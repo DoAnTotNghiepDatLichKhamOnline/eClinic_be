@@ -1,0 +1,67 @@
+# Môi trường DEV cho eClinic backend: MySQL + Redis (+ phpMyAdmin để xem DB)
+# Chạy:   docker compose up -d
+# Dừng:   docker compose down        (thêm -v để xoá luôn dữ liệu)
+# Biến môi trường: copy .env.example -> .env rồi sửa nếu cần
+
+name: eclinic
+
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: eclinic-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      MYSQL_DATABASE: ${DB_NAME:-eclinic}
+      MYSQL_USER: ${DB_USERNAME:-eclinic}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-eclinic}
+      TZ: Asia/Ho_Chi_Minh
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    ports:
+      - "${DB_PORT:-3306}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-root}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  redis:
+    image: redis:7.4-alpine
+    container_name: eclinic-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+  phpmyadmin:
+    image: phpmyadmin:5
+    container_name: eclinic-phpmyadmin
+    restart: unless-stopped
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      UPLOAD_LIMIT: 64M
+    ports:
+      - "${PMA_PORT:-8081}:80"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    labels:
+      # Spring Boot docker-compose support bỏ qua service này (không phải service connection)
+      org.springframework.boot.ignore: "true"
+
+volumes:
+  mysql_data:
+  redis_data:
