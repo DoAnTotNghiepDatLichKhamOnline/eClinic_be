@@ -1,0 +1,8 @@
+server:
+  port: 8086
+
+spring:
+  application:
+    name: notification-service
+  config:
+    import: classpath:application-common.yml

@@ -1,0 +1,14 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: identity-service
+  config:
+    import: classpath:application-common.yml
+
+app:
+  otp:
+    ttl: 300s
+    max-attempts: 5
+    length: 6

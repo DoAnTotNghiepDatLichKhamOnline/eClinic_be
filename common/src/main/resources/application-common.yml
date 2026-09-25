@@ -1,0 +1,26 @@
+# Cấu hình dùng chung cho mọi service (dùng chung 1 MySQL + 1 Redis).
+# Mỗi service nạp file này bằng:  spring.config.import: classpath:application-common.yml
+# Biến môi trường: xem .env.example ở thư mục gốc.
+spring:
+  datasource:
+    # Không set serverTimezone/hibernate.jdbc.time_zone: DATETIME lưu đúng giờ "tường" (LocalDateTime),
+    # JVM được set mặc định Asia/Ho_Chi_Minh trong hàm main của mỗi service (AppTimeZone.apply()).
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:eclinic}?characterEncoding=UTF-8
+    username: ${DB_USERNAME:eclinic}
+    password: ${DB_PASSWORD:eclinic}
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      # Schema do Flyway quản lý (common/src/main/resources/db/migration). Hibernate chỉ kiểm tra entity khớp schema.
+      ddl-auto: validate
+
+  flyway:
+    # Bật ở mọi service: Flyway có khoá trên MySQL nên nhiều service khởi động cùng lúc vẫn an toàn.
+    enabled: true
+    locations: classpath:db/migration
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}

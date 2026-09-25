@@ -1,0 +1,18 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+
+# Địa chỉ các service (dùng khi khai báo route)
+app:
+  services:
+    identity: http://localhost:8081
+    catalog: http://localhost:8082
+    scheduling: http://localhost:8083
+    booking: http://localhost:8084
+    medical: http://localhost:8085
+    notification: http://localhost:8086
+    chatbot: http://localhost:8087
+    report: http://localhost:8088
