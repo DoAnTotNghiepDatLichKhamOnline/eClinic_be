@@ -8,24 +8,25 @@
         <version>4.1.1</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
-    <groupId>iuh.fit.fe</groupId>
-    <artifactId>be_webSatLichKham</artifactId>
+    <groupId>iuh.fit.se</groupId>
+    <artifactId>eclinic-be</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
-    <name>be_webSatLichKham</name>
+    <name>eclinic-be</name>
     <description>eClinic backend - kiến trúc service-based: nhiều service Spring Boot, dùng chung 1 MySQL</description>
 
     <!--
-        common            : thư viện dùng chung (toàn bộ entity, enum, exception, Flyway migration)
-        api-gateway       : 8080 - cổng vào duy nhất cho frontend (định tuyến + kiểm JWT)
-        identity-service  : 8081 - AUTH-01..05, ADM-03
-        catalog-service   : 8082 - ADM-01, ADM-02, AUTH-04, DOC-01..03
-        scheduling-service: 8083 - SCHED-01..06
-        booking-service   : 8084 - BOOK-01..10, PAT-01..03, ADM-04
-        medical-service   : 8085 - EXAM-01..05, DOC-02
+        common              : thư viện dùng chung (toàn bộ entity, enum, exception, Flyway migration)
+        api-gateway         : 8080 - cổng vào duy nhất cho frontend (định tuyến + CORS)
+        identity-service    : 8081 - AUTH-01..04
+        catalog-service     : 8082 - ADM-01, ADM-02, AUTH-04 (hồ sơ bác sĩ), DOC-01, DOC-03
+        booking-service     : 8084 - BOOK-01..12, SCHED-01..05, PAT-01..03, ADM-03, ADM-04
+        medical-service     : 8085 - EXAM-01..05, DOC-02
         notification-service: 8086 - NOTI-01 + gửi email
-        chatbot-service   : 8087 - CHAT-01
-        report-service    : 8088 - DASH-01..06, ADM-05
+        chatbot-service     : 8087 - UC-CHAT-01 (ngoài MVP, hướng phát triển)
+        report-service      : 8088 - DASH-01..04, ADM-05
+        Cổng 8083 bỏ trống: scheduling-service đã gộp vào booking-service
+        (ca làm việc và lịch hẹn phải cập nhật trong cùng 1 transaction).
         (Mã YC theo file yeu-cau-toan-dien-dat-lich-kham-benh.md)
     -->
     <modules>
@@ -33,7 +34,6 @@
         <module>api-gateway</module>
         <module>identity-service</module>
         <module>catalog-service</module>
-        <module>scheduling-service</module>
         <module>booking-service</module>
         <module>medical-service</module>
         <module>notification-service</module>
@@ -43,18 +43,34 @@
 
     <properties>
         <java.version>17</java.version>
+        <spring-cloud.version>2025.1.3</spring-cloud.version>
+        <!-- springdoc không nằm trong BOM của Boot; 3.1.x dành cho Spring Boot 4 -->
+        <springdoc.version>3.1.1</springdoc.version>
     </properties>
 
     <dependencyManagement>
         <dependencies>
+            <!-- Spring Cloud 2025.1.x hỗ trợ Spring Boot 4.1 từ 2025.1.2; api-gateway dùng Spring Cloud Gateway -->
             <dependency>
-                <groupId>iuh.fit.fe</groupId>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring-cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.springdoc</groupId>
+                <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+                <version>${springdoc.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>iuh.fit.se</groupId>
                 <artifactId>common</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <!-- Cấu hình Testcontainers + fixture dùng chung cho test của các service -->
             <dependency>
-                <groupId>iuh.fit.fe</groupId>
+                <groupId>iuh.fit.se</groupId>
                 <artifactId>common</artifactId>
                 <version>${project.version}</version>
                 <type>test-jar</type>
@@ -75,6 +91,17 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- MockMvc (@AutoConfigureMockMvc, @WebMvcTest) và jwt() giả lập người dùng đăng nhập -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webmvc-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security-test</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>

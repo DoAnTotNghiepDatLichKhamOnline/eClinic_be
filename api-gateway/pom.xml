@@ -3,22 +3,42 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>iuh.fit.fe</groupId>
-        <artifactId>be_webSatLichKham</artifactId>
+        <groupId>iuh.fit.se</groupId>
+        <artifactId>eclinic-be</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
     <artifactId>api-gateway</artifactId>
     <name>api-gateway</name>
-    <description>Cổng vào duy nhất cho frontend: định tuyến request tới các service, kiểm tra JWT</description>
+    <description>Cổng vào duy nhất cho frontend: định tuyến request tới các service, cấu hình CORS</description>
 
     <dependencies>
-        <!--
-            TODO: thêm spring-cloud-starter-gateway-server-webmvc khi Spring Cloud 2026.0 (hỗ trợ Spring Boot 4.1) ra bản GA.
-            Hiện Spring Cloud 2025.1.x chỉ hỗ trợ Spring Boot 4.0.x.
-        -->
+        <!-- Spring Cloud Gateway bản Spring MVC (servlet); phiên bản lấy từ BOM spring-cloud-dependencies ở pom cha -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-gateway-server-webmvc</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webmvc</artifactId>
+        </dependency>
+        <!-- /actuator/health cho healthcheck của docker-compose -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
+        <!-- Gateway KHÔNG dùng Spring Security (mỗi service tự kiểm tra JWT). Pom cha thêm security-test cho mọi module;
+             khai báo lại ở đây và bỏ hết thư viện kéo theo để test của gateway chạy giống lúc chạy thật (không bị 401). -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security-test</artifactId>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
     </dependencies>
 

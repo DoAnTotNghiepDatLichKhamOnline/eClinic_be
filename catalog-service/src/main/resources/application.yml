@@ -6,3 +6,9 @@ spring:
     name: catalog-service
   config:
     import: classpath:application-common.yml
+
+app:
+  bao-mat:
+    # Không cần đăng nhập: xem danh mục chuyên khoa
+    duong-dan-cong-khai:
+      - GET /api/catalog/chuyen-khoa/**

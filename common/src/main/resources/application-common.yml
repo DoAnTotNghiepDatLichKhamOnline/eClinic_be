@@ -24,3 +24,20 @@ spring:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        # /actuator/health (docker-compose healthcheck) và /actuator/info, không cần đăng nhập
+        include: health,info
+
+app:
+  bao-mat:
+    # Khoá ký JWT (HS256), tối thiểu 32 ký tự, PHẢI giống nhau ở mọi service.
+    # Giá trị mặc định chỉ để chạy máy local; môi trường thật phải đặt JWT_SECRET.
+    jwt-secret: ${JWT_SECRET:eclinic-dev-secret-chi-dung-o-may-local-khong-dung-that-2026}
+    thoi-han-access-token: ${JWT_TTL:30m}
+    # Mỗi service thêm đường dẫn không cần đăng nhập của mình trong application.yml, vd:
+    # duong-dan-cong-khai:
+    #   - GET /api/catalog/chuyen-khoa/**

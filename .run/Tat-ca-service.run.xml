@@ -1,0 +1,13 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Tất cả service + gateway" type="CompoundRunConfigurationType" factoryName="Compound">
+    <toRun name="identity-service" type="Application" />
+    <toRun name="catalog-service" type="Application" />
+    <toRun name="booking-service" type="Application" />
+    <toRun name="medical-service" type="Application" />
+    <toRun name="notification-service" type="Application" />
+    <toRun name="chatbot-service" type="Application" />
+    <toRun name="report-service" type="Application" />
+    <toRun name="api-gateway" type="Application" />
+    <method v="2" />
+  </configuration>
+</component>

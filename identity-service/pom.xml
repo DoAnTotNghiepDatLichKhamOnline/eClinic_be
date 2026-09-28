@@ -3,17 +3,17 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>iuh.fit.fe</groupId>
-        <artifactId>be_webSatLichKham</artifactId>
+        <groupId>iuh.fit.se</groupId>
+        <artifactId>eclinic-be</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
     <artifactId>identity-service</artifactId>
     <name>identity-service</name>
-    <description>AUTH-01..05, ADM-03: đăng ký/kích hoạt, đăng nhập (JWT), mật khẩu, vô hiệu hóa tài khoản, xác minh liên kết hồ sơ CCCD</description>
+    <description>AUTH-01..04: đăng ký/kích hoạt, đăng nhập (JWT), quên mật khẩu, tài khoản bác sĩ do admin cấp</description>
 
     <dependencies>
         <dependency>
-            <groupId>iuh.fit.fe</groupId>
+            <groupId>iuh.fit.se</groupId>
             <artifactId>common</artifactId>
         </dependency>
         <dependency>
@@ -28,7 +28,7 @@
 
         <!-- Test -->
         <dependency>
-            <groupId>iuh.fit.fe</groupId>
+            <groupId>iuh.fit.se</groupId>
             <artifactId>common</artifactId>
             <type>test-jar</type>
             <scope>test</scope>

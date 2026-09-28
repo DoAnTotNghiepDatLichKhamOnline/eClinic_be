@@ -12,3 +12,7 @@ app:
     ttl: 300s
     max-attempts: 5
     length: 6
+  # Tài khoản quản trị tạo sẵn khi DB chưa có admin (KhoiTaoAdminRunner)
+  admin-mac-dinh:
+    email: ${ADMIN_EMAIL:admin@eclinic.local}
+    mat-khau: ${ADMIN_PASSWORD:Admin@123}

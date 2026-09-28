@@ -3,13 +3,13 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>iuh.fit.fe</groupId>
-        <artifactId>be_webSatLichKham</artifactId>
+        <groupId>iuh.fit.se</groupId>
+        <artifactId>eclinic-be</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
     <artifactId>common</artifactId>
     <name>common</name>
-    <description>Thư viện dùng chung: entity của toàn bộ DB, enum, exception, cấu hình JPA, Flyway migration</description>
+    <description>Thư viện dùng chung: entity của toàn bộ DB, enum, exception + xử lý lỗi, khung JSON, bảo mật JWT, OpenAPI, cấu hình JPA, Flyway migration</description>
 
     <dependencies>
         <!-- Database: JPA + MySQL + Flyway (mọi service dùng chung 1 schema) -->
@@ -35,10 +35,25 @@
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
 
-        <!-- HttpStatus trong ErrorCode -->
+        <!-- Web + xử lý lỗi chung (XuLyLoiHandler) -->
         <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-web</artifactId>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webmvc</artifactId>
+        </dependency>
+        <!-- Bảo mật: mọi service kiểm tra JWT (HS256, khoá chung JWT_SECRET) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security-oauth2-resource-server</artifactId>
+        </dependency>
+        <!-- /actuator/health cho docker-compose -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <!-- Swagger UI: /swagger-ui.html -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
         </dependency>
     </dependencies>
 

@@ -5,14 +5,59 @@ spring:
   application:
     name: api-gateway
 
-# Địa chỉ các service (dùng khi khai báo route)
+  cloud:
+    gateway:
+      server:
+        webmvc:
+          # Mỗi service 1 route: request /api/<service>/** được chuyển tới service đó, GIỮ NGUYÊN đường dẫn
+          # (controller của service tự map đầy đủ /api/<service>/..., vd /api/catalog/chuyen-khoa).
+          # Thêm service mới = copy 1 route bên dưới, đổi id, Path và biến *_URL.
+          # Biến *_URL mặc định trỏ localhost (chạy bằng IntelliJ); docker-compose đặt http://<ten-service>:<cong>.
+          routes:
+            - id: identity-service
+              uri: ${IDENTITY_URL:http://localhost:8081}
+              predicates:
+                - Path=/api/identity/**
+            - id: catalog-service
+              uri: ${CATALOG_URL:http://localhost:8082}
+              predicates:
+                - Path=/api/catalog/**
+            - id: booking-service
+              uri: ${BOOKING_URL:http://localhost:8084}
+              predicates:
+                - Path=/api/booking/**
+            - id: medical-service
+              uri: ${MEDICAL_URL:http://localhost:8085}
+              predicates:
+                - Path=/api/medical/**
+            - id: notification-service
+              uri: ${NOTIFICATION_URL:http://localhost:8086}
+              predicates:
+                - Path=/api/notification/**
+            - id: chatbot-service
+              uri: ${CHATBOT_URL:http://localhost:8087}
+              predicates:
+                - Path=/api/chatbot/**
+            - id: report-service
+              uri: ${REPORT_URL:http://localhost:8088}
+              predicates:
+                - Path=/api/report/**
+
+  # Thời gian chờ khi gateway gọi tới service (quá hạn -> 504, service chưa chạy -> 503)
+  http:
+    clients:
+      connect-timeout: 2s
+      read-timeout: ${GATEWAY_READ_TIMEOUT:30s}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        # /actuator/health cho healthcheck của docker-compose
+        include: health,info
+
 app:
-  services:
-    identity: http://localhost:8081
-    catalog: http://localhost:8082
-    scheduling: http://localhost:8083
-    booking: http://localhost:8084
-    medical: http://localhost:8085
-    notification: http://localhost:8086
-    chatbot: http://localhost:8087
-    report: http://localhost:8088
+  cors:
+    # Các địa chỉ frontend được gọi API (phân cách bằng dấu phẩy).
+    # CORS CHỈ cấu hình ở gateway, không cấu hình trong các service (tránh trùng header).
+    nguon-duoc-phep: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:3000}
