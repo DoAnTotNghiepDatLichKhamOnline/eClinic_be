@@ -13,6 +13,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy;
 
 /**
  * Bảo mật chung cho mọi service: stateless, xác thực bằng JWT (Bearer), phân quyền bằng @PreAuthorize.
@@ -42,6 +43,9 @@ public class BaoMatConfig {
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                // Giữ các header mặc định (Cache-Control: no-store, X-Content-Type-Options...), thêm Referrer-Policy:
+                // token đặt lại mật khẩu nằm trên URL của frontend, không để lộ qua header Referer
+                .headers(h -> h.referrerPolicy(r -> r.policy(ReferrerPolicy.NO_REFERRER)))
                 .authorizeHttpRequests(auth -> {
                     auth.requestMatchers(DUONG_DAN_LUON_CONG_KHAI).permitAll();
                     for (String duongDan : baoMatProperties.duongDanCongKhai()) {

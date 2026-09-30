@@ -12,12 +12,13 @@ spring:
           # Mỗi service 1 route: request /api/<service>/** được chuyển tới service đó, GIỮ NGUYÊN đường dẫn
           # (controller của service tự map đầy đủ /api/<service>/..., vd /api/catalog/chuyen-khoa).
           # Thêm service mới = copy 1 route bên dưới, đổi id, Path và biến *_URL.
+          # Ngoại lệ: API xác thực theo tài liệu API là /api/auth/** (không có tên service) nên cũng về identity-service.
           # Biến *_URL mặc định trỏ localhost (chạy bằng IntelliJ); docker-compose đặt http://<ten-service>:<cong>.
           routes:
             - id: identity-service
               uri: ${IDENTITY_URL:http://localhost:8081}
               predicates:
-                - Path=/api/identity/**
+                - Path=/api/identity/**,/api/auth/**
             - id: catalog-service
               uri: ${CATALOG_URL:http://localhost:8082}
               predicates:

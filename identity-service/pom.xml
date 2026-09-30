@@ -20,10 +20,15 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webmvc</artifactId>
         </dependency>
-        <!-- Redis: token link kích hoạt/đặt lại mật khẩu (TTL), đếm số lần đăng nhập sai -->
+        <!-- Redis: token liên kết kích hoạt/đặt lại mật khẩu (chỉ lưu SHA-256, TTL, dùng 1 lần), đếm số lần đăng nhập sai -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-redis</artifactId>
+        </dependency>
+        <!-- Gửi email kích hoạt / đặt lại mật khẩu qua Gmail SMTP (App Password) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
         </dependency>
 
         <!-- Test -->

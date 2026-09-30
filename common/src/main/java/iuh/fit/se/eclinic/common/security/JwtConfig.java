@@ -18,9 +18,12 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtGra
 
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * JWT ký bằng HS256 với khoá chung JWT_SECRET: identity-service phát hành, mọi service tự kiểm tra.
  */
+@Slf4j
 @Configuration
 public class JwtConfig {
 
@@ -30,6 +33,9 @@ public class JwtConfig {
 
     private static final int DO_DAI_KHOA_TOI_THIEU = 32;
 
+    /** PHẢI trùng giá trị mặc định của app.bao-mat.jwt-secret trong application-common.yml. */
+    static final String KHOA_DEV_MAC_DINH = "eclinic-dev-secret-chi-dung-o-may-local-khong-dung-that-2026";
+
     @Bean
     SecretKey khoaKyJwt(BaoMatProperties baoMatProperties) {
         String secret = baoMatProperties.jwtSecret();
@@ -37,6 +43,9 @@ public class JwtConfig {
         if (bytes.length < DO_DAI_KHOA_TOI_THIEU) {
             throw new IllegalStateException("app.bao-mat.jwt-secret (JWT_SECRET) phải dài tối thiểu "
                     + DO_DAI_KHOA_TOI_THIEU + " byte");
+        }
+        if (KHOA_DEV_MAC_DINH.equals(secret)) {
+            log.warn("JWT_SECRET đang là khoá mặc định cho máy dev: ai cũng tạo được token. Đặt JWT_SECRET khi triển khai thật.");
         }
         return new SecretKeySpec(bytes, "HmacSHA256");
     }

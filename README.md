@@ -42,7 +42,7 @@ Qua gateway, mọi API có dạng `http://localhost:8080/api/<service>/...`, ví
 - **JDK 17** (IntelliJ tự tải được: File → Project Structure → SDK → Download JDK, chọn bản 17).
 - **IntelliJ IDEA** (bản miễn phí là đủ).
 - **Docker Desktop** (MySQL, Redis; và để chạy test).
-- **Node.js**: chỉ cần cho script tạo token `scripts/tao-token-dev.js`.
+- **Node.js** (không bắt buộc): chỉ cần cho script tạo token bác sĩ `scripts/tao-token-dev.js`.
 
 ## Cách 1 — Chạy service trong IntelliJ (khi đang code)
 
@@ -78,14 +78,94 @@ docker compose --profile app down               # dừng; phải có --profile a
 
 - Lần đầu `identity-service` khởi động (chưa có quản trị viên nào), nó tạo tài khoản
   **`admin@eclinic.local` / `Admin@123`** (đổi bằng `ADMIN_EMAIL`, `ADMIN_PASSWORD` trong `.env`).
-- **Chưa có API đăng nhập** (AUTH-02). Để thử API cần đăng nhập trên Swagger, tạo token bằng:
-  ```bash
-  node scripts/tao-token-dev.js                   # quản trị viên, idTaiKhoan = 1
-  node scripts/tao-token-dev.js BAC_SI 5          # bác sĩ có idTaiKhoan = 5
-  node scripts/tao-token-dev.js BENH_NHAN 12
+- **Lấy token để thử API** cần đăng nhập trên Swagger: đăng nhập bằng `POST /api/auth/login`
+  (Swagger của identity-service, hoặc qua gateway `http://localhost:8080/api/auth/login`):
+  ```json
+  {"email": "admin@eclinic.local", "matKhau": "Admin@123"}
   ```
-  Dán token vào nút **Authorize** của Swagger (không cần gõ `Bearer `). Token hết hạn sau 8 giờ.
+  Copy `duLieu.accessToken` rồi dán vào nút **Authorize** của Swagger (không cần gõ `Bearer `).
+  Access token hết hạn sau 30 phút; lấy token mới bằng `POST /api/auth/refresh-token` hoặc đăng nhập lại.
+  Refresh token **không có trong body**: nó nằm trong cookie HttpOnly `eclinic_rt` (trình duyệt tự gửi, nên trên
+  Swagger chỉ cần gọi `refresh-token` với body trống). Với curl: `-c cookie.txt` khi đăng nhập, `-b cookie.txt` khi làm mới.
+  Bệnh nhân: đăng ký `POST /api/auth/register`, lấy liên kết kích hoạt trong log identity-service
+  (chế độ `MAIL_MODE=console`), gọi `POST /api/auth/verify-email`, rồi đăng nhập. Hoặc dùng trang demo bên dưới.
+- **Token bác sĩ**: chưa có API cấp tài khoản bác sĩ (AUTH-04), tạm tạo token bằng script:
+  ```bash
+  node scripts/tao-token-dev.js BAC_SI 5          # bác sĩ có idTaiKhoan = 5
+  ```
+  Token của script hết hạn sau 8 giờ.
 - Để trống `JWT_SECRET` trong `.env` (mặc định đang comment): khi đó IntelliJ, Docker và script dùng chung một khoá.
+- Rà soát bảo mật, rủi ro đang chấp nhận, việc phải làm trước khi triển khai thật và hướng dẫn cho frontend:
+  [docs/BAO-MAT-XAC-THUC.md](docs/BAO-MAT-XAC-THUC.md).
+
+## Email, đăng nhập Google và trang demo
+
+**Gửi email thật qua Gmail** (mặc định `MAIL_MODE=console`: không gửi, liên kết chỉ ghi ra log identity-service):
+1. Tài khoản Google gửi mail phải bật **Xác minh 2 bước**, rồi tạo **App Password** ở
+   https://myaccount.google.com/apppasswords (16 ký tự, không phải mật khẩu Gmail).
+2. Trong `.env`: `MAIL_MODE=smtp`, `MAIL_USERNAME=ten-ban@gmail.com`, `MAIL_APP_PASSWORD=<16 ký tự, bỏ dấu cách>`.
+   Chạy bằng IntelliJ thì đặt 3 biến này trong run config của identity-service.
+3. Khởi động lại identity-service. Thiếu tài khoản khi `MAIL_MODE=smtp` thì service không khởi động.
+
+**Đăng nhập Google:**
+1. [Google Cloud Console](https://console.cloud.google.com/apis/credentials) > Create credentials > OAuth client ID >
+   loại **Web application**; *Authorized JavaScript origins* thêm `http://localhost:5173` (chính xác, không có `/` cuối).
+   Lần đầu có thể phải cấu hình OAuth consent screen (External, thêm email của mình vào Test users).
+2. Trong `.env`: `GOOGLE_CLIENT_ID=<client id>.apps.googleusercontent.com`, rồi khởi động lại identity-service.
+   Chưa đặt thì `POST /api/auth/google` trả 503.
+
+**Trang demo** (thay frontend khi dev: đăng ký, đăng nhập, Google, làm mới phiên, đăng xuất, quên mật khẩu;
+liên kết kích hoạt / đặt lại mật khẩu trong email mở đúng trang này):
+```bash
+node scripts/demo-xac-thuc/server.js      # rồi mở http://localhost:5173 (Chrome/Edge/Firefox)
+```
+Cần gateway + identity-service đang chạy. Trang đọc `GOOGLE_CLIENT_ID` từ biến môi trường hoặc từ `.env`.
+
+### Thử toàn bộ luồng xác thực với email thật và Google thật
+
+Làm khi đã có 4 biến sau trong `.env` (xem 2 mục trên):
+```
+MAIL_MODE=smtp
+MAIL_USERNAME=ten-ban@gmail.com
+MAIL_APP_PASSWORD=<16 ký tự, không có dấu cách>
+GOOGLE_CLIENT_ID=<client id>.apps.googleusercontent.com
+```
+OAuth client Google: *Authorized JavaScript origins* gồm `http://localhost:5173` và `http://localhost`, *Authorized redirect
+URIs* để trống; không cần client secret. Consent screen đang ở chế độ Testing thì thêm tài khoản Google sẽ dùng vào
+*Test users*. Cấu hình mới có thể mất vài phút mới có hiệu lực.
+
+1. Chạy hệ thống và trang demo:
+   ```bash
+   docker compose --profile app up -d --build        # chờ tất cả "healthy": docker compose --profile app ps
+   node scripts/demo-xac-thuc/server.js              # để cửa sổ này chạy, mở http://localhost:5173
+   ```
+   - Máy đã có MySQL khác chiếm cổng 3306: đặt `DB_PORT=3307` trong `.env` (chỉ đổi cổng mở ra máy host).
+   - Kiểm tra đúng chế độ: `docker compose --profile app logs identity-service | grep -E "CONSOLE|GOOGLE_CLIENT_ID"`
+     KHÔNG được ra dòng nào (có dòng = vẫn ở chế độ console hoặc thiếu Client ID).
+   - Dùng Chrome/Edge/Firefox (Safari không gửi cookie `Secure` qua http://localhost).
+2. **Email:**
+   - [ ] Đăng ký (email nhận được thư, mật khẩu ≥ 6 ký tự, số điện thoại 10 số bắt đầu bằng 0) -> nhận thư
+     "[eClinic] Kích hoạt tài khoản" (xem cả thư rác).
+   - [ ] Bấm liên kết trong thư -> trang báo "Kích hoạt thành công".
+   - [ ] Về trang chính: Đăng nhập -> Làm mới phiên -> Đăng xuất, mỗi bước 200 ở ô "Kết quả gọi API gần nhất".
+   - [ ] Quên mật khẩu -> nhận thư "[eClinic] Đặt lại mật khẩu" -> bấm liên kết -> nhập mật khẩu mới 2 lần -> 200.
+   - [ ] Nhận thư "[eClinic] Mật khẩu đã được thay đổi".
+   - [ ] Đăng nhập bằng mật khẩu mới -> 200; mật khẩu cũ -> 401.
+3. **Google:**
+   - [ ] Bấm nút Google, chọn tài khoản -> 200, hiện đúng tên.
+     (Cùng Gmail với bước 2 thì được liên kết vào tài khoản đó, cùng id — đúng như thiết kế.)
+   - [ ] F12 > Application > Cookies > `http://localhost:8080`: có `eclinic_rt` (HttpOnly, Secure).
+   - [ ] Làm mới phiên -> 200; Đăng xuất -> 200 và cookie `eclinic_rt` biến mất.
+4. Xem nhật ký bảo mật (chỉ có id, không có mật khẩu / token):
+   ```bash
+   docker compose --profile app logs identity-service | grep -E "Đăng nhập|Đăng ký|Kích hoạt|Đặt lại|Google|Từ chối"
+   ```
+5. Xong thì dừng trang demo (Ctrl+C) và `docker compose --profile app down`. Đặt lại `MAIL_MODE=console` nếu không muốn
+   gửi email thật khi dev.
+
+Lỗi hay gặp: nút Google báo origin không hợp lệ -> kiểm tra *Authorized JavaScript origins* hoặc chờ vài phút;
+identity-service không khởi động với `MAIL_MODE=smtp` -> thiếu `MAIL_USERNAME` / `MAIL_APP_PASSWORD`; không nhận được thư ->
+xem `docker compose --profile app logs identity-service | grep "thất bại"` (sai App Password, chưa bật Xác minh 2 bước).
 
 ## Chạy test
 

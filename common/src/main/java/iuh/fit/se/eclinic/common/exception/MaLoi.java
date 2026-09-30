@@ -24,9 +24,20 @@ public enum MaLoi {
     LOI_HE_THONG(HttpStatus.INTERNAL_SERVER_ERROR, "Lỗi hệ thống, vui lòng thử lại sau"),
 
     // Tài khoản / xác thực
-    OTP_KHONG_DUNG(HttpStatus.BAD_REQUEST, "Mã OTP không đúng"),
-    OTP_HET_HAN(HttpStatus.BAD_REQUEST, "Mã OTP đã hết hạn hoặc không tồn tại"),
-    OTP_NHAP_SAI_QUA_NHIEU(HttpStatus.TOO_MANY_REQUESTS, "Nhập sai OTP quá nhiều lần"),
+    EMAIL_DA_TON_TAI(HttpStatus.CONFLICT, "Email đã được đăng ký"),
+    SO_DIEN_THOAI_DA_TON_TAI(HttpStatus.CONFLICT, "Số điện thoại đã được đăng ký"),
+    LIEN_KET_KHONG_HOP_LE(HttpStatus.GONE, "Liên kết đã hết hạn hoặc không hợp lệ"),
+    GUI_LAI_QUA_NHANH(HttpStatus.TOO_MANY_REQUESTS, "Bạn thao tác quá nhanh, vui lòng thử lại sau ít phút"),
+    TAI_KHOAN_BI_VO_HIEU_HOA(HttpStatus.FORBIDDEN, "Tài khoản đã bị vô hiệu hoá"),
+    SAI_THONG_TIN_DANG_NHAP(HttpStatus.UNAUTHORIZED, "Email hoặc mật khẩu không đúng"),
+    TAI_KHOAN_CHUA_XAC_THUC(HttpStatus.FORBIDDEN, "Tài khoản chưa được kích hoạt, vui lòng kiểm tra email"),
+    DANG_NHAP_SAI_QUA_NHIEU(HttpStatus.TOO_MANY_REQUESTS, "Đăng nhập sai quá nhiều lần, vui lòng thử lại sau 15 phút"),
+    PHIEN_DANG_NHAP_KHONG_HOP_LE(HttpStatus.UNAUTHORIZED, "Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại"),
+    GOOGLE_TOKEN_KHONG_HOP_LE(HttpStatus.UNAUTHORIZED, "Đăng nhập Google không hợp lệ hoặc đã hết hạn, vui lòng thử lại"),
+    DANG_NHAP_GOOGLE_KHONG_KHA_DUNG(HttpStatus.SERVICE_UNAVAILABLE,
+            "Đăng nhập Google tạm thời không khả dụng, vui lòng thử lại sau"),
+    DANG_NHAP_GOOGLE_KHONG_HO_TRO(HttpStatus.FORBIDDEN, "Tài khoản này không hỗ trợ đăng nhập bằng Google"),
+    EMAIL_DA_DANG_KY_MAT_KHAU(HttpStatus.CONFLICT, "Email đã được đăng ký, vui lòng đăng nhập bằng mật khẩu"),
 
     // Danh mục
     TEN_CHUYEN_KHOA_DA_TON_TAI(HttpStatus.CONFLICT, "Tên chuyên khoa đã tồn tại"),

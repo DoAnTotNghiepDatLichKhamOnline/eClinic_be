@@ -23,7 +23,7 @@ public class CorsConfig {
         cauHinh.setAllowedOrigins(corsProperties.nguonDuocPhep());
         cauHinh.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         cauHinh.setAllowedHeaders(List.of("*"));
-        // Cho phép gửi cookie (vd refresh token sau này); yêu cầu origin cụ thể, không dùng "*"
+        // Cho phép gửi cookie (refresh token eclinic_rt của /api/auth); yêu cầu origin cụ thể, không dùng "*"
         cauHinh.setAllowCredentials(true);
         cauHinh.setMaxAge(3600L);
 

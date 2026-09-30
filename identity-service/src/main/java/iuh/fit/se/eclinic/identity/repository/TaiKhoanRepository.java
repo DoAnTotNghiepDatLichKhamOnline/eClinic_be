@@ -11,7 +11,13 @@ public interface TaiKhoanRepository extends JpaRepository<TaiKhoan, Long> {
 
     Optional<TaiKhoan> findByEmail(String email);
 
+    Optional<TaiKhoan> findByGoogleId(String googleId);
+
     boolean existsByEmail(String email);
+
+    boolean existsBySoDienThoai(String soDienThoai);
+
+    boolean existsBySoDienThoaiAndIdNot(String soDienThoai, Long id);
 
     boolean existsByVaiTro(VaiTro vaiTro);
 

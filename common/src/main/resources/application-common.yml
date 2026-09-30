@@ -36,6 +36,7 @@ app:
   bao-mat:
     # Khoá ký JWT (HS256), tối thiểu 32 ký tự, PHẢI giống nhau ở mọi service.
     # Giá trị mặc định chỉ để chạy máy local; môi trường thật phải đặt JWT_SECRET.
+    # Đổi giá trị mặc định thì đổi cả JwtConfig.KHOA_DEV_MAC_DINH (dùng để cảnh báo khi khởi động).
     jwt-secret: ${JWT_SECRET:eclinic-dev-secret-chi-dung-o-may-local-khong-dung-that-2026}
     thoi-han-access-token: ${JWT_TTL:30m}
     # Mỗi service thêm đường dẫn không cần đăng nhập của mình trong application.yml, vd:

@@ -33,8 +33,13 @@ public class TaiKhoan extends AuditableEntity {
     @Column(name = "email", nullable = false, unique = true)
     private String email;
 
-    @Column(name = "mat_khau_hash", nullable = false)
+    /** NULL: tài khoản chỉ đăng nhập bằng Google (đăng nhập mật khẩu luôn báo sai thông tin). */
+    @Column(name = "mat_khau_hash")
     private String matKhauHash;
+
+    /** "sub" trong ID token Google: định danh bất biến của tài khoản Google đã liên kết (V2). */
+    @Column(name = "google_id", unique = true)
+    private String googleId;
 
     /** Duy nhất trên toàn hệ thống (AUTH-04). */
     @Column(name = "so_dien_thoai", length = 20, unique = true)

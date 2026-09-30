@@ -18,7 +18,7 @@ Cách chạy project: xem [README](../README.md).
 | Package | chữ thường | `iuh.fit.se.eclinic.catalog.controller` |
 
 Một số class kỹ thuật giữ tên tiếng Anh: `BaseEntity`, `AuditableEntity`, `AppTimeZone`, `JpaAuditingConfig`,
-các class `Jwt*`, `Otp*` và class hỗ trợ test.
+các class `Jwt*`, `*Properties`, `*Config` và class hỗ trợ test.
 
 Tên method thường dùng:
 
@@ -101,7 +101,11 @@ File mẫu trong `catalog-service/src/main/java/iuh/fit/se/eclinic/catalog/`:
   ```
 - Giới hạn vai trò: `@PreAuthorize("hasRole('QUAN_TRI_VIEN')")` (vai trò: `BENH_NHAN`, `BAC_SI`, `QUAN_TRI_VIEN`).
 - Lấy người đang gọi API: `NguoiDungHienTai.layIdTaiKhoan()`, `NguoiDungHienTai.layVaiTro()`.
-- Chưa có API đăng nhập: thử API bằng token từ `node scripts/tao-token-dev.js` (xem README).
+- Thử API cần đăng nhập: lấy `accessToken` từ `POST /api/auth/login` (Swagger, hoặc trang demo
+  `node scripts/demo-xac-thuc/server.js`, xem README). Token bác sĩ tạm dùng
+  `node scripts/tao-token-dev.js BAC_SI <id>` cho tới khi có AUTH-04.
+- Refresh token nằm trong cookie HttpOnly `eclinic_rt` (`Path=/api/auth`), không có trong body. Không ghi mật khẩu,
+  token, email ra log; sự kiện bảo mật chỉ ghi id (xem [BAO-MAT-XAC-THUC.md](BAO-MAT-XAC-THUC.md)).
 - CORS chỉ cấu hình ở api-gateway, không thêm `@CrossOrigin` trong service.
 
 ## 6. Database và migration

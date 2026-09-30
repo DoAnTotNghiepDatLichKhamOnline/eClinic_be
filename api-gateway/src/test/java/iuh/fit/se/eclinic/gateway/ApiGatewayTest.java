@@ -173,6 +173,16 @@ class ApiGatewayTest {
     }
 
     @Test
+    void apiAuthCungDiToiIdentityService() throws Exception {
+        HttpResponse<String> phanHoi = gui(HttpRequest.newBuilder(url("/api/auth/login"))
+                .POST(HttpRequest.BodyPublishers.ofString("{}")));
+
+        // identity trỏ vào cổng 1: 503 nghĩa là đã có route (không có route thì 404)
+        assertThat(phanHoi.statusCode()).isEqualTo(503);
+        assertThat(phanHoi.body()).contains("\"maLoi\":\"DICH_VU_KHONG_KHA_DUNG\"");
+    }
+
+    @Test
     void serviceTraLoiQuaLauTraVe504() throws Exception {
         HttpResponse<String> phanHoi = gui(HttpRequest.newBuilder(url("/api/catalog/cham")).GET());
 

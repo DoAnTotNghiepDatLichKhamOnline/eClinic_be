@@ -123,6 +123,15 @@ services:
       # Tài khoản quản trị tạo khi khởi động lần đầu (chưa có admin nào)
       ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@eclinic.local}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Admin@123}
+      # Email kích hoạt / đặt lại mật khẩu (xem .env.example). Mặc định console: liên kết chỉ ghi ra log.
+      MAIL_MODE: ${MAIL_MODE:-console}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_APP_PASSWORD: ${MAIL_APP_PASSWORD:-}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
+      # Đăng nhập Google (xem .env.example). Để trống: /api/auth/google trả 503.
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      # Cookie refresh token chỉ gửi qua HTTPS (localhost được coi là an toàn). false chỉ khi thử qua IP LAN bằng http
+      COOKIE_SECURE: ${COOKIE_SECURE:-true}
     healthcheck:
       <<: *kiem-tra
       test: ["CMD", "curl", "-fsS", "http://localhost:8081/actuator/health"]
