@@ -82,7 +82,11 @@ public class DangNhapGoogleServiceImpl implements DangNhapGoogleService {
             log.info("Kích hoạt tài khoản id={} bằng Google, bỏ mật khẩu và số điện thoại chưa xác minh",
                     taiKhoan.getId());
         } else {
-            // Đã kích hoạt: liên kết, giữ nguyên họ tên / ảnh / mật khẩu
+            // Đã kích hoạt: liên kết, giữ nguyên họ tên / mật khẩu. Ảnh: chỉ lấy ảnh Google khi tài khoản chưa có ảnh,
+            // và chỉ ở lần liên kết này (các lần đăng nhập Google sau không đụng tới ảnh, nên ảnh đã bỏ không quay lại)
+            if (taiKhoan.getAnhDaiDien() == null) {
+                taiKhoan.setAnhDaiDien(anhGoogle(google));
+            }
             log.info("Liên kết Google cho tài khoản id={}", taiKhoan.getId());
         }
         return taiKhoanRepository.saveAndFlush(taiKhoan);
@@ -119,7 +123,15 @@ public class DangNhapGoogleServiceImpl implements DangNhapGoogleService {
                 ? google.ten().trim()
                 : (viTriA > 0 ? google.email().substring(0, viTriA) : google.email());
         taiKhoan.setHoTen(hoTen.length() > DO_DAI_HO_TEN_TOI_DA ? hoTen.substring(0, DO_DAI_HO_TEN_TOI_DA) : hoTen);
-        taiKhoan.setAnhDaiDien(google.anh() != null && google.anh().length() <= DO_DAI_ANH_TOI_DA ? google.anh() : null);
+        taiKhoan.setAnhDaiDien(anhGoogle(google));
+    }
+
+    /**
+     * Ảnh Google được lưu nguyên là URL của Google, không chép vào kho ảnh của mình (đăng nhập không phụ thuộc kho ảnh);
+     * URL quá dài so với cột thì bỏ qua.
+     */
+    private static String anhGoogle(ThongTinGoogle google) {
+        return google.anh() != null && google.anh().length() <= DO_DAI_ANH_TOI_DA ? google.anh() : null;
     }
 
 }

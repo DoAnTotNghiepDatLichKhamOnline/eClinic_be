@@ -49,6 +49,7 @@ import iuh.fit.se.eclinic.identity.util.TokenNgauNhien;
 /**
  * Đăng nhập / làm mới phiên / đăng xuất với MySQL + Redis thật. Tài khoản tạo thẳng qua repository.
  * Ân hạn dùng lại refresh token rút còn 5 giây; "quá ân hạn" được giả lập bằng cách lùi ngay_thu_hoi 1 phút.
+ * Mỗi lần đăng nhập là 1 phiên có mã riêng (ma_phien), giữ nguyên qua các lần làm mới và nằm trong access token.
  */
 @SpringBootTest
 @ExtendWith(OutputCaptureExtension.class)
@@ -85,6 +86,20 @@ class DangNhapServiceTest {
         assertThat(phien.getTokenHash()).matches("[0-9a-f]{64}").isNotEqualTo(ketQua.refreshToken());
         assertThat(phien.getThongTinThietBi()).isEqualTo(THIET_BI);
         assertThat(phien.getNgayThuHoi()).isNull();
+        // Phiên có mã riêng, access token mang đúng mã đó
+        assertThat(phien.getMaPhien()).matches("[0-9a-f-]{36}");
+        assertThat(phien.getNgayDangNhap()).isNotNull();
+        assertThat(maPhien(ketQua)).isEqualTo(phien.getMaPhien());
+    }
+
+    @Test
+    void haiLanDangNhapLaHaiPhienKhacNhau() {
+        TaiKhoan taiKhoan = taoTaiKhoan(TrangThaiTaiKhoan.DA_KICH_HOAT, MAT_KHAU);
+
+        DangNhapResponse mayA = dangNhap(taiKhoan.getEmail(), MAT_KHAU);
+        DangNhapResponse mayB = dangNhap(taiKhoan.getEmail(), MAT_KHAU);
+
+        assertThat(maPhien(mayA)).isNotEqualTo(maPhien(mayB));
     }
 
     @Test
@@ -188,6 +203,20 @@ class DangNhapServiceTest {
     }
 
     @Test
+    void lamMoiGiuNguyenMaPhienVaThoiDiemDangNhap() {
+        DangNhapResponse lanDau = dangNhapTaiKhoanMoi();
+        RefreshToken dongDau = phien(lanDau.refreshToken());
+
+        DangNhapResponse lanHai = dangNhapService.lamMoi(lanDau.refreshToken());
+
+        RefreshToken dongHai = phien(lanHai.refreshToken());
+        assertThat(dongHai.getId()).isNotEqualTo(dongDau.getId());
+        assertThat(dongHai.getMaPhien()).isEqualTo(dongDau.getMaPhien());
+        assertThat(dongHai.getNgayDangNhap()).isEqualTo(dongDau.getNgayDangNhap());
+        assertThat(maPhien(lanHai)).isEqualTo(maPhien(lanDau)).isEqualTo(dongDau.getMaPhien());
+    }
+
+    @Test
     void dungLaiTokenCuTrongAnHanChiBao401() {
         DangNhapResponse lanDau = dangNhapTaiKhoanMoi();
         DangNhapResponse lanHai = dangNhapService.lamMoi(lanDau.refreshToken());
@@ -197,7 +226,7 @@ class DangNhapServiceTest {
     }
 
     @Test
-    void dungLaiTokenCuSauAnHanThuHoiMoiPhien() {
+    void dungLaiTokenCuSauAnHanChiDangXuatPhienDo() {
         TaiKhoan taiKhoan = taoTaiKhoan(TrangThaiTaiKhoan.DA_KICH_HOAT, MAT_KHAU);
         DangNhapResponse mayA = dangNhap(taiKhoan.getEmail(), MAT_KHAU);
         DangNhapResponse mayB = dangNhap(taiKhoan.getEmail(), MAT_KHAU);
@@ -208,9 +237,27 @@ class DangNhapServiceTest {
 
         assertMaLoi(() -> dangNhapService.lamMoi(mayA.refreshToken()), MaLoi.PHIEN_DANG_NHAP_KHONG_HOP_LE);
 
-        assertThat(refreshTokenService.layPhienDangHoatDong(taiKhoan.getId())).isEmpty();
+        // Phiên của token bị dùng lại bị đăng xuất (token mới nhất của nó cũng hết hiệu lực); máy B không bị ảnh hưởng
         assertMaLoi(() -> dangNhapService.lamMoi(mayAMoi.refreshToken()), MaLoi.PHIEN_DANG_NHAP_KHONG_HOP_LE);
-        assertMaLoi(() -> dangNhapService.lamMoi(mayB.refreshToken()), MaLoi.PHIEN_DANG_NHAP_KHONG_HOP_LE);
+        assertThat(refreshTokenService.layPhienDangHoatDong(taiKhoan.getId()))
+                .extracting(RefreshToken::getMaPhien).containsExactly(maPhien(mayB));
+        assertThat(dangNhapService.lamMoi(mayB.refreshToken()).accessToken()).isNotBlank();
+    }
+
+    @Test
+    void dungLaiTokenDaDangXuatSauAnHanKhongDangXuatPhienKhac() {
+        // Thiết bị đã đăng xuất (hoặc bị đăng xuất từ xa) quay lại với cookie cũ: chỉ 401, không làm văng thiết bị khác
+        TaiKhoan taiKhoan = taoTaiKhoan(TrangThaiTaiKhoan.DA_KICH_HOAT, MAT_KHAU);
+        DangNhapResponse mayA = dangNhap(taiKhoan.getEmail(), MAT_KHAU);
+        DangNhapResponse mayB = dangNhap(taiKhoan.getEmail(), MAT_KHAU);
+        dangNhapService.dangXuat(mayA.refreshToken());
+        RefreshToken tokenCu = phien(mayA.refreshToken());
+        tokenCu.setNgayThuHoi(tokenCu.getNgayThuHoi().minusMinutes(1));
+        refreshTokenRepository.save(tokenCu);
+
+        assertMaLoi(() -> dangNhapService.lamMoi(mayA.refreshToken()), MaLoi.PHIEN_DANG_NHAP_KHONG_HOP_LE);
+
+        assertThat(dangNhapService.lamMoi(mayB.refreshToken()).accessToken()).isNotBlank();
     }
 
     @Test
@@ -296,8 +343,8 @@ class DangNhapServiceTest {
     @Test
     void jobChiXoaPhienHetHan() {
         TaiKhoan taiKhoan = taoTaiKhoan(TrangThaiTaiKhoan.DA_KICH_HOAT, MAT_KHAU);
-        String hetHan = refreshTokenService.tao(taiKhoan, THIET_BI, Duration.ofMinutes(-1));
-        String conHan = refreshTokenService.tao(taiKhoan, THIET_BI, Duration.ofDays(1));
+        String hetHan = refreshTokenService.tao(taiKhoan, THIET_BI, Duration.ofMinutes(-1)).refreshToken();
+        String conHan = refreshTokenService.tao(taiKhoan, THIET_BI, Duration.ofDays(1)).refreshToken();
 
         donPhienHetHanJob.donPhienHetHan();
 
@@ -327,6 +374,11 @@ class DangNhapServiceTest {
         for (int i = 0; i < soLan; i++) {
             assertMaLoi(() -> dangNhap(email, "sai-mat-khau"), MaLoi.SAI_THONG_TIN_DANG_NHAP);
         }
+    }
+
+    /** Mã phiên trong access token (claim "phien"). */
+    private String maPhien(DangNhapResponse ketQua) {
+        return jwtDecoder.decode(ketQua.accessToken()).getClaimAsString(JwtConfig.CLAIM_PHIEN);
     }
 
     private RefreshToken phien(String refreshToken) {

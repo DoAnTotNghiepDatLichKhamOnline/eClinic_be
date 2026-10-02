@@ -3,6 +3,7 @@ package iuh.fit.se.eclinic.common.exception;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.ResponseEntity;
@@ -11,6 +12,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationTrustResolver;
 import org.springframework.security.authentication.AuthenticationTrustResolverImpl;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.util.unit.DataSize;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.method.ParameterErrors;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
@@ -21,6 +23,9 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.MultipartException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import iuh.fit.se.eclinic.common.dto.ChiTietLoi;
@@ -39,6 +44,13 @@ import lombok.extern.slf4j.Slf4j;
 public class XuLyLoiHandler {
 
     private static final AuthenticationTrustResolver TRUST_RESOLVER = new AuthenticationTrustResolverImpl();
+
+    /** Chỉ để ghi vào thông điệp lỗi; giới hạn thật do servlet container áp dụng. */
+    private final DataSize kichThuocTepToiDa;
+
+    public XuLyLoiHandler(@Value("${spring.servlet.multipart.max-file-size:1MB}") DataSize kichThuocTepToiDa) {
+        this.kichThuocTepToiDa = kichThuocTepToiDa;
+    }
 
     @ExceptionHandler(LoiNghiepVu.class)
     public ResponseEntity<PhanHoiApi<Void>> xuLyLoiNghiepVu(LoiNghiepVu ex) {
@@ -99,6 +111,28 @@ public class XuLyLoiHandler {
         return traVe(MaLoi.DU_LIEU_KHONG_HOP_LE, thongDiep, null);
     }
 
+    // ---- 400/413: tải tệp lên (multipart) ----
+
+    /** Tệp hoặc cả request vượt spring.servlet.multipart.max-file-size / max-request-size. */
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<PhanHoiApi<Void>> xuLyTepQuaLon(MaxUploadSizeExceededException ex) {
+        return traVe(MaLoi.TEP_QUA_LON,
+                "Tệp tải lên vượt quá dung lượng cho phép (tối đa " + docDungLuong(kichThuocTepToiDa) + ")", null);
+    }
+
+    /** Body multipart hỏng (thiếu boundary, bị cắt giữa chừng...). */
+    @ExceptionHandler(MultipartException.class)
+    public ResponseEntity<PhanHoiApi<Void>> xuLyMultipartSai(MultipartException ex) {
+        log.info("Request multipart không đọc được: {}", ex.getMessage());
+        return traVe(MaLoi.DU_LIEU_KHONG_HOP_LE, "Nội dung tải lên không đọc được", null);
+    }
+
+    /** Thiếu phần tệp mà @RequestPart yêu cầu. */
+    @ExceptionHandler(MissingServletRequestPartException.class)
+    public ResponseEntity<PhanHoiApi<Void>> xuLyThieuTep(MissingServletRequestPartException ex) {
+        return traVe(MaLoi.DU_LIEU_KHONG_HOP_LE, "Thiếu tệp '" + ex.getRequestPartName() + "'", null);
+    }
+
     // ---- 401/403/404/405/409 ----
 
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
@@ -143,6 +177,10 @@ public class XuLyLoiHandler {
     private static ResponseEntity<PhanHoiApi<Void>> traVe(MaLoi maLoi, String thongDiep, List<ChiTietLoi> chiTiet) {
         String noiDung = thongDiep != null ? thongDiep : maLoi.getThongDiepMacDinh();
         return ResponseEntity.status(maLoi.getTrangThaiHttp()).body(PhanHoiApi.loi(maLoi, noiDung, chiTiet));
+    }
+
+    private static String docDungLuong(DataSize dungLuong) {
+        return dungLuong.toMegabytes() > 0 ? dungLuong.toMegabytes() + " MB" : dungLuong.toKilobytes() + " KB";
     }
 
     private static ChiTietLoi chiTietTu(FieldError fe) {

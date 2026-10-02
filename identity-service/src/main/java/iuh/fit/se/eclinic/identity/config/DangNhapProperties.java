@@ -12,7 +12,7 @@ import org.springframework.boot.context.properties.bind.DefaultValue;
  * @param thoiGianKhoa        thời gian khoá, tính từ lần sai thứ {@code soLanSaiToiDa}
  * @param thoiHanRefreshToken thời gian sống của mỗi refresh token (mỗi lần làm mới cấp token mới)
  * @param anHanDungLai        refresh token đã thu hồi được dùng lại trong khoảng này chỉ bị từ chối;
- *                            quá khoảng này thì thu hồi mọi phiên của tài khoản
+ *                            quá khoảng này thì đăng xuất phiên của token đó
  */
 @ConfigurationProperties("app.dang-nhap")
 public record DangNhapProperties(

@@ -24,6 +24,11 @@ public final class NguoiDungHienTai {
         return VaiTro.valueOf(layToken().getToken().getClaimAsString(JwtConfig.CLAIM_VAI_TRO));
     }
 
+    /** Mã phiên đăng nhập của token đang dùng (claim "phien"); null nếu token được cấp không kèm phiên. */
+    public static String layMaPhien() {
+        return layToken().getToken().getClaimAsString(JwtConfig.CLAIM_PHIEN);
+    }
+
     private static JwtAuthenticationToken layToken() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication instanceof JwtAuthenticationToken token) {

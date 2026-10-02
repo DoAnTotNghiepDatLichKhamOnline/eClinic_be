@@ -1,5 +1,6 @@
-// Trang demo xác thực — CHỈ DÙNG KHI DEV, thay frontend để thử toàn bộ luồng qua api-gateway:
-// đăng ký, liên kết kích hoạt / đặt lại mật khẩu trong email, đăng nhập (mật khẩu, Google), cookie refresh token.
+// Trang demo xác thực và tài khoản — CHỈ DÙNG KHI DEV, thay frontend để thử toàn bộ luồng qua api-gateway:
+// đăng ký, liên kết kích hoạt / đặt lại mật khẩu / xác nhận đổi email trong email, đăng nhập (mật khẩu, Google),
+// cookie refresh token, đổi email, hồ sơ cá nhân, ảnh đại diện, đổi mật khẩu, thiết bị đăng nhập, quản trị tài khoản.
 //
 // Chạy (cần gateway + identity-service đang chạy):  node scripts/demo-xac-thuc/server.js
 // rồi mở http://localhost:5173 bằng Chrome/Edge/Firefox (Safari không gửi cookie Secure qua http://localhost).
@@ -13,7 +14,7 @@ const path = require('path');
 
 const CONG = Number(process.env.PORT || 5173);
 const API_URL = process.env.API_URL || 'http://localhost:8080';
-const CAC_TRANG = new Set(['/', '/verify-email', '/reset-password']);
+const CAC_TRANG = new Set(['/', '/verify-email', '/reset-password', '/confirm-email-change']);
 
 function layGoogleClientId() {
     if (process.env.GOOGLE_CLIENT_ID) {
@@ -45,7 +46,7 @@ http.createServer((req, res) => {
     }
     res.writeHead(200, {
         'Content-Type': 'text/html; charset=utf-8',
-        // Token đặt lại mật khẩu nằm trên URL: không gửi qua header Referer, không cache trang
+        // Token (đặt lại mật khẩu, đổi email...) nằm trên URL: không gửi qua header Referer, không cache trang
         'Referrer-Policy': 'no-referrer',
         'Cache-Control': 'no-store',
     });

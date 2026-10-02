@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.context.event.ApplicationEvents;
 import org.springframework.test.context.event.RecordApplicationEvents;
 
@@ -20,9 +21,11 @@ import iuh.fit.se.eclinic.common.enums.TrangThaiTaiKhoan;
 import iuh.fit.se.eclinic.common.enums.VaiTro;
 import iuh.fit.se.eclinic.common.exception.LoiNghiepVu;
 import iuh.fit.se.eclinic.common.exception.MaLoi;
+import iuh.fit.se.eclinic.common.security.JwtConfig;
 import iuh.fit.se.eclinic.common.testsupport.MySqlTestcontainersConfiguration;
 import iuh.fit.se.eclinic.common.testsupport.RedisTestcontainersConfiguration;
 import iuh.fit.se.eclinic.identity.dto.request.DangNhapRequest;
+import iuh.fit.se.eclinic.identity.dto.request.DoiMatKhauRequest;
 import iuh.fit.se.eclinic.identity.dto.response.DangNhapResponse;
 import iuh.fit.se.eclinic.identity.enums.MucDichLienKet;
 import iuh.fit.se.eclinic.identity.event.EmailDatLaiMatKhauEvent;
@@ -33,8 +36,8 @@ import iuh.fit.se.eclinic.identity.service.MatKhauService;
 import iuh.fit.se.eclinic.identity.service.TokenLienKetService;
 
 /**
- * Quên / đặt lại mật khẩu với MySQL + Redis thật. Không gửi email: token lấy từ event đã phát
- * (EmailService thật chạy ở chế độ console và chỉ ghi log).
+ * Quên / đặt lại mật khẩu và đổi mật khẩu khi đang đăng nhập, với MySQL + Redis thật. Không gửi email: token lấy từ
+ * event đã phát (EmailService thật chạy ở chế độ console và chỉ ghi log).
  */
 @SpringBootTest
 @Import({ MySqlTestcontainersConfiguration.class, RedisTestcontainersConfiguration.class })
@@ -49,6 +52,7 @@ class MatKhauServiceTest {
     @Autowired TokenLienKetService tokenLienKetService;
     @Autowired TaiKhoanRepository taiKhoanRepository;
     @Autowired PasswordEncoder passwordEncoder;
+    @Autowired JwtDecoder jwtDecoder;
     @Autowired ApplicationEvents applicationEvents;
 
     @Test
@@ -164,11 +168,124 @@ class MatKhauServiceTest {
         assertThat(taiKhoanRepository.findById(taiKhoan.getId()).orElseThrow().getGoogleId()).isEqualTo(googleId);
     }
 
+    @Test
+    void doiMatKhauGiuPhienHienTaiDangXuatPhienKhacVaGuiThongBao() {
+        TaiKhoan taiKhoan = taoTaiKhoan(TrangThaiTaiKhoan.DA_KICH_HOAT);
+        DangNhapResponse mayA = dangNhap(taiKhoan.getEmail(), MAT_KHAU_CU);
+        DangNhapResponse mayB = dangNhap(taiKhoan.getEmail(), MAT_KHAU_CU);
+
+        matKhauService.doiMatKhau(taiKhoan.getId(), maPhien(mayA), new DoiMatKhauRequest(MAT_KHAU_CU, MAT_KHAU_MOI));
+
+        assertThat(dangNhapService.lamMoi(mayA.refreshToken()).accessToken()).isNotBlank();
+        assertMaLoi(() -> dangNhapService.lamMoi(mayB.refreshToken()), MaLoi.PHIEN_DANG_NHAP_KHONG_HOP_LE);
+        assertMaLoi(() -> dangNhap(taiKhoan.getEmail(), MAT_KHAU_CU), MaLoi.SAI_THONG_TIN_DANG_NHAP);
+        assertThat(dangNhap(taiKhoan.getEmail(), MAT_KHAU_MOI).accessToken()).isNotBlank();
+        assertThat(applicationEvents.stream(EmailDoiMatKhauEvent.class).toList())
+                .containsExactly(new EmailDoiMatKhauEvent(taiKhoan.getEmail(), taiKhoan.getHoTen()));
+    }
+
+    @Test
+    void doiMatKhauKhongCoPhienHienTaiThiDangXuatTatCa() {
+        // Access token không có claim "phien" (maPhienHienTai = null): không biết giữ phiên nào nên thu hồi hết
+        TaiKhoan taiKhoan = taoTaiKhoan(TrangThaiTaiKhoan.DA_KICH_HOAT);
+        DangNhapResponse mayA = dangNhap(taiKhoan.getEmail(), MAT_KHAU_CU);
+        DangNhapResponse mayB = dangNhap(taiKhoan.getEmail(), MAT_KHAU_CU);
+
+        matKhauService.doiMatKhau(taiKhoan.getId(), null, new DoiMatKhauRequest(MAT_KHAU_CU, MAT_KHAU_MOI));
+
+        assertMaLoi(() -> dangNhapService.lamMoi(mayA.refreshToken()), MaLoi.PHIEN_DANG_NHAP_KHONG_HOP_LE);
+        assertMaLoi(() -> dangNhapService.lamMoi(mayB.refreshToken()), MaLoi.PHIEN_DANG_NHAP_KHONG_HOP_LE);
+        assertThat(dangNhap(taiKhoan.getEmail(), MAT_KHAU_MOI).accessToken()).isNotBlank();
+    }
+
+    @Test
+    void saiMatKhauCu5LanThiKhoaDoiMatKhauNhungVanDangNhapDuoc() {
+        TaiKhoan taiKhoan = taoTaiKhoan(TrangThaiTaiKhoan.DA_KICH_HOAT);
+        for (int i = 0; i < 5; i++) {
+            assertMaLoi(() -> doiMatKhau(taiKhoan, "sai-mat-khau", MAT_KHAU_MOI), MaLoi.MAT_KHAU_CU_KHONG_DUNG);
+        }
+
+        // Đã khoá: mật khẩu hiện tại đúng cũng bị từ chối, mật khẩu không đổi
+        assertMaLoi(() -> doiMatKhau(taiKhoan, MAT_KHAU_CU, MAT_KHAU_MOI), MaLoi.SAI_MAT_KHAU_QUA_NHIEU);
+        // Bộ đếm tách khỏi đăng nhập: chủ tài khoản vẫn đăng nhập được bằng mật khẩu cũ
+        assertThat(dangNhap(taiKhoan.getEmail(), MAT_KHAU_CU).accessToken()).isNotBlank();
+        assertThat(applicationEvents.stream(EmailDoiMatKhauEvent.class).toList()).isEmpty();
+    }
+
+    @Test
+    void doiMatKhauThanhCongXoaBoDemSai() {
+        TaiKhoan taiKhoan = taoTaiKhoan(TrangThaiTaiKhoan.DA_KICH_HOAT);
+        for (int i = 0; i < 4; i++) {
+            assertMaLoi(() -> doiMatKhau(taiKhoan, "sai-mat-khau", MAT_KHAU_MOI), MaLoi.MAT_KHAU_CU_KHONG_DUNG);
+        }
+        doiMatKhau(taiKhoan, MAT_KHAU_CU, MAT_KHAU_MOI);
+
+        // Nếu bộ đếm còn 4 thì lần sai này là lần thứ 5 và lần đổi sau đó bị 429
+        assertMaLoi(() -> doiMatKhau(taiKhoan, "sai-mat-khau", "matkhau-khac"), MaLoi.MAT_KHAU_CU_KHONG_DUNG);
+        doiMatKhau(taiKhoan, MAT_KHAU_MOI, "matkhau-khac");
+        assertThat(dangNhap(taiKhoan.getEmail(), "matkhau-khac").accessToken()).isNotBlank();
+    }
+
+    @Test
+    void matKhauCuDungThemKyTuSauByte72Bao400() {
+        // BCrypt chỉ đọc 72 byte đầu: không chặn thì "mật khẩu + x" cũng được coi là đúng
+        String matKhau72Byte = "a".repeat(72);
+        TaiKhoan taiKhoan = taoTaiKhoan(TrangThaiTaiKhoan.DA_KICH_HOAT, matKhau72Byte);
+
+        assertMaLoi(() -> doiMatKhau(taiKhoan, matKhau72Byte + "x", MAT_KHAU_MOI), MaLoi.MAT_KHAU_CU_KHONG_DUNG);
+        assertThat(dangNhap(taiKhoan.getEmail(), matKhau72Byte).accessToken()).isNotBlank();
+    }
+
+    @Test
+    void matKhauMoiTrungMatKhauCuBao400() {
+        TaiKhoan taiKhoan = taoTaiKhoan(TrangThaiTaiKhoan.DA_KICH_HOAT);
+        String refreshToken = dangNhap(taiKhoan.getEmail(), MAT_KHAU_CU).refreshToken();
+
+        assertMaLoi(() -> doiMatKhau(taiKhoan, MAT_KHAU_CU, MAT_KHAU_CU), MaLoi.MAT_KHAU_MOI_TRUNG_MAT_KHAU_CU);
+        // Không đổi gì: phiên vẫn còn
+        assertThat(dangNhapService.lamMoi(refreshToken).accessToken()).isNotBlank();
+    }
+
+    @Test
+    void doiMatKhauTaiKhoanChiCoGoogleBao409() {
+        TaiKhoan taiKhoan = taoTaiKhoan(TrangThaiTaiKhoan.DA_KICH_HOAT);
+        taiKhoan.setMatKhauHash(null);
+        taiKhoan.setGoogleId("google-" + UUID.randomUUID());
+        taiKhoanRepository.save(taiKhoan);
+
+        assertMaLoi(() -> doiMatKhau(taiKhoan, MAT_KHAU_CU, MAT_KHAU_MOI), MaLoi.TAI_KHOAN_CHUA_CO_MAT_KHAU);
+        assertThat(taiKhoanRepository.findById(taiKhoan.getId()).orElseThrow().getMatKhauHash()).isNull();
+    }
+
+    @Test
+    void doiMatKhauTaiKhoanBiVoHieuHoaBao403TaiKhoanKhongConBao401() {
+        TaiKhoan taiKhoan = taoTaiKhoan(TrangThaiTaiKhoan.VO_HIEU_HOA);
+
+        assertMaLoi(() -> doiMatKhau(taiKhoan, MAT_KHAU_CU, MAT_KHAU_MOI), MaLoi.TAI_KHOAN_BI_VO_HIEU_HOA);
+        assertThat(passwordEncoder.matches(MAT_KHAU_CU,
+                taiKhoanRepository.findById(taiKhoan.getId()).orElseThrow().getMatKhauHash())).isTrue();
+        assertMaLoi(() -> matKhauService.doiMatKhau(Long.MAX_VALUE, null,
+                new DoiMatKhauRequest(MAT_KHAU_CU, MAT_KHAU_MOI)), MaLoi.CHUA_DANG_NHAP);
+    }
+
+    private void doiMatKhau(TaiKhoan taiKhoan, String matKhauCu, String matKhauMoi) {
+        matKhauService.doiMatKhau(taiKhoan.getId(), null, new DoiMatKhauRequest(matKhauCu, matKhauMoi));
+    }
+
+    /** Mã phiên trong access token (claim "phien"). */
+    private String maPhien(DangNhapResponse ketQua) {
+        return jwtDecoder.decode(ketQua.accessToken()).getClaimAsString(JwtConfig.CLAIM_PHIEN);
+    }
+
     private TaiKhoan taoTaiKhoan(TrangThaiTaiKhoan trangThai) {
+        return taoTaiKhoan(trangThai, MAT_KHAU_CU);
+    }
+
+    private TaiKhoan taoTaiKhoan(TrangThaiTaiKhoan trangThai, String matKhau) {
         TaiKhoan taiKhoan = new TaiKhoan();
         taiKhoan.setHoTen("Bệnh nhân test");
         taiKhoan.setEmail(emailMoi());
-        taiKhoan.setMatKhauHash(passwordEncoder.encode(MAT_KHAU_CU));
+        taiKhoan.setMatKhauHash(passwordEncoder.encode(matKhau));
         taiKhoan.setVaiTro(VaiTro.BENH_NHAN);
         taiKhoan.setTrangThai(trangThai);
         return taiKhoanRepository.save(taiKhoan);

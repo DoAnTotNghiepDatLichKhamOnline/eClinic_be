@@ -18,7 +18,8 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * Lỗi phát sinh tại gateway (không phải lỗi do service trả về — lỗi đó được chuyển nguyên cho frontend):
- * service chưa chạy -> 503, service trả lời quá lâu -> 504, đường dẫn không thuộc route nào -> 404.
+ * service chưa chạy -> 503, service trả lời quá lâu -> 504, đường dẫn không thuộc route nào -> 404,
+ * body request quá lớn -> 413.
  * <p>
  * Cố ý KHÔNG có @ExceptionHandler(Exception.class): lỗi khác rơi về trang lỗi 500 mặc định của Spring Boot
  * để lỗi lập trình thật vẫn lộ ra.
@@ -47,6 +48,14 @@ public class XuLyLoiGatewayHandler {
         log.warn("Gateway không chuyển tiếp được {} {} -> {}: {}", request.getMethod(), request.getRequestURI(),
                 trangThai.value(), loi.getCause() != null ? loi.getCause().toString() : loi.toString());
         return ResponseEntity.status(trangThai).body(body);
+    }
+
+    /** Body request vượt giới hạn của gateway (GioiHanKichThuocFilter gọi tới đây, request chưa được chuyển tiếp). */
+    @ExceptionHandler(YeuCauQuaLonException.class)
+    ResponseEntity<PhanHoiLoiGateway> xuLyYeuCauQuaLon(YeuCauQuaLonException loi) {
+        return ResponseEntity.status(HttpStatus.CONTENT_TOO_LARGE)
+                .body(PhanHoiLoiGateway.loi("YEU_CAU_QUA_LON", "Dữ liệu gửi lên vượt quá dung lượng cho phép (tối đa "
+                        + loi.getKichThuocToiDa().toMegabytes() + " MB)"));
     }
 
     /** Đường dẫn không khớp route nào. */

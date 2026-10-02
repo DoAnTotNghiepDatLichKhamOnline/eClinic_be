@@ -21,6 +21,7 @@ import iuh.fit.se.eclinic.identity.repository.TaiKhoanRepository;
 import iuh.fit.se.eclinic.identity.service.DangNhapService;
 import iuh.fit.se.eclinic.identity.service.GioiHanDangNhapService;
 import iuh.fit.se.eclinic.identity.service.RefreshTokenService;
+import iuh.fit.se.eclinic.identity.service.RefreshTokenService.PhienMoi;
 import iuh.fit.se.eclinic.identity.util.ChuanHoa;
 import iuh.fit.se.eclinic.identity.util.TokenNgauNhien;
 import lombok.extern.slf4j.Slf4j;
@@ -105,7 +106,7 @@ public class DangNhapServiceImpl implements DangNhapService {
 
     /**
      * Không rollback khi ném LoiNghiepVu: mọi thao tác ghi trước khi ném lỗi đều là thu hồi phiên và phải được giữ
-     * (thu hồi toàn bộ khi token cũ bị dùng lại, thu hồi phiên của tài khoản bị vô hiệu hoá).
+     * (thu hồi phiên khi token cũ của nó bị dùng lại, thu hồi phiên của tài khoản bị vô hiệu hoá).
      * Chỉ đúng khi LoiNghiepVu được ném ở thân method này: nếu method @Transactional bên trong (RefreshTokenService)
      * tự ném thì transaction chung bị đánh dấu rollback.
      */
@@ -118,6 +119,8 @@ public class DangNhapServiceImpl implements DangNhapService {
         Long idPhien = phien.getId();
         Long idTaiKhoan = phien.getTaiKhoan().getId();
         String thongTinThietBi = phien.getThongTinThietBi();
+        String maPhien = phien.getMaPhien();
+        LocalDateTime ngayDangNhap = phien.getNgayDangNhap();
         LocalDateTime bayGio = LocalDateTime.now();
 
         // Hết hạn thì chỉ từ chối, kể cả khi đã thu hồi: token cũ hàng tuần không phải dấu hiệu bị lộ
@@ -125,12 +128,17 @@ public class DangNhapServiceImpl implements DangNhapService {
             throw new LoiNghiepVu(MaLoi.PHIEN_DANG_NHAP_KHONG_HOP_LE);
         }
         if (phien.getNgayThuHoi() != null) {
-            // Quá thời gian ân hạn: token đã xoay vòng bị dùng lại -> có thể đã bị lộ, đăng xuất mọi thiết bị.
+            // Quá thời gian ân hạn: token đã xoay vòng bị dùng lại -> có thể đã bị lộ, đăng xuất phiên của token đó
+            // (chỉ phiên đó: thiết bị bị đăng xuất từ xa quay lại với cookie cũ không được làm văng thiết bị khác).
             // Trong ân hạn: thường là 2 tab làm mới cùng lúc, chỉ từ chối.
             if (phien.getNgayThuHoi().plus(dangNhapProperties.anHanDungLai()).isBefore(bayGio)) {
-                int soPhien = refreshTokenService.thuHoiTatCaCuaTaiKhoan(idTaiKhoan);
-                log.warn("Refresh token đã thu hồi bị dùng lại: thu hồi {} phiên của tài khoản id={}", soPhien,
-                        idTaiKhoan);
+                if (refreshTokenService.thuHoiPhien(idTaiKhoan, maPhien)) {
+                    log.warn("Refresh token đã thu hồi bị dùng lại: đăng xuất phiên {} của tài khoản id={}", maPhien,
+                            idTaiKhoan);
+                } else {
+                    // Phiên đã đăng xuất (tự đăng xuất, bị đăng xuất từ xa, đổi mật khẩu): không còn gì để thu hồi
+                    log.info("Refresh token của phiên đã đăng xuất bị dùng lại, tài khoản id={}", idTaiKhoan);
+                }
             }
             throw new LoiNghiepVu(MaLoi.PHIEN_DANG_NHAP_KHONG_HOP_LE);
         }
@@ -149,7 +157,10 @@ public class DangNhapServiceImpl implements DangNhapService {
             }
         }
         log.info("Làm mới phiên id={} của tài khoản id={}", idPhien, idTaiKhoan);
-        return capPhien(taiKhoan, thongTinThietBi);
+        // Cùng 1 phiên: giữ mã phiên và thời điểm đăng nhập, chỉ đổi token
+        String refreshTokenMoi = refreshTokenService.taoTiepTheo(taiKhoan, maPhien, ngayDangNhap, thongTinThietBi,
+                dangNhapProperties.thoiHanRefreshToken());
+        return taoKetQua(taiKhoan, maPhien, refreshTokenMoi);
     }
 
     @Override
@@ -171,9 +182,14 @@ public class DangNhapServiceImpl implements DangNhapService {
     @Override
     @Transactional
     public DangNhapResponse capPhien(TaiKhoan taiKhoan, String thongTinThietBi) {
-        String accessToken = jwtService.taoAccessToken(taiKhoan.getId(), taiKhoan.getEmail(), taiKhoan.getVaiTro());
-        String refreshToken = refreshTokenService.tao(taiKhoan, thongTinThietBi,
-                dangNhapProperties.thoiHanRefreshToken());
+        PhienMoi phien = refreshTokenService.tao(taiKhoan, thongTinThietBi, dangNhapProperties.thoiHanRefreshToken());
+        return taoKetQua(taiKhoan, phien.maPhien(), phien.refreshToken());
+    }
+
+    /** Access token mang mã phiên (claim "phien") để các API /api/users/me biết request đến từ phiên nào. */
+    private DangNhapResponse taoKetQua(TaiKhoan taiKhoan, String maPhien, String refreshToken) {
+        String accessToken = jwtService.taoAccessToken(taiKhoan.getId(), taiKhoan.getEmail(), taiKhoan.getVaiTro(),
+                maPhien);
         return new DangNhapResponse(accessToken, refreshToken, LOAI_TOKEN,
                 baoMatProperties.thoiHanAccessToken().toSeconds(), taiKhoanMapper.toResponse(taiKhoan));
     }

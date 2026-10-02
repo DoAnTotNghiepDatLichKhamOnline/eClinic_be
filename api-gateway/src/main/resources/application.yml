@@ -12,13 +12,14 @@ spring:
           # Mỗi service 1 route: request /api/<service>/** được chuyển tới service đó, GIỮ NGUYÊN đường dẫn
           # (controller của service tự map đầy đủ /api/<service>/..., vd /api/catalog/chuyen-khoa).
           # Thêm service mới = copy 1 route bên dưới, đổi id, Path và biến *_URL.
-          # Ngoại lệ: API xác thực theo tài liệu API là /api/auth/** (không có tên service) nên cũng về identity-service.
+          # Ngoại lệ: API xác thực và API tài khoản theo tài liệu API là /api/auth/**, /api/users/** (không có tên service)
+          # nên cũng về identity-service.
           # Biến *_URL mặc định trỏ localhost (chạy bằng IntelliJ); docker-compose đặt http://<ten-service>:<cong>.
           routes:
             - id: identity-service
               uri: ${IDENTITY_URL:http://localhost:8081}
               predicates:
-                - Path=/api/identity/**,/api/auth/**
+                - Path=/api/identity/**,/api/auth/**,/api/users/**
             - id: catalog-service
               uri: ${CATALOG_URL:http://localhost:8082}
               predicates:
@@ -58,6 +59,13 @@ management:
         include: health,info
 
 app:
+  gioi-han:
+    # Body request tối đa (theo Content-Length); vượt -> gateway trả 413 YEU_CAU_QUA_LON, không chuyển tiếp
+    # (body tới 4 lần giới hạn được đọc bỏ trước khi trả lời để client chắc chắn nhận được thông báo, xem GioiHanKichThuocFilter).
+    # Gateway KHÔNG đọc multipart (Spring Cloud Gateway MVC tắt spring.servlet.multipart ở gateway) mà chuyển nguyên
+    # body cho service, nên đây là giới hạn duy nhất tại gateway. Phải NHỎ HƠN server.tomcat.max-swallow-size của
+    # các service nhận upload (identity-service: 10MB); giới hạn nghiệp vụ nhỏ hơn do từng service tự đặt (ảnh 2MB).
+    kich-thuoc-request-toi-da: ${GATEWAY_MAX_REQUEST_SIZE:5MB}
   cors:
     # Các địa chỉ frontend được gọi API (phân cách bằng dấu phẩy).
     # CORS CHỈ cấu hình ở gateway, không cấu hình trong các service (tránh trùng header).

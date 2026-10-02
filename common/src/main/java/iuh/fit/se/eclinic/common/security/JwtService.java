@@ -22,18 +22,27 @@ public class JwtService {
     private final JwtEncoder jwtEncoder;
     private final BaoMatProperties baoMatProperties;
 
+    /** Token không gắn với phiên đăng nhập nào (không có claim "phien"). */
     public String taoAccessToken(Long idTaiKhoan, String email, VaiTro vaiTro) {
+        return taoAccessToken(idTaiKhoan, email, vaiTro, null);
+    }
+
+    /** @param maPhien mã phiên đăng nhập, đưa vào claim "phien"; null thì token không có claim này */
+    public String taoAccessToken(Long idTaiKhoan, String email, VaiTro vaiTro, String maPhien) {
         Instant bayGio = Instant.now();
-        JwtClaimsSet claims = JwtClaimsSet.builder()
+        JwtClaimsSet.Builder claims = JwtClaimsSet.builder()
                 .issuer(JwtConfig.NHA_PHAT_HANH)
                 .subject(String.valueOf(idTaiKhoan))
                 .issuedAt(bayGio)
                 .expiresAt(bayGio.plus(baoMatProperties.thoiHanAccessToken()))
                 .claim(JwtConfig.CLAIM_EMAIL, email)
-                .claim(JwtConfig.CLAIM_VAI_TRO, vaiTro.name())
-                .build();
+                .claim(JwtConfig.CLAIM_VAI_TRO, vaiTro.name());
+        // claim() không nhận giá trị null
+        if (maPhien != null) {
+            claims.claim(JwtConfig.CLAIM_PHIEN, maPhien);
+        }
         JwsHeader header = JwsHeader.with(MacAlgorithm.HS256).build();
-        return jwtEncoder.encode(JwtEncoderParameters.from(header, claims)).getTokenValue();
+        return jwtEncoder.encode(JwtEncoderParameters.from(header, claims.build())).getTokenValue();
     }
 
 }

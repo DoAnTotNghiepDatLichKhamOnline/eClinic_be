@@ -30,6 +30,8 @@ public class JwtConfig {
     public static final String NHA_PHAT_HANH = "eclinic";
     public static final String CLAIM_EMAIL = "email";
     public static final String CLAIM_VAI_TRO = "vaiTro";
+    /** Mã phiên đăng nhập (refresh_token.ma_phien). Chỉ identity-service dùng; token không có claim này vẫn hợp lệ. */
+    public static final String CLAIM_PHIEN = "phien";
 
     private static final int DO_DAI_KHOA_TOI_THIEU = 32;
 

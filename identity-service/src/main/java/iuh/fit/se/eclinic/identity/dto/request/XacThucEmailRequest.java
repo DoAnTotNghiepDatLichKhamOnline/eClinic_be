@@ -4,7 +4,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 /**
- * Token lấy từ liên kết kích hoạt trong email (frontend đọc trên URL rồi gửi lên).
+ * Token lấy từ liên kết trong email (frontend đọc trên URL rồi gửi lên): liên kết kích hoạt tài khoản, liên kết xác nhận
+ * đổi email.
  */
 public record XacThucEmailRequest(
 

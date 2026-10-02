@@ -126,6 +126,47 @@ class DangNhapGoogleServiceTest {
     }
 
     @Test
+    void lienKetTaiKhoanChuaCoAnhThiLayAnhGoogleCoAnhRoiThiGiuNguyen() {
+        String anhGoogle = "https://lh3.googleusercontent.com/a/anh-google";
+        String anhRieng = "https://res.cloudinary.com/demo/image/upload/v1/eclinic/avatar/1.jpg";
+        TaiKhoan chuaCoAnh = taoTaiKhoan(gmailMoi(), VaiTro.BENH_NHAN, TrangThaiTaiKhoan.DA_KICH_HOAT);
+        TaiKhoan coAnh = taoTaiKhoan(gmailMoi(), VaiTro.BENH_NHAN, TrangThaiTaiKhoan.DA_KICH_HOAT);
+        coAnh.setAnhDaiDien(anhRieng);
+        taiKhoanRepository.save(coAnh);
+
+        dangNhapGoogle(new ThongTinGoogle(subMoi(), chuaCoAnh.getEmail(), null, "Tên Google", anhGoogle));
+        dangNhapGoogle(new ThongTinGoogle(subMoi(), coAnh.getEmail(), null, "Tên Google", anhGoogle));
+
+        TaiKhoan chuaCoAnhMoiNhat = taiKhoanRepository.findById(chuaCoAnh.getId()).orElseThrow();
+        assertThat(chuaCoAnhMoiNhat.getAnhDaiDien()).isEqualTo(anhGoogle);
+        assertThat(chuaCoAnhMoiNhat.getHoTen()).isEqualTo("Bệnh nhân test");
+        assertThat(taiKhoanRepository.findById(coAnh.getId()).orElseThrow().getAnhDaiDien()).isEqualTo(anhRieng);
+    }
+
+    @Test
+    void dangNhapGoogleLanSauKhongDatLaiAnhDaBoVaKhongGhiDeAnhDaDoi() {
+        String sub = subMoi();
+        String email = gmailMoi();
+        Long id = dangNhapGoogle(new ThongTinGoogle(sub, email, null, "Tên Google",
+                "https://lh3.googleusercontent.com/a/anh-1")).taiKhoan().id();
+
+        // Người dùng bỏ ảnh (DELETE /api/users/me/avatar) rồi đăng nhập Google lại
+        TaiKhoan taiKhoan = taiKhoanRepository.findById(id).orElseThrow();
+        taiKhoan.setAnhDaiDien(null);
+        taiKhoanRepository.save(taiKhoan);
+        dangNhapGoogle(new ThongTinGoogle(sub, email, null, "Tên Google", "https://lh3.googleusercontent.com/a/anh-2"));
+        assertThat(taiKhoanRepository.findById(id).orElseThrow().getAnhDaiDien()).isNull();
+
+        // Người dùng tải ảnh riêng lên rồi đăng nhập Google lại
+        String anhRieng = "https://res.cloudinary.com/demo/image/upload/v1/eclinic/avatar/" + id + ".jpg";
+        taiKhoan = taiKhoanRepository.findById(id).orElseThrow();
+        taiKhoan.setAnhDaiDien(anhRieng);
+        taiKhoanRepository.save(taiKhoan);
+        dangNhapGoogle(new ThongTinGoogle(sub, email, null, "Tên Google", "https://lh3.googleusercontent.com/a/anh-3"));
+        assertThat(taiKhoanRepository.findById(id).orElseThrow().getAnhDaiDien()).isEqualTo(anhRieng);
+    }
+
+    @Test
     void taiKhoanChoXacNhanBiChiemTruocThiGoogleNhanLaiVaBoMatKhauSoDienThoaiLienKet() {
         String email = gmailMoi();
         String soDienThoai = "09" + String.format("%08d", ThreadLocalRandom.current().nextInt(100_000_000));

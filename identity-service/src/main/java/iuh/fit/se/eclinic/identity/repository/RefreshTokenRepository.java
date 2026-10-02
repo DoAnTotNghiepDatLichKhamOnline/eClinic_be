@@ -33,6 +33,18 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long
     @Query("update RefreshToken t set t.ngayThuHoi = :now where t.taiKhoan.id = :taiKhoanId and t.ngayThuHoi is null")
     int revokeAllByTaiKhoanId(Long taiKhoanId, LocalDateTime now);
 
+    /** Thu hồi dòng còn hiệu lực (chưa thu hồi, chưa hết hạn) của 1 phiên; lọc theo tài khoản để không chạm phiên của người khác. */
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("update RefreshToken t set t.ngayThuHoi = :now where t.taiKhoan.id = :taiKhoanId and t.maPhien = :maPhien"
+            + " and t.ngayThuHoi is null and t.ngayHetHan > :now")
+    int revokeByTaiKhoanIdAndMaPhien(Long taiKhoanId, String maPhien, LocalDateTime now);
+
+    /** Thu hồi mọi phiên của tài khoản trừ phiên {@code maPhien}. */
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("update RefreshToken t set t.ngayThuHoi = :now where t.taiKhoan.id = :taiKhoanId and t.maPhien <> :maPhien"
+            + " and t.ngayThuHoi is null")
+    int revokeAllByTaiKhoanIdExcept(Long taiKhoanId, String maPhien, LocalDateTime now);
+
     @Modifying(clearAutomatically = true)
     @Query("delete from RefreshToken t where t.ngayHetHan < :before")
     int deleteExpiredBefore(LocalDateTime before);

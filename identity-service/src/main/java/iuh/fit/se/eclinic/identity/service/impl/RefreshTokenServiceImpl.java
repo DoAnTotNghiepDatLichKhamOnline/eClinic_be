@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,13 +34,29 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
 
     @Override
     @Transactional
-    public String tao(TaiKhoan taiKhoan, String thongTinThietBi, Duration thoiHan) {
+    public PhienMoi tao(TaiKhoan taiKhoan, String thongTinThietBi, Duration thoiHan) {
+        String maPhien = UUID.randomUUID().toString();
+        LocalDateTime bayGio = LocalDateTime.now();
+        return new PhienMoi(luu(taiKhoan, maPhien, bayGio, thongTinThietBi, bayGio.plus(thoiHan)), maPhien);
+    }
+
+    @Override
+    @Transactional
+    public String taoTiepTheo(TaiKhoan taiKhoan, String maPhien, LocalDateTime ngayDangNhap, String thongTinThietBi,
+            Duration thoiHan) {
+        return luu(taiKhoan, maPhien, ngayDangNhap, thongTinThietBi, LocalDateTime.now().plus(thoiHan));
+    }
+
+    private String luu(TaiKhoan taiKhoan, String maPhien, LocalDateTime ngayDangNhap, String thongTinThietBi,
+            LocalDateTime ngayHetHan) {
         String token = TokenNgauNhien.tao();
         RefreshToken refreshToken = new RefreshToken();
         refreshToken.setTaiKhoan(taiKhoan);
+        refreshToken.setMaPhien(maPhien);
+        refreshToken.setNgayDangNhap(ngayDangNhap);
         refreshToken.setTokenHash(bamToken(token));
         refreshToken.setThongTinThietBi(catNgan(thongTinThietBi));
-        refreshToken.setNgayHetHan(LocalDateTime.now().plus(thoiHan));
+        refreshToken.setNgayHetHan(ngayHetHan);
         refreshTokenRepository.save(refreshToken);
         return token;
     }
@@ -82,6 +99,21 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     @Transactional
     public int thuHoiTatCaCuaTaiKhoan(Long taiKhoanId) {
         return refreshTokenRepository.revokeAllByTaiKhoanId(taiKhoanId, LocalDateTime.now());
+    }
+
+    @Override
+    @Transactional
+    public boolean thuHoiPhien(Long taiKhoanId, String maPhien) {
+        return refreshTokenRepository.revokeByTaiKhoanIdAndMaPhien(taiKhoanId, maPhien, LocalDateTime.now()) > 0;
+    }
+
+    @Override
+    @Transactional
+    public int thuHoiCacPhienKhac(Long taiKhoanId, String maPhienGiuLai) {
+        if (maPhienGiuLai == null) {
+            return thuHoiTatCaCuaTaiKhoan(taiKhoanId);
+        }
+        return refreshTokenRepository.revokeAllByTaiKhoanIdExcept(taiKhoanId, maPhienGiuLai, LocalDateTime.now());
     }
 
     @Override

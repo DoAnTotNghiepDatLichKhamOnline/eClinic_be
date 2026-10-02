@@ -10,13 +10,15 @@ import org.springframework.boot.context.properties.bind.DefaultValue;
  * @param frontendUrl     địa chỉ frontend, liên kết trong email trỏ về đây
  * @param duongDanXacThuc trang của frontend nhận token xác thực email
  * @param duongDanDatLai  trang của frontend nhận token đặt lại mật khẩu
+ * @param duongDanDoiEmail trang của frontend nhận token xác nhận đổi email
  */
 @ConfigurationProperties("app.email")
 public record EmailProperties(
         @DefaultValue("CONSOLE") CheDoEmail cheDo,
         @DefaultValue("http://localhost:5173") String frontendUrl,
         @DefaultValue("/verify-email") String duongDanXacThuc,
-        @DefaultValue("/reset-password") String duongDanDatLai) {
+        @DefaultValue("/reset-password") String duongDanDatLai,
+        @DefaultValue("/confirm-email-change") String duongDanDoiEmail) {
 
     public enum CheDoEmail {
         CONSOLE,

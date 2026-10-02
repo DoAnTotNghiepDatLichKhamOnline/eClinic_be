@@ -2,6 +2,7 @@ package iuh.fit.se.eclinic.identity.config;
 
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,10 +21,11 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * Khi khởi động, nếu DB chưa có tài khoản QUAN_TRI_VIEN nào thì tạo 1 admin toàn quyền từ
  * {@link AdminMacDinhProperties}. Cần có admin vì tài khoản bác sĩ chỉ do admin cấp (AUTH-04).
- * Chạy lại nhiều lần không tạo thêm.
+ * Chạy lại nhiều lần không tạo thêm. Chạy trước KhoiTaoDuLieuMauRunner (ca làm việc mẫu cần có admin).
  */
 @Slf4j
 @Component
+@Order(1)
 @RequiredArgsConstructor
 public class KhoiTaoAdminRunner implements ApplicationRunner {
 

@@ -15,14 +15,14 @@ public class GioiHanDangNhapServiceImpl implements GioiHanDangNhapService {
     private final DangNhapProperties dangNhapProperties;
 
     @Override
-    public boolean dangBiKhoa(String email) {
-        String soLan = redisTemplate.opsForValue().get(khoa(email));
+    public boolean dangBiKhoa(String dinhDanh) {
+        String soLan = redisTemplate.opsForValue().get(khoa(dinhDanh));
         return soLan != null && Long.parseLong(soLan) >= dangNhapProperties.soLanSaiToiDa();
     }
 
     @Override
-    public long ghiNhanThatBai(String email) {
-        String khoa = khoa(email);
+    public long ghiNhanThatBai(String dinhDanh) {
+        String khoa = khoa(dinhDanh);
         Long soLan = redisTemplate.opsForValue().increment(khoa);
         long ketQua = soLan == null ? 0 : soLan;
         // Lần sai đầu: mở cửa sổ đếm. Từ lần sai thứ N: khoá tính lại từ lúc này (dùng >= vì 2 request đồng thời
@@ -34,8 +34,8 @@ public class GioiHanDangNhapServiceImpl implements GioiHanDangNhapService {
     }
 
     @Override
-    public void xoa(String email) {
-        redisTemplate.delete(khoa(email));
+    public void xoa(String dinhDanh) {
+        redisTemplate.delete(khoa(dinhDanh));
     }
 
     private boolean conThieuTtl(String khoa) {
@@ -43,8 +43,8 @@ public class GioiHanDangNhapServiceImpl implements GioiHanDangNhapService {
         return ttl != null && ttl < 0;
     }
 
-    private static String khoa(String email) {
-        return "dang-nhap:sai:" + email;
+    private static String khoa(String dinhDanh) {
+        return "dang-nhap:sai:" + dinhDanh;
     }
 
 }

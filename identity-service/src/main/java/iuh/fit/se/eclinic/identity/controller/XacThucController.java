@@ -30,6 +30,7 @@ import iuh.fit.se.eclinic.identity.dto.response.DangNhapResponse;
 import iuh.fit.se.eclinic.identity.dto.response.TaiKhoanResponse;
 import iuh.fit.se.eclinic.identity.service.DangNhapGoogleService;
 import iuh.fit.se.eclinic.identity.service.DangNhapService;
+import iuh.fit.se.eclinic.identity.service.DoiEmailService;
 import iuh.fit.se.eclinic.identity.service.MatKhauService;
 import iuh.fit.se.eclinic.identity.service.XacThucService;
 import jakarta.validation.Valid;
@@ -37,7 +38,8 @@ import lombok.RequiredArgsConstructor;
 
 /**
  * AUTH-01: đăng ký và kích hoạt tài khoản qua liên kết email. AUTH-02: đăng nhập, làm mới phiên, đăng xuất.
- * AUTH-03: quên / đặt lại mật khẩu qua liên kết email. Đăng nhập bằng Google (chỉ bệnh nhân).
+ * AUTH-03: quên / đặt lại mật khẩu qua liên kết email. Đăng nhập bằng Google (chỉ bệnh nhân). Xác nhận đổi email
+ * (yêu cầu đổi nằm ở DoiEmailController).
  * Mọi đường dẫn ở đây đều công khai (app.bao-mat.duong-dan-cong-khai); đăng xuất chỉ cần refresh token.
  * Đường dẫn theo tài liệu API: /api/auth/...
  * <p>
@@ -45,7 +47,7 @@ import lombok.RequiredArgsConstructor;
  * đọc cookie trước, không có thì đọc {@code refreshToken} trong body (để thử bằng Swagger, curl).
  */
 @Tag(name = "Xác thực", description = "AUTH-01: đăng ký, kích hoạt tài khoản. AUTH-02: đăng nhập, làm mới phiên, đăng xuất."
-        + " AUTH-03: quên / đặt lại mật khẩu. Đăng nhập bằng Google")
+        + " AUTH-03: quên / đặt lại mật khẩu. Đăng nhập bằng Google. Xác nhận đổi email")
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
@@ -55,6 +57,7 @@ public class XacThucController {
     private final DangNhapService dangNhapService;
     private final MatKhauService matKhauService;
     private final DangNhapGoogleService dangNhapGoogleService;
+    private final DoiEmailService doiEmailService;
     private final CookiePhien cookiePhien;
 
     @Operation(summary = "Đăng ký tài khoản bệnh nhân, gửi liên kết kích hoạt qua email")
@@ -124,6 +127,14 @@ public class XacThucController {
     public PhanHoiApi<Void> datLaiMatKhau(@Valid @RequestBody DatLaiMatKhauRequest request) {
         matKhauService.datLaiMatKhau(request.token(), request.matKhauMoi());
         return PhanHoiApi.ok(null, "Đặt lại mật khẩu thành công, vui lòng đăng nhập lại");
+    }
+
+    // Không xoá cookie refresh token: trình duyệt mở liên kết có thể đang đăng nhập 1 tài khoản khác
+    @Operation(summary = "Xác nhận đổi email bằng token trong liên kết gửi tới email mới; mọi thiết bị bị đăng xuất")
+    @PostMapping("/confirm-email-change")
+    public PhanHoiApi<Void> xacNhanDoiEmail(@Valid @RequestBody XacThucEmailRequest request) {
+        doiEmailService.xacNhan(request.token());
+        return PhanHoiApi.ok(null, "Đã đổi email đăng nhập, vui lòng đăng nhập lại bằng email mới");
     }
 
     @Operation(summary = "Đăng nhập bằng ID token Google (bệnh nhân): access token trong body, refresh token trong cookie")

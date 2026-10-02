@@ -45,6 +45,7 @@ import iuh.fit.se.eclinic.identity.dto.response.DangNhapResponse;
 import iuh.fit.se.eclinic.identity.dto.response.TaiKhoanResponse;
 import iuh.fit.se.eclinic.identity.service.DangNhapGoogleService;
 import iuh.fit.se.eclinic.identity.service.DangNhapService;
+import iuh.fit.se.eclinic.identity.service.DoiEmailService;
 import iuh.fit.se.eclinic.identity.service.MatKhauService;
 import iuh.fit.se.eclinic.identity.service.XacThucService;
 import jakarta.servlet.http.Cookie;
@@ -72,6 +73,7 @@ class XacThucControllerTest {
     @MockitoBean DangNhapService dangNhapService;
     @MockitoBean MatKhauService matKhauService;
     @MockitoBean DangNhapGoogleService dangNhapGoogleService;
+    @MockitoBean DoiEmailService doiEmailService;
 
     @Test
     void dangKyKhongCanDangNhapTraVe201() throws Exception {
@@ -279,6 +281,40 @@ class XacThucControllerTest {
     }
 
     @Test
+    void xacNhanDoiEmailKhongCanDangNhapVaKhongDungToiCookie() throws Exception {
+        guiXacNhanDoiEmail("tok")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.thanhCong").value(true))
+                .andExpect(jsonPath("$.thongDiep").value("Đã đổi email đăng nhập, vui lòng đăng nhập lại bằng email mới"))
+                .andExpect(header().doesNotExist(HttpHeaders.SET_COOKIE));
+        verify(doiEmailService).xacNhan("tok");
+    }
+
+    @Test
+    void xacNhanDoiEmailTokenRongHoacQuaDaiTraVe400() throws Exception {
+        guiXacNhanDoiEmail(" ")
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.chiTiet[*].truong").value(hasItem("token")));
+        guiXacNhanDoiEmail("a".repeat(101))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.chiTiet[*].truong").value(hasItem("token")));
+        verifyNoInteractions(doiEmailService);
+    }
+
+    @Test
+    void xacNhanDoiEmailLienKetHetHan410EmailDaBiDung409() throws Exception {
+        doThrow(new LoiNghiepVu(MaLoi.LIEN_KET_KHONG_HOP_LE)).when(doiEmailService).xacNhan("cu");
+        doThrow(new LoiNghiepVu(MaLoi.EMAIL_DA_TON_TAI)).when(doiEmailService).xacNhan("trung");
+
+        guiXacNhanDoiEmail("cu")
+                .andExpect(status().isGone())
+                .andExpect(jsonPath("$.maLoi").value("LIEN_KET_KHONG_HOP_LE"));
+        guiXacNhanDoiEmail("trung")
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.maLoi").value("EMAIL_DA_TON_TAI"));
+    }
+
+    @Test
     void dangNhapGoogleKhongCanTokenVaTruyenUserAgent() throws Exception {
         TaiKhoanResponse taiKhoan = new TaiKhoanResponse(9L, "Người Google", "g@gmail.com", null,
                 VaiTro.BENH_NHAN, TrangThaiTaiKhoan.DA_KICH_HOAT);
@@ -336,6 +372,14 @@ class XacThucControllerTest {
     private static DangNhapResponse phienMoi(String refreshToken) {
         return new DangNhapResponse("access", refreshToken, "Bearer", 1800, new TaiKhoanResponse(1L, "A",
                 "a@example.com", null, VaiTro.BENH_NHAN, TrangThaiTaiKhoan.DA_KICH_HOAT));
+    }
+
+    private ResultActions guiXacNhanDoiEmail(String token) throws Exception {
+        String body = """
+                {"token": "%s"}
+                """.formatted(token);
+        return mockMvc.perform(post("/api/auth/confirm-email-change").contentType(MediaType.APPLICATION_JSON)
+                .content(body));
     }
 
     private ResultActions guiDatLai(String token, String matKhauMoi) throws Exception {
