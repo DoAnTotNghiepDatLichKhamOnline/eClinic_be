@@ -37,6 +37,7 @@ import iuh.fit.se.eclinic.common.exception.MaLoi;
 import iuh.fit.se.eclinic.common.security.JwtConfig;
 import iuh.fit.se.eclinic.common.testsupport.MySqlTestcontainersConfiguration;
 import iuh.fit.se.eclinic.common.testsupport.RedisTestcontainersConfiguration;
+import iuh.fit.se.eclinic.common.util.TokenNgauNhien;
 import iuh.fit.se.eclinic.identity.dto.request.DangNhapRequest;
 import iuh.fit.se.eclinic.identity.dto.response.DangNhapResponse;
 import iuh.fit.se.eclinic.identity.job.DonPhienHetHanJob;
@@ -44,7 +45,6 @@ import iuh.fit.se.eclinic.identity.repository.RefreshTokenRepository;
 import iuh.fit.se.eclinic.identity.repository.TaiKhoanRepository;
 import iuh.fit.se.eclinic.identity.service.DangNhapService;
 import iuh.fit.se.eclinic.identity.service.RefreshTokenService;
-import iuh.fit.se.eclinic.identity.util.TokenNgauNhien;
 
 /**
  * Đăng nhập / làm mới phiên / đăng xuất với MySQL + Redis thật. Tài khoản tạo thẳng qua repository.

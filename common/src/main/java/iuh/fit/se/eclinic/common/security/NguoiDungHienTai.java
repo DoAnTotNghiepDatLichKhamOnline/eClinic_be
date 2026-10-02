@@ -16,6 +16,14 @@ public final class NguoiDungHienTai {
     private NguoiDungHienTai() {
     }
 
+    /**
+     * Người gọi có gửi JWT hợp lệ không. Dùng ở đường dẫn công khai nhận cả khách lẫn người đã đăng nhập (vd đặt lịch
+     * khám); các hàm lấy thông tin bên dưới ném CHUA_DANG_NHAP khi không có JWT.
+     */
+    public static boolean daDangNhap() {
+        return SecurityContextHolder.getContext().getAuthentication() instanceof JwtAuthenticationToken;
+    }
+
     public static Long layIdTaiKhoan() {
         return Long.valueOf(layToken().getToken().getSubject());
     }

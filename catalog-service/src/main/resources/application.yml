@@ -9,6 +9,7 @@ spring:
 
 app:
   bao-mat:
-    # Không cần đăng nhập: xem danh mục chuyên khoa
+    # Không cần đăng nhập: xem danh mục chuyên khoa, tìm bác sĩ
     duong-dan-cong-khai:
       - GET /api/catalog/chuyen-khoa/**
+      - GET /api/catalog/bac-si/**

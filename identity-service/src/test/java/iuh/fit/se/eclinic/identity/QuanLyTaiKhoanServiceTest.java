@@ -651,6 +651,8 @@ class QuanLyTaiKhoanServiceTest {
             lichLamViec.setGioBatDau(LocalTime.of(8, 0));
             lichLamViec.setGioKetThuc(LocalTime.of(11, 0));
             lichLamViec.setSoBenhNhanToiDa(6);
+            lichLamViec.setSoLuotToiDaMoiGio(2);
+            lichLamViec.setThoiLuongLuotPhut(30);
             entityManager.persist(lichLamViec);
 
             KhungGioKham khungGio = new KhungGioKham();

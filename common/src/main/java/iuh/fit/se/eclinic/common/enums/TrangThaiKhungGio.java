@@ -1,7 +1,7 @@
 package iuh.fit.se.eclinic.common.enums;
 
 /**
- * Trạng thái khung giờ khám (Q3: mỗi khung giờ nhận 1 bệnh nhân).
+ * Trạng thái khung giờ khám. Mỗi dòng khung giờ là 1 lượt khám, nhận 1 bệnh nhân.
  */
 public enum TrangThaiKhungGio {
     CON_TRONG,

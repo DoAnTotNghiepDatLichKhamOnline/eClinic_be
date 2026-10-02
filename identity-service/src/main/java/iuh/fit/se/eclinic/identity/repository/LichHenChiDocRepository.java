@@ -10,7 +10,7 @@ import iuh.fit.se.eclinic.common.entity.booking.LichHen;
 import iuh.fit.se.eclinic.common.enums.TrangThaiLichHen;
 
 /**
- * CHỈ ĐỌC lịch hẹn (bảng của booking-service) để kiểm tra trước khi vô hiệu hoá tài khoản bác sĩ. Kế thừa
+ * CHỈ ĐỌC lịch hẹn (bảng của booking-service) để kiểm tra trước khi vô hiệu hoá tài khoản bác sĩ, xoá tài khoản. Kế thừa
  * {@link Repository} chứ không phải JpaRepository nên không có save / delete: identity-service không được ghi bảng này.
  */
 public interface LichHenChiDocRepository extends Repository<LichHen, Long> {
@@ -19,5 +19,8 @@ public interface LichHenChiDocRepository extends Repository<LichHen, Long> {
     @Query("select count(l) from LichHen l where l.bacSi.taiKhoan.id = :taiKhoanId and l.trangThai in :trangThai"
             + " and l.khungGio.gioKetThuc > :bayGio")
     long countSapToiCuaBacSi(Long taiKhoanId, Collection<TrangThaiLichHen> trangThai, LocalDateTime bayGio);
+
+    /** Tài khoản đã đặt lịch hẹn nào khi đăng nhập chưa (lich_hen.id_tai_khoan_dat, khoá ngoại RESTRICT). */
+    boolean existsByTaiKhoanDatId(Long taiKhoanId);
 
 }

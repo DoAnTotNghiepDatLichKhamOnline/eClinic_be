@@ -12,9 +12,9 @@ import org.springframework.transaction.annotation.Transactional;
 import iuh.fit.se.eclinic.common.entity.identity.RefreshToken;
 import iuh.fit.se.eclinic.common.entity.identity.TaiKhoan;
 import iuh.fit.se.eclinic.common.exception.LoiKhongTimThay;
+import iuh.fit.se.eclinic.common.util.TokenNgauNhien;
 import iuh.fit.se.eclinic.identity.repository.RefreshTokenRepository;
 import iuh.fit.se.eclinic.identity.service.RefreshTokenService;
-import iuh.fit.se.eclinic.identity.util.TokenNgauNhien;
 import lombok.RequiredArgsConstructor;
 
 @Service

@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.OptimisticLockingFailureException;
+import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
@@ -164,6 +165,13 @@ public class XuLyLoiHandler {
     @ExceptionHandler(OptimisticLockingFailureException.class)
     public ResponseEntity<PhanHoiApi<Void>> xuLyDuLieuDaThayDoi(OptimisticLockingFailureException ex) {
         return traVe(MaLoi.DU_LIEU_DA_THAY_DOI, null, null);
+    }
+
+    /** Deadlock hoặc chờ khoá dòng (SELECT ... FOR UPDATE) quá lâu: giao dịch đã bị huỷ, người dùng thử lại là được. */
+    @ExceptionHandler(PessimisticLockingFailureException.class)
+    public ResponseEntity<PhanHoiApi<Void>> xuLyKhongKhoaDuoc(PessimisticLockingFailureException ex) {
+        log.warn("Không khoá được dòng dữ liệu: {}", ex.getMostSpecificCause().getMessage());
+        return traVe(MaLoi.DU_LIEU_DA_THAY_DOI, "Hệ thống đang bận, vui lòng thử lại", null);
     }
 
     // ---- 500 ----

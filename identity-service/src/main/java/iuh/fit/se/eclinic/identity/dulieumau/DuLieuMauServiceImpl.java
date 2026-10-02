@@ -30,6 +30,7 @@ import iuh.fit.se.eclinic.common.enums.TrangThaiLienKet;
 import iuh.fit.se.eclinic.common.enums.TrangThaiPhongKham;
 import iuh.fit.se.eclinic.common.enums.TrangThaiTaiKhoan;
 import iuh.fit.se.eclinic.common.enums.VaiTro;
+import iuh.fit.se.eclinic.common.util.ChiaCaLamViec;
 import iuh.fit.se.eclinic.identity.dulieumau.DuLieuMau.BacSiMau;
 import iuh.fit.se.eclinic.identity.dulieumau.DuLieuMau.BenhNhanMau;
 import iuh.fit.se.eclinic.identity.dulieumau.DuLieuMau.Buoi;
@@ -280,13 +281,10 @@ public class DuLieuMauServiceImpl implements DuLieuMauService {
         return caCuaPhong;
     }
 
-    /** 1 ca + các khung giờ 30 phút phủ kín ca (mô hình hiện tại: mỗi khung nhận 1 bệnh nhân). */
+    /** 1 ca + các lượt khám của ca: mỗi khung 1 giờ N lượt, mỗi lượt t phút, mỗi lượt là 1 dòng khung giờ. */
     private void taoCa(BacSi bacSi, PhongKham phongKham, QuanTriVien adminTao, LocalDate ngay, Buoi buoi) {
-        List<LocalTime> gioBatDauCacKhung = new ArrayList<>();
-        for (LocalTime gio = buoi.gioBatDau(); gio.isBefore(buoi.gioKetThuc());
-                gio = gio.plusMinutes(DuLieuMau.SO_PHUT_MOI_KHUNG)) {
-            gioBatDauCacKhung.add(gio);
-        }
+        List<LocalTime> gioBatDauCacLuot = ChiaCaLamViec.gioBatDauCacLuot(buoi.gioBatDau(), buoi.gioKetThuc(),
+                DuLieuMau.SO_LUOT_MOI_GIO, DuLieuMau.SO_PHUT_MOI_LUOT);
 
         LichLamViec lichLamViec = new LichLamViec();
         lichLamViec.setBacSi(bacSi);
@@ -295,14 +293,16 @@ public class DuLieuMauServiceImpl implements DuLieuMauService {
         lichLamViec.setNgayLamViec(ngay);
         lichLamViec.setGioBatDau(buoi.gioBatDau());
         lichLamViec.setGioKetThuc(buoi.gioKetThuc());
-        lichLamViec.setSoBenhNhanToiDa(gioBatDauCacKhung.size());
+        lichLamViec.setSoBenhNhanToiDa(gioBatDauCacLuot.size());
+        lichLamViec.setSoLuotToiDaMoiGio(DuLieuMau.SO_LUOT_MOI_GIO);
+        lichLamViec.setThoiLuongLuotPhut(DuLieuMau.SO_PHUT_MOI_LUOT);
         entityManager.persist(lichLamViec);
 
-        for (LocalTime gio : gioBatDauCacKhung) {
+        for (LocalTime gio : gioBatDauCacLuot) {
             KhungGioKham khungGio = new KhungGioKham();
             khungGio.setLichLamViec(lichLamViec);
             khungGio.setGioBatDau(ngay.atTime(gio));
-            khungGio.setGioKetThuc(ngay.atTime(gio.plusMinutes(DuLieuMau.SO_PHUT_MOI_KHUNG)));
+            khungGio.setGioKetThuc(ngay.atTime(gio.plusMinutes(DuLieuMau.SO_PHUT_MOI_LUOT)));
             entityManager.persist(khungGio);
         }
     }

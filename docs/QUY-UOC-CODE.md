@@ -85,6 +85,8 @@ File mẫu trong `catalog-service/src/main/java/iuh/fit/se/eclinic/catalog/`:
   `{"thanhCong": true, "thongDiep": "...", "duLieu": ...}`.
 - Có phân trang: service trả `TrangDuLieu.tu(page)` →
   `{"noiDung": [...], "trang", "kichThuoc", "tongSoPhanTu", "tongSoTrang"}`.
+  `@Query` phân trang có `join fetch` phải khai báo thêm `countQuery` (không có `fetch`) và viết `order by` ngay trong JPQL,
+  truyền `PageRequest.of(trang, kichThuoc)` không kèm `Sort` (xem `LichHenRepository.timCuaTaiKhoan` của booking-service).
 - Lỗi: chỉ cần `throw`; `XuLyLoiHandler` trong `common` chuyển thành
   `{"thanhCong": false, "maLoi": "...", "thongDiep": "...", "chiTiet": [{"truong", "thongDiep"}]}`
   với mã HTTP lấy từ `MaLoi`. Lỗi validation, 404, trùng khoá DB... đều đã được xử lý sẵn.
@@ -106,6 +108,13 @@ File mẫu trong `catalog-service/src/main/java/iuh/fit/se/eclinic/catalog/`:
 - Access token còn hạn tối đa 30 phút sau khi tài khoản bị vô hiệu hoá / xoá. API nào cần chắc tài khoản còn hoạt động
   thì kiểm tra lại trong DB; trong identity-service mọi API `/api/users/me/...` gọi `TaiKhoanService.layDangHoatDong(id)`
   (tài khoản không còn -> 401 `CHUA_DANG_NHAP`, bị vô hiệu hoá -> 403 `TAI_KHOAN_BI_VO_HIEU_HOA`).
+  booking-service có `TaiKhoanService.layBenhNhanDangHoatDong(id)` cho việc đặt lịch khi đã đăng nhập (thêm 403
+  `TAI_KHOAN_CHUA_XAC_THUC`, và `KHONG_CO_QUYEN` khi tài khoản không còn là bệnh nhân).
+- API công khai nhưng **đăng nhập thì làm thêm việc** (mẫu: `POST /api/booking/lich-hen`, khách đặt được, bệnh nhân đăng
+  nhập thì lịch lưu vào tài khoản): vẫn khai báo trong `duong-dan-cong-khai`, trong controller hỏi
+  `NguoiDungHienTai.daDangNhap()` rồi mới gọi `layIdTaiKhoan()` / `layVaiTro()` (không có token thì 2 method này ném 401 `CHUA_DANG_NHAP`). Token hợp lệ
+  trên đường dẫn công khai vẫn được đọc; token hết hạn / sai thì request nhận 401 dù API công khai, nên client chỉ gửi
+  `Authorization` khi đang có phiên. `@PreAuthorize` không dùng được cho trường hợp này: tự kiểm tra vai trò trong controller.
 - Thử API cần đăng nhập: lấy `accessToken` từ `POST /api/auth/login` (Swagger, hoặc trang demo
   `node scripts/demo-xac-thuc/server.js`, xem README). Có sẵn tài khoản mẫu cho cả 3 vai trò: `admin@eclinic.local`,
   `bacsi01@eclinic.local`, `benhnhan01@eclinic.local` (mật khẩu xem README).
@@ -116,7 +125,7 @@ File mẫu trong `catalog-service/src/main/java/iuh/fit/se/eclinic/catalog/`:
 ## 6. Database và migration
 
 - Schema do **Flyway** quản lý, file nằm trong `common/src/main/resources/db/migration`.
-- Muốn đổi schema: tạo file **mới** `V<số tiếp theo>__mo_ta_ngan.sql` (hiện đã có V1–V3, file tiếp theo là `V4__...sql`).
+- Muốn đổi schema: tạo file **mới** `V<số tiếp theo>__mo_ta_ngan.sql` (hiện đã có V1–V5, file tiếp theo là `V6__...sql`).
   **Không bao giờ sửa file đã chạy** (kể cả `V1__init_schema.sql`): Flyway so checksum và service sẽ không khởi động.
 - Sửa entity trong `common` cho khớp: Hibernate chạy `ddl-auto: validate`, entity lệch schema thì service báo lỗi.
 - DB dùng collation `utf8mb4_unicode_ci`: so sánh `=` và `LIKE` không phân biệt hoa thường và dấu

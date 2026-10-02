@@ -46,7 +46,8 @@ class DuLieuMauTest {
     /** 14 ngày liền = mỗi thứ 2 lần: 8 bác sĩ nhóm CHINH làm 6 ca / tuần, 4 bác sĩ nhóm PHU làm 5 ca / tuần. */
     private static final long SO_CA_14_NGAY = 8 * 12 + 4 * 10;
     private static final long SO_CA_7_NGAY = 8 * 6 + 4 * 5;
-    private static final long SO_KHUNG_MOI_CA = 7;
+    /** Ca 3,5 giờ, N = 6, t = 10: 3 khung 1 giờ đủ 6 lượt + nửa giờ cuối 3 lượt. */
+    private static final long SO_KHUNG_MOI_CA = 21;
 
     @Autowired DuLieuMauService duLieuMauService;
     @Autowired TaiKhoanRepository taiKhoanRepository;
@@ -95,7 +96,7 @@ class DuLieuMauTest {
                 .createQuery("select distinct l.ngayLamViec from LichLamViec l", LocalDate.class).getResultList();
         assertThat(cacNgay).hasSize(12).noneMatch(ngay -> ngay.getDayOfWeek() == DayOfWeek.SUNDAY);
 
-        // Mỗi ca đúng 7 khung giờ còn trống
+        // Mỗi ca đúng 21 khung giờ (lượt khám) còn trống
         assertThat(dem("select count(l) from LichLamViec l where l.soBenhNhanToiDa <> ?1 or l.trangThai <> ?2",
                 (int) SO_KHUNG_MOI_CA, TrangThaiLichLamViec.HOAT_DONG)).isZero();
         assertThat(dem("select count(k) from KhungGioKham k")).isEqualTo(SO_CA_14_NGAY * SO_KHUNG_MOI_CA);
@@ -112,7 +113,7 @@ class DuLieuMauTest {
         assertThat(entityManager.createQuery("select count(l) from LichLamViec l group by l.bacSi.id, l.ngayLamViec",
                 Long.class).getResultList()).containsOnly(1L);
 
-        // Khung giờ 30 phút phủ kín ca sáng 08:00–11:30
+        // Lượt khám 10 phút phủ kín ca sáng 08:00–11:30
         Object[] caSang = entityManager.createQuery("""
                 select l.id, l.ngayLamViec from LichLamViec l where l.gioBatDau = ?1 order by l.id
                 """, Object[].class).setParameter(1, LocalTime.of(8, 0)).setMaxResults(1).getSingleResult();
@@ -121,7 +122,7 @@ class DuLieuMauTest {
                 "select k.gioBatDau from KhungGioKham k where k.lichLamViec.id = ?1 order by k.gioBatDau",
                 LocalDateTime.class).setParameter(1, caSang[0]).getResultList();
         assertThat(gioBatDau).first().isEqualTo(ngay.atTime(8, 0));
-        assertThat(gioBatDau).last().isEqualTo(ngay.atTime(11, 0));
+        assertThat(gioBatDau).last().isEqualTo(ngay.atTime(11, 20));
         assertThat(dem("select count(k) from KhungGioKham k where k.lichLamViec.id = ?1 and k.gioKetThuc = ?2", caSang[0],
                 ngay.atTime(11, 30))).isEqualTo(1);
     }

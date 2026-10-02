@@ -23,7 +23,10 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * Khung giờ khám (ERD: KhungGioKham), sinh tự động khi Admin tạo/sửa ca. Mỗi khung nhận 1 bệnh nhân (Q3).
+ * Khung giờ khám (ERD: KhungGioKham), sinh tự động khi Admin tạo/sửa ca.
+ * <p>
+ * Mỗi dòng là 1 lượt khám (1 bệnh nhân) dài {@code thoiLuongLuotPhut} phút của ca. Khung 1 giờ của BOOK-12 không lưu
+ * thành dòng: đó là các lượt có giờ bắt đầu nằm trong cùng 1 giờ tính từ giờ bắt đầu ca (xem {@link LichLamViec}).
  */
 @Getter
 @Setter

@@ -4,7 +4,7 @@ Tài liệu rà soát bảo mật cho phần xác thực (DOANTOTNGH-2) và ph�
 thiết bị đăng nhập, ảnh đại diện, đổi email, quản trị tài khoản) của identity-service: danh sách API, đối chiếu OWASP,
 rủi ro đang chấp nhận, việc phải làm trước khi triển khai thật và hướng dẫn cho frontend.
 Đối chiếu với OWASP Cheat Sheet: Authentication, Forgot Password, Session Management, JSON Web Token, Logging,
-File Upload.
+File Upload. Mục 7 ghi phần bảo mật của các API đặt lịch khám công khai (DOANTOTNGH-4, booking-service).
 
 ## 1. Các API
 
@@ -127,6 +127,7 @@ quản trị viên trong DB); 404 `KHONG_TIM_THAY` (không có tài khoản vớ
   các tài khoản `bacsiNN@eclinic.local`, `benhnhanNN@eclinic.local`. Còn bật sẽ có cảnh báo WARN khi khởi động.
 - [ ] Cloudinary: đặt `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` qua biến môi trường (không commit);
   mỗi môi trường một `CLOUDINARY_FOLDER` riêng để không ghi đè ảnh của nhau.
+- [ ] Đặt lịch khám: xử lý địa chỉ client sau reverse proxy và xem lại các giới hạn `BOOKING_*` (mục 7).
 
 ## 5. Nhật ký bảo mật (log của identity-service)
 
@@ -193,3 +194,47 @@ Xem nhanh: `docker logs eclinic-identity-service 2>&1 | grep -E "Đăng nhập s
 - **Khi dev:** frontend chạy `http://localhost:5173` (trùng `FRONTEND_URL`, nằm trong CORS). Cookie `Secure` chạy được
   trên `http://localhost` với Chrome/Edge/Firefox (Safari thì không); curl cần bản ≥ 7.84 (dùng `-c`/`-b` để giữ cookie).
   Trang mẫu: `scripts/demo-xac-thuc` (xem README).
+
+## 7. API đặt lịch khám công khai (booking-service)
+
+Xem khung giờ, đặt lịch và xem phiếu khám không cần đăng nhập (BOOK-01, BOOK-06), nên các API này tự bảo vệ. Danh sách API
+và mã lỗi: README mục "Đặt lịch khám".
+
+| Vấn đề | Cách xử lý |
+|--------|------------|
+| Gọi đặt lịch hàng loạt | Mỗi địa chỉ IP tối đa 20 lần / 10 phút (đếm trên Redis, trước mọi thao tác DB) -> 429 `GUI_LAI_QUA_NHANH`; mỗi hồ sơ bệnh nhân tối đa 3 lịch sắp tới còn hiệu lực, mỗi số điện thoại liên hệ tối đa 5, mỗi hồ sơ 1 lịch trong cùng 1 giờ -> 409. Các con số là cấu hình `BOOKING_*` |
+| Hai người giành lượt khám cuối | Đặt lịch chạy trong 1 transaction, khoá các lượt trống của khung giờ rồi mới chọn; UNIQUE `lich_hen.id_khung_gio_hieu_luc` là chốt cuối trong DB -> chỉ 1 người được, người kia 409 |
+| Dùng số CCCD của người khác để xem / sửa hồ sơ | Số CCCD đã có hồ sơ thì họ tên và ngày sinh phải khớp, sai -> 409 với thông điệp không chứa dữ liệu đang lưu; form đặt lịch không sửa hồ sơ hay người giám hộ đã lưu, chỉ điền ngày sinh / giới tính còn trống (số điện thoại vừa nhập chỉ lưu trên lịch hẹn) |
+| Gắn hồ sơ bệnh nhân vào tài khoản | Chỉ khi đặt cho bản thân (`datChoBanThan`) hoặc tự tạo hồ sơ, và chỉ với số CCCD **chưa có** hồ sơ; số CCCD đã có hồ sơ (do khách đặt trước đó) -> 409 `CCCD_DA_CO_HO_SO`, phải xác minh tại phòng khám |
+| Mã phiếu khám | 32 byte ngẫu nhiên (`SecureRandom`, 43 ký tự base64url); API phiếu khám không nhận id số; mã sai -> 404 |
+| Dữ liệu trên phiếu khám công khai | Chỉ năm sinh; CCCD còn 3 số cuối; số điện thoại che phần giữa; người giám hộ không có CCCD; không có id lịch hẹn, id hồ sơ |
+| Token trên API đặt lịch | Không có token: khách. Token `BENH_NHAN`: lịch lưu vào tài khoản, và booking-service kiểm tra lại trong DB rằng tài khoản còn hoạt động (cả ở "lịch hẹn của tôi" và hồ sơ bệnh nhân). Token bác sĩ / quản trị viên -> 403 |
+| Danh sách bác sĩ, khung giờ | Không có email, số điện thoại, số giấy phép của bác sĩ; không có thông tin người đã đặt, chỉ số chỗ còn lại |
+
+**Rủi ro đang chấp nhận:**
+- Chưa có CAPTCHA hay xác minh số điện thoại (OTP): ai biết họ tên, ngày sinh và số CCCD của một người thì đặt được lịch
+  đứng tên người đó, trong các giới hạn ở trên.
+- 409 `THONG_TIN_BENH_NHAN_KHONG_KHOP` / `CCCD_DA_CO_HO_SO` cho biết một số CCCD đã có hồ sơ ở phòng khám (không cho biết nội dung).
+- Redis lỗi thì bỏ qua giới hạn theo IP (đặt lịch vẫn chạy, mỗi lần chờ tối đa 2 giây, có log WARN); 2 giới hạn theo hồ sơ
+  và số điện thoại vẫn còn vì nằm trong DB.
+- Link phiếu khám là bí mật duy nhất của phiếu: ai có link / ảnh QR đều xem được phiếu (đã che), và link không hết hạn.
+
+**Trước khi triển khai thật:**
+- [ ] **Địa chỉ client sau reverse proxy.** booking-service lấy phần tử CUỐI của `X-Forwarded-For` (do gateway ghi, cần
+  `GATEWAY_TRUSTED_PROXIES`). Client gọi thẳng gateway thì đó là địa chỉ client. Đặt gateway sau nginx / load balancer thì
+  phần tử cuối là địa chỉ của proxy đó, mọi người dùng bị đếm chung 1 IP: phải giới hạn theo IP ngay tại proxy, hoặc sửa
+  `DiaChiIp` cho đúng số lớp proxy, rồi đặt `GATEWAY_TRUSTED_PROXIES` thành địa chỉ proxy thay cho `.*`.
+- [ ] `FRONTEND_URL` là địa chỉ `https://…` thật: link phiếu khám trong mã QR dựng từ biến này.
+- [ ] Xem lại `BOOKING_IP_LIMIT`, `BOOKING_MAX_ACTIVE_PER_PATIENT`, `BOOKING_MAX_ACTIVE_PER_PHONE` theo lượng khách thực tế.
+
+**Hướng dẫn cho frontend:**
+- `POST /api/booking/lich-hen`: chỉ gửi `Authorization` khi đang có phiên bệnh nhân. Token hết hạn làm request nhận 401 dù
+  API công khai: làm mới phiên rồi gọi lại, không được thì đặt như khách. Các API công khai còn lại không gửi token.
+- Khung giờ gửi lên bằng đúng `idLichLamViec` + `khungGio[].gioBatDau` lấy từ `GET /api/booking/khung-gio`; khung có
+  `hetCho = true` không cho chọn. Nhận 409 khi đặt thì tải lại khung giờ.
+- Ô người giám hộ hiện khi người khám dưới 18 tuổi **tính theo ngày khám**; server vẫn là nơi quyết định (400
+  `THIEU_NGUOI_GIAM_HO`).
+- Trang `/phieu-kham/<mã>`: đọc mã trên URL, gọi `GET /api/booking/phieu-kham/<mã>`; mã QR hiển thị bằng
+  `<img src=".../api/booking/phieu-kham/<mã>/qr">`. Trang phải có `Referrer-Policy: no-referrer`, không nhúng script / ảnh
+  bên thứ ba (mã nằm trên URL). Khách đặt lịch chỉ xem lại được bằng link này: nhắc lưu link hoặc tải mã QR.
+- Trang mẫu: `scripts/demo-dat-lich` (xem README).

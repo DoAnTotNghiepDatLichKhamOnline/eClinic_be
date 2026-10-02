@@ -6,3 +6,33 @@ spring:
     name: booking-service
   config:
     import: classpath:application-common.yml
+  data:
+    redis:
+      # Redis chỉ dùng để giới hạn số lần đặt lịch theo IP; chậm hoặc mất kết nối thì bỏ qua giới hạn, không treo request
+      timeout: 2s
+      connect-timeout: 2s
+
+app:
+  bao-mat:
+    # Không cần đăng nhập: xem khung giờ khám còn chỗ, đặt lịch khám (BOOK-01), xem phiếu khám bằng mã ngẫu nhiên (BOOK-06)
+    duong-dan-cong-khai:
+      - GET /api/booking/khung-gio/**
+      - POST /api/booking/lich-hen
+      - GET /api/booking/phieu-kham/**
+  phieu-kham:
+    # Link phiếu khám (cũng là nội dung mã QR) = frontend-url + duong-dan + mã phiếu khám
+    frontend-url: ${FRONTEND_URL:http://localhost:5173}
+    duong-dan: /phieu-kham/
+    # Cạnh ảnh QR (pixel) khi request không gửi kichThuoc
+    kich-thuoc-qr: 300
+  dat-lich:
+    # Lượt khám chỉ đặt được khi còn cách giờ bắt đầu ít nhất khoảng này
+    dat-truoc-toi-thieu: ${BOOKING_MIN_LEAD:30m}
+    # Chỉ đặt được lịch trong số ngày tới này (tính cả hôm nay)
+    so-ngay-dat-truoc-toi-da: ${BOOKING_MAX_DAYS:30}
+    # Chống lạm dụng API đặt lịch công khai: số lịch hẹn sắp tới còn hiệu lực tối đa của 1 hồ sơ bệnh nhân / 1 SĐT liên hệ
+    so-lich-hieu-luc-toi-da-moi-ho-so: ${BOOKING_MAX_ACTIVE_PER_PATIENT:3}
+    so-lich-hieu-luc-toi-da-moi-so-dien-thoai: ${BOOKING_MAX_ACTIVE_PER_PHONE:5}
+    # Số lần gọi đặt lịch tối đa từ 1 địa chỉ IP trong 1 cửa sổ (đếm trên Redis; Redis lỗi thì bỏ qua giới hạn này)
+    so-lan-dat-toi-da-moi-ip: ${BOOKING_IP_LIMIT:20}
+    cua-so-gioi-han-ip: ${BOOKING_IP_WINDOW:10m}

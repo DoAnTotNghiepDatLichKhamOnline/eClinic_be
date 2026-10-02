@@ -132,6 +132,9 @@ public class QuanLyTaiKhoanServiceImpl implements QuanLyTaiKhoanService {
         if (hoSoBenhNhanChiDocRepository.existsByTaiKhoanId(id)) {
             dangThamChieu.add("hồ sơ bệnh nhân");
         }
+        if (lichHenChiDocRepository.existsByTaiKhoanDatId(id)) {
+            dangThamChieu.add("lịch hẹn đã đặt");
+        }
         if (thongBaoChiDocRepository.existsByTaiKhoanId(id)) {
             dangThamChieu.add("thông báo");
         }

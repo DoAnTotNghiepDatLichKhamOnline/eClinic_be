@@ -65,7 +65,23 @@ public enum MaLoi {
 
     // Lịch làm việc / đặt lịch
     TRUNG_LICH_LAM_VIEC(HttpStatus.CONFLICT, "Lịch làm việc bị trùng giờ"),
-    KHUNG_GIO_KHONG_CON_TRONG(HttpStatus.CONFLICT, "Khung giờ không còn trống");
+    /** Khung 1 giờ đã đủ số lượt (BOOK-04, BOOK-12). */
+    KHUNG_GIO_KHONG_CON_TRONG(HttpStatus.CONFLICT, "Khung giờ đã đủ số lượt khám, vui lòng chọn khung giờ khác"),
+    /** Ca bị hủy, bác sĩ ngừng làm việc, khung giờ đã qua hạn đặt hoặc nằm ngoài số ngày được đặt trước. */
+    KHUNG_GIO_KHONG_KHA_DUNG(HttpStatus.CONFLICT, "Khung giờ này không còn nhận đặt lịch, vui lòng chọn khung giờ khác"),
+    LICH_HEN_TRUNG_GIO(HttpStatus.CONFLICT, "Bệnh nhân đã có lịch hẹn còn hiệu lực trong khung giờ này"),
+    /** CCCD đã có hồ sơ nhưng họ tên / ngày sinh nhập vào không khớp. Thông điệp không tiết lộ dữ liệu đang lưu. */
+    THONG_TIN_BENH_NHAN_KHONG_KHOP(HttpStatus.CONFLICT,
+            "Số CCCD này đã có hồ sơ với họ tên hoặc ngày sinh khác, vui lòng kiểm tra lại hoặc liên hệ phòng khám"),
+    THIEU_NGUOI_GIAM_HO(HttpStatus.BAD_REQUEST, "Bệnh nhân dưới 18 tuổi phải có thông tin người giám hộ"),
+    NGUOI_GIAM_HO_KHONG_HOP_LE(HttpStatus.BAD_REQUEST, "Thông tin người giám hộ không hợp lệ"),
+    VUOT_GIOI_HAN_DAT_LICH(HttpStatus.CONFLICT, "Đã đạt số lịch hẹn tối đa có thể đặt cùng lúc"),
+
+    // Hồ sơ bệnh nhân của tài khoản
+    /** Tài khoản chưa có hồ sơ mà số CCCD nhập vào đã có hồ sơ: gắn hồ sơ đã có vào tài khoản phải qua xác minh. */
+    CCCD_DA_CO_HO_SO(HttpStatus.CONFLICT,
+            "Số CCCD này đã có hồ sơ bệnh nhân, chưa thể gắn vào tài khoản của bạn; vui lòng liên hệ phòng khám để xác minh"),
+    HO_SO_CHO_XAC_MINH(HttpStatus.CONFLICT, "Hồ sơ bệnh nhân của tài khoản đang chờ phòng khám xác minh");
 
     private final HttpStatus trangThaiHttp;
     private final String thongDiepMacDinh;

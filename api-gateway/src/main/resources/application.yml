@@ -9,6 +9,10 @@ spring:
     gateway:
       server:
         webmvc:
+          # Gateway chỉ ghi X-Forwarded-For (địa chỉ client) cho service phía sau khi có thuộc tính này. Giá trị là regex
+          # các proxy đứng TRƯỚC gateway được tin; mặc định tin tất cả, vì service chỉ đọc phần tử cuối của
+          # X-Forwarded-For (do chính gateway thêm). booking-service dùng nó để giới hạn số lần đặt lịch theo IP.
+          trusted-proxies: ${GATEWAY_TRUSTED_PROXIES:.*}
           # Mỗi service 1 route: request /api/<service>/** được chuyển tới service đó, GIỮ NGUYÊN đường dẫn
           # (controller của service tự map đầy đủ /api/<service>/..., vd /api/catalog/chuyen-khoa).
           # Thêm service mới = copy 1 route bên dưới, đổi id, Path và biến *_URL.

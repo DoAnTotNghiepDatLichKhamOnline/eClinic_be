@@ -20,6 +20,16 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webmvc</artifactId>
         </dependency>
+        <!-- Redis: đếm số lần gọi API đặt lịch công khai theo địa chỉ IP -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
+        </dependency>
+        <!-- ZXing core: mã hoá link phiếu khám thành ma trận QR; ảnh PNG do ImageIO của JDK ghi -->
+        <dependency>
+            <groupId>com.google.zxing</groupId>
+            <artifactId>core</artifactId>
+        </dependency>
 
         <!-- Test -->
         <dependency>

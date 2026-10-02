@@ -13,6 +13,7 @@ import iuh.fit.se.eclinic.common.exception.LoiNghiepVu;
 import iuh.fit.se.eclinic.common.exception.MaLoi;
 import iuh.fit.se.eclinic.common.security.BaoMatProperties;
 import iuh.fit.se.eclinic.common.security.JwtService;
+import iuh.fit.se.eclinic.common.util.TokenNgauNhien;
 import iuh.fit.se.eclinic.identity.config.DangNhapProperties;
 import iuh.fit.se.eclinic.identity.dto.request.DangNhapRequest;
 import iuh.fit.se.eclinic.identity.dto.response.DangNhapResponse;
@@ -23,7 +24,6 @@ import iuh.fit.se.eclinic.identity.service.GioiHanDangNhapService;
 import iuh.fit.se.eclinic.identity.service.RefreshTokenService;
 import iuh.fit.se.eclinic.identity.service.RefreshTokenService.PhienMoi;
 import iuh.fit.se.eclinic.identity.util.ChuanHoa;
-import iuh.fit.se.eclinic.identity.util.TokenNgauNhien;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j

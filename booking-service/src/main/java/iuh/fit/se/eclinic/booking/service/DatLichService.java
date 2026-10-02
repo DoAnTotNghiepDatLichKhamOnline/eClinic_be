@@ -1,0 +1,26 @@
+package iuh.fit.se.eclinic.booking.service;
+
+import iuh.fit.se.eclinic.booking.dto.request.DatLichRequest;
+import iuh.fit.se.eclinic.booking.dto.response.DatLichResponse;
+
+public interface DatLichService {
+
+    /**
+     * Đặt lịch khám (BOOK-01, BOOK-03, BOOK-04, BOOK-11, BOOK-12) trong 1 transaction: kiểm tra lại ca và khung giờ,
+     * khoá khung giờ rồi lấy lượt khám trống sớm nhất, tìm hoặc tạo hồ sơ bệnh nhân theo CCCD, tạo lịch hẹn
+     * CHO_XAC_NHAN kèm số thứ tự và mã phiếu khám.
+     * <p>
+     * Bệnh nhân đã đăng nhập (BOOK-02, BOOK-07): lịch hẹn ghi nhận tài khoản đặt. Chỉ khi {@code datChoBanThan} thì hồ
+     * sơ bệnh nhân mới là hồ sơ của tài khoản: tài khoản đã có hồ sơ thì CCCD nhập vào phải đúng hồ sơ đó; chưa có thì
+     * CCCD phải là số chưa có hồ sơ, hồ sơ mới được gắn vào tài khoản. Không có cờ: hồ sơ theo CCCD như khách đặt.
+     * <p>
+     * Ném: KHONG_TIM_THAY (không có ca), DU_LIEU_KHONG_HOP_LE (khung giờ không thuộc ca), KHUNG_GIO_KHONG_KHA_DUNG,
+     * KHUNG_GIO_KHONG_CON_TRONG, THIEU_NGUOI_GIAM_HO, NGUOI_GIAM_HO_KHONG_HOP_LE, THONG_TIN_BENH_NHAN_KHONG_KHOP,
+     * LICH_HEN_TRUNG_GIO, VUOT_GIOI_HAN_DAT_LICH, CCCD_DA_CO_HO_SO, HO_SO_CHO_XAC_MINH và các mã của
+     * {@link TaiKhoanService#layBenhNhanDangHoatDong}.
+     *
+     * @param idTaiKhoan tài khoản đang đăng nhập; null = khách đặt
+     */
+    DatLichResponse datLich(DatLichRequest request, Long idTaiKhoan);
+
+}

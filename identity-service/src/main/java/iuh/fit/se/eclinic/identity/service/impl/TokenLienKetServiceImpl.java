@@ -8,9 +8,9 @@ import org.springframework.stereotype.Service;
 
 import iuh.fit.se.eclinic.common.exception.LoiNghiepVu;
 import iuh.fit.se.eclinic.common.exception.MaLoi;
+import iuh.fit.se.eclinic.common.util.TokenNgauNhien;
 import iuh.fit.se.eclinic.identity.enums.MucDichLienKet;
 import iuh.fit.se.eclinic.identity.service.TokenLienKetService;
-import iuh.fit.se.eclinic.identity.util.TokenNgauNhien;
 import lombok.RequiredArgsConstructor;
 
 @Service

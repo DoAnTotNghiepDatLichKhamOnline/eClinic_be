@@ -44,7 +44,7 @@ Qua gateway, mọi API có dạng `http://localhost:8080/api/<service>/...`, ví
 - **JDK 17** (IntelliJ tự tải được: File → Project Structure → SDK → Download JDK, chọn bản 17).
 - **IntelliJ IDEA** (bản miễn phí là đủ).
 - **Docker Desktop** (MySQL, Redis; và để chạy test).
-- **Node.js** (không bắt buộc): chỉ cần cho trang demo `scripts/demo-xac-thuc/server.js`.
+- **Node.js** (không bắt buộc): chỉ cần cho trang demo `scripts/demo-xac-thuc/server.js` (xác thực, tài khoản và đặt lịch khám).
 
 ## Cách 1 — Chạy service trong IntelliJ (khi đang code)
 
@@ -168,6 +168,7 @@ Cần gateway + identity-service đang chạy. Trang đọc `GOOGLE_CLIENT_ID` t
 Các ô "cần đăng nhập" dùng access token của lần đăng nhập gần nhất trên trang (đăng nhập bằng tài khoản mẫu ở mục
 "Tài khoản và token"); ô "Quản trị tài khoản" cần đăng nhập `admin@eclinic.local`, vai trò khác sẽ thấy 403.
 Kết quả của mỗi lần gọi API hiện ở ô "Kết quả gọi API gần nhất" cuối trang.
+Cùng server này còn có trang demo đặt lịch khám ở http://localhost:5173/dat-lich (xem mục "Đặt lịch khám").
 
 ### Thử toàn bộ luồng xác thực với email thật và Google thật
 
@@ -235,6 +236,69 @@ hộp thư thật. Trang demo mở ở http://localhost:5173, Swagger của iden
    - [ ] `PUT /api/users/{id}/status` với `{"trangThai": "VO_HIEU_HOA", "lyDo": "Thử nghiệm"}` -> 200; chủ tài khoản nhận thư
      "[eClinic] Tài khoản của bạn đã bị vô hiệu hoá" có ghi lý do; đăng nhập -> 403.
    - [ ] `{"trangThai": "DA_KICH_HOAT"}` -> 200; nhận thư "[eClinic] Tài khoản của bạn đã được kích hoạt lại"; đăng nhập -> 200.
+
+## Đặt lịch khám
+
+UC-APPT-01 (BOOK-01..07, BOOK-11, BOOK-12): **khách không cần đăng nhập** hoặc **bệnh nhân đã đăng nhập** chọn chuyên khoa,
+bác sĩ (hoặc "bác sĩ bất kỳ"), ngày, khung giờ 1 tiếng, điền thông tin người khám và nhận phiếu khám (số thứ tự, giờ khám dự
+kiến, link, mã QR). Lịch mới ở trạng thái `CHO_XAC_NHAN`. Huỷ / đổi lịch và bác sĩ xác nhận chưa có (task khác).
+
+- Mỗi ca làm việc có N lượt khám mỗi giờ, mỗi lượt t phút (dữ liệu mẫu: N = 6, t = 10). Khung 1 tiếng hết N lượt thì hiện
+  "Hết chỗ"; người đặt được xếp vào lượt trống sớm nhất của khung. Khung cuối của ca có thể ngắn hơn 1 tiếng.
+- Người khám **dưới 18 tuổi tính theo ngày khám** phải kèm thông tin người giám hộ (từ đủ 18 tuổi, CCCD khác người khám).
+- Hồ sơ bệnh nhân tìm theo số CCCD (trẻ chưa có CCCD dùng số định danh cá nhân), chưa có thì tạo mới. Số CCCD đã có hồ sơ thì
+  họ tên và ngày sinh phải khớp hồ sơ đó; form đặt lịch không sửa hồ sơ đã lưu.
+- Khách đặt: chỉ xem lại bằng link phiếu khám. Bệnh nhân đăng nhập: lịch được lưu vào tài khoản ("Lịch hẹn của tôi"), đặt cho
+  bản thân (`datChoBanThan: true`, dùng hồ sơ của tài khoản, chưa có thì tạo và gắn vào tài khoản) hoặc cho người thân.
+
+Tất cả gọi qua gateway `http://localhost:8080`; thử nhanh trên Swagger của catalog-service và booking-service.
+
+| API | Ai gọi | Ghi chú |
+|---|---|---|
+| `GET /api/catalog/chuyen-khoa`, `GET /api/catalog/chuyen-khoa/{id}` | Công khai | Danh sách chuyên khoa (phân trang) |
+| `GET /api/catalog/bac-si?idChuyenKhoa=&tuKhoa=&trang=&kichThuoc=`, `GET /api/catalog/bac-si/{id}` | Công khai | Bác sĩ đang công tác, tài khoản còn hoạt động; không có email, số điện thoại, số giấy phép |
+| `GET /api/booking/khung-gio/ngay-con-cho?tuNgay=&denNgay=&idBacSi=&idChuyenKhoa=` | Công khai | Các ngày có ca đặt được và số chỗ còn lại |
+| `GET /api/booking/khung-gio?ngay=&idBacSi=&idChuyenKhoa=` | Công khai | Các ca trong ngày, mỗi ca kèm bác sĩ, phòng và các khung 1 tiếng (`tongSoCho`, `soChoConLai`, `hetCho`) |
+| `POST /api/booking/lich-hen` | Công khai; có token `BENH_NHAN` thì lưu vào tài khoản | Body: `idLichLamViec`, `gioBatDauKhung` (2 giá trị lấy từ `khung-gio`), `benhNhan` {`hoTen`, `ngaySinh`, `gioiTinh`, `soDienThoai`, `cccd`}, `nguoiGiamHo` {`hoTen`, `quanHe`, `soDienThoai`, `cccd`, `ngaySinh`}, `lyDoKham`, `datChoBanThan`. 201: `maPhieuKham`, `linkPhieuKham`, `soThuTu`, `gioKhamDuKien`, `luuVaoTaiKhoan`... |
+| `GET /api/booking/phieu-kham/{maPhieuKham}` | Công khai (ai có mã cũng xem được) | Phiếu khám; CCCD và số điện thoại đã che; trẻ dưới 18 tuổi có người giám hộ và `canNguoiGiamHoDiCung` |
+| `GET /api/booking/phieu-kham/{maPhieuKham}/qr?kichThuoc=&taiVe=` | Công khai | Ảnh PNG mã QR của link phiếu khám (100–1000 px, mặc định 300; `taiVe=true` để tải về) |
+| `GET /api/booking/lich-hen/cua-toi?loc=TAT_CA\|SAP_TOI\|LICH_SU&trang=&kichThuoc=` | `BENH_NHAN` | Lịch do tài khoản đặt khi đã đăng nhập (cho bản thân hoặc người thân), kèm link phiếu khám |
+| `GET /api/booking/ho-so-benh-nhan/cua-toi`, `PUT /api/booking/ho-so-benh-nhan/cua-toi` | `BENH_NHAN` | Xem, tạo, sửa hồ sơ bệnh nhân của tài khoản; số CCCD không đổi được sau khi đã có hồ sơ |
+
+Mã lỗi (`maLoi`) khi đặt lịch:
+
+| Mã HTTP | `maLoi` | Khi nào |
+|---|---|---|
+| 400 | `DU_LIEU_KHONG_HOP_LE` | Form sai quy tắc; `chiTiet` nêu từng trường (vd `benhNhan.cccd`) |
+| 400 | `THIEU_NGUOI_GIAM_HO`, `NGUOI_GIAM_HO_KHONG_HOP_LE` | Người khám dưới 18 tuổi mà thiếu người giám hộ; người giám hộ chưa đủ 18 tuổi hoặc trùng CCCD với người khám |
+| 409 | `KHUNG_GIO_KHONG_CON_TRONG` | Khung giờ đã hết chỗ |
+| 409 | `KHUNG_GIO_KHONG_KHA_DUNG` | Khung giờ không còn đặt được (đã qua, quá gần giờ khám, quá xa, ca bị huỷ, bác sĩ ngừng công tác) |
+| 409 | `LICH_HEN_TRUNG_GIO` | Người khám đã có lịch còn hiệu lực trong cùng khung giờ đó |
+| 409 | `THONG_TIN_BENH_NHAN_KHONG_KHOP` | Số CCCD đã có hồ sơ nhưng họ tên / ngày sinh không khớp; hoặc đặt cho bản thân với CCCD khác hồ sơ của tài khoản |
+| 409 | `VUOT_GIOI_HAN_DAT_LICH` | Hồ sơ / số điện thoại đã có quá nhiều lịch sắp tới |
+| 409 | `CCCD_DA_CO_HO_SO`, `HO_SO_CHO_XAC_MINH` | Đặt cho bản thân (hoặc tạo hồ sơ) bằng số CCCD đã có hồ sơ chưa gắn với tài khoản: liên hệ phòng khám để xác minh |
+| 403 | `KHONG_CO_QUYEN`, `TAI_KHOAN_BI_VO_HIEU_HOA`, `TAI_KHOAN_CHUA_XAC_THUC` | Token bác sĩ / quản trị viên; tài khoản bị vô hiệu hoá hoặc chưa xác thực email |
+| 429 | `GUI_LAI_QUA_NHANH` | Quá nhiều lần đặt từ một địa chỉ IP |
+| 404 | `KHONG_TIM_THAY` | Ca khám không tồn tại; mã phiếu khám sai |
+
+Cấu hình (đều có giá trị mặc định, xem `.env.example`): `BOOKING_MIN_LEAD` (30m), `BOOKING_MAX_DAYS` (30),
+`BOOKING_MAX_ACTIVE_PER_PATIENT` (3), `BOOKING_MAX_ACTIVE_PER_PHONE` (5), `BOOKING_IP_LIMIT` (20) trong `BOOKING_IP_WINDOW` (10m),
+`GATEWAY_TRUSTED_PROXIES`; link phiếu khám dựng từ `FRONTEND_URL`. Rủi ro và việc cần làm trước khi triển khai thật:
+[docs/BAO-MAT-XAC-THUC.md](docs/BAO-MAT-XAC-THUC.md) mục 7.
+
+**Trang demo đặt lịch** (cần gateway, identity-service, catalog-service, booking-service đang chạy và dữ liệu mẫu):
+```bash
+node scripts/demo-xac-thuc/server.js      # rồi mở http://localhost:5173/dat-lich (Chrome/Edge/Firefox)
+```
+1. **Khách:** chọn chuyên khoa (vd Nhi khoa), để "Bác sĩ bất kỳ" hoặc chọn 1 bác sĩ, bấm 1 ngày, bấm 1 khung giờ, điền form,
+   bấm **Đặt lịch** -> phiếu khám hiện bên dưới kèm mã QR. "Mở trang phiếu khám" mở `/phieu-kham/<mã>` (cũng là link trong
+   mã QR), CCCD và số điện thoại đã che.
+2. **Trẻ dưới 18 tuổi:** nhập ngày sinh của trẻ -> ô "Người giám hộ" hiện ra. Để trống ô này rồi đặt -> 400
+   `THIEU_NGUOI_GIAM_HO`; điền đủ -> phiếu khám có người giám hộ và dòng "người giám hộ phải đi cùng".
+3. **Bệnh nhân:** đăng nhập `benhnhan01@eclinic.local` / `Demo@123` (hoặc đăng nhập ở trang demo xác thực rồi mở trang này)
+   -> "Đặt cho bản thân" điền sẵn từ hồ sơ; đặt xong lịch hiện ở "Lịch hẹn của tôi" (lọc Tất cả / Sắp tới / Lịch sử).
+   "Đặt cho người thân" để nhập người khác; ô "Hồ sơ bệnh nhân của tôi" để xem / sửa hồ sơ.
+4. Khung giờ hết chỗ hiện "Hết chỗ" và không bấm được. Mọi lần gọi API hiện ở ô "Kết quả gọi API gần nhất" cuối trang.
 
 ## Chạy test
 

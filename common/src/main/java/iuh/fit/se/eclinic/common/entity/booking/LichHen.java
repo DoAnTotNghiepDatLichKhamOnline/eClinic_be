@@ -6,6 +6,7 @@ import org.hibernate.type.SqlTypes;
 import iuh.fit.se.eclinic.common.entity.AuditableEntity;
 import iuh.fit.se.eclinic.common.entity.catalog.BacSi;
 import iuh.fit.se.eclinic.common.entity.catalog.PhongKham;
+import iuh.fit.se.eclinic.common.entity.identity.TaiKhoan;
 import iuh.fit.se.eclinic.common.entity.scheduling.KhungGioKham;
 import iuh.fit.se.eclinic.common.enums.TrangThaiLichHen;
 import jakarta.persistence.AttributeOverride;
@@ -31,7 +32,8 @@ import lombok.Setter;
  * <p>
  * Đổi lịch = hủy + tạo mới (quy tắc #10): lịch cũ -> DA_HUY_DO_DOI_LICH, lịch mới có {@code lichHenCu} trỏ về lịch cũ.
  * <p>
- * Khác ERD: thêm {@code lyDoHuy}, {@code canDoiLich} (.md mục 15.4) và {@code lichHenCu}.
+ * Khác ERD: thêm {@code lyDoHuy}, {@code canDoiLich} (.md mục 15.4), {@code lichHenCu}, {@code nguoiGiamHo},
+ * {@code taiKhoanDat} và {@code soDienThoaiLienHe}.
  */
 @Getter
 @Setter
@@ -44,6 +46,16 @@ public class LichHen extends AuditableEntity {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_ho_so_benh_nhan", nullable = false)
     private HoSoBenhNhan hoSoBenhNhan;
+
+    /** Người giám hộ của lượt khám này, bắt buộc khi bệnh nhân dưới 18 tuổi (BOOK-11). */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_nguoi_giam_ho")
+    private NguoiGiamHo nguoiGiamHo;
+
+    /** Tài khoản đã đặt lịch; null = Khách đặt. Chỉ để biết ai đặt, lịch hẹn vẫn thuộc về hồ sơ bệnh nhân. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_tai_khoan_dat")
+    private TaiKhoan taiKhoanDat;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_bac_si", nullable = false)
@@ -72,6 +84,13 @@ public class LichHen extends AuditableEntity {
 
     @Column(name = "ghi_chu", columnDefinition = "TEXT")
     private String ghiChu;
+
+    /**
+     * SĐT người đặt nhập trên form, để liên hệ cho lượt khám này. Không ghi vào hồ sơ bệnh nhân: SĐT của hồ sơ là thứ
+     * được đối chiếu khi liên kết hồ sơ vào tài khoản (quy tắc #3). Null với lịch hẹn tạo trước V5.
+     */
+    @Column(name = "so_dien_thoai_lien_he", length = 20)
+    private String soDienThoaiLienHe;
 
     /** Chuỗi ngẫu nhiên cho link/QR phiếu khám (quy tắc #8), không dùng id tuần tự. */
     @Column(name = "ma_token_phieu_kham", nullable = false, unique = true, length = 64)

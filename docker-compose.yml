@@ -172,11 +172,22 @@ services:
       - "8084:8084"
     environment:
       <<: *moi-truong-chung
+      # Link phiếu khám (nội dung mã QR) trỏ về frontend: FRONTEND_URL/phieu-kham/<mã>
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
+      # Giới hạn khi đặt lịch (xem .env.example): đặt trước tối thiểu / tối đa, số lịch còn hiệu lực, số lần đặt theo IP
+      BOOKING_MIN_LEAD: ${BOOKING_MIN_LEAD:-30m}
+      BOOKING_MAX_DAYS: ${BOOKING_MAX_DAYS:-30}
+      BOOKING_MAX_ACTIVE_PER_PATIENT: ${BOOKING_MAX_ACTIVE_PER_PATIENT:-3}
+      BOOKING_MAX_ACTIVE_PER_PHONE: ${BOOKING_MAX_ACTIVE_PER_PHONE:-5}
+      BOOKING_IP_LIMIT: ${BOOKING_IP_LIMIT:-20}
+      BOOKING_IP_WINDOW: ${BOOKING_IP_WINDOW:-10m}
     healthcheck:
       <<: *kiem-tra
       test: ["CMD", "curl", "-fsS", "http://localhost:8084/actuator/health"]
     depends_on:
       mysql:
+        condition: service_healthy
+      redis:
         condition: service_healthy
 
   medical-service:
@@ -259,6 +270,8 @@ services:
       GATEWAY_READ_TIMEOUT: ${GATEWAY_READ_TIMEOUT:-30s}
       # Body request tối đa tại gateway (vượt -> 413); phải nhỏ hơn max-swallow-size của identity-service (10MB)
       GATEWAY_MAX_REQUEST_SIZE: ${GATEWAY_MAX_REQUEST_SIZE:-5MB}
+      # Regex các proxy đứng trước gateway được tin khi ghi X-Forwarded-For (booking-service giới hạn đặt lịch theo IP)
+      GATEWAY_TRUSTED_PROXIES: "${GATEWAY_TRUSTED_PROXIES:-.*}"
     healthcheck:
       <<: *kiem-tra
       test: ["CMD", "curl", "-fsS", "http://localhost:8080/actuator/health"]

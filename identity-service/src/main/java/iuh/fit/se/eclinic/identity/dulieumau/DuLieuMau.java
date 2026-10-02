@@ -15,8 +15,11 @@ import iuh.fit.se.eclinic.common.enums.TrangThaiTaiKhoan;
  */
 public final class DuLieuMau {
 
-    /** Độ dài 1 khung giờ khám. Ca 3,5 giờ chia được 7 khung. */
-    public static final int SO_PHUT_MOI_KHUNG = 30;
+    /** N: số lượt khám tối đa trong 1 khung 1 giờ (BOOK-12). */
+    public static final int SO_LUOT_MOI_GIO = 6;
+
+    /** t: số phút của 1 lượt khám. Ca 3,5 giờ = 3 khung đủ 6 lượt + nửa giờ cuối 3 lượt = 21 lượt. */
+    public static final int SO_PHUT_MOI_LUOT = 10;
 
     private DuLieuMau() {
     }
