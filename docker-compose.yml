@@ -1,0 +1,281 @@
+# Môi trường Docker cho eClinic backend. Có 2 cách chạy:
+#
+# 1) Chỉ hạ tầng (MySQL + Redis + phpMyAdmin cổng 8090), còn service chạy trong IntelliJ:
+#      docker compose up -d
+#      docker compose down                      (thêm -v để xoá luôn dữ liệu)
+#
+# 2) Chạy tất cả trong Docker (hạ tầng + 7 service + api-gateway cổng 8080):
+#      docker compose --profile app up -d --build
+#      docker compose --profile app down        (phải có --profile app thì mới dừng các service)
+#    Lần build đầu tải toàn bộ thư viện Maven (vài phút, tuỳ tốc độ mạng), các lần sau nhanh hơn nhiều.
+#    Không chạy cùng lúc với service trong IntelliJ: cả hai dùng cổng 8080-8088.
+#
+# Biến môi trường: copy .env.example -> .env rồi sửa nếu cần. Container chỉ nhận đúng các biến
+# khai báo trong "environment:" bên dưới (không dùng env_file để .env không lọt vào container).
+
+name: eclinic
+
+# ---- Phần cấu hình dùng chung cho các service ứng dụng (YAML anchor) ----
+# Lưu ý: "<<:" chỉ gộp 1 cấp. Vì vậy build/healthcheck/environment được gộp ở bên trong từng map.
+
+x-dich-vu: &dich-vu
+  profiles: [app]
+  restart: unless-stopped
+  mem_limit: 512m
+
+x-kiem-tra-suc-khoe: &kiem-tra
+  interval: 10s
+  timeout: 5s
+  retries: 12
+  # 8 JVM khởi động cùng lúc nên cho thời gian khởi động dài
+  start_period: 120s
+
+x-java: &java-tool-options
+  # Heap theo giới hạn bộ nhớ container, GC nhỏ gọn, khởi động nhanh hơn
+  JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=70 -XX:+UseSerialGC -XX:TieredStopAtLevel=1
+
+x-moi-truong-chung: &moi-truong-chung
+  <<: *java-tool-options
+  # Trong mạng Docker, service gọi MySQL/Redis bằng tên service và cổng bên trong container.
+  # DB_PORT/REDIS_PORT trong .env là cổng mở ra máy host, không dùng ở đây.
+  DB_HOST: mysql
+  DB_PORT: "3306"
+  DB_NAME: ${DB_NAME:-eclinic}
+  DB_USERNAME: ${DB_USERNAME:-eclinic}
+  DB_PASSWORD: ${DB_PASSWORD:-eclinic}
+  REDIS_HOST: redis
+  REDIS_PORT: "6379"
+  # Giá trị mặc định giống application-common.yml: token tạo khi chạy IntelliJ vẫn dùng được ở đây.
+  # (Không để trống: biến rỗng sẽ ghi đè giá trị mặc định của Spring và service không khởi động được.)
+  JWT_SECRET: ${JWT_SECRET:-eclinic-dev-secret-chi-dung-o-may-local-khong-dung-that-2026}
+  JWT_TTL: ${JWT_TTL:-30m}
+
+services:
+  # ================= Hạ tầng (luôn chạy) =================
+  mysql:
+    image: mysql:8.4
+    container_name: eclinic-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      MYSQL_DATABASE: ${DB_NAME:-eclinic}
+      MYSQL_USER: ${DB_USERNAME:-eclinic}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-eclinic}
+      TZ: Asia/Ho_Chi_Minh
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    ports:
+      - "${DB_PORT:-3306}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-root}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  redis:
+    image: redis:7.4-alpine
+    container_name: eclinic-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+  phpmyadmin:
+    image: phpmyadmin:5
+    container_name: eclinic-phpmyadmin
+    restart: unless-stopped
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      UPLOAD_LIMIT: 64M
+    ports:
+      - "${PMA_PORT:-8090}:80"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    labels:
+      # Spring Boot docker-compose support bỏ qua service này (không phải service connection)
+      org.springframework.boot.ignore: "true"
+
+  # ================= Ứng dụng (chỉ chạy với --profile app) =================
+  # Tên service phải khớp địa chỉ mà api-gateway dùng (http://<tên service>:<cổng>).
+  # Mỗi service mở cổng riêng ra host để xem Swagger của từng service.
+
+  identity-service:
+    <<: *dich-vu
+    build: { context: ., args: { MODULE: identity-service } }
+    container_name: eclinic-identity-service
+    ports:
+      - "8081:8081"
+    environment:
+      <<: *moi-truong-chung
+      # Tài khoản quản trị tạo khi khởi động lần đầu (chưa có admin nào)
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@eclinic.local}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Admin@123}
+      # Dữ liệu mẫu để thử / demo: bác sĩ, bệnh nhân, chuyên khoa, ca làm việc (xem .env.example). Triển khai thật: SEED_DATA=false
+      SEED_DATA: ${SEED_DATA:-true}
+      SEED_PASSWORD: ${SEED_PASSWORD:-Demo@123}
+      # Email kích hoạt / đặt lại mật khẩu (xem .env.example). Mặc định console: liên kết chỉ ghi ra log.
+      MAIL_MODE: ${MAIL_MODE:-console}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_APP_PASSWORD: ${MAIL_APP_PASSWORD:-}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
+      # Đăng nhập Google (xem .env.example). Để trống: /api/auth/google trả 503.
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      # Kho ảnh đại diện Cloudinary (xem .env.example). Thiếu 1 trong 3 giá trị đầu: POST /api/users/me/avatar trả 503.
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME:-}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY:-}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET:-}
+      CLOUDINARY_FOLDER: ${CLOUDINARY_FOLDER:-eclinic}
+      # Cookie refresh token chỉ gửi qua HTTPS (localhost được coi là an toàn). false chỉ khi thử qua IP LAN bằng http
+      COOKIE_SECURE: ${COOKIE_SECURE:-true}
+    healthcheck:
+      <<: *kiem-tra
+      test: ["CMD", "curl", "-fsS", "http://localhost:8081/actuator/health"]
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  catalog-service:
+    <<: *dich-vu
+    build: { context: ., args: { MODULE: catalog-service } }
+    container_name: eclinic-catalog-service
+    ports:
+      - "8082:8082"
+    environment:
+      <<: *moi-truong-chung
+    healthcheck:
+      <<: *kiem-tra
+      test: ["CMD", "curl", "-fsS", "http://localhost:8082/actuator/health"]
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  booking-service:
+    <<: *dich-vu
+    build: { context: ., args: { MODULE: booking-service } }
+    container_name: eclinic-booking-service
+    ports:
+      - "8084:8084"
+    environment:
+      <<: *moi-truong-chung
+      # Link phiếu khám (nội dung mã QR) trỏ về frontend: FRONTEND_URL/phieu-kham/<mã>
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
+      # Giới hạn khi đặt lịch (xem .env.example): đặt trước tối thiểu / tối đa, số lịch còn hiệu lực, số lần đặt theo IP
+      BOOKING_MIN_LEAD: ${BOOKING_MIN_LEAD:-30m}
+      BOOKING_MAX_DAYS: ${BOOKING_MAX_DAYS:-30}
+      BOOKING_MAX_ACTIVE_PER_PATIENT: ${BOOKING_MAX_ACTIVE_PER_PATIENT:-3}
+      BOOKING_MAX_ACTIVE_PER_PHONE: ${BOOKING_MAX_ACTIVE_PER_PHONE:-5}
+      BOOKING_IP_LIMIT: ${BOOKING_IP_LIMIT:-20}
+      BOOKING_IP_WINDOW: ${BOOKING_IP_WINDOW:-10m}
+    healthcheck:
+      <<: *kiem-tra
+      test: ["CMD", "curl", "-fsS", "http://localhost:8084/actuator/health"]
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  medical-service:
+    <<: *dich-vu
+    build: { context: ., args: { MODULE: medical-service } }
+    container_name: eclinic-medical-service
+    ports:
+      - "8085:8085"
+    environment:
+      <<: *moi-truong-chung
+    healthcheck:
+      <<: *kiem-tra
+      test: ["CMD", "curl", "-fsS", "http://localhost:8085/actuator/health"]
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  notification-service:
+    <<: *dich-vu
+    build: { context: ., args: { MODULE: notification-service } }
+    container_name: eclinic-notification-service
+    ports:
+      - "8086:8086"
+    environment:
+      <<: *moi-truong-chung
+    healthcheck:
+      <<: *kiem-tra
+      test: ["CMD", "curl", "-fsS", "http://localhost:8086/actuator/health"]
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  chatbot-service:
+    <<: *dich-vu
+    build: { context: ., args: { MODULE: chatbot-service } }
+    container_name: eclinic-chatbot-service
+    ports:
+      - "8087:8087"
+    environment:
+      <<: *moi-truong-chung
+    healthcheck:
+      <<: *kiem-tra
+      test: ["CMD", "curl", "-fsS", "http://localhost:8087/actuator/health"]
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  report-service:
+    <<: *dich-vu
+    build: { context: ., args: { MODULE: report-service } }
+    container_name: eclinic-report-service
+    ports:
+      - "8088:8088"
+    environment:
+      <<: *moi-truong-chung
+    healthcheck:
+      <<: *kiem-tra
+      test: ["CMD", "curl", "-fsS", "http://localhost:8088/actuator/health"]
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  # Gateway không chờ các service: service nào chưa lên thì gateway trả 503 cho service đó.
+  api-gateway:
+    <<: *dich-vu
+    build: { context: ., args: { MODULE: api-gateway } }
+    container_name: eclinic-api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      <<: *java-tool-options
+      IDENTITY_URL: http://identity-service:8081
+      CATALOG_URL: http://catalog-service:8082
+      BOOKING_URL: http://booking-service:8084
+      MEDICAL_URL: http://medical-service:8085
+      NOTIFICATION_URL: http://notification-service:8086
+      CHATBOT_URL: http://chatbot-service:8087
+      REPORT_URL: http://report-service:8088
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:5173,http://localhost:3000}
+      GATEWAY_READ_TIMEOUT: ${GATEWAY_READ_TIMEOUT:-30s}
+      # Body request tối đa tại gateway (vượt -> 413); phải nhỏ hơn max-swallow-size của identity-service (10MB)
+      GATEWAY_MAX_REQUEST_SIZE: ${GATEWAY_MAX_REQUEST_SIZE:-5MB}
+      # Regex các proxy đứng trước gateway được tin khi ghi X-Forwarded-For (booking-service giới hạn đặt lịch theo IP)
+      GATEWAY_TRUSTED_PROXIES: "${GATEWAY_TRUSTED_PROXIES:-.*}"
+    healthcheck:
+      <<: *kiem-tra
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/actuator/health"]
+
+volumes:
+  mysql_data:
+  redis_data:

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>iuh.fit.se</groupId>
+        <artifactId>eclinic-be</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+    </parent>
+    <artifactId>booking-service</artifactId>
+    <name>booking-service</name>
+    <description>BOOK-01..12, SCHED-01..05, PAT-01..03, ADM-03, ADM-04: ca làm việc, khung giờ khám, yêu cầu đổi lịch, đặt/đổi/hủy lịch hẹn, phiếu khám, hồ sơ bệnh nhân theo CCCD</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>iuh.fit.se</groupId>
+            <artifactId>common</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webmvc</artifactId>
+        </dependency>
+        <!-- Redis: đếm số lần gọi API đặt lịch công khai theo địa chỉ IP -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
+        </dependency>
+        <!-- ZXing core: mã hoá link phiếu khám thành ma trận QR; ảnh PNG do ImageIO của JDK ghi -->
+        <dependency>
+            <groupId>com.google.zxing</groupId>
+            <artifactId>core</artifactId>
+        </dependency>
+
+        <!-- Test -->
+        <dependency>
+            <groupId>iuh.fit.se</groupId>
+            <artifactId>common</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

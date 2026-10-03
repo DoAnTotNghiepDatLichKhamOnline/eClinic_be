@@ -1,0 +1,76 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+      server:
+        webmvc:
+          # Gateway chỉ ghi X-Forwarded-For (địa chỉ client) cho service phía sau khi có thuộc tính này. Giá trị là regex
+          # các proxy đứng TRƯỚC gateway được tin; mặc định tin tất cả, vì service chỉ đọc phần tử cuối của
+          # X-Forwarded-For (do chính gateway thêm). booking-service dùng nó để giới hạn số lần đặt lịch theo IP.
+          trusted-proxies: ${GATEWAY_TRUSTED_PROXIES:.*}
+          # Mỗi service 1 route: request /api/<service>/** được chuyển tới service đó, GIỮ NGUYÊN đường dẫn
+          # (controller của service tự map đầy đủ /api/<service>/..., vd /api/catalog/chuyen-khoa).
+          # Thêm service mới = copy 1 route bên dưới, đổi id, Path và biến *_URL.
+          # Ngoại lệ: API xác thực và API tài khoản theo tài liệu API là /api/auth/**, /api/users/** (không có tên service)
+          # nên cũng về identity-service.
+          # Biến *_URL mặc định trỏ localhost (chạy bằng IntelliJ); docker-compose đặt http://<ten-service>:<cong>.
+          routes:
+            - id: identity-service
+              uri: ${IDENTITY_URL:http://localhost:8081}
+              predicates:
+                - Path=/api/identity/**,/api/auth/**,/api/users/**
+            - id: catalog-service
+              uri: ${CATALOG_URL:http://localhost:8082}
+              predicates:
+                - Path=/api/catalog/**
+            - id: booking-service
+              uri: ${BOOKING_URL:http://localhost:8084}
+              predicates:
+                - Path=/api/booking/**
+            - id: medical-service
+              uri: ${MEDICAL_URL:http://localhost:8085}
+              predicates:
+                - Path=/api/medical/**
+            - id: notification-service
+              uri: ${NOTIFICATION_URL:http://localhost:8086}
+              predicates:
+                - Path=/api/notification/**
+            - id: chatbot-service
+              uri: ${CHATBOT_URL:http://localhost:8087}
+              predicates:
+                - Path=/api/chatbot/**
+            - id: report-service
+              uri: ${REPORT_URL:http://localhost:8088}
+              predicates:
+                - Path=/api/report/**
+
+  # Thời gian chờ khi gateway gọi tới service (quá hạn -> 504, service chưa chạy -> 503)
+  http:
+    clients:
+      connect-timeout: 2s
+      read-timeout: ${GATEWAY_READ_TIMEOUT:30s}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        # /actuator/health cho healthcheck của docker-compose
+        include: health,info
+
+app:
+  gioi-han:
+    # Body request tối đa (theo Content-Length); vượt -> gateway trả 413 YEU_CAU_QUA_LON, không chuyển tiếp
+    # (body tới 4 lần giới hạn được đọc bỏ trước khi trả lời để client chắc chắn nhận được thông báo, xem GioiHanKichThuocFilter).
+    # Gateway KHÔNG đọc multipart (Spring Cloud Gateway MVC tắt spring.servlet.multipart ở gateway) mà chuyển nguyên
+    # body cho service, nên đây là giới hạn duy nhất tại gateway. Phải NHỎ HƠN server.tomcat.max-swallow-size của
+    # các service nhận upload (identity-service: 10MB); giới hạn nghiệp vụ nhỏ hơn do từng service tự đặt (ảnh 2MB).
+    kich-thuoc-request-toi-da: ${GATEWAY_MAX_REQUEST_SIZE:5MB}
+  cors:
+    # Các địa chỉ frontend được gọi API (phân cách bằng dấu phẩy).
+    # CORS CHỈ cấu hình ở gateway, không cấu hình trong các service (tránh trùng header).
+    nguon-duoc-phep: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:3000}

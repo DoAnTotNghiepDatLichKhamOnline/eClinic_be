@@ -1,0 +1,119 @@
+server:
+  port: 8081
+  tomcat:
+    # Upload vượt giới hạn multipart: Tomcat chỉ đọc bỏ phần body còn lại tối đa chừng này (mặc định 2MB), quá thì ngắt
+    # kết nối trước khi trả xong response -> gateway báo 502 thay vì 413 TEP_QUA_LON. Phải LỚN HƠN giới hạn request
+    # của gateway (app.gioi-han.kich-thuoc-request-toi-da = 5MB) để mọi request gateway cho qua đều được đọc hết.
+    max-swallow-size: 10MB
+
+spring:
+  application:
+    name: identity-service
+  config:
+    import: classpath:application-common.yml
+
+  servlet:
+    multipart:
+      # Ảnh đại diện (POST /api/users/me/avatar): tối đa 2MB mỗi tệp. Vượt -> 413 TEP_QUA_LON (XuLyLoiHandler).
+      max-file-size: 2MB
+      max-request-size: 3MB
+
+  # Gmail SMTP. MAIL_APP_PASSWORD là App Password 16 ký tự (cần bật xác minh 2 bước cho tài khoản Google),
+  # KHÔNG phải mật khẩu Gmail. Chỉ dùng khi app.email.che-do = smtp.
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_APP_PASSWORD:}
+    default-encoding: UTF-8
+    properties:
+      "[mail.smtp.auth]": true
+      "[mail.smtp.starttls.enable]": true
+      "[mail.smtp.starttls.required]": true
+      # Không để thread gửi mail treo vô hạn khi SMTP không phản hồi (ms)
+      "[mail.smtp.connectiontimeout]": 5000
+      "[mail.smtp.timeout]": 5000
+      "[mail.smtp.writetimeout]": 5000
+
+management:
+  health:
+    mail:
+      # Tắt: health check sẽ đăng nhập Gmail mỗi lần docker kiểm tra -> chế độ console (không có tài khoản) luôn DOWN,
+      # chế độ smtp thì Gmail chậm/lỗi làm identity bị coi là hỏng. Lỗi gửi mail đã được ghi log riêng.
+      enabled: false
+
+app:
+  email:
+    # console: chỉ ghi email + liên kết ra log (máy dev, KHÔNG gửi thật). smtp: gửi qua Gmail, thiếu tài khoản thì không khởi động.
+    che-do: ${MAIL_MODE:console}
+    # Liên kết trong email trỏ về frontend; frontend lấy token trên URL rồi POST về API.
+    frontend-url: ${FRONTEND_URL:http://localhost:5173}
+    duong-dan-xac-thuc: /verify-email
+    duong-dan-dat-lai: /reset-password
+    duong-dan-doi-email: /confirm-email-change
+  lien-ket:
+    thoi-han-xac-thuc-email: 24h
+    thoi-gian-cho-gui-lai: 60s
+    thoi-han-dat-lai-mat-khau: 15m
+    thoi-han-doi-email: 1h
+  dang-nhap:
+    # Sai mật khẩu 5 lần thì khoá email 15 phút tính từ lần sai thứ 5
+    so-lan-sai-toi-da: 5
+    thoi-gian-khoa: 15m
+    # Mỗi lần làm mới cấp refresh token mới sống thêm 7 ngày
+    thoi-han-refresh-token: 7d
+    # Refresh token đã thu hồi dùng lại trong khoảng này coi như 2 tab làm mới cùng lúc (chỉ báo 401);
+    # quá khoảng này coi như token bị lộ -> đăng xuất phiên của token đó (các thiết bị khác giữ nguyên)
+    an-han-dung-lai: 10s
+  # Cookie HttpOnly chứa refresh token (tên eclinic_rt, đường dẫn /api/auth). secure=true vẫn chạy trên http://localhost;
+  # chỉ đặt COOKIE_SECURE=false khi thử qua IP mạng LAN bằng http
+  cookie-phien:
+    secure: ${COOKIE_SECURE:true}
+    same-site: Strict
+  google:
+    # OAuth Client ID (loại Web) mà frontend dùng với Google Identity Services. Để trống: đăng nhập Google trả 503.
+    client-id: ${GOOGLE_CLIENT_ID:}
+    # Khoá công khai của Google để kiểm tra chữ ký ID token (được cache)
+    jwk-set-uri: https://www.googleapis.com/oauth2/v3/certs
+    thoi-gian-cho: 5s
+  # Kho ảnh Cloudinary (gói miễn phí, không cần thẻ): xem .env.example. Thiếu 1 trong 3 giá trị: tải ảnh đại diện trả 503,
+  # service vẫn khởi động bình thường.
+  cloudinary:
+    cloud-name: ${CLOUDINARY_CLOUD_NAME:}
+    api-key: ${CLOUDINARY_API_KEY:}
+    api-secret: ${CLOUDINARY_API_SECRET:}
+    # Mỗi tài khoản 1 ảnh: <thu-muc>/avatar/<idTaiKhoan>. 2 DB dùng chung 1 tài khoản Cloudinary thì đặt thư mục khác nhau.
+    thu-muc: ${CLOUDINARY_FOLDER:eclinic}
+    url-api: https://api.cloudinary.com
+    # Nhỏ hơn read-timeout của gateway (30s) để lỗi kho ảnh ra 503 chứ không ra 504
+    thoi-gian-cho: 20s
+  anh-dai-dien:
+    # Mỗi tài khoản tải ảnh lên tối đa 10 lần / giờ (mỗi lần tải tốn hạn mức của gói miễn phí)
+    so-lan-tai-len-toi-da: 10
+    khoang-dem: 1h
+  bao-mat:
+    # Không cần đăng nhập: đăng ký, xác thực email, đăng nhập, làm mới phiên, đăng xuất (chỉ cần refresh token),
+    # quên / đặt lại mật khẩu, đăng nhập Google, xác nhận đổi email (liên kết có thể mở ở trình duyệt chưa đăng nhập)
+    duong-dan-cong-khai:
+      - POST /api/auth/register
+      - POST /api/auth/verify-email
+      - POST /api/auth/resend-verification
+      - POST /api/auth/login
+      - POST /api/auth/refresh-token
+      - POST /api/auth/logout
+      - POST /api/auth/forgot-password
+      - POST /api/auth/reset-password
+      - POST /api/auth/google
+      - POST /api/auth/confirm-email-change
+  # Tài khoản quản trị tạo sẵn khi DB chưa có admin (KhoiTaoAdminRunner)
+  admin-mac-dinh:
+    email: ${ADMIN_EMAIL:admin@eclinic.local}
+    # Đổi giá trị mặc định thì đổi cả KhoiTaoAdminRunner.MAT_KHAU_MAC_DINH (dùng để cảnh báo khi khởi động)
+    mat-khau: ${ADMIN_PASSWORD:Admin@123}
+  # Dữ liệu mẫu CHỈ để thử / demo (package dulieumau): 8 chuyên khoa + phòng khám, 12 bác sĩ, 6 bệnh nhân,
+  # ca làm việc + khung giờ cho so-ngay ngày tới. Mặc định tắt (test, triển khai thật); docker-compose.yml và
+  # run config IntelliJ của identity-service bật sẵn. Mọi tài khoản mẫu dùng chung mat-khau.
+  du-lieu-mau:
+    bat: ${SEED_DATA:false}
+    mat-khau: ${SEED_PASSWORD:Demo@123}
+    so-ngay: 14

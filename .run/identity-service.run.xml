@@ -1,0 +1,14 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="identity-service" type="Application" factoryName="Application">
+    <option name="MAIN_CLASS_NAME" value="iuh.fit.se.eclinic.IdentityServiceApplication" />
+    <module name="identity-service" />
+    <option name="VM_PARAMETERS" value="-Xmx512m -XX:TieredStopAtLevel=1" />
+    <shortenClasspath name="ARGS_FILE" />
+    <envs>
+      <env name="SEED_DATA" value="true" />
+    </envs>
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

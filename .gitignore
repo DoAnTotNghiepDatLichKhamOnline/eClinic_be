@@ -47,6 +47,7 @@ local.properties
 *.env
 *.env*
 **/.env*
+!.env.example
 *.pem
 *.key
 
@@ -116,3 +117,27 @@ build/
 
 # Spring Boot generated files
 HELP.md
+
+# ==========================================
+# PM Bible (local-only tooling, not part of the codebase)
+# ==========================================
+# Bible clone
+/bible/
+/.bible/
+# Synced scripts, config and hash ledger
+/bible-files/
+# Synced skills and local Claude Code settings
+/.claude/skills/
+/.claude/settings.local.json
+# Plan files written by /pm, /p, /s
+/cycles/
+# Second-opinion reviewer transcripts and topic registry
+/temp/seop/
+# Reviewer provider profiles hold live API keys
+seop-providers.json
+
+# ==========================================
+# Tài liệu đồ án (chỉ giữ ở máy, không commit)
+# ==========================================
+/*.docx
+/yeu-cau-toan-dien-dat-lich-kham-benh.md

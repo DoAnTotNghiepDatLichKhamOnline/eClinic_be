@@ -1,0 +1,8 @@
+server:
+  port: 8087
+
+spring:
+  application:
+    name: chatbot-service
+  config:
+    import: classpath:application-common.yml
