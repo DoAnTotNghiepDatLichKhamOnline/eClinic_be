@@ -123,6 +123,7 @@ class SchemaConstraintsTest {
         lichHen.setPhongKham(ca.phongKham());
         lichHen.setSoThuTu(soThuTu);
         lichHen.setMaTokenPhieuKham(UUID.randomUUID().toString());
+        lichHen.setMaTraCuu(UUID.randomUUID().toString().substring(0, 20));
         return lichHen;
     }
 

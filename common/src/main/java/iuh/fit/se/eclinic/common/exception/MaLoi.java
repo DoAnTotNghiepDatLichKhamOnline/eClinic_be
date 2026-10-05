@@ -49,7 +49,7 @@ public enum MaLoi {
     EMAIL_MOI_TRUNG_EMAIL_CU(HttpStatus.BAD_REQUEST, "Email mới phải khác email hiện tại"),
     ANH_KHONG_HOP_LE(HttpStatus.BAD_REQUEST, "Ảnh phải là tệp JPEG, PNG hoặc WebP"),
     LUU_TRU_ANH_KHONG_KHA_DUNG(HttpStatus.SERVICE_UNAVAILABLE,
-            "Chức năng ảnh đại diện tạm thời không khả dụng, vui lòng thử lại sau"),
+            "Chức năng tải ảnh lên tạm thời không khả dụng, vui lòng thử lại sau"),
     // Quản trị viên quản lý tài khoản
     TAI_KHOAN_QUAN_TRI_DUOC_BAO_VE(HttpStatus.FORBIDDEN,
             "Không thể vô hiệu hoá hoặc xoá tài khoản quản trị viên"),
@@ -62,6 +62,7 @@ public enum MaLoi {
     // Danh mục
     TEN_CHUYEN_KHOA_DA_TON_TAI(HttpStatus.CONFLICT, "Tên chuyên khoa đã tồn tại"),
     CHUYEN_KHOA_DANG_DUOC_SU_DUNG(HttpStatus.CONFLICT, "Chuyên khoa đang được sử dụng, không thể xoá"),
+    VUOT_SO_ANH_BAC_SI(HttpStatus.CONFLICT, "Bác sĩ đã có đủ số ảnh giới thiệu tối đa, hãy xoá bớt ảnh trước khi thêm"),
 
     // Lịch làm việc / đặt lịch
     TRUNG_LICH_LAM_VIEC(HttpStatus.CONFLICT, "Lịch làm việc bị trùng giờ"),

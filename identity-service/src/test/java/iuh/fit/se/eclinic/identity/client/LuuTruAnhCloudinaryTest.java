@@ -31,7 +31,8 @@ import org.springframework.web.client.RestClient;
 
 import iuh.fit.se.eclinic.common.exception.LoiNghiepVu;
 import iuh.fit.se.eclinic.common.exception.MaLoi;
-import iuh.fit.se.eclinic.identity.config.CloudinaryProperties;
+import iuh.fit.se.eclinic.common.luutru.CloudinaryProperties;
+import iuh.fit.se.eclinic.common.luutru.LuuTruAnhCloudinary;
 
 /**
  * Kho ảnh Cloudinary với server giả (MockRestServiceServer), không gọi Cloudinary thật: kiểm tra request gửi đi
@@ -199,7 +200,7 @@ class LuuTruAnhCloudinaryTest {
     }
 
     private static CloudinaryProperties cauHinh(String cloudName, String apiKey, String apiSecret) {
-        return new CloudinaryProperties(cloudName, apiKey, apiSecret, "eclinic", "https://api.cloudinary.com",
+        return new CloudinaryProperties(true, cloudName, apiKey, apiSecret, "eclinic", "https://api.cloudinary.com",
                 Duration.ofSeconds(20));
     }
 

@@ -10,8 +10,8 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 /**
- * Thông tin người giám hộ, bắt buộc khi người khám dưới 18 tuổi (BOOK-11). Ngày sinh bắt buộc để kiểm tra người giám
- * hộ từ đủ 18 tuổi.
+ * Thông tin người giám hộ, bắt buộc khi người khám dưới 18 tuổi (BOOK-11). Ngày sinh không bắt buộc (form đặt lịch
+ * không có ô này); có gửi thì người giám hộ phải từ đủ 18 tuổi tính theo ngày khám.
  */
 public record NguoiGiamHoRequest(
         @NotBlank(message = "Họ tên người giám hộ không được để trống")
@@ -29,7 +29,6 @@ public record NguoiGiamHoRequest(
         @Pattern(regexp = "^\\d{12}$", message = "Số CCCD gồm đúng 12 chữ số")
         String cccd,
 
-        @NotNull(message = "Ngày sinh người giám hộ không được để trống")
         @Past(message = "Ngày sinh người giám hộ phải ở quá khứ")
         LocalDate ngaySinh) {
 }

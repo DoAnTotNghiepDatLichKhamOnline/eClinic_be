@@ -1,4 +1,4 @@
-package iuh.fit.se.eclinic.identity.util;
+package iuh.fit.se.eclinic.common.util;
 
 import java.util.Optional;
 

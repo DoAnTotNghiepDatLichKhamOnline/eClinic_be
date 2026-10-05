@@ -92,6 +92,17 @@ public class LichHen extends AuditableEntity {
     @Column(name = "so_dien_thoai_lien_he", length = 20)
     private String soDienThoaiLienHe;
 
+    /** Email người đặt nhập trên form (không bắt buộc), để sau này gửi phiếu khám / nhắc lịch. */
+    @Column(name = "email_lien_he", length = 255)
+    private String emailLienHe;
+
+    /**
+     * Mã ngắn để đọc / gõ, dạng {@code ECL-<ngày khám yyyyMMdd>-<4 chữ số>}. Bác sĩ, quản trị viên tra lịch hẹn theo mã
+     * này; KHÔNG dùng để mở phiếu khám công khai (đoán được).
+     */
+    @Column(name = "ma_tra_cuu", nullable = false, unique = true, length = 20)
+    private String maTraCuu;
+
     /** Chuỗi ngẫu nhiên cho link/QR phiếu khám (quy tắc #8), không dùng id tuần tự. */
     @Column(name = "ma_token_phieu_kham", nullable = false, unique = true, length = 64)
     private String maTokenPhieuKham;

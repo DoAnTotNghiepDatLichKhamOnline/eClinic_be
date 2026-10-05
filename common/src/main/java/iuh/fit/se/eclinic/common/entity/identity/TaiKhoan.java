@@ -45,6 +45,13 @@ public class TaiKhoan extends AuditableEntity {
     @Column(name = "so_dien_thoai", length = 20, unique = true)
     private String soDienThoai;
 
+    /**
+     * Số CCCD khai khi đăng ký (không bắt buộc, chưa được kiểm chứng). booking-service dùng để tìm hồ sơ bệnh nhân đã
+     * có của Khách và liên kết vào tài khoản (quy tắc #3). Không duy nhất, không trả về trong API nào.
+     */
+    @Column(name = "cccd_dang_ky", length = 12)
+    private String cccdDangKy;
+
     @Column(name = "anh_dai_dien", length = 500)
     private String anhDaiDien;
 

@@ -477,7 +477,7 @@ class QuanLyTaiKhoanServiceTest {
     void xoaTaiKhoanChuaDuocThamChieuXoaLuonPhienVaLienKetRoiEmailDangKyLaiDuoc() {
         String email = "ql-xoa-" + hauTo() + "@example.com";
         String soDienThoai = soDienThoaiMoi();
-        Long id = xacThucService.dangKy(new DangKyRequest("Người đăng ký", email, "Matkhau@123", soDienThoai)).id();
+        Long id = xacThucService.dangKy(new DangKyRequest("Người đăng ký", email, "Matkhau@123", soDienThoai, null)).id();
         String tokenXacThuc = applicationEvents.stream(EmailXacThucEvent.class).toList().get(0).token();
         TaiKhoan taiKhoan = taiKhoanRepository.findById(id).orElseThrow();
         String tokenA = refreshTokenService.tao(taiKhoan, "JUnit A", Duration.ofDays(7)).refreshToken();
@@ -494,7 +494,7 @@ class QuanLyTaiKhoanServiceTest {
                 .containsExactly(new TaiKhoanDaXoaEvent(id, null));
         assertMaLoi(() -> quanLyTaiKhoanService.layChiTiet(idAdmin, id), MaLoi.KHONG_TIM_THAY);
         // Email và số điện thoại được giải phóng
-        Long idMoi = xacThucService.dangKy(new DangKyRequest("Người đăng ký lại", email, "Matkhau@123", soDienThoai))
+        Long idMoi = xacThucService.dangKy(new DangKyRequest("Người đăng ký lại", email, "Matkhau@123", soDienThoai, null))
                 .id();
         assertThat(idMoi).isNotEqualTo(id);
     }
@@ -675,6 +675,7 @@ class QuanLyTaiKhoanServiceTest {
             lichHen.setSoThuTu(1);
             lichHen.setTrangThai(trangThai);
             lichHen.setMaTokenPhieuKham(UUID.randomUUID().toString().replace("-", ""));
+            lichHen.setMaTraCuu(UUID.randomUUID().toString().substring(0, 20));
             entityManager.persist(lichHen);
             entityManager.flush();
             return lichHen.getId();

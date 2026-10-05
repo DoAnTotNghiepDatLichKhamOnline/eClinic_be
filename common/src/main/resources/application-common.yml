@@ -33,6 +33,19 @@ management:
         include: health,info
 
 app:
+  # Kho ảnh Cloudinary (gói miễn phí, không cần thẻ): xem .env.example. Chỉ service đặt app.cloudinary.bat: true mới tạo
+  # kho ảnh (identity-service: ảnh đại diện; catalog-service: ảnh giới thiệu bác sĩ). Thiếu 1 trong 3 giá trị đầu:
+  # các API tải ảnh lên trả 503, service vẫn khởi động bình thường.
+  cloudinary:
+    # KHÔNG đặt "bat" ở đây: file này được import nên giá trị ở đây đè lên application.yml của service
+    cloud-name: ${CLOUDINARY_CLOUD_NAME:}
+    api-key: ${CLOUDINARY_API_KEY:}
+    api-secret: ${CLOUDINARY_API_SECRET:}
+    # Thư mục gốc của ảnh. 2 DB dùng chung 1 tài khoản Cloudinary thì đặt thư mục khác nhau (ảnh đặt tên theo id).
+    thu-muc: ${CLOUDINARY_FOLDER:eclinic}
+    url-api: https://api.cloudinary.com
+    # Nhỏ hơn read-timeout của gateway (30s) để lỗi kho ảnh ra 503 chứ không ra 504
+    thoi-gian-cho: 20s
   bao-mat:
     # Khoá ký JWT (HS256), tối thiểu 32 ký tự, PHẢI giống nhau ở mọi service.
     # Giá trị mặc định chỉ để chạy máy local; môi trường thật phải đặt JWT_SECRET.

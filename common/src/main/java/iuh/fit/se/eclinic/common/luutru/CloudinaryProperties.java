@@ -1,4 +1,4 @@
-package iuh.fit.se.eclinic.identity.config;
+package iuh.fit.se.eclinic.common.luutru;
 
 import java.time.Duration;
 
@@ -6,8 +6,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.bind.DefaultValue;
 
 /**
- * Kho ảnh Cloudinary (gói miễn phí), prefix {@code app.cloudinary} trong application.yml.
+ * Kho ảnh Cloudinary (gói miễn phí), prefix {@code app.cloudinary} trong application-common.yml.
  *
+ * @param bat         true ở service có tải ảnh lên (identity, catalog): chỉ khi đó bean {@link LuuTruAnh} được tạo
  * @param cloudName   CLOUDINARY_CLOUD_NAME
  * @param apiKey      CLOUDINARY_API_KEY
  * @param apiSecret   CLOUDINARY_API_SECRET, dùng để ký request, không bao giờ ghi ra log
@@ -18,6 +19,7 @@ import org.springframework.boot.context.properties.bind.DefaultValue;
  */
 @ConfigurationProperties("app.cloudinary")
 public record CloudinaryProperties(
+        @DefaultValue("false") boolean bat,
         @DefaultValue("") String cloudName,
         @DefaultValue("") String apiKey,
         @DefaultValue("") String apiSecret,

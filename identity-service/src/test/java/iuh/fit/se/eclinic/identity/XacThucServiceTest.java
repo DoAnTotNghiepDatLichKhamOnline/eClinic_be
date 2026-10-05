@@ -51,7 +51,7 @@ class XacThucServiceTest {
     void dangKyTaoTaiKhoanChoXacThucVaPhatEmail() {
         String hauTo = hauTo();
         TaiKhoanResponse ketQua = xacThucService.dangKy(
-                new DangKyRequest("  Nguyễn Văn A ", "  BN-" + hauTo + "@Example.COM ", "123456", soDienThoai()));
+                new DangKyRequest("  Nguyễn Văn A ", "  BN-" + hauTo + "@Example.COM ", "123456", soDienThoai(), null));
 
         TaiKhoan taiKhoan = taiKhoanRepository.findById(ketQua.id()).orElseThrow();
         assertThat(taiKhoan.getEmail()).isEqualTo("bn-" + hauTo + "@example.com");
@@ -155,7 +155,7 @@ class XacThucServiceTest {
     }
 
     private TaiKhoanResponse dangKy(String email, String soDienThoai, String matKhau) {
-        return xacThucService.dangKy(new DangKyRequest("Bệnh nhân test", email, matKhau, soDienThoai));
+        return xacThucService.dangKy(new DangKyRequest("Bệnh nhân test", email, matKhau, soDienThoai, null));
     }
 
     private List<EmailXacThucEvent> cacEmailDaPhat() {

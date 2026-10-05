@@ -49,8 +49,28 @@ public class BacSi extends BaseEntity {
     @Column(name = "hoc_vi", length = 100)
     private String hocVi;
 
+    /** vd: Trưởng khoa Nhi */
+    @Column(name = "chuc_vu", length = 150)
+    private String chucVu;
+
+    /** 1-2 câu hiện trên thẻ bác sĩ. */
+    @Column(name = "gioi_thieu_ngan", length = 300)
+    private String gioiThieuNgan;
+
+    /** Đoạn giới thiệu tự do. */
     @Column(name = "tieu_su", columnDefinition = "TEXT")
     private String tieuSu;
+
+    /** 3 mục dưới đây lưu văn bản thuần, mỗi dòng 1 ý; API trả về / nhận vào dạng mảng chuỗi. */
+    @Column(name = "qua_trinh_dao_tao", columnDefinition = "TEXT")
+    private String quaTrinhDaoTao;
+
+    @Column(name = "qua_trinh_cong_tac", columnDefinition = "TEXT")
+    private String quaTrinhCongTac;
+
+    /** Khám và điều trị. */
+    @Column(name = "linh_vuc_kham_chua", columnDefinition = "TEXT")
+    private String linhVucKhamChua;
 
     @Column(name = "so_nam_kinh_nghiem")
     private Integer soNamKinhNghiem;

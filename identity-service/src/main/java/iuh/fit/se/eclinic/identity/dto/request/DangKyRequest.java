@@ -25,9 +25,16 @@ public record DangKyRequest(
 
         @NotBlank(message = "Số điện thoại không được để trống")
         @Pattern(regexp = "^0\\d{9}$", message = "Số điện thoại gồm 10 chữ số, bắt đầu bằng 0")
-        String soDienThoai) {
+        String soDienThoai,
 
-    /** Không in mật khẩu (tránh lộ khi request bị log). */
+        /**
+         * Không bắt buộc. Có thì hồ sơ bệnh nhân đã tạo khi đặt lịch như khách bằng số CCCD này được liên kết vào tài
+         * khoản sau khi đăng nhập (quy tắc #3).
+         */
+        @Pattern(regexp = "^(\\d{12})?$", message = "Số CCCD gồm đúng 12 chữ số")
+        String cccd) {
+
+    /** Không in mật khẩu, số CCCD (tránh lộ khi request bị log). */
     @Override
     public String toString() {
         return "DangKyRequest[email=" + email + "]";

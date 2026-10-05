@@ -59,4 +59,13 @@ public interface BacSiRepository extends JpaRepository<BacSi, Long> {
             """)
     Optional<BacSi> timCongKhaiTheoId(Long id);
 
+    /** Cho quản trị viên: bác sĩ theo id, không lọc trạng thái, lấy sẵn tài khoản và chuyên khoa. */
+    @Query("""
+            select b from BacSi b
+              join fetch b.taiKhoan
+              join fetch b.chuyenKhoa
+            where b.id = :id
+            """)
+    Optional<BacSi> timKemTaiKhoanVaChuyenKhoa(Long id);
+
 }

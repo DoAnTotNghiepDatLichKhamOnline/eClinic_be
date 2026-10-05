@@ -36,12 +36,28 @@
         pre { background: #f6f8fa; padding: 12px; border-radius: 6px; white-space: pre-wrap; word-break: break-all; max-height: 360px; overflow: auto; }
         /* !important: "button.nho", "button.o" đặt display có độ ưu tiên cao hơn 1 class */
         .an { display: none !important; }
+        .luoi-the { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
+        .the-bac-si { border: 1px solid #d5d9e2; border-radius: 8px; padding: 10px; }
+        .the-bac-si.da-chon { border-color: #1f6feb; box-shadow: 0 0 0 2px #1f6feb33; }
+        .the-bac-si p { margin: 6px 0; font-size: .9rem; }
+        .dau-the { display: flex; gap: 10px; align-items: center; }
+        .anh-dai-dien { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; background: #eaeef2; flex: none; }
+        .anh-dai-dien.lon { width: 96px; height: 96px; }
+        dialog { border: 1px solid #d5d9e2; border-radius: 10px; max-width: 760px; width: calc(100% - 48px); }
+        dialog::backdrop { background: #0006; }
+        .luoi-anh { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; }
+        .luoi-anh figure { margin: 0; } .luoi-anh img { width: 100%; border: 1px solid #d5d9e2; border-radius: 6px; }
+        .luoi-anh figcaption { font-size: .8rem; color: #57606a; }
+        .hang-nut { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+        .tom-tat { display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px; margin: 0; }
+        .tom-tat dt { color: #57606a; } .tom-tat dd { margin: 0; }
+        input[type=checkbox] { display: inline; width: auto; margin: 0 4px 0 0; }
     </style>
 </head>
 <body>
 <h1>eClinic — demo đặt lịch khám</h1>
 <p class="canh-bao">Chỉ dùng khi dev (thay frontend). Khách đặt lịch không cần đăng nhập; bệnh nhân đăng nhập thì lịch được lưu vào
-    tài khoản. Cần gateway, identity-service, catalog-service và booking-service đang chạy.
+    tài khoản. Một trang: chuyên khoa, bác sĩ (thẻ + chi tiết), ngày, giờ, thông tin người khám, xác nhận, phiếu khám. Cần gateway, identity-service, catalog-service và booking-service đang chạy.
     <a href="/">Trang demo xác thực và tài khoản</a> (dùng chung phiên đăng nhập).</p>
 
 <!-- /phieu-kham/<mã>: phiếu khám công khai, không cần đăng nhập (link này nằm trong mã QR) -->
@@ -65,53 +81,66 @@
     </section>
 
     <section>
-        <h2>1. Chuyên khoa và bác sĩ</h2>
-        <div class="hai-cot">
-            <div>
-                <label for="chuyen-khoa">Chuyên khoa</label>
-                <select id="chuyen-khoa"><option value="">— Chọn chuyên khoa —</option></select>
-            </div>
-            <div>
-                <label for="bac-si">Bác sĩ</label>
-                <select id="bac-si" disabled><option value="">Bác sĩ bất kỳ</option></select>
-            </div>
+        <h2>1. Chuyên khoa</h2>
+        <select id="chuyen-khoa"><option value="">— Chọn chuyên khoa —</option></select>
+    </section>
+
+    <section>
+        <h2>2. Bác sĩ</h2>
+        <div id="ds-bac-si" class="luoi-the"><p class="ghi-chu">Chọn chuyên khoa trước.</p></div>
+    </section>
+
+    <!-- Chi tiết bác sĩ: mở từ thẻ bác sĩ, không rời trang -->
+    <dialog id="hop-bac-si">
+        <div id="bac-si-chi-tiet"></div>
+        <div class="hang-nut">
+            <button type="button" id="nut-chon-bac-si-nay">Chọn bác sĩ này</button>
+            <button type="button" id="nut-dong-bac-si" class="phu">Đóng</button>
         </div>
+    </dialog>
+
+    <section>
+        <h2>3. Ngày khám</h2>
+        <div id="ds-ngay"><p class="ghi-chu">Chọn bác sĩ trước.</p></div>
     </section>
 
     <section>
-        <h2>2. Ngày khám (14 ngày tới)</h2>
-        <div id="ds-ngay"><p class="ghi-chu">Chọn chuyên khoa trước.</p></div>
-    </section>
-
-    <section>
-        <h2>3. Khung giờ</h2>
+        <h2>4. Giờ khám (khung 1 tiếng, hiện số chỗ còn lại)</h2>
         <div id="ds-ca"><p class="ghi-chu">Chọn ngày khám trước.</p></div>
         <p id="da-chon" class="ghi-chu">Chưa chọn khung giờ.</p>
     </section>
 
     <section>
-        <h2>4. Thông tin người khám</h2>
+        <h2>5. Thông tin người khám</h2>
         <div id="chon-nguoi-kham" class="an">
             <label class="chon"><input type="radio" name="nguoiKham" value="banThan" checked>Đặt cho bản thân</label>
             <label class="chon"><input type="radio" name="nguoiKham" value="nguoiThan">Đặt cho người thân</label>
             <p id="ghi-chu-nguoi-kham" class="ghi-chu"></p>
+            <div id="khoi-nguoi-than-da-luu" class="an">
+                <label for="nguoi-than-da-luu">Người thân đã lưu</label>
+                <select id="nguoi-than-da-luu"><option value="">— Nhập người mới —</option></select>
+                <button type="button" id="nut-bo-nguoi-than" class="phu nho">Bỏ người này khỏi danh sách đã lưu</button>
+            </div>
         </div>
         <form id="form-dat-lich">
             <div class="hai-cot">
                 <div><label>Họ tên</label><input name="hoTen" required maxlength="150"></div>
                 <div><label>Ngày sinh</label><input name="ngaySinh" type="date" required></div>
                 <div><label>Giới tính</label>
-                    <select name="gioiTinh">
-                        <option value="">(không chọn)</option>
+                    <select name="gioiTinh" required>
+                        <option value="">— Chọn —</option>
                         <option value="NAM">Nam</option>
                         <option value="NU">Nữ</option>
                         <option value="KHAC">Khác</option>
                     </select></div>
                 <div><label>Số điện thoại (10 số, bắt đầu bằng 0)</label><input name="soDienThoai" required></div>
-                <div><label>Số CCCD / số định danh cá nhân (12 số)</label><input name="cccd" required></div>
+                <div><label>Số CCCD (12 số; dưới 18 tuổi chưa có thì để trống)</label><input name="cccd"></div>
+                <div><label>Email (không bắt buộc)</label><input name="email" type="email" maxlength="255"></div>
+                <div><label>Số bảo hiểm y tế (không bắt buộc)</label><input name="soBaoHiemYTe" maxlength="50"></div>
+                <div><label>Địa chỉ (không bắt buộc)</label><input name="diaChi" maxlength="500"></div>
             </div>
-            <label>Lý do khám (không bắt buộc)</label>
-            <textarea name="lyDoKham" rows="2" maxlength="500"></textarea>
+            <label>Lý do khám</label>
+            <textarea name="lyDoKham" rows="2" maxlength="500" required></textarea>
 
             <!-- Hiện khi người khám dưới 18 tuổi tính theo ngày khám. Chỉ để hiển thị: server mới là nơi quyết định -->
             <fieldset id="khoi-giam-ho" class="an">
@@ -129,14 +158,26 @@
                         </select></div>
                     <div><label>Số điện thoại</label><input name="ghSoDienThoai"></div>
                     <div><label>Số CCCD (12 số)</label><input name="ghCccd"></div>
-                    <div><label>Ngày sinh (từ đủ 18 tuổi)</label><input name="ghNgaySinh" type="date"></div>
+                    <div><label>Ngày sinh (không bắt buộc; có thì phải từ đủ 18 tuổi)</label><input name="ghNgaySinh" type="date"></div>
                 </div>
             </fieldset>
 
-            <button id="nut-dat-lich">Đặt lịch</button>
+            <label id="khoi-luu-nguoi-than" class="chon an"><input type="checkbox" id="luu-nguoi-than" checked>Lưu người này để lần sau
+                điền sẵn</label>
+            <button id="nut-dat-lich">Xem lại và đặt lịch</button>
         </form>
         <p id="thong-bao-dat" class="ghi-chu"></p>
     </section>
+
+    <!-- 6. Tóm tắt trước khi gửi -->
+    <dialog id="hop-tom-tat">
+        <h2>6. Xác nhận đặt lịch</h2>
+        <dl id="tom-tat" class="tom-tat"></dl>
+        <div class="hang-nut">
+            <button type="button" id="nut-xac-nhan-dat">Xác nhận đặt lịch</button>
+            <button type="button" id="nut-sua-lai" class="phu">Sửa lại</button>
+        </div>
+    </dialog>
 
     <section id="khoi-ket-qua" class="an">
         <h2>Phiếu khám vừa đặt</h2>
@@ -153,7 +194,7 @@
         </select>
         <div class="bang">
             <table>
-                <thead><tr><th>Giờ khám dự kiến</th><th>STT</th><th>Bác sĩ</th><th>Phòng</th><th>Người khám</th><th>Trạng thái</th><th>Phiếu</th></tr></thead>
+                <thead><tr><th>Giờ khám dự kiến</th><th>STT</th><th>Bác sĩ</th><th>Phòng</th><th>Người khám</th><th>Trạng thái</th><th>Mã / phiếu</th></tr></thead>
                 <tbody id="ds-lich"></tbody>
             </table>
         </div>
@@ -198,7 +239,7 @@
     const SO_NGAY_XEM = 14;
     const KICH_THUOC_TRANG_LICH = 5;
     // Chỉ các API này nhận access token. Không gửi cho API công khai khác: token hết hạn làm cả API công khai trả 401
-    const CAN_TOKEN = ['/api/booking/lich-hen', '/api/booking/ho-so-benh-nhan'];
+    const CAN_TOKEN = ['/api/booking/lich-hen', '/api/booking/ho-so-benh-nhan', '/api/booking/thong-tin-dat-lich'];
     const TRANG_THAI = {
         CHO_XAC_NHAN: 'Chờ xác nhận', DA_XAC_NHAN: 'Đã xác nhận', BI_TU_CHOI: 'Bị từ chối',
         DA_HOAN_THANH: 'Đã hoàn thành', DA_HUY: 'Đã hủy', DA_HUY_DO_DOI_LICH: 'Đã hủy do đổi lịch',
@@ -210,8 +251,13 @@
     let accessToken = null;   // chỉ trong bộ nhớ, không lưu localStorage
     let taiKhoan = null;      // tài khoản đang đăng nhập (null = khách)
     let hoSoCuaToi = null;    // hồ sơ bệnh nhân của tài khoản (null = chưa có / chưa tải)
+    let thongTin = null;      // thông tin điền sẵn của tài khoản: banThan, nguoiThan[], lanDatGanNhat
+    const BAT_KY = 'bat-ky';
+    let dsBacSi = [];         // bác sĩ của chuyên khoa đang chọn
+    let bacSiChon = null;     // null = chưa chọn, BAT_KY, hoặc id bác sĩ (chuỗi)
+    let caCuaBacSi = [];      // các ca 7 ngày tới của bác sĩ đang chọn (khung-gio/nhieu-ngay)
     let ngayChon = null;      // 'YYYY-MM-DD'
-    let khungChon = null;     // { idLichLamViec, gioBatDauKhung, nhan }
+    let khungChon = null;     // { idLichLamViec | idChuyenKhoa, gioBatDauKhung, nhan }
     let trangLich = 0, tongSoTrangLich = 0;
 
     const $ = (id) => document.getElementById(id);
@@ -307,6 +353,7 @@
             dl.append(the('dt', nhan), the('dd', giaTri, lop));
         };
         const bn = phieu.benhNhan;
+        dong('Mã tra cứu', phieu.maTraCuu);
         dong('Số thứ tự', phieu.soThuTu, 'so-thu-tu');
         dong('Trạng thái', TRANG_THAI[phieu.trangThai] || phieu.trangThai);
         dong('Ngày khám', `${thuCuaNgay(phieu.ngay)} ${ngayVn(phieu.ngay)}`);
@@ -315,7 +362,7 @@
         dong('Bác sĩ', `${phieu.bacSi.hocVi || ''} ${phieu.bacSi.hoTen}`.trim() + ` · ${phieu.tenChuyenKhoa}`);
         dong('Phòng khám', `${phieu.phongKham.tenPhong}${phieu.phongKham.tang ? ` (${phieu.phongKham.tang})` : ''}`);
         dong('Bệnh nhân', `${bn.hoTen} · sinh năm ${bn.namSinh ?? '?'}${bn.gioiTinh ? ` · ${GIOI_TINH[bn.gioiTinh]}` : ''}`);
-        dong('CCCD', bn.cccd);
+        if (bn.cccd) dong('CCCD', bn.cccd);
         if (bn.soDienThoai) dong('Số điện thoại', bn.soDienThoai);
         if (phieu.nguoiGiamHo) {
             const gh = phieu.nguoiGiamHo;
@@ -370,6 +417,7 @@
         accessToken = null;
         taiKhoan = null;
         hoSoCuaToi = null;
+        thongTin = null;
         hienPhien(thongBao);
     }
 
@@ -384,22 +432,25 @@
         for (const id of ['chon-nguoi-kham', 'khoi-lich-cua-toi', 'khoi-ho-so', 'nut-dien-giam-ho']) {
             $(id).classList.toggle('an', !laBenhNhan());
         }
+        if (!laBenhNhan()) $('khoi-luu-nguoi-than').classList.add('an');
     }
 
     async function sauKhiDangNhap() {
         hienPhien();
         if (!laBenhNhan()) return;
-        await taiHoSo(true);
+        // Lần đọc đầu tiên sau đăng nhập cũng là lúc server liên kết hồ sơ đã đặt như khách theo CCCD khai khi đăng ký
+        await taiThongTin();
         apDungNguoiKham();
+        await chonLanDatGanNhat();
         trangLich = 0;
         await taiLichCuaToi(true);
     }
 
-    // ===== 1. Chuyên khoa, bác sĩ =====
+    // ===== 1. Chuyên khoa =====
     async function taiChuyenKhoa() {
         const { status, json } = await goi('/api/catalog/chuyen-khoa?kichThuoc=100', undefined, 'GET', true);
         if (status !== 200) {
-            $('ds-ngay').replaceChildren(the('p', thongDiepLoi(json, 'Không tải được chuyên khoa.'), 'ghi-chu loi'));
+            $('ds-bac-si').replaceChildren(the('p', thongDiepLoi(json, 'Không tải được chuyên khoa.'), 'ghi-chu loi'));
             return;
         }
         for (const ck of json.duLieu.noiDung) {
@@ -409,52 +460,168 @@
         }
     }
 
+    // ===== 2. Thẻ bác sĩ, chi tiết bác sĩ =====
+    const tenBacSi = (bs) => `${bs.hocVi || ''} ${bs.hoTen}`.trim();
+
+    // Ảnh từ API: chỉ nhận URL http(s)
+    function anh(url, moTa, lop) {
+        const el = document.createElement('img');
+        if (lop) el.className = lop;
+        el.alt = moTa || '';
+        if (/^https?:\/\//.test(url || '')) el.src = url;
+        return el;
+    }
+
+    function theBacSi(bs, somNhat) {
+        const khoi = the('div', undefined, 'the-bac-si');
+        khoi.dataset.bacSi = bs.id;
+        const dau = the('div', undefined, 'dau-the');
+        dau.append(anh(bs.anhDaiDien, 'Ảnh ' + bs.hoTen, 'anh-dai-dien'));
+        const chu = document.createElement('div');
+        chu.append(the('strong', tenBacSi(bs)));
+        if (bs.chucVu) chu.append(the('div', bs.chucVu, 'ghi-chu'));
+        if (bs.soNamKinhNghiem != null) chu.append(the('div', `${bs.soNamKinhNghiem} năm kinh nghiệm`, 'ghi-chu'));
+        dau.append(chu);
+        khoi.append(dau);
+        if (bs.gioiThieuNgan) khoi.append(the('p', bs.gioiThieuNgan));
+        khoi.append(the('p', somNhat
+            ? `Ngày sớm nhất còn chỗ: ${thuCuaNgay(somNhat.ngay)} ${ngayVn(somNhat.ngay)} (còn ${somNhat.soChoConLai})`
+            : 'Chưa có ngày nào còn chỗ.', 'ghi-chu'));
+        const chon = the('button', 'Chọn', 'nho');
+        chon.type = 'button';
+        chon.addEventListener('click', () => chonBacSi(String(bs.id)));
+        const xem = the('button', 'Xem chi tiết', 'nho phu');
+        xem.type = 'button';
+        xem.addEventListener('click', () => xemBacSi(bs.id));
+        khoi.append(chon, xem);
+        return khoi;
+    }
+
     async function taiBacSi() {
-        const bacSi = $('bac-si');
-        bacSi.replaceChildren(the('option', 'Bác sĩ bất kỳ'));
-        bacSi.firstChild.value = '';
-        bacSi.disabled = !$('chuyen-khoa').value;
-        if (bacSi.disabled) return;
-        const { status, json } = await goi(`/api/catalog/bac-si?idChuyenKhoa=${$('chuyen-khoa').value}&kichThuoc=100`, undefined, 'GET');
-        if (status !== 200) return;
-        for (const bs of json.duLieu.noiDung) {
-            const lua = the('option', `${bs.hocVi || ''} ${bs.hoTen}`.trim() + (bs.soNamKinhNghiem != null ? ` (${bs.soNamKinhNghiem} năm kinh nghiệm)` : ''));
-            lua.value = bs.id;
-            bacSi.append(lua);
+        const ds = $('ds-bac-si');
+        dsBacSi = [];
+        const idChuyenKhoa = $('chuyen-khoa').value;
+        if (!idChuyenKhoa) {
+            ds.replaceChildren(ghiChu('Chọn chuyên khoa trước.'));
+            return;
         }
+        const [bacSi, somNhat] = await Promise.all([
+            goi(`/api/catalog/bac-si?idChuyenKhoa=${idChuyenKhoa}&kichThuoc=100`, undefined, 'GET'),
+            goi(`/api/booking/khung-gio/ngay-som-nhat?idChuyenKhoa=${idChuyenKhoa}`, undefined, 'GET', true),
+        ]);
+        if (bacSi.status !== 200) {
+            ds.replaceChildren(the('p', thongDiepLoi(bacSi.json, 'Không tải được bác sĩ.'), 'ghi-chu loi'));
+            return;
+        }
+        dsBacSi = bacSi.json.duLieu.noiDung;
+        const theoBacSi = new Map((somNhat.status === 200 ? somNhat.json.duLieu : []).map((n) => [n.idBacSi, n]));
+        const batKy = the('div', undefined, 'the-bac-si');
+        batKy.dataset.bacSi = BAT_KY;
+        batKy.append(the('strong', 'Bác sĩ bất kỳ'),
+            the('p', 'Phòng khám xếp bác sĩ còn nhiều chỗ nhất trong giờ bạn chọn.', 'ghi-chu'));
+        const chonBatKy = the('button', 'Chọn', 'nho');
+        chonBatKy.type = 'button';
+        chonBatKy.addEventListener('click', () => chonBacSi(BAT_KY));
+        batKy.append(chonBatKy);
+        ds.replaceChildren(batKy, ...dsBacSi.map((bs) => theBacSi(bs, theoBacSi.get(bs.id))));
     }
 
-    // Bác sĩ đã chọn thì lọc theo bác sĩ, chưa thì theo chuyên khoa ("bác sĩ bất kỳ": mỗi bác sĩ 1 nhóm khung giờ)
-    function thamSoLoc() {
-        return $('bac-si').value ? `idBacSi=${$('bac-si').value}` : `idChuyenKhoa=${$('chuyen-khoa').value}`;
+    function danhSach(tieuDe, cacDong) {
+        if (!cacDong || !cacDong.length) return [];
+        const ul = document.createElement('ul');
+        for (const dong of cacDong) ul.append(the('li', dong));
+        return [the('h3', tieuDe), ul];
     }
 
-    // ===== 2. Ngày còn chỗ =====
+    async function xemBacSi(id) {
+        const { status, json } = await goi('/api/catalog/bac-si/' + id, undefined, 'GET');
+        const khung = $('bac-si-chi-tiet');
+        if (status !== 200) {
+            khung.replaceChildren(the('p', thongDiepLoi(json, 'Không tải được bác sĩ.'), 'ghi-chu loi'));
+        } else {
+            const bs = json.duLieu;
+            const dau = the('div', undefined, 'dau-the');
+            dau.append(anh(bs.anhDaiDien, 'Ảnh ' + bs.hoTen, 'anh-dai-dien lon'));
+            const chu = document.createElement('div');
+            chu.append(the('h2', tenBacSi(bs)), the('div', [bs.chucVu, bs.tenChuyenKhoa].filter(Boolean).join(' · '), 'ghi-chu'));
+            if (bs.soNamKinhNghiem != null) chu.append(the('div', `${bs.soNamKinhNghiem} năm kinh nghiệm`, 'ghi-chu'));
+            if (bs.gioiThieuNgan) chu.append(the('p', bs.gioiThieuNgan));
+            dau.append(chu);
+            const phan = [dau];
+            if (bs.tieuSu) phan.push(the('h3', 'Giới thiệu'), the('p', bs.tieuSu));
+            phan.push(...danhSach('Khám và điều trị', bs.linhVucKhamChua), ...danhSach('Quá trình công tác', bs.quaTrinhCongTac),
+                ...danhSach('Quá trình đào tạo', bs.quaTrinhDaoTao));
+            if (bs.anh && bs.anh.length) {
+                const luoi = the('div', undefined, 'luoi-anh');
+                for (const a of bs.anh) {
+                    const hinh = document.createElement('figure');
+                    hinh.append(anh(a.url, a.chuThich), the('figcaption',
+                        `${a.loai === 'CHUNG_CHI' ? 'Chứng chỉ' : 'Ảnh công việc'}${a.chuThich ? ': ' + a.chuThich : ''}`));
+                    luoi.append(hinh);
+                }
+                phan.push(the('h3', 'Hình ảnh và chứng chỉ'), luoi);
+            }
+            khung.replaceChildren(...phan);
+        }
+        $('nut-chon-bac-si-nay').dataset.bacSi = id;
+        $('nut-chon-bac-si-nay').classList.toggle('an', status !== 200);
+        $('hop-bac-si').showModal();
+    }
+
+    async function chonBacSi(giaTri) {
+        bacSiChon = giaTri;
+        for (const khoi of $('ds-bac-si').querySelectorAll('.the-bac-si')) {
+            khoi.classList.toggle('da-chon', khoi.dataset.bacSi === giaTri);
+        }
+        ngayChon = null;
+        boChonKhung();
+        $('ds-ca').replaceChildren(ghiChu('Chọn ngày khám trước.'));
+        await taiNgay();
+    }
+
+    // ===== 3. Ngày còn chỗ =====
     function boChonKhung() {
         khungChon = null;
         $('da-chon').textContent = 'Chưa chọn khung giờ.';
     }
 
+    // Bác sĩ cụ thể: 1 lần gọi nhieu-ngay (7 ngày) cho cả ngày lẫn giờ. Bác sĩ bất kỳ: ngay-con-cho (14 ngày), giờ lấy ở gop
     async function taiNgay(imLang = false) {
         const ds = $('ds-ngay');
-        if (!$('chuyen-khoa').value) {
-            ds.replaceChildren(ghiChu('Chọn chuyên khoa trước.'));
+        caCuaBacSi = [];
+        if (!bacSiChon) {
+            ds.replaceChildren(ghiChu('Chọn bác sĩ trước.'));
             return;
         }
-        const homNay = new Date();
-        const ngayCuoi = new Date(homNay.getFullYear(), homNay.getMonth(), homNay.getDate() + SO_NGAY_XEM - 1);
-        const { status, json } = await goi(
-            `/api/booking/khung-gio/ngay-con-cho?tuNgay=${ngayIso(homNay)}&denNgay=${ngayIso(ngayCuoi)}&${thamSoLoc()}`,
-            undefined, 'GET', imLang);
-        if (status !== 200) {
-            ds.replaceChildren(the('p', thongDiepLoi(json, 'Không tải được ngày khám.'), 'ghi-chu loi'));
+        let cacNgay;
+        if (bacSiChon === BAT_KY) {
+            const homNay = new Date();
+            const ngayCuoi = new Date(homNay.getFullYear(), homNay.getMonth(), homNay.getDate() + SO_NGAY_XEM - 1);
+            const { status, json } = await goi(`/api/booking/khung-gio/ngay-con-cho?tuNgay=${ngayIso(homNay)}`
+                + `&denNgay=${ngayIso(ngayCuoi)}&idChuyenKhoa=${$('chuyen-khoa').value}`, undefined, 'GET', imLang);
+            if (status !== 200) {
+                ds.replaceChildren(the('p', thongDiepLoi(json, 'Không tải được ngày khám.'), 'ghi-chu loi'));
+                return;
+            }
+            cacNgay = json.duLieu;
+        } else {
+            const { status, json } = await goi(`/api/booking/khung-gio/nhieu-ngay?idBacSi=${bacSiChon}`, undefined, 'GET', imLang);
+            if (status !== 200) {
+                ds.replaceChildren(the('p', thongDiepLoi(json, 'Không tải được lịch của bác sĩ.'), 'ghi-chu loi'));
+                return;
+            }
+            caCuaBacSi = json.duLieu;
+            const tong = new Map();
+            for (const ca of caCuaBacSi) {
+                tong.set(ca.ngay, (tong.get(ca.ngay) || 0) + ca.khungGio.reduce((s, kg) => s + kg.soChoConLai, 0));
+            }
+            cacNgay = [...tong].map(([ngay, soChoConLai]) => ({ ngay, soChoConLai }));
+        }
+        if (!cacNgay.length) {
+            ds.replaceChildren(ghiChu(bacSiChon === BAT_KY ? 'Không có ca khám nào trong 14 ngày tới.' : 'Bác sĩ không có ca khám nào trong 7 ngày tới.'));
             return;
         }
-        if (!json.duLieu.length) {
-            ds.replaceChildren(ghiChu('Không có ca khám nào trong 14 ngày tới.'));
-            return;
-        }
-        ds.replaceChildren(...json.duLieu.map((n) => {
+        ds.replaceChildren(...cacNgay.map((n) => {
             const hetCho = n.soChoConLai === 0;
             const nut = the('button', `${thuCuaNgay(n.ngay)} ${n.ngay.slice(8, 10)}/${n.ngay.slice(5, 7)} · ${hetCho ? 'Hết chỗ' : `còn ${n.soChoConLai}`}`,
                 'o' + (n.ngay === ngayChon ? ' da-chon' : ''));
@@ -476,48 +643,76 @@
         await taiKhung();
     }
 
-    // ===== 3. Khung giờ 1 tiếng của từng ca =====
+    // ===== 4. Giờ khám =====
+    function nutKhung(ds, kg, nhanSoCho, khung) {
+        const khoang = `${gio(kg.gioBatDau)}–${gio(kg.gioKetThuc)}`;
+        const daChon = khungChon && khungChon.gioBatDauKhung === kg.gioBatDau
+            && khungChon.idLichLamViec === khung.idLichLamViec && khungChon.idChuyenKhoa === khung.idChuyenKhoa;
+        const nut = the('button', `${khoang} · ${kg.hetCho ? 'Hết chỗ' : nhanSoCho}`, 'o' + (daChon ? ' da-chon' : ''));
+        nut.type = 'button';
+        nut.disabled = kg.hetCho;
+        nut.dataset.gio = kg.gioBatDau;
+        nut.addEventListener('click', () => {
+            khungChon = { ...khung, gioBatDauKhung: kg.gioBatDau, nhan: `${khoang} ${ngayVn(ngayChon)}, ${khung.nhan}` };
+            for (const nutKhac of ds.querySelectorAll('button')) nutKhac.classList.toggle('da-chon', nutKhac === nut);
+            $('da-chon').textContent = 'Đã chọn: ' + khungChon.nhan;
+        });
+        return nut;
+    }
+
     async function taiKhung(imLang = false) {
         const ds = $('ds-ca');
-        if (!ngayChon) {
+        if (!ngayChon || !bacSiChon) {
             ds.replaceChildren(ghiChu('Chọn ngày khám trước.'));
             return;
         }
-        const { status, json } = await goi(`/api/booking/khung-gio?ngay=${ngayChon}&${thamSoLoc()}`, undefined, 'GET', imLang);
-        if (status !== 200) {
-            ds.replaceChildren(the('p', thongDiepLoi(json, 'Không tải được khung giờ.'), 'ghi-chu loi'));
+        if (bacSiChon === BAT_KY) {
+            const idChuyenKhoa = Number($('chuyen-khoa').value);
+            const { status, json } = await goi(`/api/booking/khung-gio/gop?idChuyenKhoa=${idChuyenKhoa}&ngay=${ngayChon}`, undefined, 'GET', imLang);
+            if (status !== 200) {
+                ds.replaceChildren(the('p', thongDiepLoi(json, 'Không tải được giờ khám.'), 'ghi-chu loi'));
+                return;
+            }
+            if (!json.duLieu.length) {
+                ds.replaceChildren(ghiChu('Ngày này không còn giờ khám nào đặt được.'));
+                return;
+            }
+            const khoi = the('div', undefined, 'ca');
+            khoi.append(the('h3', 'Gộp các bác sĩ của chuyên khoa'));
+            for (const kg of json.duLieu) {
+                khoi.append(nutKhung(ds, kg, `còn ${kg.soChoConLai}/${kg.tongSoCho} · ${kg.soBacSi} bác sĩ`,
+                    { idChuyenKhoa, nhan: 'bác sĩ do phòng khám xếp' }));
+            }
+            ds.replaceChildren(khoi);
             return;
         }
-        if (!json.duLieu.length) {
+        const cacCa = caCuaBacSi.filter((ca) => ca.ngay === ngayChon);
+        if (!cacCa.length) {
             ds.replaceChildren(ghiChu('Ngày này không còn ca khám nào đặt được.'));
             return;
         }
-        ds.replaceChildren(...json.duLieu.map((ca) => {
+        ds.replaceChildren(...cacCa.map((ca) => {
             const khoi = the('div', undefined, 'ca');
-            const bacSi = `${ca.bacSi.hocVi || ''} ${ca.bacSi.hoTen}`.trim();
             const phong = `${ca.phongKham.tenPhong}${ca.phongKham.tang ? ` (${ca.phongKham.tang})` : ''}`;
-            khoi.append(the('h3', `${bacSi} · ${phong} · ca ${ca.gioBatDau.slice(0, 5)}–${ca.gioKetThuc.slice(0, 5)}, mỗi lượt ${ca.thoiLuongLuotPhut} phút`));
+            khoi.append(the('h3', `${tenBacSi(ca.bacSi)} · ${phong} · ca ${ca.gioBatDau.slice(0, 5)}–${ca.gioKetThuc.slice(0, 5)}, mỗi lượt ${ca.thoiLuongLuotPhut} phút`));
             for (const kg of ca.khungGio) {
-                const khoang = `${gio(kg.gioBatDau)}–${gio(kg.gioKetThuc)}`;
-                const daChon = khungChon && khungChon.idLichLamViec === ca.idLichLamViec && khungChon.gioBatDauKhung === kg.gioBatDau;
-                const nut = the('button', `${khoang} · ${kg.hetCho ? 'Hết chỗ' : `còn ${kg.soChoConLai}/${kg.tongSoCho}`}`, 'o' + (daChon ? ' da-chon' : ''));
-                nut.type = 'button';
-                nut.disabled = kg.hetCho;
-                nut.dataset.ca = ca.idLichLamViec;
-                nut.dataset.gio = kg.gioBatDau;
-                nut.addEventListener('click', () => {
-                    khungChon = { idLichLamViec: ca.idLichLamViec, gioBatDauKhung: kg.gioBatDau, nhan: `${khoang} ${ngayVn(ca.ngay)}, ${bacSi}, ${phong}` };
-                    for (const nutKhac of ds.querySelectorAll('button')) nutKhac.classList.toggle('da-chon', nutKhac === nut);
-                    $('da-chon').textContent = 'Đã chọn: ' + khungChon.nhan;
-                });
-                khoi.append(nut);
+                khoi.append(nutKhung(ds, kg, `còn ${kg.soChoConLai}/${kg.tongSoCho}`,
+                    { idLichLamViec: ca.idLichLamViec, nhan: `${tenBacSi(ca.bacSi)}, ${phong}` }));
             }
             return khoi;
         }));
     }
 
-    // ===== 4. Form người khám =====
+    // Sau khi đặt (hoặc bị từ chối vì hết chỗ): tải lại số chỗ
+    async function taiLaiLich() {
+        await taiNgay(true);
+        await taiKhung(true);
+    }
+
+    // ===== 5. Form người khám =====
     const formDat = $('form-dat-lich');
+    const TRUONG_NGUOI_KHAM = ['hoTen', 'ngaySinh', 'gioiTinh', 'soDienThoai', 'cccd', 'email', 'soBaoHiemYTe', 'diaChi'];
+    const TRUONG_GIAM_HO = { ghHoTen: 'hoTen', ghQuanHe: 'quanHe', ghSoDienThoai: 'soDienThoai', ghCccd: 'cccd', ghNgaySinh: 'ngaySinh' };
 
     function capNhatKhoiGiamHo() {
         const ngaySinh = formDat.elements.ngaySinh.value;
@@ -530,40 +725,77 @@
         return laBenhNhan() && document.querySelector('input[name=nguoiKham]:checked').value === 'banThan';
     }
 
-    function dienNguoiKham(hs) {
-        for (const ten of ['hoTen', 'ngaySinh', 'gioiTinh', 'soDienThoai', 'cccd']) {
-            formDat.elements[ten].value = (hs && hs[ten]) || '';
-        }
+    function dienNguoiKham(nguoi, giamHo) {
+        for (const ten of TRUONG_NGUOI_KHAM) formDat.elements[ten].value = (nguoi && nguoi[ten]) || '';
+        for (const [o, truong] of Object.entries(TRUONG_GIAM_HO)) formDat.elements[o].value = (giamHo && giamHo[truong]) || '';
         capNhatKhoiGiamHo();
     }
 
-    // "Đặt cho bản thân": điền sẵn từ hồ sơ bệnh nhân của tài khoản; "người thân": form trống, hồ sơ theo CCCD như khách
+    function hienNguoiThanDaLuu() {
+        const chon = $('nguoi-than-da-luu');
+        const ds = (thongTin && thongTin.nguoiThan) || [];
+        chon.replaceChildren(the('option', '— Nhập người mới —'));
+        chon.firstChild.value = '';
+        for (const nt of ds) {
+            const lua = the('option', `${nt.hoTen}${nt.ngaySinh ? ' · ' + ngayVn(nt.ngaySinh) : ''}`);
+            lua.value = nt.id;
+            chon.append(lua);
+        }
+        const choNguoiThan = laBenhNhan() && !datChoBanThan();
+        $('khoi-nguoi-than-da-luu').classList.toggle('an', !choNguoiThan || !ds.length);
+        $('khoi-luu-nguoi-than').classList.toggle('an', !choNguoiThan);
+    }
+
+    // "Đặt cho bản thân": điền sẵn từ hồ sơ bệnh nhân của tài khoản; "người thân": chọn người đã lưu hoặc nhập mới
     function apDungNguoiKham() {
         if (!laBenhNhan()) return;
+        hienNguoiThanDaLuu();
         const ghi = $('ghi-chu-nguoi-kham');
         if (!datChoBanThan()) {
             dienNguoiKham(null);
-            ghi.textContent = 'Nhập thông tin người thân. Trẻ dưới 18 tuổi: bạn là người giám hộ (bấm "Điền từ hồ sơ của tôi").';
+            ghi.textContent = 'Chọn người thân đã lưu hoặc nhập người mới. Trẻ dưới 18 tuổi: bạn là người giám hộ (bấm "Điền từ hồ sơ của tôi").';
         } else if (hoSoCuaToi && hoSoCuaToi.cccd) {
-            dienNguoiKham(hoSoCuaToi);
+            dienNguoiKham({ ...hoSoCuaToi, email: thongTin && thongTin.emailTaiKhoan });
             ghi.textContent = 'Đã điền từ hồ sơ bệnh nhân của bạn (họ tên, ngày sinh, CCCD phải khớp hồ sơ).';
         } else {
+            dienNguoiKham(null);
             ghi.textContent = hoSoCuaToi
-                ? 'Hồ sơ bệnh nhân của tài khoản đang chờ phòng khám xác minh.'
+                ? 'Hồ sơ bệnh nhân của tài khoản đang chờ phòng khám xác minh: chưa đặt cho bản thân được, hãy đặt cho người thân hoặc liên hệ phòng khám.'
                 : 'Tài khoản chưa có hồ sơ bệnh nhân: lần đặt này sẽ tạo hồ sơ và gắn vào tài khoản.';
         }
     }
 
+    // Thông tin điền sẵn của tài khoản: hồ sơ của tôi, người thân đã lưu, chuyên khoa và bác sĩ lần đặt gần nhất
+    async function taiThongTin(imLang = true) {
+        const { status, json } = await goi('/api/booking/thong-tin-dat-lich/cua-toi', undefined, 'GET', imLang);
+        if (status !== 200) return;
+        thongTin = json.duLieu;
+        hienHoSo(thongTin.banThan);
+        hienNguoiThanDaLuu();
+    }
+
+    async function chonLanDatGanNhat() {
+        const lan = thongTin && thongTin.lanDatGanNhat;
+        if (!lan || $('chuyen-khoa').value) return;
+        $('chuyen-khoa').value = lan.idChuyenKhoa;
+        if (!$('chuyen-khoa').value) return;
+        await taiBacSi();
+        if (dsBacSi.some((bs) => bs.id === lan.idBacSi)) await chonBacSi(String(lan.idBacSi));
+    }
+
     function thanDatLich(v) {
         const than = {
-            idLichLamViec: khungChon.idLichLamViec,
             gioBatDauKhung: khungChon.gioBatDauKhung,
             benhNhan: {
                 hoTen: v.hoTen, ngaySinh: v.ngaySinh || null, gioiTinh: v.gioiTinh || null,
-                soDienThoai: v.soDienThoai, cccd: v.cccd,
+                soDienThoai: v.soDienThoai, cccd: v.cccd || null, email: v.email || null,
+                soBaoHiemYTe: v.soBaoHiemYTe || null, diaChi: v.diaChi || null,
             },
             lyDoKham: v.lyDoKham || null,
         };
+        // Bác sĩ cụ thể gửi ca làm việc; "bác sĩ bất kỳ" gửi chuyên khoa và server chọn bác sĩ
+        if (khungChon.idLichLamViec) than.idLichLamViec = khungChon.idLichLamViec;
+        else than.idChuyenKhoa = khungChon.idChuyenKhoa;
         const nguoiGiamHo = {
             hoTen: v.ghHoTen, quanHe: v.ghQuanHe || null, soDienThoai: v.ghSoDienThoai, cccd: v.ghCccd,
             ngaySinh: v.ghNgaySinh || null,
@@ -573,34 +805,71 @@
             than.nguoiGiamHo = nguoiGiamHo;
         }
         if (datChoBanThan()) than.datChoBanThan = true;
+        else if (laBenhNhan() && !$('luu-nguoi-than').checked) than.luuNguoiThan = false;
         return than;
     }
 
-    formDat.addEventListener('submit', async (e) => {
+    // ===== 6. Tóm tắt rồi mới gửi =====
+    let thanChoGui = null;
+
+    function hienTomTat(than) {
+        const dl = $('tom-tat');
+        const bn = than.benhNhan;
+        const dong = (nhan, giaTri) => {
+            if (giaTri) dl.append(the('dt', nhan), the('dd', giaTri));
+        };
+        dl.replaceChildren();
+        dong('Chuyên khoa', $('chuyen-khoa').selectedOptions[0].textContent);
+        dong('Giờ khám', khungChon.nhan);
+        dong('Người khám', `${bn.hoTen} · ${bn.ngaySinh ? ngayVn(bn.ngaySinh) : '?'} · ${GIOI_TINH[bn.gioiTinh] || ''}`);
+        dong('Số điện thoại', bn.soDienThoai);
+        dong('CCCD', bn.cccd);
+        dong('Email', bn.email);
+        dong('Số bảo hiểm y tế', bn.soBaoHiemYTe);
+        dong('Địa chỉ', bn.diaChi);
+        if (than.nguoiGiamHo) {
+            const gh = than.nguoiGiamHo;
+            dong('Người giám hộ', `${gh.hoTen} (${QUAN_HE[gh.quanHe] || '?'}) · ${gh.soDienThoai} · CCCD ${gh.cccd}`);
+        }
+        dong('Lý do khám', than.lyDoKham);
+        if (laBenhNhan()) {
+            dong('Lưu vào tài khoản', than.datChoBanThan ? 'Đặt cho bản thân'
+                : than.luuNguoiThan === false ? 'Đặt cho người thân, không lưu người này' : 'Đặt cho người thân, lưu để lần sau điền sẵn');
+        }
+    }
+
+    formDat.addEventListener('submit', (e) => {
         e.preventDefault();
         if (!khungChon) {
-            baoLoi('thong-bao-dat', 'Chưa chọn khung giờ (bước 3).');
+            baoLoi('thong-bao-dat', 'Chưa chọn khung giờ (bước 4).');
             return;
         }
-        const nut = $('nut-dat-lich');
+        thanChoGui = thanDatLich(Object.fromEntries(new FormData(formDat).entries()));
+        hienTomTat(thanChoGui);
+        $('hop-tom-tat').showModal();
+    });
+
+    $('nut-sua-lai').addEventListener('click', () => $('hop-tom-tat').close());
+
+    $('nut-xac-nhan-dat').addEventListener('click', async () => {
+        const nut = $('nut-xac-nhan-dat');
         nut.disabled = true;
-        const { status, json } = await goi('/api/booking/lich-hen', thanDatLich(Object.fromEntries(new FormData(formDat).entries())));
+        const { status, json } = await goi('/api/booking/lich-hen', thanChoGui);
         nut.disabled = false;
+        $('hop-tom-tat').close();
         if (status !== 201) {
             baoLoi('thong-bao-dat', thongDiepLoi(json, 'Đặt lịch thất bại.'));
             // Hết chỗ / khung không còn đặt được: tải lại để thấy số chỗ mới
-            if (status === 409) {
-                await taiNgay(true);
-                await taiKhung(true);
-            }
+            if (status === 409) await taiLaiLich();
             return;
         }
         const kq = json.duLieu;
-        baoTot('thong-bao-dat', `Đặt lịch thành công: số thứ tự ${kq.soThuTu}, giờ khám dự kiến ${ngayGioVn(kq.gioKhamDuKien)}.`);
+        baoTot('thong-bao-dat', `Đặt lịch thành công: mã ${kq.maTraCuu}, số thứ tự ${kq.soThuTu}, giờ khám dự kiến ${ngayGioVn(kq.gioKhamDuKien)}.`);
         $('khoi-ket-qua').classList.remove('an');
-        $('ket-qua-ghi-chu').textContent = kq.luuVaoTaiKhoan
-            ? 'Lịch đã lưu vào tài khoản (xem ở "Lịch hẹn của tôi").'
-            : 'Khách đặt: lịch không nằm trong tài khoản nào, hãy lưu link / mã QR dưới đây để xem lại phiếu khám.';
+        $('ket-qua-ghi-chu').textContent = (kq.bacSiDoPhongKhamXep ? `Phòng khám đã xếp ${tenBacSi(kq.bacSi)}. ` : '')
+            + (kq.luuVaoTaiKhoan
+                ? 'Lịch đã lưu vào tài khoản (xem ở "Lịch hẹn của tôi").'
+                : 'Khách đặt: lịch không nằm trong tài khoản nào, hãy lưu link / mã QR dưới đây để xem lại phiếu khám.');
         const phieu = await taiPhieu(kq.maPhieuKham, true);
         if (phieu.status === 200) {
             hienPhieu($('ket-qua-phieu'), phieu.json.duLieu);
@@ -608,10 +877,9 @@
             $('ket-qua-phieu').replaceChildren(the('p', thongDiepLoi(phieu.json, 'Không tải được phiếu khám.'), 'ghi-chu loi'));
         }
         boChonKhung();
-        await taiNgay(true);
-        await taiKhung(true);
+        await taiLaiLich();
         if (laBenhNhan()) {
-            if (!hoSoCuaToi) await taiHoSo(true);   // lần đầu "đặt cho bản thân" vừa tạo hồ sơ
+            await taiThongTin();   // hồ sơ vừa tạo khi "đặt cho bản thân" lần đầu, người thân vừa được lưu
             trangLich = 0;
             await taiLichCuaToi(true);
         }
@@ -633,6 +901,22 @@
         formDat.elements.ghNgaySinh.value = hoSoCuaToi.ngaySinh || '';
     });
 
+    $('nguoi-than-da-luu').addEventListener('change', (e) => {
+        const nt = ((thongTin && thongTin.nguoiThan) || []).find((n) => String(n.id) === e.target.value);
+        dienNguoiKham(nt || null, nt && nt.nguoiGiamHo);
+    });
+    $('nut-bo-nguoi-than').addEventListener('click', async () => {
+        const id = $('nguoi-than-da-luu').value;
+        if (!id) return;
+        const { status, json } = await goi('/api/booking/thong-tin-dat-lich/cua-toi/nguoi-than/' + id, undefined, 'DELETE');
+        if (status !== 200) {
+            baoLoi('thong-bao-dat', thongDiepLoi(json, 'Không bỏ được người thân.'));
+            return;
+        }
+        dienNguoiKham(null);
+        await taiThongTin();
+    });
+
     // ===== Lịch hẹn của tôi =====
     function hangLich(lich) {
         const tr = document.createElement('tr');
@@ -645,7 +929,7 @@
         ];
         for (const giaTriO of cacO) tr.append(the('td', giaTriO));
         const oPhieu = document.createElement('td');
-        const link = the('a', 'Xem phiếu');
+        const link = the('a', lich.maTraCuu || 'Xem phiếu');
         link.href = '/phieu-kham/' + encodeURIComponent(lich.maPhieuKham);
         link.target = '_blank';
         oPhieu.append(link);
@@ -705,7 +989,9 @@
         formHoSo.elements.cccd.readOnly = !!(hs && hs.cccd);
         $('ho-so-trang-thai').textContent = !hs
             ? 'Tài khoản chưa có hồ sơ bệnh nhân: nhập đủ thông tin (kể cả số CCCD) rồi bấm Lưu để tạo.'
-            : `Trạng thái liên kết: ${hs.trangThaiLienKet}.`;
+            : hs.trangThaiLienKet === 'CHO_XAC_MINH'
+                ? 'Số CCCD của bạn đã có hồ sơ bệnh nhân nhưng thông tin không khớp: hồ sơ đang chờ phòng khám xác minh, chưa xem / sửa được.'
+                : `Trạng thái liên kết: ${hs.trangThaiLienKet}.`;
     }
 
     async function taiHoSo(imLang = false) {
@@ -751,17 +1037,18 @@
     });
 
     $('chuyen-khoa').addEventListener('change', async () => {
+        bacSiChon = null;
         ngayChon = null;
         boChonKhung();
+        $('ds-ngay').replaceChildren(ghiChu('Chọn bác sĩ trước.'));
         $('ds-ca').replaceChildren(ghiChu('Chọn ngày khám trước.'));
         await taiBacSi();
-        await taiNgay();
     });
 
-    $('bac-si').addEventListener('change', async () => {
-        boChonKhung();
-        await taiNgay();
-        await taiKhung(true);
+    $('nut-dong-bac-si').addEventListener('click', () => $('hop-bac-si').close());
+    $('nut-chon-bac-si-nay').addEventListener('click', async (e) => {
+        $('hop-bac-si').close();
+        await chonBacSi(e.target.dataset.bacSi);
     });
 
     // ===== Khởi động: trang phiếu khám hoặc trang đặt lịch =====

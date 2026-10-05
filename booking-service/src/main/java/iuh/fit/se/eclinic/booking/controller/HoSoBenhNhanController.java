@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import iuh.fit.se.eclinic.booking.dto.request.HoSoCuaToiRequest;
 import iuh.fit.se.eclinic.booking.dto.response.HoSoCuaToiResponse;
 import iuh.fit.se.eclinic.booking.service.HoSoBenhNhanService;
+import iuh.fit.se.eclinic.booking.service.LienKetHoSoService;
 import iuh.fit.se.eclinic.common.dto.PhanHoiApi;
 import iuh.fit.se.eclinic.common.security.NguoiDungHienTai;
 import jakarta.validation.Valid;
@@ -29,14 +30,19 @@ import lombok.RequiredArgsConstructor;
 public class HoSoBenhNhanController {
 
     private final HoSoBenhNhanService hoSoBenhNhanService;
+    private final LienKetHoSoService lienKetHoSoService;
 
     @Operation(summary = "Xem hồ sơ bệnh nhân của tôi (404 nếu tài khoản chưa có hồ sơ)")
     @GetMapping("/cua-toi")
     public PhanHoiApi<HoSoCuaToiResponse> xemCuaToi() {
-        return PhanHoiApi.ok(hoSoBenhNhanService.xemCuaToi(NguoiDungHienTai.layIdTaiKhoan()));
+        Long idTaiKhoan = NguoiDungHienTai.layIdTaiKhoan();
+        lienKetHoSoService.thuLienKet(idTaiKhoan);
+        return PhanHoiApi.ok(hoSoBenhNhanService.xemCuaToi(idTaiKhoan));
     }
 
-    @Operation(summary = "Tạo hồ sơ bệnh nhân của tôi (khi chưa có) hoặc sửa thông tin; số CCCD không đổi được")
+    @Operation(summary = "Tạo hồ sơ bệnh nhân của tôi (khi chưa có) hoặc sửa thông tin; số CCCD không đổi được. Số CCCD"
+            + " đã có hồ sơ (đặt lịch như khách): khớp họ tên và ngày sinh hoặc SĐT thì liên kết ngay, không khớp thì trả"
+            + " trangThaiLienKet CHO_XAC_MINH")
     @PutMapping("/cua-toi")
     public PhanHoiApi<HoSoCuaToiResponse> luuCuaToi(@Valid @RequestBody HoSoCuaToiRequest request) {
         return PhanHoiApi.ok(hoSoBenhNhanService.luuCuaToi(NguoiDungHienTai.layIdTaiKhoan(), request),

@@ -59,16 +59,19 @@ public class LichHenServiceImpl implements LichHenService {
         taiKhoanService.layBenhNhanDangHoatDong(idTaiKhoan);
         Pageable phanTrang = PageRequest.of(trang, kichThuoc);
         LocalDateTime bayGio = LocalDateTime.now();
-        Page<LichHen> lichHen = switch (loc) {
-            case TAT_CA -> lichHenRepository.timCuaTaiKhoan(idTaiKhoan, phanTrang);
-            case SAP_TOI -> lichHenRepository.timSapToiCuaTaiKhoan(idTaiKhoan, TRANG_THAI_CON_HIEU_LUC, bayGio,
-                    phanTrang);
-            case LICH_SU -> lichHenRepository.timLichSuCuaTaiKhoan(idTaiKhoan, TRANG_THAI_CON_HIEU_LUC, bayGio,
-                    phanTrang);
-        };
-        Long idHoSoCuaToi = hoSoBenhNhanRepository.findByTaiKhoanId(idTaiKhoan)
+        // Hồ sơ chờ xác minh chưa được tính là của tài khoản: lịch hẹn của hồ sơ đó chưa hiện (quy tắc #3)
+        HoSoBenhNhan hoSoCuaToi = hoSoBenhNhanRepository.findByTaiKhoanId(idTaiKhoan)
                 .filter(hoSo -> hoSo.getTrangThaiLienKet() == TrangThaiLienKet.DA_LIEN_KET)
-                .map(HoSoBenhNhan::getId).orElse(null);
+                .orElse(null);
+        Long idHoSoCuaToi = hoSoCuaToi == null ? null : hoSoCuaToi.getId();
+        String cccdCuaToi = hoSoCuaToi == null ? null : hoSoCuaToi.getCccd();
+        Page<LichHen> lichHen = switch (loc) {
+            case TAT_CA -> lichHenRepository.timCuaTaiKhoan(idTaiKhoan, idHoSoCuaToi, cccdCuaToi, phanTrang);
+            case SAP_TOI -> lichHenRepository.timSapToiCuaTaiKhoan(idTaiKhoan, idHoSoCuaToi, cccdCuaToi,
+                    TRANG_THAI_CON_HIEU_LUC, bayGio, phanTrang);
+            case LICH_SU -> lichHenRepository.timLichSuCuaTaiKhoan(idTaiKhoan, idHoSoCuaToi, cccdCuaToi,
+                    TRANG_THAI_CON_HIEU_LUC, bayGio, phanTrang);
+        };
         return TrangDuLieu.tu(lichHen.map(l -> lichHenMapper.toLichHenCuaToi(l, idHoSoCuaToi)));
     }
 

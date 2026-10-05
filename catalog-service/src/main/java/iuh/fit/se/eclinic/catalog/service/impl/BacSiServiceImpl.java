@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import iuh.fit.se.eclinic.catalog.dto.response.BacSiChiTietResponse;
 import iuh.fit.se.eclinic.catalog.dto.response.BacSiResponse;
 import iuh.fit.se.eclinic.catalog.mapper.BacSiMapper;
+import iuh.fit.se.eclinic.catalog.repository.AnhBacSiRepository;
 import iuh.fit.se.eclinic.catalog.repository.BacSiRepository;
 import iuh.fit.se.eclinic.catalog.service.BacSiService;
 import iuh.fit.se.eclinic.common.dto.TrangDuLieu;
@@ -23,6 +24,7 @@ import lombok.RequiredArgsConstructor;
 public class BacSiServiceImpl implements BacSiService {
 
     private final BacSiRepository bacSiRepository;
+    private final AnhBacSiRepository anhBacSiRepository;
     private final BacSiMapper bacSiMapper;
 
     @Override
@@ -49,8 +51,8 @@ public class BacSiServiceImpl implements BacSiService {
 
     @Override
     public BacSiChiTietResponse layChiTiet(Long id) {
-        return bacSiMapper.toChiTietResponse(
-                bacSiRepository.timCongKhaiTheoId(id).orElseThrow(() -> new LoiKhongTimThay("BacSi", id)));
+        BacSi bacSi = bacSiRepository.timCongKhaiTheoId(id).orElseThrow(() -> new LoiKhongTimThay("BacSi", id));
+        return bacSiMapper.toChiTietResponse(bacSi, anhBacSiRepository.findByBacSiIdOrderByThuTuAscIdAsc(id));
     }
 
     /** Mẫu LIKE "chứa từ khoá"; %, _ trong từ khoá được escape để chỉ khớp đúng ký tự đó. Rỗng -> null. */

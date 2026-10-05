@@ -103,6 +103,11 @@ File mẫu trong `catalog-service/src/main/java/iuh/fit/se/eclinic/catalog/`:
         - GET /api/catalog/chuyen-khoa/**
   ```
 - Giới hạn vai trò: `@PreAuthorize("hasRole('QUAN_TRI_VIEN')")` (vai trò: `BENH_NHAN`, `BAC_SI`, `QUAN_TRI_VIEN`).
+- Đường dẫn theo người gọi: API chỉ quản trị viên dùng nằm dưới `/api/<service>/quan-tri/...` (vd
+  `/api/catalog/quan-tri/bac-si/{id}`, `/api/booking/quan-tri/lich-lam-viec`); API của bác sĩ về dữ liệu của chính mình nằm
+  dưới `/api/booking/bac-si/toi/...` và **không nhận id bác sĩ**: lấy bác sĩ từ token bằng
+  `TaiKhoanService.layBacSiDangHoatDong(idTaiKhoan)`. Đường dẫn công khai của booking-service: `GET /api/booking/khung-gio/**`,
+  `POST /api/booking/lich-hen`, `GET /api/booking/phieu-kham/**`.
 - Lấy người đang gọi API: `NguoiDungHienTai.layIdTaiKhoan()`, `NguoiDungHienTai.layVaiTro()`,
   `NguoiDungHienTai.layMaPhien()` (mã phiên đăng nhập = thiết bị đang dùng; `null` nếu token không có claim `phien`).
 - Access token còn hạn tối đa 30 phút sau khi tài khoản bị vô hiệu hoá / xoá. API nào cần chắc tài khoản còn hoạt động
@@ -125,7 +130,7 @@ File mẫu trong `catalog-service/src/main/java/iuh/fit/se/eclinic/catalog/`:
 ## 6. Database và migration
 
 - Schema do **Flyway** quản lý, file nằm trong `common/src/main/resources/db/migration`.
-- Muốn đổi schema: tạo file **mới** `V<số tiếp theo>__mo_ta_ngan.sql` (hiện đã có V1–V5, file tiếp theo là `V6__...sql`).
+- Muốn đổi schema: tạo file **mới** `V<số tiếp theo>__mo_ta_ngan.sql` (hiện đã có V1–V9, file tiếp theo là `V10__...sql`).
   **Không bao giờ sửa file đã chạy** (kể cả `V1__init_schema.sql`): Flyway so checksum và service sẽ không khởi động.
 - Sửa entity trong `common` cho khớp: Hibernate chạy `ddl-auto: validate`, entity lệch schema thì service báo lỗi.
 - DB dùng collation `utf8mb4_unicode_ci`: so sánh `=` và `LIKE` không phân biệt hoa thường và dấu
@@ -142,6 +147,14 @@ File mẫu trong `catalog-service/src/main/java/iuh/fit/se/eclinic/catalog/`:
 - Cần ghi vào bảng của miền khác → gọi REST sang service sở hữu, bằng `RestClient` đặt trong package `client/`.
   Địa chỉ lấy từ cấu hình (ví dụ `${CATALOG_URL:http://localhost:8082}`); trong Docker là `http://catalog-service:8082`.
   Ví dụ đầu tiên: tạo tài khoản bác sĩ (AUTH-04/ADM-02) — tài khoản do identity ghi, hồ sơ bác sĩ do catalog ghi.
+- Kho ảnh (Cloudinary) dùng chung nằm ở `common/luutru` (`LuuTruAnh`); service nào cần tải ảnh lên thì đặt
+  `app.cloudinary.bat: true` trong `application.yml` của mình (identity-service, catalog-service).
+  `application-common.yml` được **import** nên giá trị ở đó **đè** lên `application.yml` của service: khoá nào mỗi service
+  cần đặt khác nhau thì không được khai trong file chung.
+- Việc của miền này phải xảy ra "khi" miền khác có sự kiện mà chưa có lời gọi REST giữa 2 service: làm ở lần đọc kế tiếp
+  của miền sở hữu dữ liệu. Mẫu: identity chỉ lưu số CCCD khai khi đăng ký (`tai_khoan.cccd_dang_ky`); booking-service liên
+  kết hồ sơ bệnh nhân ở lần đọc đầu tiên của bệnh nhân (`LienKetHoSoService.thuLienKet`, transaction riêng, không bao giờ
+  làm hỏng lần đọc). Nhờ vậy đăng nhập không phụ thuộc booking-service.
 - Việc cần cập nhật nhiều bảng trong **một transaction** phải nằm trong cùng một service
   (vì vậy lịch làm việc và lịch hẹn đều ở `booking-service`).
 - Gọi dịch vụ bên ngoài (Cloudinary, Google...) **không nằm trong transaction DB**: gọi xong mới mở transaction ngắn để lưu

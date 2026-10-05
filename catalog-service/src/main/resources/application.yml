@@ -1,5 +1,10 @@
 server:
   port: 8082
+  tomcat:
+    # Upload vượt giới hạn multipart: Tomcat chỉ đọc bỏ phần body còn lại tối đa chừng này (mặc định 2MB), quá thì ngắt
+    # kết nối trước khi trả xong response -> gateway báo 502 thay vì 413 TEP_QUA_LON. Phải LỚN HƠN giới hạn request
+    # của gateway (app.gioi-han.kich-thuoc-request-toi-da = 5MB) để mọi request gateway cho qua đều được đọc hết.
+    max-swallow-size: 10MB
 
 spring:
   application:
@@ -7,7 +12,18 @@ spring:
   config:
     import: classpath:application-common.yml
 
+  servlet:
+    multipart:
+      # Ảnh giới thiệu bác sĩ (POST /api/catalog/quan-tri/bac-si/{id}/anh): tối đa 4MB mỗi tệp, vì gateway chặn mọi
+      # request quá 5MB. Vượt -> 413 TEP_QUA_LON (XuLyLoiHandler).
+      max-file-size: 4MB
+      max-request-size: 5MB
+
 app:
+  # Dùng kho ảnh Cloudinary cho ảnh giới thiệu bác sĩ (cấu hình kết nối: app.cloudinary trong application-common.yml).
+  # Mỗi ảnh 1 mã riêng: <thu-muc>/bac-si/<idBacSi>/<mã ngẫu nhiên>.
+  cloudinary:
+    bat: true
   bao-mat:
     # Không cần đăng nhập: xem danh mục chuyên khoa, tìm bác sĩ
     duong-dan-cong-khai:

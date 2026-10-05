@@ -171,7 +171,7 @@ class DangNhapGoogleServiceTest {
         String email = gmailMoi();
         String soDienThoai = "09" + String.format("%08d", ThreadLocalRandom.current().nextInt(100_000_000));
         // Kẻ xấu đăng ký trước bằng email của nạn nhân
-        xacThucService.dangKy(new DangKyRequest("Kẻ chiếm trước", email, MAT_KHAU, soDienThoai));
+        xacThucService.dangKy(new DangKyRequest("Kẻ chiếm trước", email, MAT_KHAU, soDienThoai, null));
         List<EmailXacThucEvent> events = applicationEvents.stream(EmailXacThucEvent.class).toList();
         String tokenKichHoat = events.get(events.size() - 1).token();
 

@@ -4,6 +4,8 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 
+import iuh.fit.se.eclinic.booking.dto.response.CaLamViecResponse;
+import iuh.fit.se.eclinic.booking.dto.response.LichHenTrongCaResponse;
 import iuh.fit.se.eclinic.common.entity.scheduling.LichLamViec;
 
 public interface LichLamViecService {
@@ -20,5 +22,33 @@ public interface LichLamViecService {
      */
     void kiemTraKhongTrungLich(Long bacSiId, Long phongKhamId, LocalDate ngayLamViec, LocalTime gioBatDau,
             LocalTime gioKetThuc, Long excludeLichLamViecId);
+
+    /** Số ngày tối đa của 1 lần xem lịch làm việc (lưới tháng 6 tuần). */
+    int SO_NGAY_XEM_TOI_DA = 42;
+
+    /**
+     * Lịch làm việc của bác sĩ đang đăng nhập trong [tuNgay, denNgay], kể cả ca đã huỷ, theo ngày rồi giờ bắt đầu.
+     * Ném DU_LIEU_KHONG_HOP_LE nếu denNgay trước tuNgay hoặc khoảng dài hơn {@link #SO_NGAY_XEM_TOI_DA} ngày; lỗi tài
+     * khoản như {@link TaiKhoanService#layBacSiDangHoatDong}.
+     */
+    List<CaLamViecResponse> lichCuaBacSi(Long idTaiKhoan, LocalDate tuNgay, LocalDate denNgay);
+
+    /** Lịch làm việc toàn viện cho quản trị viên, như {@link #lichCuaBacSi}; bộ lọc null = không lọc. */
+    List<CaLamViecResponse> lichToanVien(LocalDate tuNgay, LocalDate denNgay, Long idChuyenKhoa, Long idBacSi,
+            Long idPhongKham);
+
+    /** Lịch hẹn (mọi trạng thái) trong 1 ngày của bác sĩ đang đăng nhập, theo giờ khám. */
+    List<LichHenTrongCaResponse> lichHenCuaBacSiTheoNgay(Long idTaiKhoan, LocalDate ngay);
+
+    /**
+     * Tra 1 lịch hẹn theo mã in trên phiếu khám: mã tra cứu ngắn (ECL-...) hoặc mã phiếu khám (chuỗi trong link / QR).
+     * Ném KHONG_TIM_THAY nếu không có, hoặc lịch hẹn không phải của bác sĩ đang đăng nhập (cùng 1 thông điệp).
+     *
+     * @param idTaiKhoanBacSi tài khoản bác sĩ đang tra; null = quản trị viên tra (mọi bác sĩ)
+     */
+    LichHenTrongCaResponse traCuuLichHen(Long idTaiKhoanBacSi, String ma);
+
+    /** Lịch hẹn (mọi trạng thái) của 1 ca, theo giờ khám, cho quản trị viên. Ném KHONG_TIM_THAY nếu không có ca. */
+    List<LichHenTrongCaResponse> lichHenCuaCa(Long idLichLamViec);
 
 }

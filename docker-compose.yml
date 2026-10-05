@@ -157,6 +157,12 @@ services:
       - "8082:8082"
     environment:
       <<: *moi-truong-chung
+      # Kho ảnh giới thiệu bác sĩ, cùng tài khoản Cloudinary với identity-service (xem .env.example).
+      # Thiếu 1 trong 3 giá trị đầu: POST /api/catalog/quan-tri/bac-si/{id}/anh trả 503.
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME:-}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY:-}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET:-}
+      CLOUDINARY_FOLDER: ${CLOUDINARY_FOLDER:-eclinic}
     healthcheck:
       <<: *kiem-tra
       test: ["CMD", "curl", "-fsS", "http://localhost:8082/actuator/health"]
@@ -268,7 +274,8 @@ services:
       REPORT_URL: http://report-service:8088
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:5173,http://localhost:3000}
       GATEWAY_READ_TIMEOUT: ${GATEWAY_READ_TIMEOUT:-30s}
-      # Body request tối đa tại gateway (vượt -> 413); phải nhỏ hơn max-swallow-size của identity-service (10MB)
+      # Body request tối đa tại gateway (vượt -> 413); phải nhỏ hơn max-swallow-size của các service nhận upload
+      # (identity-service, catalog-service: 10MB)
       GATEWAY_MAX_REQUEST_SIZE: ${GATEWAY_MAX_REQUEST_SIZE:-5MB}
       # Regex các proxy đứng trước gateway được tin khi ghi X-Forwarded-For (booking-service giới hạn đặt lịch theo IP)
       GATEWAY_TRUSTED_PROXIES: "${GATEWAY_TRUSTED_PROXIES:-.*}"

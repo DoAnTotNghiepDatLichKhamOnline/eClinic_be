@@ -1,4 +1,4 @@
-package iuh.fit.se.eclinic.identity.client;
+package iuh.fit.se.eclinic.common.luutru;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -11,13 +11,11 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
-import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClient;
@@ -26,7 +24,6 @@ import org.springframework.web.client.RestClientResponseException;
 
 import iuh.fit.se.eclinic.common.exception.LoiNghiepVu;
 import iuh.fit.se.eclinic.common.exception.MaLoi;
-import iuh.fit.se.eclinic.identity.config.CloudinaryProperties;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -34,15 +31,15 @@ import lombok.extern.slf4j.Slf4j;
  * <p>
  * Mỗi request được ký: SHA-1 của các tham số (xếp theo tên, nối {@code ten=giaTri} bằng {@code &}) + API secret;
  * {@code file}, {@code api_key} không nằm trong chữ ký. Ảnh được tải lên với {@code overwrite} nên mỗi mã chỉ có 1 ảnh,
- * và {@code invalidate} để CDN bỏ bản cũ. Ảnh lớn được thu về tối đa 512 x 512 ngay khi lưu.
+ * và {@code invalidate} để CDN bỏ bản cũ. Ảnh lớn được thu nhỏ ngay khi lưu.
+ * <p>
+ * Không phải @Component: bean do {@link LuuTruAnhConfig} tạo ở service có dùng kho ảnh.
  */
 @Slf4j
-@Component
 public class LuuTruAnhCloudinary implements LuuTruAnh {
 
     /** Tên định dạng theo cách gọi của Cloudinary. */
     private static final String DINH_DANG_CHO_PHEP = "jpg,png,webp";
-    private static final String THU_NHO = "c_limit,h_512,w_512";
     private static final String MAY_CHU_ANH = "https://res.cloudinary.com/";
     private static final int DO_DAI_LOI_TOI_DA = 300;
     private static final Duration CHO_KET_NOI_TOI_DA = Duration.ofSeconds(5);
@@ -52,17 +49,16 @@ public class LuuTruAnhCloudinary implements LuuTruAnh {
     private final CloudinaryProperties properties;
     private final RestClient restClient;
 
-    @Autowired
     public LuuTruAnhCloudinary(CloudinaryProperties properties) {
         this(properties, RestClient.builder().requestFactory(taoRequestFactory(properties)));
         if (!properties.daCauHinh()) {
             log.warn("Chưa đặt đủ CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET: "
-                    + "tải ảnh đại diện (POST /api/users/me/avatar) sẽ trả 503.");
+                    + "các API tải ảnh lên sẽ trả 503.");
         }
     }
 
     /** Cho test: builder đã gắn server giả. */
-    LuuTruAnhCloudinary(CloudinaryProperties properties, RestClient.Builder builder) {
+    public LuuTruAnhCloudinary(CloudinaryProperties properties, RestClient.Builder builder) {
         this.properties = properties;
         this.restClient = builder.build();
     }
@@ -73,7 +69,7 @@ public class LuuTruAnhCloudinary implements LuuTruAnh {
     }
 
     @Override
-    public String taiLen(String ma, byte[] noiDung) {
+    public String taiLen(String ma, byte[] noiDung, int canhToiDa) {
         kiemTraDaCauHinh();
         SortedMap<String, String> thamSo = new TreeMap<>();
         thamSo.put("allowed_formats", DINH_DANG_CHO_PHEP);
@@ -81,7 +77,7 @@ public class LuuTruAnhCloudinary implements LuuTruAnh {
         thamSo.put("overwrite", "true");
         thamSo.put("public_id", publicId(ma));
         thamSo.put("timestamp", String.valueOf(Instant.now().getEpochSecond()));
-        thamSo.put("transformation", THU_NHO);
+        thamSo.put("transformation", "c_limit,h_" + canhToiDa + ",w_" + canhToiDa);
 
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
         thamSo.forEach(body::add);
@@ -130,7 +126,7 @@ public class LuuTruAnhCloudinary implements LuuTruAnh {
      * Chữ ký của Upload API: các tham số (đã xếp theo tên) nối thành {@code a=1&b=2}, nối tiếp API secret, băm SHA-1,
      * viết dạng hex.
      */
-    static String ky(SortedMap<String, String> thamSo, String apiSecret) {
+    public static String ky(SortedMap<String, String> thamSo, String apiSecret) {
         String chuoi = thamSo.entrySet().stream()
                 .map(e -> e.getKey() + "=" + e.getValue())
                 .collect(Collectors.joining("&")) + apiSecret;

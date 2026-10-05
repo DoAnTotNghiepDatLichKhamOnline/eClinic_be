@@ -3,6 +3,7 @@ package iuh.fit.se.eclinic.booking.mapper;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.Period;
 
 import org.springframework.stereotype.Component;
 
@@ -10,6 +11,7 @@ import iuh.fit.se.eclinic.booking.config.PhieuKhamProperties;
 import iuh.fit.se.eclinic.booking.dto.response.BenhNhanPhieuKhamResponse;
 import iuh.fit.se.eclinic.booking.dto.response.DatLichResponse;
 import iuh.fit.se.eclinic.booking.dto.response.LichHenCuaToiResponse;
+import iuh.fit.se.eclinic.booking.dto.response.LichHenTrongCaResponse;
 import iuh.fit.se.eclinic.booking.dto.response.NguoiGiamHoPhieuKhamResponse;
 import iuh.fit.se.eclinic.booking.dto.response.PhieuKhamResponse;
 import iuh.fit.se.eclinic.booking.util.CheThongTin;
@@ -33,17 +35,19 @@ public class LichHenMapper {
     /**
      * @param gioBatDauKhung  khung 1 giờ chứa lượt khám của lịch hẹn
      * @param gioKetThucKhung giờ kết thúc khung đó
+     * @param bacSiDoPhongKhamXep true nếu người đặt chọn "bác sĩ bất kỳ"
      */
     public DatLichResponse toDatLichResponse(LichHen lichHen, LocalDateTime gioBatDauKhung,
-            LocalDateTime gioKetThucKhung) {
+            LocalDateTime gioKetThucKhung, boolean bacSiDoPhongKhamXep) {
         LocalDateTime gioKhamDuKien = lichHen.getKhungGio().getGioBatDau();
         NguoiGiamHo nguoiGiamHo = lichHen.getNguoiGiamHo();
-        return new DatLichResponse(lichHen.getMaTokenPhieuKham(),
+        return new DatLichResponse(lichHen.getMaTokenPhieuKham(), lichHen.getMaTraCuu(),
                 phieuKhamProperties.lienKet(lichHen.getMaTokenPhieuKham()), lichHen.getSoThuTu(),
                 gioKhamDuKien.toLocalDate(), gioKhamDuKien, gioBatDauKhung, gioKetThucKhung, lichHen.getTrangThai(),
                 caKhamMapper.toBacSiTomTat(lichHen.getBacSi()),
                 caKhamMapper.toPhongKhamTomTat(lichHen.getPhongKham()), lichHen.getHoSoBenhNhan().getHoTen(),
-                nguoiGiamHo == null ? null : nguoiGiamHo.getHoTen(), lichHen.getTaiKhoanDat() != null);
+                nguoiGiamHo == null ? null : nguoiGiamHo.getHoTen(), lichHen.getTaiKhoanDat() != null,
+                bacSiDoPhongKhamXep);
     }
 
     /**
@@ -60,7 +64,7 @@ public class LichHenMapper {
 
         HoSoBenhNhan hoSo = lichHen.getHoSoBenhNhan();
         NguoiGiamHo nguoiGiamHo = lichHen.getNguoiGiamHo();
-        return new LichHenCuaToiResponse(lichHen.getMaTokenPhieuKham(),
+        return new LichHenCuaToiResponse(lichHen.getMaTokenPhieuKham(), lichHen.getMaTraCuu(),
                 phieuKhamProperties.lienKet(lichHen.getMaTokenPhieuKham()), lichHen.getTrangThai(),
                 lichHen.getSoThuTu(), ngay, gioKhamDuKien, ngay.atTime(gioBatDauKhung), ngay.atTime(gioKetThucKhung),
                 caKhamMapper.toBacSiTomTat(lichHen.getBacSi()),
@@ -88,13 +92,39 @@ public class LichHenMapper {
                 CheThongTin.cccd(hoSo.getCccd()),
                 nguoiGiamHo == null ? CheThongTin.soDienThoai(lichHen.getSoDienThoaiLienHe()) : null);
 
-        return new PhieuKhamResponse(lichHen.getMaTokenPhieuKham(),
+        return new PhieuKhamResponse(lichHen.getMaTokenPhieuKham(), lichHen.getMaTraCuu(),
                 phieuKhamProperties.lienKet(lichHen.getMaTokenPhieuKham()), lichHen.getTrangThai(),
                 lichHen.getSoThuTu(), ngay, gioKhamDuKien, ngay.atTime(gioBatDauKhung), ngay.atTime(gioKetThucKhung),
                 caKhamMapper.toBacSiTomTat(lichHen.getBacSi()),
                 lichHen.getBacSi().getChuyenKhoa().getTenChuyenKhoa(),
                 caKhamMapper.toPhongKhamTomTat(lichHen.getPhongKham()), lichHen.getLyDoKham(), lichHen.getNgayTao(),
                 benhNhan, nguoiGiamHo == null ? null : toNguoiGiamHoPhieuKham(nguoiGiamHo), nguoiGiamHo != null);
+    }
+
+    /**
+     * 1 dòng lịch hẹn cho bác sĩ / quản trị viên: SĐT không che, không có mã phiếu khám và CCCD.
+     *
+     * @param kemBacSi false ở danh sách của chính bác sĩ (trường {@code bacSi} để null)
+     */
+    public LichHenTrongCaResponse toTrongCaResponse(LichHen lichHen, boolean kemBacSi) {
+        LocalDateTime gioKhamDuKien = lichHen.getKhungGio().getGioBatDau();
+        LocalDate ngay = gioKhamDuKien.toLocalDate();
+        LichLamViec ca = lichHen.getKhungGio().getLichLamViec();
+        LocalTime gioBatDauKhung = ChiaCaLamViec.gioBatDauKhung(ca.getGioBatDau(), gioKhamDuKien.toLocalTime());
+        LocalTime gioKetThucKhung = ChiaCaLamViec.gioKetThucKhung(gioBatDauKhung, ca.getGioKetThuc());
+
+        HoSoBenhNhan hoSo = lichHen.getHoSoBenhNhan();
+        NguoiGiamHo nguoiGiamHo = lichHen.getNguoiGiamHo();
+        Integer tuoi = hoSo.getNgaySinh() == null ? null : Period.between(hoSo.getNgaySinh(), ngay).getYears();
+        return new LichHenTrongCaResponse(lichHen.getId(), lichHen.getMaTraCuu(), ca.getId(), lichHen.getTrangThai(), lichHen.getSoThuTu(),
+                gioKhamDuKien, ngay.atTime(gioBatDauKhung), ngay.atTime(gioKetThucKhung),
+                kemBacSi ? caKhamMapper.toBacSiTomTat(lichHen.getBacSi()) : null,
+                caKhamMapper.toPhongKhamTomTat(lichHen.getPhongKham()), lichHen.getLyDoKham(), lichHen.getNgayTao(),
+                new LichHenTrongCaResponse.BenhNhan(hoSo.getHoTen(), hoSo.getNgaySinh(), tuoi, hoSo.getGioiTinh(),
+                        nguoiGiamHo == null ? lichHen.getSoDienThoaiLienHe() : null),
+                nguoiGiamHo == null ? null
+                        : new LichHenTrongCaResponse.NguoiGiamHo(nguoiGiamHo.getHoTen(), nguoiGiamHo.getQuanHe(),
+                                nguoiGiamHo.getSoDienThoai()));
     }
 
     private static NguoiGiamHoPhieuKhamResponse toNguoiGiamHoPhieuKham(NguoiGiamHo nguoiGiamHo) {

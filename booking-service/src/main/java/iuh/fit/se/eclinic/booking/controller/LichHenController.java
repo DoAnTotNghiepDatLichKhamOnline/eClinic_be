@@ -19,6 +19,7 @@ import iuh.fit.se.eclinic.booking.dto.response.LichHenCuaToiResponse;
 import iuh.fit.se.eclinic.booking.service.DatLichService;
 import iuh.fit.se.eclinic.booking.service.GioiHanDatLichService;
 import iuh.fit.se.eclinic.booking.service.LichHenService;
+import iuh.fit.se.eclinic.booking.service.LienKetHoSoService;
 import iuh.fit.se.eclinic.booking.util.DiaChiIp;
 import iuh.fit.se.eclinic.common.dto.PhanHoiApi;
 import iuh.fit.se.eclinic.common.dto.TrangDuLieu;
@@ -46,6 +47,7 @@ public class LichHenController {
     private final DatLichService datLichService;
     private final GioiHanDatLichService gioiHanDatLichService;
     private final LichHenService lichHenService;
+    private final LienKetHoSoService lienKetHoSoService;
 
     @Operation(summary = "Đặt lịch khám: khách không cần đăng nhập, bệnh nhân đã đăng nhập thì lịch lưu vào tài khoản;"
             + " người khám dưới 18 tuổi phải kèm người giám hộ")
@@ -65,15 +67,18 @@ public class LichHenController {
         return PhanHoiApi.ok(datLichService.datLich(request, idTaiKhoan), "Đặt lịch thành công");
     }
 
-    @Operation(summary = "Lịch hẹn do tài khoản đang đăng nhập đặt (cho bản thân hoặc người thân), lọc Tất cả / Sắp tới"
-            + " / Lịch sử, phân trang")
+    @Operation(summary = "Lịch hẹn của tài khoản đang đăng nhập: lịch tài khoản đặt (cho bản thân hoặc người thân) và"
+            + " lịch của hồ sơ bệnh nhân đã liên kết (kể cả lịch đặt như khách); lọc Tất cả / Sắp tới / Lịch sử, phân trang")
     @GetMapping("/cua-toi")
     @PreAuthorize("hasRole('BENH_NHAN')")
     public PhanHoiApi<TrangDuLieu<LichHenCuaToiResponse>> lichHenCuaToi(
             @RequestParam(defaultValue = "TAT_CA") LocLichHen loc,
             @RequestParam(defaultValue = "0") @Min(0) int trang,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int kichThuoc) {
-        return PhanHoiApi.ok(lichHenService.lichHenCuaToi(NguoiDungHienTai.layIdTaiKhoan(), loc, trang, kichThuoc));
+        Long idTaiKhoan = NguoiDungHienTai.layIdTaiKhoan();
+        // Lịch đặt như khách bằng số CCCD đã khai khi đăng ký phải có trong danh sách ngay lần xem đầu tiên (quy tắc #3)
+        lienKetHoSoService.thuLienKet(idTaiKhoan);
+        return PhanHoiApi.ok(lichHenService.lichHenCuaToi(idTaiKhoan, loc, trang, kichThuoc));
     }
 
 }
