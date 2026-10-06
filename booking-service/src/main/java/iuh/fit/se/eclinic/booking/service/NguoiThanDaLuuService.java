@@ -2,6 +2,7 @@ package iuh.fit.se.eclinic.booking.service;
 
 import java.util.List;
 
+import iuh.fit.se.eclinic.booking.dto.request.NguoiThanDaLuuRequest;
 import iuh.fit.se.eclinic.booking.dto.response.NguoiThanDaLuuResponse;
 import iuh.fit.se.eclinic.booking.event.DaDatLichChoNguoiThanEvent;
 
@@ -21,6 +22,12 @@ public interface NguoiThanDaLuuService {
 
     /** Người thân đã lưu của tài khoản, người vừa đặt lịch gần nhất đứng trước. */
     List<NguoiThanDaLuuResponse> cuaTaiKhoan(Long idTaiKhoan);
+
+    /**
+     * Sửa bản lưu của tài khoản về 1 người thân (điền sẵn form đặt lịch lần sau). Không sửa hồ sơ bệnh nhân, không đổi
+     * số CCCD và thứ tự trong danh sách. Ném KHONG_TIM_THAY nếu không có hoặc là dòng của tài khoản khác.
+     */
+    NguoiThanDaLuuResponse sua(Long idTaiKhoan, Long id, NguoiThanDaLuuRequest request);
 
     /** Bỏ 1 người thân đã lưu. Ném KHONG_TIM_THAY nếu không có hoặc là dòng của tài khoản khác. */
     void xoa(Long idTaiKhoan, Long id);

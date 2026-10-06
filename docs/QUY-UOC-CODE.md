@@ -144,6 +144,9 @@ File mẫu trong `catalog-service/src/main/java/iuh/fit/se/eclinic/catalog/`:
 - Mỗi service **chỉ ghi** vào bảng thuộc miền của mình.
   Ngoại lệ duy nhất: dữ liệu mẫu (package `dulieumau` của identity-service, chỉ chạy khi `SEED_DATA=true`) ghi cả bảng của
   catalog và booking, vì ca làm việc cần admin, bác sĩ, phòng khám có trước mà các service khởi động song song.
+  Ngoại lệ thứ hai, có chủ đích: khi bác sĩ ghi nhận kết quả khám, medical-service đổi `lich_hen.trang_thai` sang
+  `DA_HOAN_THANH` trong cùng transaction với việc lưu hồ sơ bệnh án (`LichHenKhamRepository`, `KhamBenhServiceImpl`), để
+  bệnh án và trạng thái lịch hẹn không bao giờ lệch nhau. Qua repository đó chỉ được đổi `trangThai`.
 - Cần ghi vào bảng của miền khác → gọi REST sang service sở hữu, bằng `RestClient` đặt trong package `client/`.
   Địa chỉ lấy từ cấu hình (ví dụ `${CATALOG_URL:http://localhost:8082}`); trong Docker là `http://catalog-service:8082`.
   Ví dụ đầu tiên: tạo tài khoản bác sĩ (AUTH-04/ADM-02) — tài khoản do identity ghi, hồ sơ bác sĩ do catalog ghi.

@@ -204,7 +204,7 @@ và mã lỗi: README mục "Đặt lịch khám".
 |--------|------------|
 | Gọi đặt lịch hàng loạt | Mỗi địa chỉ IP tối đa 20 lần / 10 phút (đếm trên Redis, trước mọi thao tác DB) -> 429 `GUI_LAI_QUA_NHANH`; mỗi hồ sơ bệnh nhân tối đa 3 lịch sắp tới còn hiệu lực, mỗi số điện thoại liên hệ tối đa 5, mỗi hồ sơ 1 lịch trong cùng 1 giờ -> 409. Các con số là cấu hình `BOOKING_*` |
 | Hai người giành lượt khám cuối | Đặt lịch chạy trong 1 transaction, khoá các lượt trống của khung giờ rồi mới chọn; UNIQUE `lich_hen.id_khung_gio_hieu_luc` là chốt cuối trong DB -> chỉ 1 người được, người kia 409 |
-| Dùng số CCCD của người khác để xem / sửa hồ sơ | Số CCCD đã có hồ sơ thì họ tên và ngày sinh phải khớp, sai -> 409 với thông điệp không chứa dữ liệu đang lưu; form đặt lịch không sửa hồ sơ hay người giám hộ đã lưu, chỉ điền ngày sinh / giới tính còn trống (số điện thoại vừa nhập chỉ lưu trên lịch hẹn) |
+| Dùng số CCCD của người khác để xem / sửa hồ sơ | Số CCCD đã có hồ sơ thì lần đặt sau dùng lại hồ sơ đó dù họ tên / ngày sinh nhập khác (không còn từ chối). Người đặt không đọc lại được dữ liệu đang lưu: kết quả đặt lịch, phiếu khám và "lịch hẹn của tôi" chỉ hiện bản sao những gì chính họ nhập (`lich_hen.*_da_nhap`). Form đặt lịch không sửa hồ sơ hay người giám hộ đã lưu; chỉ khi thông tin nhập khớp hồ sơ mới điền các trường còn trống. Lịch hẹn có thông tin khác hồ sơ được đánh dấu `can_doi_chieu` để phòng khám đối chiếu giấy tờ; hồ sơ chỉ do chủ tài khoản đã liên kết hoặc quản trị viên sửa |
 | Gắn hồ sơ bệnh nhân vào tài khoản | Chỉ khi đặt cho bản thân (`datChoBanThan`) hoặc tự tạo hồ sơ, và chỉ với số CCCD **chưa có** hồ sơ; số CCCD đã có hồ sơ (do khách đặt trước đó) -> 409 `CCCD_DA_CO_HO_SO`, phải xác minh tại phòng khám |
 | Mã phiếu khám | 32 byte ngẫu nhiên (`SecureRandom`, 43 ký tự base64url); API phiếu khám không nhận id số; mã sai -> 404 |
 | Dữ liệu trên phiếu khám công khai | Chỉ năm sinh; CCCD còn 3 số cuối; số điện thoại che phần giữa; người giám hộ không có CCCD; không có id lịch hẹn, id hồ sơ |
@@ -212,9 +212,12 @@ và mã lỗi: README mục "Đặt lịch khám".
 | Danh sách bác sĩ, khung giờ | Không có email, số điện thoại, số giấy phép của bác sĩ; không có thông tin người đã đặt, chỉ số chỗ còn lại |
 
 **Rủi ro đang chấp nhận:**
-- Chưa có CAPTCHA hay xác minh số điện thoại (OTP): ai biết họ tên, ngày sinh và số CCCD của một người thì đặt được lịch
-  đứng tên người đó, trong các giới hạn ở trên.
-- 409 `THONG_TIN_BENH_NHAN_KHONG_KHOP` / `CCCD_DA_CO_HO_SO` cho biết một số CCCD đã có hồ sơ ở phòng khám (không cho biết nội dung).
+- Chưa có CAPTCHA hay xác minh số điện thoại (OTP): ai biết số CCCD của một người thì đặt được lịch gắn vào hồ sơ của
+  người đó (không cần biết họ tên, ngày sinh), trong các giới hạn ở trên; có thể dùng hết 3 lịch sắp tới của hồ sơ đó.
+  Lịch hẹn như vậy mang đánh dấu cần đối chiếu.
+- Gõ nhầm số CCCD trùng số của người khác thì lịch hẹn nằm ở hồ sơ của người đó cho tới khi phòng khám đối chiếu.
+- 409 `CCCD_DA_CO_HO_SO` (đặt cho bản thân), `LICH_HEN_TRUNG_GIO` và `VUOT_GIOI_HAN_DAT_LICH` cho biết một số CCCD đã có
+  hồ sơ / lịch hẹn ở phòng khám (không cho biết nội dung).
 - Redis lỗi thì bỏ qua giới hạn theo IP (đặt lịch vẫn chạy, mỗi lần chờ tối đa 2 giây, có log WARN); 2 giới hạn theo hồ sơ
   và số điện thoại vẫn còn vì nằm trong DB.
 - Link phiếu khám là bí mật duy nhất của phiếu: ai có link / ảnh QR đều xem được phiếu (đã che), và link không hết hạn.

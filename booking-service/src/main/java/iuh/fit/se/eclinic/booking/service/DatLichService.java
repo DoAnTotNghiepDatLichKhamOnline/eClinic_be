@@ -10,13 +10,16 @@ public interface DatLichService {
      * khoá khung giờ rồi lấy lượt khám trống sớm nhất, tìm hoặc tạo hồ sơ bệnh nhân theo CCCD, tạo lịch hẹn
      * CHO_XAC_NHAN kèm số thứ tự và mã phiếu khám.
      * <p>
+     * Số CCCD đã có hồ sơ: luôn dùng lại hồ sơ đó, kể cả khi họ tên / ngày sinh nhập vào khác hồ sơ. Hồ sơ không bị
+     * sửa; lịch hẹn giữ bản sao thông tin đã nhập và được đánh dấu cần đối chiếu khi có khác biệt.
+     * <p>
      * Bệnh nhân đã đăng nhập (BOOK-02, BOOK-07): lịch hẹn ghi nhận tài khoản đặt. Chỉ khi {@code datChoBanThan} thì hồ
      * sơ bệnh nhân mới là hồ sơ của tài khoản: tài khoản đã có hồ sơ thì CCCD nhập vào phải đúng hồ sơ đó; chưa có thì
      * CCCD phải là số chưa có hồ sơ, hồ sơ mới được gắn vào tài khoản. Không có cờ: hồ sơ theo CCCD như khách đặt.
      * <p>
      * Ném: KHONG_TIM_THAY (không có ca), DU_LIEU_KHONG_HOP_LE (khung giờ không thuộc ca), KHUNG_GIO_KHONG_KHA_DUNG,
-     * KHUNG_GIO_KHONG_CON_TRONG, THIEU_NGUOI_GIAM_HO, NGUOI_GIAM_HO_KHONG_HOP_LE, THONG_TIN_BENH_NHAN_KHONG_KHOP,
-     * LICH_HEN_TRUNG_GIO, VUOT_GIOI_HAN_DAT_LICH, CCCD_DA_CO_HO_SO, HO_SO_CHO_XAC_MINH và các mã của
+     * KHUNG_GIO_KHONG_CON_TRONG, THIEU_NGUOI_GIAM_HO, NGUOI_GIAM_HO_KHONG_HOP_LE, THONG_TIN_BENH_NHAN_KHONG_KHOP (chỉ
+     * khi đặt cho bản thân với số CCCD khác hồ sơ của tài khoản), LICH_HEN_TRUNG_GIO, VUOT_GIOI_HAN_DAT_LICH, CCCD_DA_CO_HO_SO, HO_SO_CHO_XAC_MINH và các mã của
      * {@link TaiKhoanService#layBenhNhanDangHoatDong}.
      *
      * @param idTaiKhoan tài khoản đang đăng nhập; null = khách đặt

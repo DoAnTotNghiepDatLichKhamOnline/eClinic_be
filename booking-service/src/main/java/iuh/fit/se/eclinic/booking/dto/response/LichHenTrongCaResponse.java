@@ -11,8 +11,11 @@ import iuh.fit.se.eclinic.common.enums.TrangThaiLichHen;
  * 1 lịch hẹn trong danh sách của bác sĩ (lịch hẹn trong ngày) hoặc của quản trị viên (lịch hẹn của 1 ca). CHỈ trả cho
  * bác sĩ của lịch hẹn và quản trị viên: số điện thoại KHÔNG che. Không có mã phiếu khám, không có CCCD.
  *
- * @param maTraCuu mã ngắn in trên phiếu khám (vd ECL-20261005-4198)
- * @param bacSi    null ở danh sách của chính bác sĩ
+ * @param maTraCuu       mã ngắn in trên phiếu khám (vd ECL-20261005-4198)
+ * @param bacSi          null ở danh sách của chính bác sĩ
+ * @param idHoSoBenhNhan hồ sơ bệnh nhân của lịch hẹn
+ * @param benhNhan       dữ liệu đang lưu trong hồ sơ bệnh nhân
+ * @param doiChieu       những gì người đặt nhập cho lượt khám này, để đối chiếu với hồ sơ
  */
 public record LichHenTrongCaResponse(
         Long id,
@@ -27,8 +30,10 @@ public record LichHenTrongCaResponse(
         PhongKhamTomTatResponse phongKham,
         String lyDoKham,
         LocalDateTime ngayDat,
+        Long idHoSoBenhNhan,
         BenhNhan benhNhan,
-        NguoiGiamHo nguoiGiamHo) {
+        NguoiGiamHo nguoiGiamHo,
+        DoiChieu doiChieu) {
 
     /**
      * @param tuoi         số tuổi tròn vào ngày khám; null nếu hồ sơ chưa có ngày sinh
@@ -39,5 +44,15 @@ public record LichHenTrongCaResponse(
     }
 
     public record NguoiGiamHo(String hoTen, QuanHeGiamHo quanHe, String soDienThoai) {
+    }
+
+    /**
+     * @param canDoiChieu       true nếu họ tên / ngày sinh nhập vào khác hồ sơ (hoặc khác người giám hộ đã khai) và
+     *                          phòng khám chưa đối chiếu
+     * @param hoTenDaNhap       null với lịch hẹn tạo trước khi lưu thông tin đã nhập (các trường còn lại cũng null)
+     * @param hoTenGiamHoDaNhap null nếu lượt khám không có người giám hộ
+     */
+    public record DoiChieu(boolean canDoiChieu, String hoTenDaNhap, LocalDate ngaySinhDaNhap, GioiTinh gioiTinhDaNhap,
+            String hoTenGiamHoDaNhap) {
     }
 }

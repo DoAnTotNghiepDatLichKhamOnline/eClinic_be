@@ -48,6 +48,12 @@ public class HoSoBenhNhanServiceImpl implements HoSoBenhNhanService {
     }
 
     @Override
+    public Optional<HoSoBenhNhan> timDaLienKetCuaTaiKhoan(Long idTaiKhoan) {
+        return hoSoBenhNhanRepository.findByTaiKhoanId(idTaiKhoan)
+                .filter(hoSo -> hoSo.getTrangThaiLienKet() == TrangThaiLienKet.DA_LIEN_KET);
+    }
+
+    @Override
     public HoSoCuaToiResponse xemCuaToi(Long idTaiKhoan) {
         taiKhoanService.layBenhNhanDangHoatDong(idTaiKhoan);
         HoSoBenhNhan hoSo = hoSoBenhNhanRepository.findByTaiKhoanId(idTaiKhoan)

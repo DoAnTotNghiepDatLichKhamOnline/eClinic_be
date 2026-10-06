@@ -172,7 +172,8 @@ Cần gateway + identity-service đang chạy. Trang đọc `GOOGLE_CLIENT_ID` t
 Các ô "cần đăng nhập" dùng access token của lần đăng nhập gần nhất trên trang (đăng nhập bằng tài khoản mẫu ở mục
 "Tài khoản và token"); ô "Quản trị tài khoản" cần đăng nhập `admin@eclinic.local`, vai trò khác sẽ thấy 403.
 Kết quả của mỗi lần gọi API hiện ở ô "Kết quả gọi API gần nhất" cuối trang.
-Cùng server này còn có trang demo đặt lịch khám ở http://localhost:5173/dat-lich (xem mục "Đặt lịch khám").
+Cùng server này còn có trang demo đặt lịch khám ở http://localhost:5173/dat-lich và trang demo lịch hẹn (bệnh nhân, bác
+sĩ) ở http://localhost:5173/lich-hen (xem mục "Đặt lịch khám").
 
 ### Thử toàn bộ luồng xác thực với email thật và Google thật
 
@@ -245,13 +246,18 @@ hộp thư thật. Trang demo mở ở http://localhost:5173, Swagger của iden
 
 UC-APPT-01 (BOOK-01..07, BOOK-11, BOOK-12): **khách không cần đăng nhập** hoặc **bệnh nhân đã đăng nhập** chọn chuyên khoa,
 bác sĩ (hoặc "bác sĩ bất kỳ"), ngày, khung giờ 1 tiếng, điền thông tin người khám và nhận phiếu khám (số thứ tự, giờ khám dự
-kiến, link, mã QR). Lịch mới ở trạng thái `CHO_XAC_NHAN`. Huỷ / đổi lịch và bác sĩ xác nhận chưa có (task khác).
+kiến, link, mã QR). Lịch mới ở trạng thái `CHO_XAC_NHAN`. Huỷ / đổi lịch và bác sĩ xác nhận chưa có (task khác); bác sĩ ghi kết quả khám thì lịch chuyển sang `DA_HOAN_THANH`.
 
 - Mỗi ca làm việc có N lượt khám mỗi giờ, mỗi lượt t phút (dữ liệu mẫu: N = 6, t = 10). Khung 1 tiếng hết N lượt thì hiện
   "Hết chỗ"; người đặt được xếp vào lượt trống sớm nhất của khung. Khung cuối của ca có thể ngắn hơn 1 tiếng.
 - Người khám **dưới 18 tuổi tính theo ngày khám** phải kèm thông tin người giám hộ (từ đủ 18 tuổi, CCCD khác người khám).
-- Hồ sơ bệnh nhân tìm theo số CCCD, chưa có thì tạo mới. Số CCCD đã có hồ sơ thì họ tên và ngày sinh phải khớp hồ sơ đó;
-  form đặt lịch chỉ điền thêm địa chỉ, số bảo hiểm y tế khi hồ sơ còn trống, không sửa thông tin đã lưu.
+- Hồ sơ bệnh nhân tìm theo số CCCD, chưa có thì tạo mới. **Số CCCD là khoá nhận diện duy nhất:** số đã có hồ sơ thì lần
+  đặt sau luôn dùng lại hồ sơ đó, họ tên / ngày sinh nhập khác hồ sơ không bị từ chối. Hồ sơ không bị sửa; lịch hẹn giữ
+  bản sao thông tin đã nhập (phiếu khám và "lịch hẹn của tôi" hiện bản sao này, không hiện dữ liệu của hồ sơ) và được đánh
+  dấu `canDoiChieu` khi có khác biệt, kể cả khác biệt ở người giám hộ, để phòng khám đối chiếu giấy tờ. Thông tin nhập
+  khớp hồ sơ thì form chỉ điền thêm ngày sinh, giới tính, địa chỉ, số bảo hiểm y tế còn trống.
+- Sửa thông tin đã lưu: chủ tài khoản sửa hồ sơ của mình (`PUT .../ho-so-benh-nhan/cua-toi`) và người thân đã lưu
+  (`PUT .../nguoi-than/{id}`); hồ sơ chưa gắn tài khoản do quản trị viên sửa sau khi đối chiếu giấy tờ. Số CCCD không đổi được.
 - **Người khám dưới 18 tuổi được bỏ trống CCCD**: hồ sơ nhận diện bằng họ tên + ngày sinh + CCCD người giám hộ; lần đặt sau
   có CCCD thì hồ sơ đó được điền số. Từ đủ 18 tuổi bắt buộc CCCD 12 số. Giới tính và lý do khám bắt buộc.
 - **"Bác sĩ bất kỳ"**: gửi `idChuyenKhoa` thay cho `idLichLamViec`, server xếp bác sĩ còn nhiều chỗ nhất trong giờ đó.
@@ -282,11 +288,21 @@ Tất cả gọi qua gateway `http://localhost:8080`; thử nhanh trên Swagger 
 | `POST /api/booking/lich-hen` | Công khai; có token `BENH_NHAN` thì lưu vào tài khoản | Body: `idLichLamViec` **hoặc** `idChuyenKhoa` (đúng 1 trong 2), `gioBatDauKhung`, `benhNhan` {`hoTen`, `ngaySinh`, `gioiTinh`, `soDienThoai`, `cccd` (bỏ trống được khi dưới 18 tuổi), `email`?, `soBaoHiemYTe`?, `diaChi`?}, `nguoiGiamHo` {`hoTen`, `quanHe`, `soDienThoai`, `cccd`, `ngaySinh`?}, `lyDoKham`, `datChoBanThan`?, `luuNguoiThan`?. 201: `maPhieuKham`, `maTraCuu`, `linkPhieuKham`, `soThuTu`, `gioKhamDuKien`, `bacSi`, `bacSiDoPhongKhamXep`, `luuVaoTaiKhoan`... |
 | `GET /api/booking/phieu-kham/{maPhieuKham}` | Công khai (ai có mã cũng xem được) | Phiếu khám; CCCD và số điện thoại đã che; trẻ dưới 18 tuổi có người giám hộ và `canNguoiGiamHoDiCung` |
 | `GET /api/booking/phieu-kham/{maPhieuKham}/qr?kichThuoc=&taiVe=` | Công khai | Ảnh PNG mã QR của link phiếu khám (100–1000 px, mặc định 300; `taiVe=true` để tải về) |
-| `GET /api/booking/lich-hen/cua-toi?loc=TAT_CA\|SAP_TOI\|LICH_SU&trang=&kichThuoc=` | `BENH_NHAN` | Lịch tài khoản đã đặt (cho bản thân hoặc người thân), lịch của hồ sơ bệnh nhân đã liên kết (kể cả lịch đặt như khách) và lịch của người khám có người giám hộ khai số CCCD của hồ sơ đó; kèm `maTraCuu`, link phiếu khám |
+| `GET /api/booking/lich-hen/cua-toi?loc=TAT_CA\|SAP_TOI\|LICH_SU&cuaAi=TAT_CA\|BAN_THAN\|NGUOI_KHAC&trang=&kichThuoc=` | `BENH_NHAN` | Lịch tài khoản đã đặt (cho bản thân hoặc người thân), lịch của hồ sơ bệnh nhân đã liên kết (kể cả lịch đặt như khách) và lịch của người khám có người giám hộ khai số CCCD của hồ sơ đó; kèm `maTraCuu`, link phiếu khám. `cuaAi`: `BAN_THAN` = người khám là chủ tài khoản (bất kể ai đặt), `NGUOI_KHAC` = còn lại. Mỗi dòng có `laBanThan`, `nguoiDat` (`TOI` / `KHACH` / `TAI_KHOAN_KHAC`) và `thongTinKhacHoSo` (lịch của tôi mà người đặt nhập họ tên / ngày sinh khác hồ sơ của tôi) |
+| `GET /api/booking/lich-hen/cua-toi/lich?tuNgay=&denNgay=&cuaAi=` | `BENH_NHAN` | Lịch hẹn của tài khoản theo khoảng ngày cho màn hình lịch: mọi trạng thái, theo giờ khám, không phân trang, tối đa 42 ngày (lưới tháng 6 tuần); dòng như "lịch hẹn của tôi" |
+| `GET /api/booking/bac-si/toi/lich-hen/lich?tuNgay=&denNgay=` | `BAC_SI` | Lịch hẹn của chính bác sĩ theo khoảng ngày cho màn hình lịch (tối đa 42 ngày), dòng như danh sách trong ngày |
+| `GET /api/booking/lich-hen/cua-toi/{maPhieuKham}` | `BENH_NHAN` | Chi tiết 1 lịch hẹn tài khoản được xem: `lichHen` (như dòng danh sách), `ngaySinhBenhNhan`, `gioiTinhBenhNhan`, `soDienThoaiLienHe`, `emailLienHe` (2 trường liên hệ chỉ có khi chính tài khoản này đặt). Lịch không thuộc tài khoản -> 404 |
+| `GET /api/booking/trang-ca-nhan/cua-toi` | `BENH_NHAN` | Trang cá nhân trong 1 lần gọi: `hoSo`, `emailTaiKhoan`, `nguoiThan[]`, `lichSapToi` {`cuaToi[]`, `cuaNguoiKhac[]`} (5 lịch gần nhất mỗi bên), `lanKhamGanDay[]` (5 lượt đã khám gần nhất kèm kết quả), `soLich` {`sapToiCuaToi`, `sapToiCuaNguoiKhac`, `lichSu`, `daKham`} |
+| `GET /api/booking/lich-su-kham/cua-toi?cuaAi=TAT_CA\|BAN_THAN\|NGUOI_KHAC&trang=&kichThuoc=` | `BENH_NHAN` | Lịch sử khám: các lượt đã khám xong mà tài khoản được xem kết quả, mới nhất trước. Mỗi dòng: `lichHen` (như dòng "lịch hẹn của tôi") và `ketQua` {`chanDoan`, `ghiChu`, `ngayTaiKhamDeXuat`, `donThuoc[]`}. Được xem kết quả khi người khám là chủ tài khoản (bất kể ai đặt) hoặc chính tài khoản đã đặt lịch; lịch chỉ thấy vì là người giám hộ theo CCCD thì không có kết quả. `GET .../lich-hen/cua-toi/{maPhieuKham}` cũng trả `ketQua` theo cùng quy tắc |
 | `GET /api/booking/ho-so-benh-nhan/cua-toi`, `PUT /api/booking/ho-so-benh-nhan/cua-toi` | `BENH_NHAN` | Xem, tạo, sửa hồ sơ bệnh nhân của tài khoản; số CCCD không đổi được sau khi đã có hồ sơ. Số CCCD đã có hồ sơ chưa gắn tài khoản: khớp thì liên kết, không khớp trả `trangThaiLienKet: CHO_XAC_MINH` |
-| `GET /api/booking/thong-tin-dat-lich/cua-toi`, `DELETE .../cua-toi/nguoi-than/{id}` | `BENH_NHAN` | Điền sẵn form: `banThan`, `emailTaiKhoan`, `nguoiThan[]` đã lưu, `lanDatGanNhat`; bỏ 1 người thân đã lưu |
-| `GET /api/booking/bac-si/toi/lich-lam-viec?tuNgay=&denNgay=`, `GET /api/booking/bac-si/toi/lich-hen?ngay=`, `GET /api/booking/bac-si/toi/lich-hen/tra-cuu?ma=` | `BAC_SI` | Ca làm việc của chính bác sĩ (tối đa 42 ngày, kèm số lượt đã đặt), bệnh nhân trong ngày, tra 1 lịch hẹn theo mã tra cứu hoặc mã phiếu khám |
-| `GET /api/booking/quan-tri/lich-lam-viec?tuNgay=&denNgay=&idChuyenKhoa=&idBacSi=&idPhongKham=`, `GET .../lich-lam-viec/{id}/lich-hen`, `GET /api/booking/quan-tri/lich-hen/tra-cuu?ma=` | `QUAN_TRI_VIEN` | Lịch làm việc toàn viện (chỉ xem, tối đa 42 ngày), lịch hẹn của 1 ca, tra lịch hẹn theo mã |
+| `GET /api/booking/thong-tin-dat-lich/cua-toi`, `PUT .../cua-toi/nguoi-than/{id}`, `DELETE .../cua-toi/nguoi-than/{id}` | `BENH_NHAN` | Điền sẵn form: `banThan`, `emailTaiKhoan`, `nguoiThan[]` đã lưu, `lanDatGanNhat`; sửa bản lưu của 1 người thân (các trường của `benhNhan` trừ `cccd`, kèm `nguoiGiamHo`?; không sửa hồ sơ bệnh nhân); bỏ 1 người thân đã lưu |
+| `GET /api/booking/bac-si/toi/lich-lam-viec?tuNgay=&denNgay=`, `GET /api/booking/bac-si/toi/lich-hen?ngay=`, `GET /api/booking/bac-si/toi/lich-hen/tra-cuu?ma=` | `BAC_SI` | Ca làm việc của chính bác sĩ (tối đa 42 ngày, kèm số lượt đã đặt), bệnh nhân trong ngày, tra 1 lịch hẹn theo mã tra cứu, mã phiếu khám hoặc cả link phiếu khám (quét QR). Danh sách trong ngày: `ngay` bỏ trống = hôm nay; lọc `idLichLamViec`, `soThuTu`, `tuKhoa` (họ tên, không xét dấu / hoa thường) |
+| `GET /api/booking/bac-si/toi/lich-hen/{id}/ho-so-kham`, `GET /api/booking/bac-si/toi/lich-hen/tra-cuu/ho-so-kham?ma=` | `BAC_SI` | Hồ sơ khám của bệnh nhân từ 1 lịch hẹn của chính bác sĩ (theo id, hoặc theo mã / link phiếu khám quét từ QR): `lichHen`, `hoSoBenhNhan` (số CCCD không che, `tienSuBenhLy`), `lanKhamTruoc[]` (các lần khám trước với mọi bác sĩ, kèm `ketQua` nếu đã có bệnh án). Lịch hẹn của bác sĩ khác -> 404 |
+| `POST` / `PUT` / `GET /api/medical/bac-si/toi/lich-hen/{idLichHen}/benh-an`, `GET /api/medical/bac-si/toi/thuoc?tuKhoa=` | `BAC_SI` | Khám bệnh (medical-service): ghi kết quả khám `{ chanDoan, ghiChu?, ngayTaiKhamDeXuat?, donThuoc[]? }` cho lịch hẹn của chính bác sĩ, từ ngày khám trở đi; lịch hẹn chuyển sang `DA_HOAN_THANH` trong cùng transaction. `PUT` sửa kết quả đã ghi (thay toàn bộ đơn thuốc), `GET` xem lại; gợi ý tên thuốc trong danh mục. Hồ sơ khám ở booking-service hiện `ketQua` và `lanKhamTruoc[].ketQua` kèm `donThuoc[]` |
+| `PUT /api/booking/bac-si/toi/lich-hen/{id}/benh-nhan`, `POST .../lich-hen/{id}/da-doi-chieu` | `BAC_SI` | Sửa hồ sơ bệnh nhân của 1 lịch hẹn của mình sau khi đối chiếu giấy tờ (body như của quản trị viên); bỏ đánh dấu `canDoiChieu` |
+| `GET /api/booking/quan-tri/lich-lam-viec?tuNgay=&denNgay=&idChuyenKhoa=&idBacSi=&idPhongKham=`, `GET .../lich-lam-viec/{id}/lich-hen`, `GET /api/booking/quan-tri/lich-hen/tra-cuu?ma=` | `QUAN_TRI_VIEN` | Lịch làm việc toàn viện (chỉ xem, tối đa 42 ngày), lịch hẹn của 1 ca, tra lịch hẹn theo mã. Mỗi lịch hẹn (cả ở danh sách của bác sĩ) có `idHoSoBenhNhan`, `benhNhan` (dữ liệu của hồ sơ) và `doiChieu` {`canDoiChieu`, `hoTenDaNhap`, `ngaySinhDaNhap`, `gioiTinhDaNhap`, `hoTenGiamHoDaNhap`} |
+| `POST /api/booking/quan-tri/lich-hen/{id}/da-doi-chieu` | `QUAN_TRI_VIEN` | Đã đối chiếu giấy tờ: bỏ đánh dấu `canDoiChieu` của lịch hẹn |
+| `GET /api/booking/quan-tri/ho-so-benh-nhan/{id}`, `PUT .../ho-so-benh-nhan/{id}` | `QUAN_TRI_VIEN` | Xem (số CCCD không che) và sửa hồ sơ bệnh nhân bất kỳ: `hoTen`, `ngaySinh`, `gioiTinh`?, `soDienThoai`, `diaChi`?, `soBaoHiemYTe`?, `cccd`? (chỉ điền được khi hồ sơ chưa có số; đổi số đã có -> 400, số thuộc hồ sơ khác -> 409) |
 | `GET /api/booking/quan-tri/ho-so-benh-nhan/cho-xac-minh`, `POST .../ho-so-benh-nhan/{id}/duyet`, `POST .../{id}/tu-choi` | `QUAN_TRI_VIEN` | Hồ sơ bệnh nhân chờ xác minh liên kết với tài khoản: duyệt hoặc từ chối (cặp đã từ chối không tự vào hàng chờ lại) |
 
 Mã lỗi (`maLoi`) khi đặt lịch:
@@ -298,11 +314,12 @@ Mã lỗi (`maLoi`) khi đặt lịch:
 | 409 | `KHUNG_GIO_KHONG_CON_TRONG` | Khung giờ đã hết chỗ |
 | 409 | `KHUNG_GIO_KHONG_KHA_DUNG` | Khung giờ không còn đặt được (đã qua, quá gần giờ khám, quá xa, ca bị huỷ, bác sĩ ngừng công tác) |
 | 409 | `LICH_HEN_TRUNG_GIO` | Người khám đã có lịch còn hiệu lực trong cùng khung giờ đó |
-| 409 | `THONG_TIN_BENH_NHAN_KHONG_KHOP` | Số CCCD đã có hồ sơ nhưng họ tên / ngày sinh không khớp; hoặc đặt cho bản thân với CCCD khác hồ sơ của tài khoản |
+| 409 | `THONG_TIN_BENH_NHAN_KHONG_KHOP` | Đặt cho bản thân với CCCD khác hồ sơ của tài khoản (họ tên / ngày sinh khác hồ sơ của 1 số CCCD không còn bị từ chối) |
 | 409 | `VUOT_GIOI_HAN_DAT_LICH` | Hồ sơ / số điện thoại đã có quá nhiều lịch sắp tới |
 | 409 | `CCCD_DA_CO_HO_SO`, `HO_SO_CHO_XAC_MINH` | Đặt cho bản thân bằng số CCCD đã có hồ sơ chưa gắn với tài khoản; hồ sơ của tài khoản đang chờ xác minh; tạo hồ sơ bằng số CCCD thuộc tài khoản khác hoặc đã bị quản trị viên từ chối liên kết |
 | 403 | `KHONG_CO_QUYEN`, `TAI_KHOAN_BI_VO_HIEU_HOA`, `TAI_KHOAN_CHUA_XAC_THUC` | Token bác sĩ / quản trị viên; tài khoản bị vô hiệu hoá hoặc chưa xác thực email |
 | 429 | `GUI_LAI_QUA_NHANH` | Quá nhiều lần đặt từ một địa chỉ IP |
+| 409 | `CHUA_DEN_NGAY_KHAM`, `LICH_HEN_KHONG_KHAM_DUOC` | (Khám bệnh) Bác sĩ ghi kết quả khám trước ngày khám; lịch hẹn đã khám xong, đã huỷ hoặc bị từ chối |
 | 404 | `KHONG_TIM_THAY` | Ca khám không tồn tại; mã phiếu khám sai |
 
 Cấu hình (đều có giá trị mặc định, xem `.env.example`): `BOOKING_MIN_LEAD` (30m), `BOOKING_MAX_DAYS` (30),
@@ -331,6 +348,42 @@ Cả luồng nằm trên một trang: chuyên khoa -> thẻ bác sĩ -> ngày ->
    số CCCD đó, kích hoạt, đăng nhập -> lịch đã đặt như khách nằm trong "Lịch hẹn của tôi". Đăng ký với số điện thoại khác
    -> ô hồ sơ ghi "đang chờ phòng khám xác minh"; quản trị viên duyệt bằng `POST /api/booking/quan-tri/ho-so-benh-nhan/{id}/duyet`.
 6. Khung giờ hết chỗ hiện "Hết chỗ" và không bấm được. Mọi lần gọi API hiện ở ô "Kết quả gọi API gần nhất" cuối trang.
+
+**Trang demo lịch hẹn** (cùng server, mở http://localhost:5173/lich-hen; cần thêm medical-service đang chạy và **internet**: thư
+viện lịch FullCalendar 6 và, ở trình duyệt chưa tự đọc được QR, thư viện jsQR được tải từ CDN jsdelivr). Trang hiện theo vai trò
+của tài khoản đang đăng nhập (dùng chung phiên với 2 trang demo kia):
+1. **Bệnh nhân** (`benhnhan01@eclinic.local` / `Demo@123`): lịch hẹn dạng lịch (tháng / tuần / ngày / danh sách), màu khác nhau
+   cho lịch của tôi, lịch của người khác, đã khám, đã hủy; lọc Tất cả / Của tôi / Của người khác. Bấm 1 lịch hẹn -> chi tiết, kết
+   quả khám (nếu được xem), cảnh báo khi người đặt nhập thông tin khác hồ sơ của mình. Trang cá nhân: hồ sơ, số lịch hẹn, người
+   thân đã lưu (sửa, bỏ), các lần khám gần đây kèm chẩn đoán và đơn thuốc.
+2. **Bác sĩ** (`bacsi01@eclinic.local` / `Demo@123`): lịch gồm ca làm việc (số lượt đã đặt / tổng) và lịch hẹn. Bấm 1 ngày hoặc 1
+   ca -> danh sách bệnh nhân trong ngày, lọc theo số thứ tự, họ tên (không cần dấu), ca. Bấm 1 lịch hẹn, gõ mã, hoặc **quét mã QR**
+   trên phiếu khám (camera hoặc chọn ảnh) -> hồ sơ khám: hồ sơ đang lưu, thông tin người đặt đã nhập, các lần khám trước. Tại đó
+   sửa hồ sơ bệnh nhân, bấm "Đã đối chiếu giấy tờ", ghi / sửa kết quả khám kèm đơn thuốc (gõ tên thuốc có gợi ý).
+3. Ghi kết quả khám chỉ được từ **ngày khám** trở đi: muốn thử ngay thì đặt 1 lịch cho ca **hôm nay** (đặt trước ít nhất 30 phút)
+   rồi đăng nhập bằng bác sĩ của ca đó; lịch của ngày sau trả 409 `CHUA_DEN_NGAY_KHAM`.
+
+**Danh sách kiểm tra trên màn hình cho trang `/lich-hen`** (DOANTOTNGH-6; phần API đã kiểm tra tự động, phần dưới đây phải
+nhìn trên trình duyệt). Chuẩn bị: chạy gateway, identity-service, booking-service, medical-service với `SEED_DATA=true`, chạy
+`node scripts/demo-xac-thuc/server.js`, máy có internet. Đặt sẵn ở `/dat-lich` bằng `benhnhan01@eclinic.local`: 1 lịch cho bản thân,
+1 lịch cho người thân, và 1 lịch cho ca **hôm nay** (để bác sĩ ghi kết quả khám); ghi lại bác sĩ của các ca đó.
+
+- [ ] **1. Lịch của bệnh nhân.** Đăng nhập `benhnhan01` ở `/lich-hen`. Lịch hẹn hiện ở cả 4 chế độ Tháng / Tuần / Ngày / Lịch
+      biểu; lịch của tôi và của người khác khác màu, lịch đã khám màu xanh lá. Bấm 1 lịch hẹn -> hiện chi tiết; lịch đã khám hiện
+      kết quả khám. Đổi bộ lọc Tất cả / Lịch của tôi / Lịch của người khác -> lịch đổi theo.
+- [ ] **2. Trang cá nhân của bệnh nhân.** Hiện hồ sơ bệnh nhân, 4 số đếm lịch hẹn, người thân đã lưu, các lần khám gần đây. Bấm
+      **Sửa** 1 người thân, đổi họ tên, **Lưu** -> bảng hiện tên mới. Bấm **Bỏ** -> người đó biến mất khỏi bảng.
+- [ ] **3. Lịch và danh sách của bác sĩ.** Đăng xuất, đăng nhập bằng bác sĩ của ca đã đặt (`bacsiNN@eclinic.local` / `Demo@123`).
+      Lịch hiện ca làm việc (kèm số lượt đã đặt / tổng) và lịch hẹn. Bấm 1 ngày hoặc 1 ca -> danh sách bệnh nhân của ngày đó. Lọc
+      theo **số thứ tự**, theo **họ tên gõ không dấu** -> chỉ còn dòng khớp. Bấm 1 dòng -> mở hồ sơ khám, có mục "Các lần khám trước".
+- [ ] **4. Thao tác của bác sĩ trong hồ sơ khám.** Sửa họ tên trong "Sửa hồ sơ bệnh nhân", **Lưu** -> hồ sơ hiện tên mới. Với lịch
+      có cảnh báo "khác hồ sơ" (đặt bằng số CCCD đã có nhưng gõ tên khác): bấm **Đã đối chiếu giấy tờ** -> cảnh báo mất. Với lịch
+      của **hôm nay**: nhập chẩn đoán, thêm 1 dòng thuốc (gõ 2 ký tự trở lên của tên thuốc đã từng kê -> có gợi ý), **Lưu kết quả
+      khám** -> lịch hẹn thành "Đã hoàn thành", form chuyển sang chế độ sửa. Lịch của ngày sau -> báo `CHUA_DEN_NGAY_KHAM`.
+- [ ] **5. Mã QR.** Mở phiếu khám của 1 lịch hẹn thuộc bác sĩ đang đăng nhập (link "Mở phiếu khám" ở chi tiết lịch hẹn của bệnh
+      nhân) để có mã QR. Ở màn hình bác sĩ: **Quét QR bằng camera** rồi đưa mã vào -> mở đúng hồ sơ khám; chụp / lưu ảnh mã QR rồi
+      **chọn ảnh** -> mở đúng hồ sơ khám; dán mã `ECL-…` hoặc cả link phiếu khám vào ô mã -> mở đúng hồ sơ khám. Mã của bác sĩ
+      khác -> báo không tìm thấy.
 
 Đối chiếu từng màn hình của frontend với API: [docs/BAN-GIAO-FRONTEND-05-10.md](docs/BAN-GIAO-FRONTEND-05-10.md).
 

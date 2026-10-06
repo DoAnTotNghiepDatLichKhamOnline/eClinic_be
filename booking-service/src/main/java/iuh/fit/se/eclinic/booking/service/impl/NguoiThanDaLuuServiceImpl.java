@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import iuh.fit.se.eclinic.booking.dto.request.BenhNhanRequest;
 import iuh.fit.se.eclinic.booking.dto.request.NguoiGiamHoRequest;
+import iuh.fit.se.eclinic.booking.dto.request.NguoiThanDaLuuRequest;
 import iuh.fit.se.eclinic.booking.dto.response.NguoiThanDaLuuResponse;
 import iuh.fit.se.eclinic.booking.event.DaDatLichChoNguoiThanEvent;
 import iuh.fit.se.eclinic.booking.repository.NguoiThanDaLuuRepository;
@@ -56,12 +57,7 @@ public class NguoiThanDaLuuServiceImpl implements NguoiThanDaLuuService {
         nguoiThan.setDiaChi(rongThanhNull(benhNhan.diaChi()));
         nguoiThan.setSoBaoHiemYTe(rongThanhNull(benhNhan.soBaoHiemYTe()));
 
-        NguoiGiamHoRequest giamHo = event.nguoiGiamHo();
-        nguoiThan.setGiamHoHoTen(giamHo == null ? null : ChuanHoaTen.gon(giamHo.hoTen()));
-        nguoiThan.setGiamHoQuanHe(giamHo == null ? null : giamHo.quanHe());
-        nguoiThan.setGiamHoSoDienThoai(giamHo == null ? null : giamHo.soDienThoai());
-        nguoiThan.setGiamHoCccd(giamHo == null ? null : giamHo.cccd());
-        nguoiThan.setGiamHoNgaySinh(giamHo == null ? null : giamHo.ngaySinh());
+        ganNguoiGiamHo(nguoiThan, event.nguoiGiamHo());
         nguoiThan.setLanDungCuoi(LocalDateTime.now());
         nguoiThanDaLuuRepository.saveAndFlush(nguoiThan);
 
@@ -82,11 +78,36 @@ public class NguoiThanDaLuuServiceImpl implements NguoiThanDaLuuService {
 
     @Override
     @Transactional
+    public NguoiThanDaLuuResponse sua(Long idTaiKhoan, Long id, NguoiThanDaLuuRequest request) {
+        taiKhoanService.layBenhNhanDangHoatDong(idTaiKhoan);
+        NguoiThanDaLuu nguoiThan = nguoiThanDaLuuRepository.findByIdAndTaiKhoanId(id, idTaiKhoan)
+                .orElseThrow(() -> new LoiKhongTimThay("NguoiThanDaLuu", id));
+        nguoiThan.setHoTen(ChuanHoaTen.gon(request.hoTen()));
+        nguoiThan.setNgaySinh(request.ngaySinh());
+        nguoiThan.setGioiTinh(request.gioiTinh());
+        nguoiThan.setSoDienThoai(request.soDienThoai());
+        nguoiThan.setEmail(rongThanhNull(request.email()));
+        nguoiThan.setDiaChi(rongThanhNull(request.diaChi()));
+        nguoiThan.setSoBaoHiemYTe(rongThanhNull(request.soBaoHiemYTe()));
+        ganNguoiGiamHo(nguoiThan, request.nguoiGiamHo());
+        return toResponse(nguoiThan);
+    }
+
+    @Override
+    @Transactional
     public void xoa(Long idTaiKhoan, Long id) {
         taiKhoanService.layBenhNhanDangHoatDong(idTaiKhoan);
         NguoiThanDaLuu nguoiThan = nguoiThanDaLuuRepository.findByIdAndTaiKhoanId(id, idTaiKhoan)
                 .orElseThrow(() -> new LoiKhongTimThay("NguoiThanDaLuu", id));
         nguoiThanDaLuuRepository.delete(nguoiThan);
+    }
+
+    private static void ganNguoiGiamHo(NguoiThanDaLuu nguoiThan, NguoiGiamHoRequest giamHo) {
+        nguoiThan.setGiamHoHoTen(giamHo == null ? null : ChuanHoaTen.gon(giamHo.hoTen()));
+        nguoiThan.setGiamHoQuanHe(giamHo == null ? null : giamHo.quanHe());
+        nguoiThan.setGiamHoSoDienThoai(giamHo == null ? null : giamHo.soDienThoai());
+        nguoiThan.setGiamHoCccd(giamHo == null ? null : giamHo.cccd());
+        nguoiThan.setGiamHoNgaySinh(giamHo == null ? null : giamHo.ngaySinh());
     }
 
     private static NguoiThanDaLuuResponse toResponse(NguoiThanDaLuu nguoiThan) {

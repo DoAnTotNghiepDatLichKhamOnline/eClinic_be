@@ -69,6 +69,14 @@ public class DatLichServiceImpl implements DatLichService {
     private record CaVaLuot(LichLamViec ca, LocalDateTime gioKetThucKhung, List<KhungGioKham> cacLuot) {
     }
 
+    /**
+     * Dòng đã lưu (hồ sơ bệnh nhân, người giám hộ) dùng cho lượt đặt này.
+     *
+     * @param khacThongTin true nếu dòng đã có từ trước và họ tên / ngày sinh nhập vào khác dòng đó
+     */
+    private record DaTim<T>(T dong, boolean khacThongTin) {
+    }
+
     /** Lịch hẹn còn hiệu lực: tính vào trùng giờ và vào giới hạn số lịch đang giữ. */
     private static final List<TrangThaiLichHen> TRANG_THAI_CON_HIEU_LUC = List.of(TrangThaiLichHen.CHO_XAC_NHAN,
             TrangThaiLichHen.DA_XAC_NHAN);
@@ -126,9 +134,11 @@ public class DatLichServiceImpl implements DatLichService {
         KhungGioKham luot = chonLuot(daChon.cacLuot(), moc);
 
         kiemTraGioiHanTheoSoDienThoai(soDienThoaiLienHe, bayGio);
-        HoSoBenhNhan hoSo = timHoacTaoHoSo(benhNhan, cccd, giamHo, chuHoSoMoi, gioBatDauKhung, gioKetThucKhung,
-                bayGio);
-        NguoiGiamHo nguoiGiamHo = giamHo == null ? null : timHoacTaoNguoiGiamHo(hoSo, giamHo);
+        DaTim<HoSoBenhNhan> hoSoDaTim = timHoacTaoHoSo(benhNhan, cccd, giamHo, chuHoSoMoi, gioBatDauKhung,
+                gioKetThucKhung, bayGio);
+        HoSoBenhNhan hoSo = hoSoDaTim.dong();
+        DaTim<NguoiGiamHo> giamHoDaTim = giamHo == null ? null : timHoacTaoNguoiGiamHo(hoSo, giamHo);
+        NguoiGiamHo nguoiGiamHo = giamHoDaTim == null ? null : giamHoDaTim.dong();
 
         luot.setTrangThai(TrangThaiKhungGio.DA_DAT);
         LichHen lichHen = new LichHen();
@@ -142,6 +152,12 @@ public class DatLichServiceImpl implements DatLichService {
         lichHen.setLyDoKham(rongThanhNull(request.lyDoKham()));
         lichHen.setSoDienThoaiLienHe(soDienThoaiLienHe);
         lichHen.setEmailLienHe(rongThanhNull(benhNhan.email()));
+        // Bản sao những gì người đặt nhập: hồ sơ đã có không bị sửa, nơi hiển thị cho người đặt dùng bản sao này
+        lichHen.setHoTenDaNhap(ChuanHoaTen.gon(benhNhan.hoTen()));
+        lichHen.setNgaySinhDaNhap(benhNhan.ngaySinh());
+        lichHen.setGioiTinhDaNhap(benhNhan.gioiTinh());
+        lichHen.setHoTenGiamHoDaNhap(giamHo == null ? null : ChuanHoaTen.gon(giamHo.hoTen()));
+        lichHen.setCanDoiChieu(hoSoDaTim.khacThongTin() || (giamHoDaTim != null && giamHoDaTim.khacThongTin()));
         lichHen.setMaTraCuu(taoMaTraCuu(ngayKham));
         lichHen.setMaTokenPhieuKham(TokenNgauNhien.tao());
         try {
@@ -373,15 +389,16 @@ public class DatLichServiceImpl implements DatLichService {
     }
 
     /**
-     * BOOK-03: CCCD (hoặc khoá nhận diện của trẻ chưa có CCCD) chưa có hồ sơ thì tạo mới. Đã có thì dùng lại, với điều kiện họ tên và ngày sinh nhập vào khớp hồ
-     * sơ; không cập nhật gì vào hồ sơ đã có ngoài việc điền ngày sinh / giới tính còn trống (việc đặt lịch không sửa dữ
-     * liệu của hồ sơ; chủ tài khoản sửa hồ sơ của mình ở API riêng). Hồ sơ đã có được khoá để các lần đặt của cùng bệnh
-     * nhân chạy lần lượt.
+     * BOOK-03: CCCD (hoặc khoá nhận diện của trẻ chưa có CCCD) chưa có hồ sơ thì tạo mới. Đã có thì dùng lại: số CCCD là
+     * khoá nhận diện duy nhất, họ tên / ngày sinh nhập khác hồ sơ KHÔNG bị từ chối mà được báo lại để lịch hẹn đánh dấu
+     * cần đối chiếu. Việc đặt lịch không sửa dữ liệu của hồ sơ (chủ tài khoản sửa hồ sơ của mình, quản trị viên sửa hồ
+     * sơ bất kỳ ở API riêng); chỉ khi thông tin nhập khớp hồ sơ mới điền các trường hồ sơ còn trống. Hồ sơ đã có được
+     * khoá để các lần đặt của cùng bệnh nhân chạy lần lượt.
      *
      * @param chuHoSoMoi khác null khi đặt cho bản thân mà tài khoản chưa có hồ sơ: hồ sơ tạo mới được gắn vào tài khoản
      *                   này, còn nếu CCCD vừa có hồ sơ (request khác tạo sau lần kiểm tra không khoá) thì từ chối
      */
-    private HoSoBenhNhan timHoacTaoHoSo(BenhNhanRequest benhNhan, String cccd, NguoiGiamHoRequest giamHo,
+    private DaTim<HoSoBenhNhan> timHoacTaoHoSo(BenhNhanRequest benhNhan, String cccd, NguoiGiamHoRequest giamHo,
             TaiKhoan chuHoSoMoi, LocalDateTime gioBatDauKhung, LocalDateTime gioKetThucKhung, LocalDateTime bayGio) {
         // Người khám dưới 18 tuổi (có người giám hộ): khoá nhận diện khi chưa có CCCD (quy tắc #10)
         String khoaNhanDien = giamHo == null ? null
@@ -417,15 +434,13 @@ public class DatLichServiceImpl implements DatLichService {
             }
             // 2 request cùng lúc với cùng CCCD mới ở 2 khung khác nhau, hoặc 2 lần "đặt cho bản thân" đầu tiên của 1 tài
             // khoản: request sau vi phạm UNIQUE cccd / khoa_nhan_dien / id_tai_khoan -> 409 XUNG_DOT_DU_LIEU
-            return hoSoBenhNhanRepository.saveAndFlush(hoSo);
+            return new DaTim<>(hoSoBenhNhanRepository.saveAndFlush(hoSo), false);
         }
         if (chuHoSoMoi != null) {
             throw new LoiNghiepVu(MaLoi.CCCD_DA_CO_HO_SO);
         }
         HoSoBenhNhan hoSo = daCo.get();
-        if (!khop(hoSo.getHoTen(), hoSo.getNgaySinh(), benhNhan.hoTen(), benhNhan.ngaySinh())) {
-            throw new LoiNghiepVu(MaLoi.THONG_TIN_BENH_NHAN_KHONG_KHOP);
-        }
+        boolean khacThongTin = !khop(hoSo.getHoTen(), hoSo.getNgaySinh(), benhNhan.hoTen(), benhNhan.ngaySinh());
         if (lichHenRepository.coLichTrongKhoang(hoSo.getId(), TRANG_THAI_CON_HIEU_LUC, gioBatDauKhung,
                 gioKetThucKhung)) {
             throw new LoiNghiepVu(MaLoi.LICH_HEN_TRUNG_GIO);
@@ -434,6 +449,10 @@ public class DatLichServiceImpl implements DatLichService {
         if (lichHenRepository.demLichCuaHoSoTu(hoSo.getId(), TRANG_THAI_CON_HIEU_LUC, bayGio) >= toiDa) {
             throw new LoiNghiepVu(MaLoi.VUOT_GIOI_HAN_DAT_LICH,
                     "Bệnh nhân đang giữ tối đa " + toiDa + " lịch hẹn sắp tới, không thể đặt thêm");
+        }
+        if (khacThongTin) {
+            // Chưa đối chiếu được người đặt có đúng là người của hồ sơ: không ghi gì vào hồ sơ
+            return new DaTim<>(hoSo, true);
         }
         if (hoSo.getNgaySinh() == null) {
             hoSo.setNgaySinh(benhNhan.ngaySinh());
@@ -447,11 +466,14 @@ public class DatLichServiceImpl implements DatLichService {
         if (hoSo.getSoBaoHiemYTe() == null) {
             hoSo.setSoBaoHiemYTe(rongThanhNull(benhNhan.soBaoHiemYTe()));
         }
-        return hoSo;
+        return new DaTim<>(hoSo, false);
     }
 
-    /** Người giám hộ đã khai cho hồ sơ (theo CCCD) thì dùng lại nếu họ tên và ngày sinh khớp, không sửa dòng đã lưu. */
-    private NguoiGiamHo timHoacTaoNguoiGiamHo(HoSoBenhNhan hoSo, NguoiGiamHoRequest giamHo) {
+    /**
+     * Người giám hộ đã khai cho hồ sơ (theo CCCD) thì dùng lại và không sửa dòng đã lưu; họ tên / ngày sinh nhập khác
+     * dòng đó thì báo lại để lịch hẹn đánh dấu cần đối chiếu.
+     */
+    private DaTim<NguoiGiamHo> timHoacTaoNguoiGiamHo(HoSoBenhNhan hoSo, NguoiGiamHoRequest giamHo) {
         Optional<NguoiGiamHo> daCo = nguoiGiamHoRepository.findByHoSoBenhNhanIdAndCccd(hoSo.getId(), giamHo.cccd());
         if (daCo.isEmpty()) {
             NguoiGiamHo nguoiGiamHo = new NguoiGiamHo();
@@ -461,17 +483,16 @@ public class DatLichServiceImpl implements DatLichService {
             nguoiGiamHo.setSoDienThoai(giamHo.soDienThoai());
             nguoiGiamHo.setCccd(giamHo.cccd());
             nguoiGiamHo.setNgaySinh(giamHo.ngaySinh());
-            return nguoiGiamHoRepository.save(nguoiGiamHo);
+            return new DaTim<>(nguoiGiamHoRepository.save(nguoiGiamHo), false);
         }
         NguoiGiamHo nguoiGiamHo = daCo.get();
         if (!khop(nguoiGiamHo.getHoTen(), nguoiGiamHo.getNgaySinh(), giamHo.hoTen(), giamHo.ngaySinh())) {
-            throw new LoiNghiepVu(MaLoi.NGUOI_GIAM_HO_KHONG_HOP_LE,
-                    "Số CCCD người giám hộ này đã được khai với họ tên hoặc ngày sinh khác, vui lòng kiểm tra lại");
+            return new DaTim<>(nguoiGiamHo, true);
         }
         if (nguoiGiamHo.getNgaySinh() == null) {
             nguoiGiamHo.setNgaySinh(giamHo.ngaySinh());
         }
-        return nguoiGiamHo;
+        return new DaTim<>(nguoiGiamHo, false);
     }
 
     /** Họ tên giống nhau (không xét dấu, hoa/thường) và ngày sinh trùng; ngày sinh đang lưu còn trống thì coi là khớp. */

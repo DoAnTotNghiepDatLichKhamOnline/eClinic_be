@@ -1,8 +1,13 @@
 package iuh.fit.se.eclinic.booking.controller;
 
+import java.time.LocalDate;
+import java.util.List;
+
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,7 +19,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import iuh.fit.se.eclinic.booking.dto.request.DatLichRequest;
 import iuh.fit.se.eclinic.booking.dto.request.LocLichHen;
+import iuh.fit.se.eclinic.booking.dto.request.PhamViLichHen;
 import iuh.fit.se.eclinic.booking.dto.response.DatLichResponse;
+import iuh.fit.se.eclinic.booking.dto.response.LichHenChiTietCuaToiResponse;
 import iuh.fit.se.eclinic.booking.dto.response.LichHenCuaToiResponse;
 import iuh.fit.se.eclinic.booking.service.DatLichService;
 import iuh.fit.se.eclinic.booking.service.GioiHanDatLichService;
@@ -68,17 +75,39 @@ public class LichHenController {
     }
 
     @Operation(summary = "Lịch hẹn của tài khoản đang đăng nhập: lịch tài khoản đặt (cho bản thân hoặc người thân) và"
-            + " lịch của hồ sơ bệnh nhân đã liên kết (kể cả lịch đặt như khách); lọc Tất cả / Sắp tới / Lịch sử, phân trang")
+            + " lịch của hồ sơ bệnh nhân đã liên kết (kể cả lịch đặt như khách); lọc Tất cả / Sắp tới / Lịch sử và"
+            + " của tôi / của người khác (cuaAi), phân trang")
     @GetMapping("/cua-toi")
     @PreAuthorize("hasRole('BENH_NHAN')")
     public PhanHoiApi<TrangDuLieu<LichHenCuaToiResponse>> lichHenCuaToi(
             @RequestParam(defaultValue = "TAT_CA") LocLichHen loc,
+            @RequestParam(defaultValue = "TAT_CA") PhamViLichHen cuaAi,
             @RequestParam(defaultValue = "0") @Min(0) int trang,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int kichThuoc) {
         Long idTaiKhoan = NguoiDungHienTai.layIdTaiKhoan();
         // Lịch đặt như khách bằng số CCCD đã khai khi đăng ký phải có trong danh sách ngay lần xem đầu tiên (quy tắc #3)
         lienKetHoSoService.thuLienKet(idTaiKhoan);
-        return PhanHoiApi.ok(lichHenService.lichHenCuaToi(idTaiKhoan, loc, trang, kichThuoc));
+        return PhanHoiApi.ok(lichHenService.lichHenCuaToi(idTaiKhoan, loc, cuaAi, trang, kichThuoc));
+    }
+
+    @Operation(summary = "Lịch hẹn của tôi theo khoảng ngày (tối đa 42 ngày, mọi trạng thái, theo giờ khám, không phân"
+            + " trang) cho màn hình lịch; lọc của tôi / của người khác (cuaAi)")
+    @GetMapping("/cua-toi/lich")
+    @PreAuthorize("hasRole('BENH_NHAN')")
+    public PhanHoiApi<List<LichHenCuaToiResponse>> lichCuaToi(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate tuNgay,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate denNgay,
+            @RequestParam(defaultValue = "TAT_CA") PhamViLichHen cuaAi) {
+        Long idTaiKhoan = NguoiDungHienTai.layIdTaiKhoan();
+        lienKetHoSoService.thuLienKet(idTaiKhoan);
+        return PhanHoiApi.ok(lichHenService.lichCuaToiTrongKhoang(idTaiKhoan, tuNgay, denNgay, cuaAi));
+    }
+
+    @Operation(summary = "Chi tiết 1 lịch hẹn của tôi theo mã phiếu khám (404 nếu lịch không thuộc tài khoản)")
+    @GetMapping("/cua-toi/{maPhieuKham}")
+    @PreAuthorize("hasRole('BENH_NHAN')")
+    public PhanHoiApi<LichHenChiTietCuaToiResponse> chiTietCuaToi(@PathVariable String maPhieuKham) {
+        return PhanHoiApi.ok(lichHenService.chiTietCuaToi(NguoiDungHienTai.layIdTaiKhoan(), maPhieuKham));
     }
 
 }

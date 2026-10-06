@@ -12,6 +12,10 @@
 // Server này cũng phục vụ trang demo đặt lịch khám (scripts/demo-dat-lich/index.html, cần thêm catalog-service và
 // booking-service): /dat-lich và /phieu-kham/<mã phiếu khám>. Phải chung cổng 5173 vì link phiếu khám trong mã QR là
 // FRONTEND_URL/phieu-kham/<mã>, và cookie refresh token dùng chung nên đăng nhập ở trang này thì trang kia cũng có phiên.
+//
+// Và trang demo lịch hẹn (scripts/demo-lich-hen/index.html, cần thêm medical-service và internet cho thư viện lịch):
+// /lich-hen. Bệnh nhân: lịch hẹn dạng lịch, trang cá nhân, lịch sử khám. Bác sĩ: lịch làm việc, danh sách bệnh nhân, hồ sơ
+// khám, quét QR, ghi kết quả khám.
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
@@ -44,10 +48,15 @@ const html = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8')
     .replace('"__GOOGLE_CLIENT_ID__"', choVaoScript(googleClientId));
 const htmlDatLich = fs.readFileSync(path.join(__dirname, '..', 'demo-dat-lich', 'index.html'), 'utf8')
     .replace('"__API_URL__"', choVaoScript(API_URL));
+const htmlLichHen = fs.readFileSync(path.join(__dirname, '..', 'demo-lich-hen', 'index.html'), 'utf8')
+    .replace('"__API_URL__"', choVaoScript(API_URL));
 
 http.createServer((req, res) => {
     const duongDan = new URL(req.url, 'http://localhost').pathname;
-    const trang = CAC_TRANG.has(duongDan) ? html : TRANG_DAT_LICH.test(duongDan) ? htmlDatLich : null;
+    const trang = CAC_TRANG.has(duongDan) ? html
+        : TRANG_DAT_LICH.test(duongDan) ? htmlDatLich
+        : duongDan === '/lich-hen' ? htmlLichHen
+        : null;
     if (req.method !== 'GET' || !trang) {
         res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
         res.end('Không tìm thấy');
@@ -64,4 +73,5 @@ http.createServer((req, res) => {
     console.log(`Trang demo xác thực: http://localhost:${CONG}  (API: ${API_URL}, Google: `
         + `${googleClientId ? 'đã cấu hình' : 'chưa có GOOGLE_CLIENT_ID'})`);
     console.log(`Trang demo đặt lịch: http://localhost:${CONG}/dat-lich`);
+    console.log(`Trang demo lịch hẹn: http://localhost:${CONG}/lich-hen`);
 });

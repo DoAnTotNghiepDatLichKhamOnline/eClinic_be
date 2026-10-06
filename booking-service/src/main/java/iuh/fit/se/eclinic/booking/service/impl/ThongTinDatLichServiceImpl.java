@@ -39,7 +39,7 @@ public class ThongTinDatLichServiceImpl implements ThongTinDatLichService {
         // timCuaTaiKhoan: giờ khám muộn nhất trước, lấy sẵn bác sĩ + tài khoản + chuyên khoa
         LanDatGanNhat lanDatGanNhat = lichHenRepository
                 .timCuaTaiKhoan(idTaiKhoan, daLienKet ? hoSo.getId() : null, daLienKet ? hoSo.getCccd() : null,
-                        PageRequest.of(0, 1))
+                        false, false, PageRequest.of(0, 1))
                 .stream()
                 .findFirst()
                 .map(lichHen -> {
