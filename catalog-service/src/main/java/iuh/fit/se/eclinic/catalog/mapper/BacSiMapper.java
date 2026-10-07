@@ -7,10 +7,14 @@ import org.springframework.stereotype.Component;
 import iuh.fit.se.eclinic.catalog.dto.request.CapNhatHoSoBacSiRequest;
 import iuh.fit.se.eclinic.catalog.dto.response.AnhBacSiResponse;
 import iuh.fit.se.eclinic.catalog.dto.response.BacSiChiTietResponse;
+import iuh.fit.se.eclinic.catalog.dto.response.BacSiQuanTriResponse;
 import iuh.fit.se.eclinic.catalog.dto.response.BacSiResponse;
 import iuh.fit.se.eclinic.catalog.dto.response.HoSoBacSiQuanTriResponse;
+import iuh.fit.se.eclinic.catalog.repository.DanhGiaChiDocRepository.DiemTheoBacSi;
 import iuh.fit.se.eclinic.common.entity.catalog.AnhBacSi;
 import iuh.fit.se.eclinic.common.entity.catalog.BacSi;
+import iuh.fit.se.eclinic.common.entity.identity.TaiKhoan;
+import iuh.fit.se.eclinic.common.util.DiemDanhGia;
 
 /**
  * Chuyển entity bác sĩ sang DTO. Họ tên, ảnh đại diện lấy từ tài khoản của bác sĩ.
@@ -20,27 +24,49 @@ import iuh.fit.se.eclinic.common.entity.catalog.BacSi;
 @Component
 public class BacSiMapper {
 
-    public BacSiResponse toResponse(BacSi bacSi) {
+    /** @param diem điểm đánh giá của bác sĩ; null nếu chưa có đánh giá nào */
+    public BacSiResponse toResponse(BacSi bacSi, DiemTheoBacSi diem) {
         return new BacSiResponse(bacSi.getId(), bacSi.getTaiKhoan().getHoTen(), bacSi.getTaiKhoan().getAnhDaiDien(),
                 bacSi.getHocVi(), bacSi.getChucVu(), bacSi.getSoNamKinhNghiem(), bacSi.getGioiThieuNgan(),
-                bacSi.getChuyenKhoa().getId(), bacSi.getChuyenKhoa().getTenChuyenKhoa());
+                bacSi.getChuyenKhoa().getId(), bacSi.getChuyenKhoa().getTenChuyenKhoa(),
+                diem == null ? null : DiemDanhGia.lamTron(diem.getDiemTrungBinh()),
+                diem == null ? 0 : diem.getSoDanhGia());
     }
 
-    public BacSiChiTietResponse toChiTietResponse(BacSi bacSi, List<AnhBacSi> danhSachAnh) {
+    /** @param diem như {@link #toResponse} */
+    public BacSiChiTietResponse toChiTietResponse(BacSi bacSi, List<AnhBacSi> danhSachAnh, DiemTheoBacSi diem) {
         return new BacSiChiTietResponse(bacSi.getId(), bacSi.getTaiKhoan().getHoTen(),
                 bacSi.getTaiKhoan().getAnhDaiDien(), bacSi.getHocVi(), bacSi.getChucVu(), bacSi.getSoNamKinhNghiem(),
                 bacSi.getGioiThieuNgan(), bacSi.getChuyenKhoa().getId(), bacSi.getChuyenKhoa().getTenChuyenKhoa(),
                 bacSi.getTieuSu(), tachDong(bacSi.getQuaTrinhDaoTao()), tachDong(bacSi.getQuaTrinhCongTac()),
-                tachDong(bacSi.getLinhVucKhamChua()), toAnhResponse(danhSachAnh));
+                tachDong(bacSi.getLinhVucKhamChua()), toAnhResponse(danhSachAnh),
+                diem == null ? null : DiemDanhGia.lamTron(diem.getDiemTrungBinh()),
+                diem == null ? 0 : diem.getSoDanhGia());
     }
 
     public HoSoBacSiQuanTriResponse toQuanTriResponse(BacSi bacSi, List<AnhBacSi> danhSachAnh) {
-        return new HoSoBacSiQuanTriResponse(bacSi.getId(), bacSi.getTaiKhoan().getHoTen(),
-                bacSi.getTaiKhoan().getAnhDaiDien(), bacSi.getSoGiayPhep(), bacSi.getTrangThai(), bacSi.getHocVi(),
+        TaiKhoan taiKhoan = bacSi.getTaiKhoan();
+        return new HoSoBacSiQuanTriResponse(bacSi.getId(), maBacSi(bacSi.getId()), taiKhoan.getHoTen(),
+                taiKhoan.getEmail(), taiKhoan.getSoDienThoai(), taiKhoan.getAnhDaiDien(), bacSi.getSoGiayPhep(),
+                bacSi.getTrangThai(), taiKhoan.getTrangThai(), taiKhoan.isPhaiDoiMatKhau(), bacSi.getHocVi(),
                 bacSi.getChucVu(), bacSi.getSoNamKinhNghiem(), bacSi.getGioiThieuNgan(),
                 bacSi.getChuyenKhoa().getId(), bacSi.getChuyenKhoa().getTenChuyenKhoa(), bacSi.getTieuSu(),
                 tachDong(bacSi.getQuaTrinhDaoTao()), tachDong(bacSi.getQuaTrinhCongTac()),
                 tachDong(bacSi.getLinhVucKhamChua()), toAnhResponse(danhSachAnh));
+    }
+
+    /** 1 dòng của danh bạ bác sĩ cho quản trị viên. */
+    public BacSiQuanTriResponse toDongQuanTri(BacSi bacSi, long soLuotDaKham) {
+        TaiKhoan taiKhoan = bacSi.getTaiKhoan();
+        return new BacSiQuanTriResponse(bacSi.getId(), maBacSi(bacSi.getId()), taiKhoan.getHoTen(), taiKhoan.getEmail(),
+                taiKhoan.getSoDienThoai(), taiKhoan.getAnhDaiDien(), bacSi.getHocVi(), bacSi.getSoGiayPhep(),
+                bacSi.getChuyenKhoa().getId(), bacSi.getChuyenKhoa().getTenChuyenKhoa(), soLuotDaKham,
+                bacSi.getTrangThai(), taiKhoan.getTrangThai(), taiKhoan.isPhaiDoiMatKhau());
+    }
+
+    /** Mã hiển thị của bác sĩ: "BS" + id đủ 4 chữ số (BS0007). Suy ra từ id, không lưu trong DB. */
+    public static String maBacSi(Long id) {
+        return String.format("BS%04d", id);
     }
 
     public AnhBacSiResponse toAnhResponse(AnhBacSi anh) {

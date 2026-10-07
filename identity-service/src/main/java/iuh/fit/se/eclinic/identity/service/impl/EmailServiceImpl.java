@@ -16,6 +16,7 @@ import org.springframework.web.util.HtmlUtils;
 import iuh.fit.se.eclinic.identity.config.EmailProperties;
 import iuh.fit.se.eclinic.identity.config.EmailProperties.CheDoEmail;
 import iuh.fit.se.eclinic.identity.config.LienKetProperties;
+import iuh.fit.se.eclinic.identity.event.EmailChaoBacSiEvent;
 import iuh.fit.se.eclinic.identity.event.EmailDaDoiEmailEvent;
 import iuh.fit.se.eclinic.identity.event.EmailDatLaiMatKhauEvent;
 import iuh.fit.se.eclinic.identity.event.EmailDoiMatKhauEvent;
@@ -41,6 +42,8 @@ public class EmailServiceImpl implements EmailService {
     private static final String TIEU_DE_DA_DOI_EMAIL = "[eClinic] Email đăng nhập đã được thay đổi";
     private static final String TIEU_DE_VO_HIEU_HOA = "[eClinic] Tài khoản của bạn đã bị vô hiệu hoá";
     private static final String TIEU_DE_KICH_HOAT_LAI = "[eClinic] Tài khoản của bạn đã được kích hoạt lại";
+    private static final String TIEU_DE_CHAO_BAC_SI = "[eClinic] Tài khoản bác sĩ của bạn đã được tạo";
+    private static final String DUONG_DAN_DANG_NHAP = "/login";
 
     private final JavaMailSender mailSender;
     private final EmailProperties emailProperties;
@@ -127,6 +130,14 @@ public class EmailServiceImpl implements EmailService {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
     public void guiThongBaoKichHoatLai(EmailKichHoatLaiTaiKhoanEvent event) {
         gui(event.email(), TIEU_DE_KICH_HOAT_LAI, noiDungKichHoatLai(event.hoTen()), null);
+    }
+
+    @Override
+    @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
+    public void guiEmailChaoBacSi(EmailChaoBacSiEvent event) {
+        String lienKet = emailProperties.frontendUrl() + DUONG_DAN_DANG_NHAP;
+        gui(event.email(), TIEU_DE_CHAO_BAC_SI, noiDungChaoBacSi(event.hoTen(), event.email(), lienKet), lienKet);
     }
 
     /** @param lienKet chỉ để ghi log ở chế độ console; null nếu email không có liên kết */
@@ -253,6 +264,19 @@ public class EmailServiceImpl implements EmailService {
                 hệ thống như bình thường.</p>
                 </div>
                 """.formatted(escape(hoTen));
+    }
+
+    private static String noiDungChaoBacSi(String hoTen, String email, String lienKet) {
+        String url = escape(lienKet);
+        return """
+                <div style="font-family:Arial,sans-serif;font-size:15px;color:#222;max-width:560px">
+                  <p>Xin chào %s,</p>
+                  <p>Phòng khám đã tạo tài khoản bác sĩ eClinic cho bạn với email đăng nhập <b>%s</b>.</p>
+                  <p>Hãy đăng nhập tại <a href="%s">%s</a> bằng mật khẩu ban đầu do phòng khám cung cấp. Ở lần đăng \
+                nhập đầu tiên, hệ thống sẽ yêu cầu bạn đặt mật khẩu của riêng mình trước khi sử dụng.</p>
+                  <p>Nếu bạn không làm việc tại phòng khám, hãy bỏ qua email này.</p>
+                </div>
+                """.formatted(escape(hoTen), escape(email), url, url);
     }
 
     private static String escape(String giaTri) {

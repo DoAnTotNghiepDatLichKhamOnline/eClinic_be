@@ -46,6 +46,10 @@ app:
     url-api: https://api.cloudinary.com
     # Nhỏ hơn read-timeout của gateway (30s) để lỗi kho ảnh ra 503 chứ không ra 504
     thoi-gian-cho: 20s
+  noi-bo:
+    # Khoá của các API nội bộ /noi-bo/** (service gọi service, không qua gateway), tối thiểu 32 ký tự, PHẢI giống nhau ở
+    # mọi service. Đổi giá trị mặc định thì đổi cả KhoaNoiBo.KHOA_DEV_MAC_DINH (dùng để cảnh báo khi khởi động).
+    khoa: ${INTERNAL_API_KEY:eclinic-dev-khoa-noi-bo-chi-dung-o-may-local-khong-dung-that}
   bao-mat:
     # Khoá ký JWT (HS256), tối thiểu 32 ký tự, PHẢI giống nhau ở mọi service.
     # Giá trị mặc định chỉ để chạy máy local; môi trường thật phải đặt JWT_SECRET.

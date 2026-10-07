@@ -81,6 +81,22 @@ public enum MaLoi {
     NGUOI_GIAM_HO_KHONG_HOP_LE(HttpStatus.BAD_REQUEST, "Thông tin người giám hộ không hợp lệ"),
     VUOT_GIOI_HAN_DAT_LICH(HttpStatus.CONFLICT, "Đã đạt số lịch hẹn tối đa có thể đặt cùng lúc"),
 
+    // Bác sĩ xác nhận / từ chối lịch hẹn
+    /** Lịch hẹn đã được xác nhận, bị từ chối, đã khám xong hoặc đã hủy. */
+    LICH_HEN_KHONG_CHO_XAC_NHAN(HttpStatus.CONFLICT, "Lịch hẹn không còn ở trạng thái chờ xác nhận"),
+    /** Lượt khám của lịch hẹn đã bắt đầu: không xác nhận / từ chối được nữa. */
+    LICH_HEN_DA_QUA_GIO(HttpStatus.CONFLICT, "Đã qua giờ khám của lịch hẹn này"),
+
+    // Bệnh nhân hủy / đổi lịch hẹn
+    /** Lịch hẹn đã khám xong, đã hủy, đã đổi sang lịch khác hoặc bị từ chối. */
+    LICH_HEN_KHONG_HUY_DOI_DUOC(HttpStatus.CONFLICT, "Lịch hẹn đã khám xong, đã hủy hoặc bị từ chối nên không hủy / đổi được"),
+    /** Còn cách giờ khám ít hơn app.dat-lich.huy-doi-truoc-toi-thieu. */
+    QUA_HAN_HUY_DOI_LICH(HttpStatus.CONFLICT,
+            "Đã quá hạn hủy / đổi lịch hẹn này trên hệ thống, vui lòng liên hệ phòng khám"),
+    VUOT_SO_LAN_DOI_LICH(HttpStatus.CONFLICT, "Lịch hẹn này đã đổi đủ số lần cho phép"),
+    /** Hủy / đổi bằng link phiếu khám: SĐT nhập vào không phải SĐT liên hệ của lượt khám. */
+    SO_DIEN_THOAI_KHONG_KHOP(HttpStatus.FORBIDDEN, "Số điện thoại không khớp với số đã dùng khi đặt lịch"),
+
     // Hồ sơ bệnh nhân của tài khoản
     /** Tài khoản chưa có hồ sơ mà số CCCD nhập vào đã có hồ sơ: gắn hồ sơ đã có vào tài khoản phải qua xác minh. */
     CCCD_DA_CO_HO_SO(HttpStatus.CONFLICT,
@@ -91,7 +107,44 @@ public enum MaLoi {
     /** Bác sĩ chỉ ghi nhận kết quả khám từ ngày khám của lịch hẹn trở đi. */
     CHUA_DEN_NGAY_KHAM(HttpStatus.CONFLICT, "Chưa đến ngày khám của lịch hẹn này"),
     /** Lịch hẹn đã khám xong, đã hủy hoặc bị từ chối. */
-    LICH_HEN_KHONG_KHAM_DUOC(HttpStatus.CONFLICT, "Lịch hẹn đã khám xong hoặc đã hủy, không ghi nhận kết quả khám được");
+    LICH_HEN_KHONG_KHAM_DUOC(HttpStatus.CONFLICT, "Lịch hẹn đã khám xong hoặc đã hủy, không ghi nhận kết quả khám được"),
+
+    // Ca làm việc, yêu cầu đổi ca / xin nghỉ
+    CA_KHONG_SUA_DUOC(HttpStatus.CONFLICT, "Ca làm việc đã bắt đầu hoặc đã hủy, không sửa / hủy / gửi yêu cầu được"),
+    CA_CON_LICH_HEN(HttpStatus.CONFLICT,
+            "Thay đổi này làm mất lượt khám đã có người đặt; hãy giữ các lượt đó hoặc hủy cả ca"),
+    CA_DA_CO_YEU_CAU_CHO_DUYET(HttpStatus.CONFLICT, "Ca làm việc này đã có 1 yêu cầu đang chờ duyệt"),
+    QUA_HAN_GUI_YEU_CAU(HttpStatus.CONFLICT, "Đã quá hạn gửi yêu cầu đổi ca / xin nghỉ cho ca này"),
+    YEU_CAU_DA_XU_LY(HttpStatus.CONFLICT, "Yêu cầu đã được xử lý hoặc đã rút"),
+    LICH_HEN_CAN_DOI_LICH(HttpStatus.CONFLICT,
+            "Ca khám của lịch hẹn này đã bị hủy, đang chờ bệnh nhân đổi sang khung giờ khác"),
+
+    // Quản lý bác sĩ
+    PHAI_DOI_MAT_KHAU(HttpStatus.FORBIDDEN,
+            "Tài khoản đang dùng mật khẩu mặc định, hãy đặt mật khẩu mới trước khi đăng nhập"),
+    SO_GIAY_PHEP_DA_TON_TAI(HttpStatus.CONFLICT, "Số giấy phép hành nghề đã thuộc về bác sĩ khác"),
+    BAC_SI_CON_CA_LAM_VIEC(HttpStatus.CONFLICT,
+            "Bác sĩ còn ca làm việc sắp tới nên không đổi chuyên khoa được; hãy hủy các ca đó trước"),
+    DICH_VU_NOI_BO_LOI(HttpStatus.SERVICE_UNAVAILABLE,
+            "Một dịch vụ của hệ thống đang không phản hồi, thao tác chưa hoàn tất; vui lòng thử lại sau ít phút"),
+
+    // Danh mục phòng khám, thuốc
+    TEN_PHONG_DA_TON_TAI(HttpStatus.CONFLICT, "Tên phòng khám đã tồn tại"),
+    PHONG_CON_CA_LAM_VIEC(HttpStatus.CONFLICT,
+            "Phòng khám còn ca làm việc sắp tới; hãy chuyển các ca đó sang phòng khác trước"),
+    TEN_THUOC_DA_TON_TAI(HttpStatus.CONFLICT, "Tên thuốc đã có trong danh mục"),
+    THUOC_DA_DUOC_KE(HttpStatus.CONFLICT,
+            "Thuốc đã có trong đơn thuốc nên không đổi sang tên khác được (chỉ sửa được cách viết hoa, khoảng trắng);"
+                    + " hãy thêm thuốc mới và cho thuốc này ngừng dùng"),
+    THUOC_NGUNG_DUNG(HttpStatus.CONFLICT, "Thuốc đã ngừng dùng trong danh mục, không kê mới được"),
+
+    // Đánh giá lượt khám
+    LICH_HEN_CHUA_KHAM_XONG(HttpStatus.CONFLICT, "Chỉ đánh giá được lượt khám đã hoàn thành"),
+    DA_DANH_GIA(HttpStatus.CONFLICT, "Lượt khám này đã được đánh giá"),
+    HET_HAN_SUA_DANH_GIA(HttpStatus.CONFLICT, "Đã quá thời hạn sửa đánh giá"),
+
+    // Thông báo
+    KHONG_TIM_THAY_THONG_BAO(HttpStatus.NOT_FOUND, "Không tìm thấy thông báo");
 
     private final HttpStatus trangThaiHttp;
     private final String thongDiepMacDinh;

@@ -24,6 +24,14 @@ app:
   # Mỗi ảnh 1 mã riêng: <thu-muc>/bac-si/<idBacSi>/<mã ngẫu nhiên>.
   cloudinary:
     bat: true
+  # Quản lý bác sĩ: tài khoản do identity-service ghi, ca làm việc do booking-service ghi. catalog-service gọi thẳng API
+  # nội bộ /noi-bo/** của 2 service này (không qua gateway), kèm khoá nội bộ app.noi-bo.khoa.
+  dich-vu-noi-bo:
+    identity-url: ${IDENTITY_URL:http://localhost:8081}
+    booking-url: ${BOOKING_URL:http://localhost:8084}
+    thoi-gian-cho-ket-noi: 5s
+    # Dài: hủy mọi ca sắp tới của 1 bác sĩ chạy trong 1 lần gọi
+    thoi-gian-cho-phan-hoi: 60s
   bao-mat:
     # Không cần đăng nhập: xem danh mục chuyên khoa, tìm bác sĩ
     duong-dan-cong-khai:

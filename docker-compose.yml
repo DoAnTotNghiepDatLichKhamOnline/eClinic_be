@@ -49,6 +49,8 @@ x-moi-truong-chung: &moi-truong-chung
   # (Không để trống: biến rỗng sẽ ghi đè giá trị mặc định của Spring và service không khởi động được.)
   JWT_SECRET: ${JWT_SECRET:-eclinic-dev-secret-chi-dung-o-may-local-khong-dung-that-2026}
   JWT_TTL: ${JWT_TTL:-30m}
+  # Khoá của các API nội bộ /noi-bo/** (service gọi service), giống nhau ở mọi service; mặc định giống application-common.yml
+  INTERNAL_API_KEY: ${INTERNAL_API_KEY:-eclinic-dev-khoa-noi-bo-chi-dung-o-may-local-khong-dung-that}
 
 services:
   # ================= Hạ tầng (luôn chạy) =================
@@ -128,6 +130,8 @@ services:
       SEED_PASSWORD: ${SEED_PASSWORD:-Demo@123}
       # Email kích hoạt / đặt lại mật khẩu (xem .env.example). Mặc định console: liên kết chỉ ghi ra log.
       MAIL_MODE: ${MAIL_MODE:-console}
+      # Mật khẩu ban đầu của tài khoản bác sĩ do quản trị viên tạo (bác sĩ phải đặt mật khẩu mới ở lần đăng nhập đầu)
+      DOCTOR_DEFAULT_PASSWORD: ${DOCTOR_DEFAULT_PASSWORD:-Doctor@123}
       MAIL_USERNAME: ${MAIL_USERNAME:-}
       MAIL_APP_PASSWORD: ${MAIL_APP_PASSWORD:-}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
@@ -163,6 +167,9 @@ services:
       CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY:-}
       CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET:-}
       CLOUDINARY_FOLDER: ${CLOUDINARY_FOLDER:-eclinic}
+      # Quản lý bác sĩ gọi API nội bộ của 2 service này (tạo / vô hiệu hoá tài khoản, hủy ca của bác sĩ ngừng công tác)
+      IDENTITY_URL: http://identity-service:8081
+      BOOKING_URL: http://booking-service:8084
     healthcheck:
       <<: *kiem-tra
       test: ["CMD", "curl", "-fsS", "http://localhost:8082/actuator/health"]
@@ -187,6 +194,15 @@ services:
       BOOKING_MAX_ACTIVE_PER_PHONE: ${BOOKING_MAX_ACTIVE_PER_PHONE:-5}
       BOOKING_IP_LIMIT: ${BOOKING_IP_LIMIT:-20}
       BOOKING_IP_WINDOW: ${BOOKING_IP_WINDOW:-10m}
+      BOOKING_CHANGE_LEAD: ${BOOKING_CHANGE_LEAD:-2h}
+      BOOKING_MAX_RESCHEDULES: ${BOOKING_MAX_RESCHEDULES:-2}
+      # Ca làm việc: hạn gửi yêu cầu đổi ca / xin nghỉ trước giờ bắt đầu ca, số ngày tới được xếp ca
+      SHIFT_REQUEST_LEAD: ${SHIFT_REQUEST_LEAD:-24h}
+      SHIFT_MAX_DAYS: ${SHIFT_MAX_DAYS:-90}
+      # Thông báo trong ứng dụng: job của booking-service gửi sự kiện sang notification-service (gọi thẳng, không qua
+      # gateway). Không khai depends_on: notification-service chưa chạy thì thông báo nằm chờ, booking-service vẫn chạy.
+      NOTIFICATION_URL: http://notification-service:8086
+      BOOKING_NOTIFY_INTERVAL: ${BOOKING_NOTIFY_INTERVAL:-5s}
     healthcheck:
       <<: *kiem-tra
       test: ["CMD", "curl", "-fsS", "http://localhost:8084/actuator/health"]

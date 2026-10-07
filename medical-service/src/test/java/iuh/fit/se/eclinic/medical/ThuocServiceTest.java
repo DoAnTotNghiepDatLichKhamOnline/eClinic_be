@@ -23,8 +23,8 @@ class ThuocServiceTest {
     void getOrCreateIsCaseAndWhitespaceInsensitive() {
         String ten = "Paracetamol " + UUID.randomUUID().toString().substring(0, 8);
 
-        Thuoc created = thuocService.layHoacTao("  " + ten + "  ", "viên", null);
-        Thuoc again = thuocService.layHoacTao(ten.toUpperCase(), "viên", null);
+        Thuoc created = thuocService.layHoacTao("  " + ten + "  ", "viên", null, java.util.Set.of());
+        Thuoc again = thuocService.layHoacTao(ten.toUpperCase(), "viên", null, java.util.Set.of());
 
         assertThat(again.getId()).isEqualTo(created.getId());
         assertThat(created.getTenThuoc()).isEqualTo(ten);

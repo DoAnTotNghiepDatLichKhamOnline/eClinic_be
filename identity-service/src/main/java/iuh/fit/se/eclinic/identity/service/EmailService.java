@@ -1,5 +1,6 @@
 package iuh.fit.se.eclinic.identity.service;
 
+import iuh.fit.se.eclinic.identity.event.EmailChaoBacSiEvent;
 import iuh.fit.se.eclinic.identity.event.EmailDaDoiEmailEvent;
 import iuh.fit.se.eclinic.identity.event.EmailDatLaiMatKhauEvent;
 import iuh.fit.se.eclinic.identity.event.EmailDoiMatKhauEvent;
@@ -30,6 +31,9 @@ public interface EmailService {
 
     /** Báo cho địa chỉ cũ rằng email đăng nhập đã đổi. Không chứa liên kết hay token. */
     void guiThongBaoDaDoiEmail(EmailDaDoiEmailEvent event);
+
+    /** Báo cho bác sĩ mới email đăng nhập và việc phải đặt mật khẩu ở lần đăng nhập đầu. Không chứa mật khẩu mặc định. */
+    void guiEmailChaoBacSi(EmailChaoBacSiEvent event);
 
     /** Báo tài khoản vừa bị quản trị viên vô hiệu hoá, kèm lý do. Không chứa liên kết hay token. */
     void guiThongBaoVoHieuHoa(EmailVoHieuHoaTaiKhoanEvent event);

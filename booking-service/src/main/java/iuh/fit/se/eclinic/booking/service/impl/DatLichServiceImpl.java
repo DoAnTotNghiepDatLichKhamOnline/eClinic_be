@@ -31,6 +31,7 @@ import iuh.fit.se.eclinic.booking.repository.LichLamViecRepository;
 import iuh.fit.se.eclinic.booking.repository.NguoiGiamHoRepository;
 import iuh.fit.se.eclinic.booking.service.DatLichService;
 import iuh.fit.se.eclinic.booking.service.TaiKhoanService;
+import iuh.fit.se.eclinic.booking.service.ThongBaoLichHenService;
 import iuh.fit.se.eclinic.booking.util.ChuanHoaTen;
 import iuh.fit.se.eclinic.booking.util.KhoaNhanDien;
 import iuh.fit.se.eclinic.common.entity.booking.HoSoBenhNhan;
@@ -90,6 +91,7 @@ public class DatLichServiceImpl implements DatLichService {
     private final DatLichProperties datLichProperties;
     private final TaiKhoanService taiKhoanService;
     private final ApplicationEventPublisher eventPublisher;
+    private final ThongBaoLichHenService thongBaoLichHenService;
 
     /**
      * READ_COMMITTED chứ không dùng REPEATABLE READ mặc định của MySQL: request phải chờ khoá (2 người cùng đặt 1 khung,
@@ -160,6 +162,21 @@ public class DatLichServiceImpl implements DatLichService {
         lichHen.setCanDoiChieu(hoSoDaTim.khacThongTin() || (giamHoDaTim != null && giamHoDaTim.khacThongTin()));
         lichHen.setMaTraCuu(taoMaTraCuu(ngayKham));
         lichHen.setMaTokenPhieuKham(TokenNgauNhien.tao());
+        luu(lichHen, luot);
+        // Chỉ ở đặt lịch mới: đổi lịch (datLaiTuLichCu) do HuyDoiLichServiceImpl báo cho bác sĩ bằng 1 thông báo "đã đổi"
+        thongBaoLichHenService.lichHenMoi(lichHen);
+        // Đặt cho người thân khi đã đăng nhập: sau khi commit, lưu những gì vừa nhập để điền sẵn lần sau
+        boolean laHoSoCuaTaiKhoan = taiKhoanDat != null && hoSo.getTaiKhoan() != null
+                && hoSo.getTaiKhoan().getId().equals(taiKhoanDat.getId());
+        if (taiKhoanDat != null && !datChoBanThan && !laHoSoCuaTaiKhoan
+                && !Boolean.FALSE.equals(request.luuNguoiThan())) {
+            eventPublisher.publishEvent(
+                    new DaDatLichChoNguoiThanEvent(taiKhoanDat.getId(), hoSo.getId(), benhNhan, giamHo));
+        }
+        return lichHenMapper.toDatLichResponse(lichHen, gioBatDauKhung, gioKetThucKhung, bacSiBatKy);
+    }
+
+    private void luu(LichHen lichHen, KhungGioKham luot) {
         try {
             lichHenRepository.saveAndFlush(lichHen);
         } catch (DataIntegrityViolationException ex) {
@@ -172,14 +189,60 @@ public class DatLichServiceImpl implements DatLichService {
                     ex.getMostSpecificCause().getMessage());
             throw new LoiNghiepVu(MaLoi.KHUNG_GIO_KHONG_CON_TRONG);
         }
-        // Đặt cho người thân khi đã đăng nhập: sau khi commit, lưu những gì vừa nhập để điền sẵn lần sau
-        boolean laHoSoCuaTaiKhoan = taiKhoanDat != null && hoSo.getTaiKhoan() != null
-                && hoSo.getTaiKhoan().getId().equals(taiKhoanDat.getId());
-        if (taiKhoanDat != null && !datChoBanThan && !laHoSoCuaTaiKhoan
-                && !Boolean.FALSE.equals(request.luuNguoiThan())) {
-            eventPublisher.publishEvent(
-                    new DaDatLichChoNguoiThanEvent(taiKhoanDat.getId(), hoSo.getId(), benhNhan, giamHo));
+    }
+
+    @Override
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public DatLichResponse datLaiTuLichCu(LichHen cu, Long idLichLamViec, Long idChuyenKhoa,
+            LocalDateTime gioBatDauKhung, LocalDateTime bayGio) {
+        boolean bacSiBatKy = idLichLamViec == null;
+        if (bacSiBatKy == (idChuyenKhoa == null)) {
+            throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE,
+                    "Gửi idLichLamViec (chọn bác sĩ) hoặc idChuyenKhoa (bác sĩ bất kỳ), không gửi cả hai");
         }
+        List<LichLamViec> caUngVien = bacSiBatKy
+                ? timCaUngVien(idChuyenKhoa, gioBatDauKhung, bayGio.toLocalDate())
+                : List.of(timCaDichDanh(idLichLamViec, gioBatDauKhung, bayGio.toLocalDate()));
+        LocalDateTime moc = bayGio.plus(datLichProperties.datTruocToiThieu());
+        CaVaLuot daChon = khoaVaChonCa(caUngVien, gioBatDauKhung, moc);
+        LichLamViec ca = daChon.ca();
+        LocalDateTime gioKetThucKhung = daChon.gioKetThucKhung();
+        // Đổi lịch phải sang khung giờ khác: lượt cũ vừa được mở lại nên không chặn thì sẽ "đổi" vào chính chỗ cũ
+        KhungGioKham luotCu = cu.getKhungGio();
+        if (luotCu.getLichLamViec().getId().equals(ca.getId()) && !luotCu.getGioBatDau().isBefore(gioBatDauKhung)
+                && luotCu.getGioBatDau().isBefore(gioKetThucKhung)) {
+            throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE, "Hãy chọn khung giờ khác với khung giờ đang giữ");
+        }
+        KhungGioKham luot = chonLuot(daChon.cacLuot(), moc);
+
+        HoSoBenhNhan hoSo = cu.getHoSoBenhNhan();
+        if (cu.getSoDienThoaiLienHe() != null) {
+            kiemTraGioiHanTheoSoDienThoai(cu.getSoDienThoaiLienHe(), bayGio);
+        }
+        kiemTraTrungGioVaGioiHanCuaHoSo(hoSo, gioBatDauKhung, gioKetThucKhung, bayGio);
+
+        luot.setTrangThai(TrangThaiKhungGio.DA_DAT);
+        LichHen lichHen = new LichHen();
+        lichHen.setLichHenCu(cu);
+        lichHen.setHoSoBenhNhan(hoSo);
+        lichHen.setNguoiGiamHo(cu.getNguoiGiamHo());
+        lichHen.setTaiKhoanDat(cu.getTaiKhoanDat());
+        lichHen.setBacSi(ca.getBacSi());
+        lichHen.setKhungGio(luot);
+        lichHen.setPhongKham(ca.getPhongKham());
+        lichHen.setSoThuTu(soThuTu(ca, luot));
+        lichHen.setLyDoKham(cu.getLyDoKham());
+        lichHen.setGhiChu(cu.getGhiChu());
+        lichHen.setSoDienThoaiLienHe(cu.getSoDienThoaiLienHe());
+        lichHen.setEmailLienHe(cu.getEmailLienHe());
+        lichHen.setHoTenDaNhap(cu.getHoTenDaNhap());
+        lichHen.setNgaySinhDaNhap(cu.getNgaySinhDaNhap());
+        lichHen.setGioiTinhDaNhap(cu.getGioiTinhDaNhap());
+        lichHen.setHoTenGiamHoDaNhap(cu.getHoTenGiamHoDaNhap());
+        lichHen.setCanDoiChieu(cu.isCanDoiChieu());
+        lichHen.setMaTraCuu(taoMaTraCuu(gioBatDauKhung.toLocalDate()));
+        lichHen.setMaTokenPhieuKham(TokenNgauNhien.tao());
+        luu(lichHen, luot);
         return lichHenMapper.toDatLichResponse(lichHen, gioBatDauKhung, gioKetThucKhung, bacSiBatKy);
     }
 
@@ -352,6 +415,20 @@ public class DatLichServiceImpl implements DatLichService {
         throw new LoiNghiepVu(coLuotDaDat ? MaLoi.KHUNG_GIO_KHONG_CON_TRONG : MaLoi.KHUNG_GIO_KHONG_KHA_DUNG);
     }
 
+    /** BOOK-04: 1 bệnh nhân không giữ 2 lịch còn hiệu lực trong cùng khung giờ, và không quá số lịch sắp tới cho phép. */
+    private void kiemTraTrungGioVaGioiHanCuaHoSo(HoSoBenhNhan hoSo, LocalDateTime gioBatDauKhung,
+            LocalDateTime gioKetThucKhung, LocalDateTime bayGio) {
+        if (lichHenRepository.coLichTrongKhoang(hoSo.getId(), TRANG_THAI_CON_HIEU_LUC, gioBatDauKhung,
+                gioKetThucKhung)) {
+            throw new LoiNghiepVu(MaLoi.LICH_HEN_TRUNG_GIO);
+        }
+        int toiDa = datLichProperties.soLichHieuLucToiDaMoiHoSo();
+        if (lichHenRepository.demLichCuaHoSoTu(hoSo.getId(), TRANG_THAI_CON_HIEU_LUC, bayGio) >= toiDa) {
+            throw new LoiNghiepVu(MaLoi.VUOT_GIOI_HAN_DAT_LICH,
+                    "Bệnh nhân đang giữ tối đa " + toiDa + " lịch hẹn sắp tới, không thể đặt thêm");
+        }
+    }
+
     private void kiemTraGioiHanTheoSoDienThoai(String soDienThoai, LocalDateTime bayGio) {
         int toiDa = datLichProperties.soLichHieuLucToiDaMoiSoDienThoai();
         if (lichHenRepository.demLichTheoSoDienThoaiTu(soDienThoai, TRANG_THAI_CON_HIEU_LUC, bayGio) >= toiDa) {
@@ -441,15 +518,7 @@ public class DatLichServiceImpl implements DatLichService {
         }
         HoSoBenhNhan hoSo = daCo.get();
         boolean khacThongTin = !khop(hoSo.getHoTen(), hoSo.getNgaySinh(), benhNhan.hoTen(), benhNhan.ngaySinh());
-        if (lichHenRepository.coLichTrongKhoang(hoSo.getId(), TRANG_THAI_CON_HIEU_LUC, gioBatDauKhung,
-                gioKetThucKhung)) {
-            throw new LoiNghiepVu(MaLoi.LICH_HEN_TRUNG_GIO);
-        }
-        int toiDa = datLichProperties.soLichHieuLucToiDaMoiHoSo();
-        if (lichHenRepository.demLichCuaHoSoTu(hoSo.getId(), TRANG_THAI_CON_HIEU_LUC, bayGio) >= toiDa) {
-            throw new LoiNghiepVu(MaLoi.VUOT_GIOI_HAN_DAT_LICH,
-                    "Bệnh nhân đang giữ tối đa " + toiDa + " lịch hẹn sắp tới, không thể đặt thêm");
-        }
+        kiemTraTrungGioVaGioiHanCuaHoSo(hoSo, gioBatDauKhung, gioKetThucKhung, bayGio);
         if (khacThongTin) {
             // Chưa đối chiếu được người đặt có đúng là người của hồ sơ: không ghi gì vào hồ sơ
             return new DaTim<>(hoSo, true);

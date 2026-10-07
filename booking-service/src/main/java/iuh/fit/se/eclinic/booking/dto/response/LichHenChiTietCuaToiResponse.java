@@ -14,6 +14,8 @@ import iuh.fit.se.eclinic.common.enums.GioiTinh;
  * @param emailLienHe       email liên hệ của lượt khám; null nếu không nhập hoặc lịch không do tài khoản đang xem đặt
  * @param ketQua            kết quả khám; null nếu chưa khám xong, hoặc tài khoản không được xem kết quả (chỉ được xem
  *                          khi {@code lichHen.laBanThan} hoặc {@code lichHen.nguoiDat} là TOI)
+ * @param duocDanhGia       true: lượt khám đã hoàn thành, tài khoản được xem kết quả và chưa gửi đánh giá
+ * @param danhGia           đánh giá đã gửi cho lượt khám này; null nếu chưa có hoặc tài khoản không được xem kết quả
  */
 public record LichHenChiTietCuaToiResponse(
         LichHenCuaToiResponse lichHen,
@@ -21,5 +23,7 @@ public record LichHenChiTietCuaToiResponse(
         GioiTinh gioiTinhBenhNhan,
         String soDienThoaiLienHe,
         String emailLienHe,
-        KetQuaKhamResponse ketQua) {
+        KetQuaKhamResponse ketQua,
+        boolean duocDanhGia,
+        DanhGiaCuaToiResponse danhGia) {
 }

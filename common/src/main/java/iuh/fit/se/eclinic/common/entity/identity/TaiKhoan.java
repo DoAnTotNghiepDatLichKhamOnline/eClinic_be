@@ -37,6 +37,13 @@ public class TaiKhoan extends AuditableEntity {
     @Column(name = "mat_khau_hash")
     private String matKhauHash;
 
+    /**
+     * Tài khoản bác sĩ do quản trị viên tạo đang mang mật khẩu mặc định (V13): đăng nhập đúng mật khẩu vẫn không được
+     * cấp phiên cho tới khi chủ tài khoản đặt mật khẩu của mình (POST /api/auth/first-password hoặc liên kết đặt lại).
+     */
+    @Column(name = "phai_doi_mat_khau", nullable = false)
+    private boolean phaiDoiMatKhau;
+
     /** "sub" trong ID token Google: định danh bất biến của tài khoản Google đã liên kết (V2). */
     @Column(name = "google_id", unique = true)
     private String googleId;

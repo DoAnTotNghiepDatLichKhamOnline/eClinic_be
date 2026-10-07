@@ -56,6 +56,10 @@ app:
     thoi-gian-cho-gui-lai: 60s
     thoi-han-dat-lai-mat-khau: 15m
     thoi-han-doi-email: 1h
+  bac-si:
+    # Mật khẩu ban đầu của tài khoản bác sĩ do quản trị viên tạo. Chỉ dùng được để đặt mật khẩu mới ở lần đăng nhập
+    # đầu (POST /api/auth/first-password); đăng nhập bằng nó không được cấp phiên.
+    mat-khau-mac-dinh: ${DOCTOR_DEFAULT_PASSWORD:Doctor@123}
   dang-nhap:
     # Sai mật khẩu 5 lần thì khoá email 15 phút tính từ lần sai thứ 5
     so-lan-sai-toi-da: 5
@@ -92,12 +96,17 @@ app:
       - POST /api/auth/verify-email
       - POST /api/auth/resend-verification
       - POST /api/auth/login
+      - POST /api/auth/first-password
       - POST /api/auth/refresh-token
       - POST /api/auth/logout
       - POST /api/auth/forgot-password
       - POST /api/auth/reset-password
       - POST /api/auth/google
       - POST /api/auth/confirm-email-change
+      # API nội bộ cho catalog-service (quản lý bác sĩ): không qua gateway, kiểm tra khoá nội bộ thay cho JWT
+      - POST /noi-bo/tai-khoan/**
+      - PUT /noi-bo/tai-khoan/**
+      - DELETE /noi-bo/tai-khoan/**
   # Tài khoản quản trị tạo sẵn khi DB chưa có admin (KhoiTaoAdminRunner)
   admin-mac-dinh:
     email: ${ADMIN_EMAIL:admin@eclinic.local}

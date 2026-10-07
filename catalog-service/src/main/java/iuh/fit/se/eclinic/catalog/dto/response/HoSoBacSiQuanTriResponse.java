@@ -3,6 +3,7 @@ package iuh.fit.se.eclinic.catalog.dto.response;
 import java.util.List;
 
 import iuh.fit.se.eclinic.common.enums.TrangThaiBacSi;
+import iuh.fit.se.eclinic.common.enums.TrangThaiTaiKhoan;
 
 /**
  * Hồ sơ giới thiệu của bác sĩ cho quản trị viên: như {@link BacSiChiTietResponse}, thêm số giấy phép và trạng thái.
@@ -10,10 +11,15 @@ import iuh.fit.se.eclinic.common.enums.TrangThaiBacSi;
  */
 public record HoSoBacSiQuanTriResponse(
         Long id,
+        String maBacSi,
         String hoTen,
+        String email,
+        String soDienThoai,
         String anhDaiDien,
         String soGiayPhep,
         TrangThaiBacSi trangThai,
+        TrangThaiTaiKhoan trangThaiTaiKhoan,
+        boolean phaiDoiMatKhau,
         String hocVi,
         String chucVu,
         Integer soNamKinhNghiem,

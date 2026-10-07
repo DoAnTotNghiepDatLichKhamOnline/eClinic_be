@@ -2,6 +2,7 @@ package iuh.fit.se.eclinic.catalog.service;
 
 import java.util.List;
 
+import iuh.fit.se.eclinic.catalog.dto.response.PhongKhamResponse;
 import iuh.fit.se.eclinic.common.entity.catalog.PhongKham;
 
 public interface PhongKhamService {
@@ -13,5 +14,8 @@ public interface PhongKhamService {
 
     /** Các phòng khám đang hoạt động của 1 chuyên khoa. */
     List<PhongKham> layDangHoatDongTheoChuyenKhoa(Long chuyenKhoaId);
+
+    /** Các phòng khám đang hoạt động kèm tên chuyên khoa, theo tên phòng; {@code idChuyenKhoa} null = mọi chuyên khoa. */
+    List<PhongKhamResponse> danhSachDangHoatDong(Long idChuyenKhoa);
 
 }

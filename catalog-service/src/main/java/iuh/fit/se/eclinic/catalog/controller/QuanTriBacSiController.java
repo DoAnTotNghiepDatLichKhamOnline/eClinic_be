@@ -23,14 +23,26 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import iuh.fit.se.eclinic.catalog.dto.request.CapNhatAnhBacSiRequest;
 import iuh.fit.se.eclinic.catalog.dto.request.CapNhatHoSoBacSiRequest;
+import iuh.fit.se.eclinic.catalog.dto.request.NgungCongTacRequest;
 import iuh.fit.se.eclinic.catalog.dto.request.SapXepAnhBacSiRequest;
+import iuh.fit.se.eclinic.catalog.dto.request.SuaBacSiRequest;
+import iuh.fit.se.eclinic.catalog.dto.request.ThemBacSiRequest;
 import iuh.fit.se.eclinic.catalog.dto.response.AnhBacSiResponse;
+import iuh.fit.se.eclinic.catalog.dto.response.AnhHuongNgungCongTacResponse;
+import iuh.fit.se.eclinic.catalog.dto.response.BacSiQuanTriResponse;
 import iuh.fit.se.eclinic.catalog.dto.response.HoSoBacSiQuanTriResponse;
+import iuh.fit.se.eclinic.catalog.dto.response.KetQuaNgungCongTacResponse;
 import iuh.fit.se.eclinic.catalog.service.AnhBacSiService;
 import iuh.fit.se.eclinic.catalog.service.HoSoBacSiService;
+import iuh.fit.se.eclinic.catalog.service.QuanLyBacSiService;
 import iuh.fit.se.eclinic.common.dto.PhanHoiApi;
+import iuh.fit.se.eclinic.common.dto.TrangDuLieu;
 import iuh.fit.se.eclinic.common.enums.LoaiAnhBacSi;
+import iuh.fit.se.eclinic.common.enums.TrangThaiBacSi;
+import iuh.fit.se.eclinic.common.security.NguoiDungHienTai;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 
@@ -50,6 +62,56 @@ public class QuanTriBacSiController {
 
     private final HoSoBacSiService hoSoBacSiService;
     private final AnhBacSiService anhBacSiService;
+    private final QuanLyBacSiService quanLyBacSiService;
+
+    @Operation(summary = "Danh bạ bác sĩ (phân trang, bác sĩ mới thêm đứng trước, kể cả bác sĩ ngừng công tác); lọc theo từ"
+            + " khoá (họ tên, email, số điện thoại, số giấy phép), chuyên khoa, trạng thái")
+    @GetMapping
+    public PhanHoiApi<TrangDuLieu<BacSiQuanTriResponse>> danhSach(
+            @RequestParam(required = false) String tuKhoa,
+            @RequestParam(required = false) Long idChuyenKhoa,
+            @RequestParam(required = false) TrangThaiBacSi trangThai,
+            @RequestParam(defaultValue = "0") @Min(0) int trang,
+            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int kichThuoc) {
+        return PhanHoiApi.ok(quanLyBacSiService.danhSach(tuKhoa, idChuyenKhoa, trangThai, trang, kichThuoc));
+    }
+
+    @Operation(summary = "Thêm bác sĩ: tạo tài khoản đăng nhập (mật khẩu mặc định, phải đặt mật khẩu ở lần đăng nhập đầu) và"
+            + " hồ sơ bác sĩ trong 1 bước")
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public PhanHoiApi<HoSoBacSiQuanTriResponse> them(@Valid @RequestBody ThemBacSiRequest request) {
+        return PhanHoiApi.ok(quanLyBacSiService.them(request), "Đã thêm bác sĩ");
+    }
+
+    @Operation(summary = "Sửa thông tin cơ bản: họ tên, số điện thoại, chuyên khoa, số giấy phép (đổi chuyên khoa khi còn ca"
+            + " sắp tới: 409 BAC_SI_CON_CA_LAM_VIEC)")
+    @PutMapping("/{id}")
+    public PhanHoiApi<HoSoBacSiQuanTriResponse> sua(@PathVariable Long id, @Valid @RequestBody SuaBacSiRequest request) {
+        return PhanHoiApi.ok(quanLyBacSiService.sua(id, request), "Đã cập nhật thông tin bác sĩ");
+    }
+
+    @Operation(summary = "Xem trước khi cho ngừng công tác: số ca sắp tới sẽ bị hủy và số lịch hẹn sẽ phải đổi lịch")
+    @GetMapping("/{id}/anh-huong-ngung-cong-tac")
+    public PhanHoiApi<AnhHuongNgungCongTacResponse> anhHuongNgungCongTac(@PathVariable Long id) {
+        return PhanHoiApi.ok(quanLyBacSiService.anhHuongNgungCongTac(id));
+    }
+
+    @Operation(summary = "Cho bác sĩ ngừng công tác: hủy mọi ca sắp tới (lịch hẹn được giữ và đánh dấu cần đổi lịch, bệnh nhân"
+            + " được báo), ẩn khỏi danh sách công khai, vô hiệu hoá tài khoản. Trả 503 DICH_VU_NOI_BO_LOI thì gửi lại")
+    @PostMapping("/{id}/ngung-cong-tac")
+    public PhanHoiApi<KetQuaNgungCongTacResponse> ngungCongTac(@PathVariable Long id,
+            @Valid @RequestBody NgungCongTacRequest request) {
+        return PhanHoiApi.ok(quanLyBacSiService.ngungCongTac(NguoiDungHienTai.layIdTaiKhoan(), id, request.lyDo()),
+                "Bác sĩ đã ngừng công tác");
+    }
+
+    @Operation(summary = "Cho bác sĩ công tác lại: kích hoạt lại tài khoản, hiện lại trong danh sách công khai. Các ca đã hủy"
+            + " không được khôi phục")
+    @PostMapping("/{id}/cong-tac-lai")
+    public PhanHoiApi<HoSoBacSiQuanTriResponse> congTacLai(@PathVariable Long id) {
+        return PhanHoiApi.ok(quanLyBacSiService.congTacLai(id), "Bác sĩ đã công tác lại");
+    }
 
     @Operation(summary = "Xem hồ sơ giới thiệu của bác sĩ (kể cả bác sĩ không hiển thị công khai)")
     @GetMapping("/{id}")

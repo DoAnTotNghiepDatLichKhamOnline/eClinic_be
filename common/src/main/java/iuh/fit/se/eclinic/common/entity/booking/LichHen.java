@@ -141,7 +141,11 @@ public class LichHen extends AuditableEntity {
     @Column(name = "ly_do_huy", length = 500)
     private String lyDoHuy;
 
-    /** Đánh dấu "cần dời/hủy" khi ca làm việc bị đổi/hủy (SCHED-03, SCHED-05). */
+    /**
+     * Ca khám của lịch hẹn đã bị hủy (quản trị viên hủy ca, hoặc duyệt yêu cầu xin nghỉ / đổi ca): lịch hẹn giữ nguyên
+     * trạng thái, bệnh nhân phải đổi sang khung giờ khác hoặc hủy. Chỉ có nghĩa khi lịch hẹn còn hiệu lực; lịch mới tạo
+     * ra khi đổi lịch không mang cờ này.
+     */
     @Column(name = "can_doi_lich", nullable = false)
     private boolean canDoiLich;
 

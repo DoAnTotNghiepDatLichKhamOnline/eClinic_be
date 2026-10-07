@@ -18,13 +18,17 @@ import org.springframework.web.bind.annotation.RestController;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import iuh.fit.se.eclinic.booking.dto.request.DatLichRequest;
+import iuh.fit.se.eclinic.booking.dto.request.DoiLichRequest;
+import iuh.fit.se.eclinic.booking.dto.request.HuyLichRequest;
 import iuh.fit.se.eclinic.booking.dto.request.LocLichHen;
 import iuh.fit.se.eclinic.booking.dto.request.PhamViLichHen;
 import iuh.fit.se.eclinic.booking.dto.response.DatLichResponse;
 import iuh.fit.se.eclinic.booking.dto.response.LichHenChiTietCuaToiResponse;
 import iuh.fit.se.eclinic.booking.dto.response.LichHenCuaToiResponse;
+import iuh.fit.se.eclinic.booking.dto.response.PhieuKhamResponse;
 import iuh.fit.se.eclinic.booking.service.DatLichService;
 import iuh.fit.se.eclinic.booking.service.GioiHanDatLichService;
+import iuh.fit.se.eclinic.booking.service.HuyDoiLichService;
 import iuh.fit.se.eclinic.booking.service.LichHenService;
 import iuh.fit.se.eclinic.booking.service.LienKetHoSoService;
 import iuh.fit.se.eclinic.booking.util.DiaChiIp;
@@ -55,6 +59,7 @@ public class LichHenController {
     private final GioiHanDatLichService gioiHanDatLichService;
     private final LichHenService lichHenService;
     private final LienKetHoSoService lienKetHoSoService;
+    private final HuyDoiLichService huyDoiLichService;
 
     @Operation(summary = "Đặt lịch khám: khách không cần đăng nhập, bệnh nhân đã đăng nhập thì lịch lưu vào tài khoản;"
             + " người khám dưới 18 tuổi phải kèm người giám hộ")
@@ -108,6 +113,28 @@ public class LichHenController {
     @PreAuthorize("hasRole('BENH_NHAN')")
     public PhanHoiApi<LichHenChiTietCuaToiResponse> chiTietCuaToi(@PathVariable String maPhieuKham) {
         return PhanHoiApi.ok(lichHenService.chiTietCuaToi(NguoiDungHienTai.layIdTaiKhoan(), maPhieuKham));
+    }
+
+    @Operation(summary = "Hủy 1 lịch hẹn của tôi (tôi đặt, hoặc tôi là người khám) trước hạn hủy / đổi; lý do không bắt"
+            + " buộc; lượt khám được mở lại cho người khác đặt")
+    @PostMapping("/cua-toi/{maPhieuKham}/huy")
+    @PreAuthorize("hasRole('BENH_NHAN')")
+    public PhanHoiApi<PhieuKhamResponse> huyCuaToi(@PathVariable String maPhieuKham,
+            @Valid @RequestBody(required = false) HuyLichRequest request) {
+        return PhanHoiApi.ok(huyDoiLichService.huyCuaToi(NguoiDungHienTai.layIdTaiKhoan(), maPhieuKham,
+                request == null ? null : request.lyDo()), "Đã hủy lịch hẹn");
+    }
+
+    @Operation(summary = "Đổi 1 lịch hẹn của tôi sang khung giờ khác: lịch cũ thành DA_HUY_DO_DOI_LICH, trả lịch mới (chờ"
+            + " xác nhận) với phiếu khám mới; số lần đổi có giới hạn")
+    @PostMapping("/cua-toi/{maPhieuKham}/doi-lich")
+    @PreAuthorize("hasRole('BENH_NHAN')")
+    @ResponseStatus(HttpStatus.CREATED)
+    public PhanHoiApi<DatLichResponse> doiCuaToi(@PathVariable String maPhieuKham,
+            @Valid @RequestBody DoiLichRequest request, HttpServletRequest httpRequest) {
+        gioiHanDatLichService.ghiNhan(DiaChiIp.cua(httpRequest));
+        return PhanHoiApi.ok(huyDoiLichService.doiCuaToi(NguoiDungHienTai.layIdTaiKhoan(), maPhieuKham, request),
+                "Đổi lịch thành công");
     }
 
 }

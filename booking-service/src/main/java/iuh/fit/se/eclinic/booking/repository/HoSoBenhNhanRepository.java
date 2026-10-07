@@ -48,4 +48,25 @@ public interface HoSoBenhNhanRepository extends JpaRepository<HoSoBenhNhan, Long
             countQuery = "select count(h) from HoSoBenhNhan h where h.trangThaiLienKet = :trangThai")
     Page<HoSoBenhNhan> timTheoTrangThaiLienKet(TrangThaiLienKet trangThai, Pageable pageable);
 
+    /**
+     * Danh sách hồ sơ của quản trị viên, hồ sơ mới tạo trước, kèm tài khoản đang gắn (nếu có).
+     *
+     * @param mau       mẫu LIKE (escape '!') so với họ tên, số điện thoại, số bảo hiểm y tế; null = không lọc
+     * @param cccd      số CCCD đầy đủ để so khớp hoàn toàn; null nếu từ khoá không phải 12 chữ số
+     * @param trangThai null = mọi trạng thái liên kết
+     */
+    @Query(value = """
+            select h from HoSoBenhNhan h left join fetch h.taiKhoan
+            where (:trangThai is null or h.trangThaiLienKet = :trangThai)
+              and (:mau is null or h.hoTen like :mau escape '!' or h.soDienThoai like :mau escape '!'
+                   or h.soBaoHiemYTe like :mau escape '!' or h.cccd = :cccd)
+            order by h.id desc
+            """, countQuery = """
+            select count(h) from HoSoBenhNhan h
+            where (:trangThai is null or h.trangThaiLienKet = :trangThai)
+              and (:mau is null or h.hoTen like :mau escape '!' or h.soDienThoai like :mau escape '!'
+                   or h.soBaoHiemYTe like :mau escape '!' or h.cccd = :cccd)
+            """)
+    Page<HoSoBenhNhan> timChoQuanTri(String mau, String cccd, TrangThaiLienKet trangThai, Pageable pageable);
+
 }

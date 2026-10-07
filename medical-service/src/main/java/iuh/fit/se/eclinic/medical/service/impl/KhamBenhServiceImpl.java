@@ -4,6 +4,8 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,7 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 @Transactional(readOnly = true)
 public class KhamBenhServiceImpl implements KhamBenhService {
 
-    /** Lịch hẹn còn chờ khám. Chưa có bước bác sĩ xác nhận lịch nên nhận cả CHO_XAC_NHAN. */
+    /** Lịch hẹn còn chờ khám. Lịch bác sĩ chưa kịp xác nhận (CHO_XAC_NHAN) vẫn khám được vào ngày khám. */
     private static final List<TrangThaiLichHen> TRANG_THAI_KHAM_DUOC = List.of(TrangThaiLichHen.CHO_XAC_NHAN,
             TrangThaiLichHen.DA_XAC_NHAN);
 
@@ -105,9 +107,13 @@ public class KhamBenhServiceImpl implements KhamBenhService {
     private void ganNoiDung(HoSoBenhAn benhAn, BenhAnRequest request, Long idBacSi) {
         // Tra / thêm thuốc trước khi đụng tới hồ sơ bệnh án: việc thêm thuốc chạy câu lệnh native
         List<DonThuocRequest> cacDong = request.donThuoc() == null ? List.of() : request.donThuoc();
+        // Thuốc đơn này đã có từ trước vẫn giữ được dù quản trị viên đã cho ngừng dùng; chỉ dòng thêm mới bị từ chối
+        Set<Long> idThuocDaCo = benhAn.getChiTietDonThuoc().stream()
+                .map(chiTiet -> chiTiet.getThuoc().getId())
+                .collect(Collectors.toSet());
         List<Thuoc> cacThuoc = new ArrayList<>();
         for (DonThuocRequest dong : cacDong) {
-            cacThuoc.add(thuocService.layHoacTao(dong.tenThuoc(), rongThanhNull(dong.donVi()), idBacSi));
+            cacThuoc.add(thuocService.layHoacTao(dong.tenThuoc(), rongThanhNull(dong.donVi()), idBacSi, idThuocDaCo));
         }
         benhAn.setChanDoan(request.chanDoan().trim());
         benhAn.setGhiChu(rongThanhNull(request.ghiChu()));

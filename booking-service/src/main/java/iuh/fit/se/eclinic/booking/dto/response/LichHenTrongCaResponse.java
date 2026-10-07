@@ -16,6 +16,8 @@ import iuh.fit.se.eclinic.common.enums.TrangThaiLichHen;
  * @param idHoSoBenhNhan hồ sơ bệnh nhân của lịch hẹn
  * @param benhNhan       dữ liệu đang lưu trong hồ sơ bệnh nhân
  * @param doiChieu       những gì người đặt nhập cho lượt khám này, để đối chiếu với hồ sơ
+ * @param lyDoHuy        lý do bác sĩ từ chối (BI_TU_CHOI) hoặc lý do hủy; null ở các trạng thái khác
+ * @param canDoiLich     true: ca khám đã bị hủy, lịch hẹn còn hiệu lực và đang chờ bệnh nhân đổi sang khung giờ khác
  */
 public record LichHenTrongCaResponse(
         Long id,
@@ -33,7 +35,9 @@ public record LichHenTrongCaResponse(
         Long idHoSoBenhNhan,
         BenhNhan benhNhan,
         NguoiGiamHo nguoiGiamHo,
-        DoiChieu doiChieu) {
+        DoiChieu doiChieu,
+        String lyDoHuy,
+        boolean canDoiLich) {
 
     /**
      * @param tuoi         số tuổi tròn vào ngày khám; null nếu hồ sơ chưa có ngày sinh

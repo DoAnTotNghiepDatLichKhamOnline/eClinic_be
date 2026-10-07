@@ -24,7 +24,8 @@ import lombok.Setter;
 /**
  * Thông báo trong ứng dụng (ERD: ThongBao — NOTI-01). Chỉ gửi cho tài khoản đăng nhập, Khách không nhận.
  * <p>
- * Khác ERD: thêm {@code yeuCauDoiLich} để bấm vào thông báo chuyển tới yêu cầu đổi lịch (Admin/Bác sĩ).
+ * Khác ERD: thêm {@code yeuCauDoiLich} để bấm vào thông báo chuyển tới yêu cầu đổi lịch (Admin/Bác sĩ), và
+ * {@code maNguon} (V11).
  */
 @Getter
 @Setter
@@ -45,6 +46,13 @@ public class ThongBao extends CreatableEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_yeu_cau")
     private YeuCauDoiLich yeuCauDoiLich;
+
+    /**
+     * Mã của sự kiện đã sinh ra thông báo (vd {@code booking:15}), UNIQUE: service nguồn gửi lại cùng 1 sự kiện thì không
+     * tạo thông báo thứ hai. Null với thông báo không sinh từ sự kiện.
+     */
+    @Column(name = "ma_nguon", length = 64)
+    private String maNguon;
 
     @Column(name = "noi_dung", nullable = false, columnDefinition = "TEXT")
     private String noiDung;

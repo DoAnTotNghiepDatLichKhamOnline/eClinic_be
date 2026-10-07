@@ -2,12 +2,14 @@ package iuh.fit.se.eclinic.medical.service.impl;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import iuh.fit.se.eclinic.common.entity.medical.Thuoc;
+import iuh.fit.se.eclinic.common.enums.TrangThaiThuoc;
 import iuh.fit.se.eclinic.common.exception.LoiNghiepVu;
 import iuh.fit.se.eclinic.common.exception.MaLoi;
 import iuh.fit.se.eclinic.medical.repository.ThuocRepository;
@@ -23,20 +25,25 @@ public class ThuocServiceImpl implements ThuocService {
 
     @Override
     @Transactional
-    public Thuoc layHoacTao(String tenThuoc, String donVi, Long idBacSiTao) {
+    public Thuoc layHoacTao(String tenThuoc, String donVi, Long idBacSiTao, Set<Long> idThuocDaCoTrongDon) {
         if (!StringUtils.hasText(tenThuoc)) {
             throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE, "Tên thuốc không được để trống");
         }
         String tenHienThi = collapseWhitespace(tenThuoc);
         String tenChuanHoa = normalize(tenThuoc);
 
-        return thuocRepository.findByTenChuanHoa(tenChuanHoa).orElseGet(() -> {
+        Thuoc thuoc = thuocRepository.findByTenChuanHoa(tenChuanHoa).orElseGet(() -> {
             // INSERT ... ON DUPLICATE KEY UPDATE: không ném lỗi nếu request khác vừa thêm cùng tên,
             // sau đó đọc có khoá để chắc chắn thấy bản ghi đã commit.
             thuocRepository.insertIfAbsent(tenHienThi, tenChuanHoa, donVi, idBacSiTao);
             return thuocRepository.findByTenChuanHoaForShare(tenChuanHoa)
                     .orElseThrow(() -> new IllegalStateException("Thuoc not found after insert: " + tenChuanHoa));
         });
+        if (thuoc.getTrangThai() == TrangThaiThuoc.NGUNG_DUNG && !idThuocDaCoTrongDon.contains(thuoc.getId())) {
+            throw new LoiNghiepVu(MaLoi.THUOC_NGUNG_DUNG, "Thuốc \"" + thuoc.getTenThuoc()
+                    + "\" đã ngừng dùng trong danh mục, không kê mới được");
+        }
+        return thuoc;
     }
 
     @Override
@@ -44,14 +51,15 @@ public class ThuocServiceImpl implements ThuocService {
         if (!StringUtils.hasText(keyword)) {
             return List.of();
         }
-        return thuocRepository.findTop20ByTenChuanHoaContainingOrderByTenThuocAsc(normalize(keyword));
+        return thuocRepository.findTop20ByTenChuanHoaContainingAndTrangThaiOrderByTenThuocAsc(normalize(keyword),
+                TrangThaiThuoc.DANG_DUNG);
     }
 
     static String normalize(String ten) {
         return collapseWhitespace(ten).toLowerCase(Locale.ROOT);
     }
 
-    private static String collapseWhitespace(String value) {
+    static String collapseWhitespace(String value) {
         return value.trim().replaceAll("\\s+", " ");
     }
 

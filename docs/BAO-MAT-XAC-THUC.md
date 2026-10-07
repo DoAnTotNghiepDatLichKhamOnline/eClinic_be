@@ -193,7 +193,7 @@ Xem nhanh: `docker logs eclinic-identity-service 2>&1 | grep -E "Đăng nhập s
   `QUAN_TRI_VIEN` không có nút vô hiệu hoá / xoá.
 - **Khi dev:** frontend chạy `http://localhost:5173` (trùng `FRONTEND_URL`, nằm trong CORS). Cookie `Secure` chạy được
   trên `http://localhost` với Chrome/Edge/Firefox (Safari thì không); curl cần bản ≥ 7.84 (dùng `-c`/`-b` để giữ cookie).
-  Trang mẫu: `scripts/demo-xac-thuc` (xem README).
+  Trang mẫu: `scripts/demo` (các màn hình xác thực và `/account`, xem README).
 
 ## 7. API đặt lịch khám công khai (booking-service)
 
@@ -240,4 +240,4 @@ và mã lỗi: README mục "Đặt lịch khám".
 - Trang `/phieu-kham/<mã>`: đọc mã trên URL, gọi `GET /api/booking/phieu-kham/<mã>`; mã QR hiển thị bằng
   `<img src=".../api/booking/phieu-kham/<mã>/qr">`. Trang phải có `Referrer-Policy: no-referrer`, không nhúng script / ảnh
   bên thứ ba (mã nằm trên URL). Khách đặt lịch chỉ xem lại được bằng link này: nhắc lưu link hoặc tải mã QR.
-- Trang mẫu: `scripts/demo-dat-lich` (xem README).
+- Trang mẫu: `scripts/demo/man-hinh/dat-lich.js` (xem README).

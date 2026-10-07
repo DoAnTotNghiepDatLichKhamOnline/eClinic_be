@@ -13,8 +13,11 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param soLichHieuLucToiDaMoiSoDienThoai số lịch hẹn sắp tới còn hiệu lực tối đa đặt bằng cùng 1 SĐT liên hệ
  * @param soLanDatToiDaMoiIp             số lần gọi đặt lịch tối đa từ 1 địa chỉ IP trong {@code cuaSoGioiHanIp}
  * @param cuaSoGioiHanIp                 khoảng thời gian đếm số lần gọi đặt lịch của 1 địa chỉ IP
+ * @param huyDoiTruocToiThieu            bệnh nhân chỉ hủy / đổi được lịch khi còn cách giờ khám ít nhất khoảng này
+ * @param soLanDoiLichToiDa              số lần đổi lịch tối đa của 1 lần đặt (đếm theo chuỗi lịch cũ)
  */
 @ConfigurationProperties("app.dat-lich")
 public record DatLichProperties(Duration datTruocToiThieu, int soNgayDatTruocToiDa, int soLichHieuLucToiDaMoiHoSo,
-        int soLichHieuLucToiDaMoiSoDienThoai, int soLanDatToiDaMoiIp, Duration cuaSoGioiHanIp) {
+        int soLichHieuLucToiDaMoiSoDienThoai, int soLanDatToiDaMoiIp, Duration cuaSoGioiHanIp,
+        Duration huyDoiTruocToiThieu, int soLanDoiLichToiDa) {
 }

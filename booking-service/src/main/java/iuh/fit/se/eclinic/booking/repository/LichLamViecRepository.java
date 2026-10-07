@@ -7,12 +7,20 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
+import jakarta.persistence.LockModeType;
+
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 
 import iuh.fit.se.eclinic.common.entity.scheduling.LichLamViec;
 
 public interface LichLamViecRepository extends JpaRepository<LichLamViec, Long> {
+
+    /** Khoá dòng ca (SELECT ... FOR UPDATE) trước khi sửa / hủy ca hoặc duyệt yêu cầu của ca: các thao tác đó chạy lần lượt. */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select l from LichLamViec l where l.id = :id")
+    Optional<LichLamViec> findByIdForUpdate(Long id);
 
     List<LichLamViec> findByBacSiIdAndNgayLamViecBetweenOrderByNgayLamViecAscGioBatDauAsc(Long bacSiId,
             LocalDate tuNgay, LocalDate denNgay);
@@ -210,5 +218,15 @@ public interface LichLamViecRepository extends JpaRepository<LichLamViec, Long> 
             """)
     boolean existsTrungCaCuaPhongKham(Long phongKhamId, LocalDate ngayLamViec, LocalTime gioBatDau,
             LocalTime gioKetThuc, Long excludeId);
+
+    /** Id các ca còn hoạt động chưa bắt đầu của bác sĩ (ca đang diễn ra không tính), ca sớm nhất trước. */
+    @Query("""
+            select l.id from LichLamViec l
+            where l.bacSi.id = :idBacSi
+              and l.trangThai = iuh.fit.se.eclinic.common.enums.TrangThaiLichLamViec.HOAT_DONG
+              and (l.ngayLamViec > :homNay or (l.ngayLamViec = :homNay and l.gioBatDau > :gioHienTai))
+            order by l.ngayLamViec, l.gioBatDau
+            """)
+    List<Long> timIdCaSapToiCuaBacSi(Long idBacSi, LocalDate homNay, LocalTime gioHienTai);
 
 }

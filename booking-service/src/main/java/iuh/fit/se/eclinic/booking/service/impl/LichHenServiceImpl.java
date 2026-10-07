@@ -15,12 +15,15 @@ import org.springframework.transaction.annotation.Transactional;
 
 import iuh.fit.se.eclinic.booking.dto.request.LocLichHen;
 import iuh.fit.se.eclinic.booking.dto.request.PhamViLichHen;
+import iuh.fit.se.eclinic.booking.dto.response.DanhGiaCuaToiResponse;
 import iuh.fit.se.eclinic.booking.dto.response.LichHenChiTietCuaToiResponse;
 import iuh.fit.se.eclinic.booking.dto.response.KetQuaKhamResponse;
 import iuh.fit.se.eclinic.booking.dto.response.LichHenCuaToiResponse;
 import iuh.fit.se.eclinic.booking.dto.response.NguoiDatLich;
+import iuh.fit.se.eclinic.booking.mapper.DanhGiaMapper;
 import iuh.fit.se.eclinic.booking.mapper.LichHenMapper;
 import iuh.fit.se.eclinic.booking.mapper.KetQuaKhamMapper;
+import iuh.fit.se.eclinic.booking.repository.DanhGiaRepository;
 import iuh.fit.se.eclinic.booking.repository.HoSoBenhAnChiDocRepository;
 import iuh.fit.se.eclinic.booking.repository.LichHenRepository;
 import iuh.fit.se.eclinic.booking.service.HoSoBenhNhanService;
@@ -56,6 +59,8 @@ public class LichHenServiceImpl implements LichHenService {
     private final KetQuaKhamMapper ketQuaKhamMapper;
     private final TaiKhoanService taiKhoanService;
     private final LichHenMapper lichHenMapper;
+    private final DanhGiaRepository danhGiaRepository;
+    private final DanhGiaMapper danhGiaMapper;
 
     @Override
     public LichHen layTheoId(Long id) {
@@ -128,7 +133,10 @@ public class LichHenServiceImpl implements LichHenService {
         KetQuaKhamResponse ketQua = !duocXemKetQua ? null
                 : hoSoBenhAnChiDocRepository.timTheoLichHenKemDonThuoc(List.of(lichHen.getId())).stream()
                         .findFirst().map(ketQuaKhamMapper::toResponse).orElse(null);
-        return lichHenMapper.toChiTietCuaToi(lichHen, dong, ketQua);
+        // Người được đánh giá = người được xem kết quả khám
+        DanhGiaCuaToiResponse danhGia = !duocXemKetQua ? null
+                : danhGiaRepository.findByLichHenId(lichHen.getId()).map(danhGiaMapper::toCuaToi).orElse(null);
+        return lichHenMapper.toChiTietCuaToi(lichHen, dong, ketQua, duocXemKetQua && danhGia == null, danhGia);
     }
 
     private HoSoBenhNhan hoSoDaLienKet(Long idTaiKhoan) {

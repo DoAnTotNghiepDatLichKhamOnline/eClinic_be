@@ -32,8 +32,9 @@ import lombok.Setter;
  * Mỗi lượt là 1 dòng {@link KhungGioKham}; {@code soBenhNhanToiDa} là tổng số lượt của cả ca.
  * Không được chồng giờ theo bác sĩ hoặc theo phòng (kiểm ở LichLamViecService.kiemTraKhongTrungLich).
  * <p>
- * Khác ERD: thêm {@code trangThai} để hủy ca khi Admin duyệt yêu cầu "Xin nghỉ" (SCHED-03)
- * mà vẫn giữ các khung giờ/lịch hẹn cũ để truy vết.
+ * Khác ERD: thêm {@code trangThai} để hủy ca (Admin hủy trực tiếp, hoặc duyệt yêu cầu xin nghỉ / đổi ca, SCHED-03/06)
+ * mà vẫn giữ các khung giờ / lịch hẹn cũ để truy vết: ca không bao giờ bị xoá. Lịch hẹn còn hiệu lực của ca bị hủy được
+ * đánh dấu {@code LichHen.canDoiLich} (xem QuanLyCaService của booking-service).
  */
 @Getter
 @Setter
