@@ -19,6 +19,22 @@ app:
       - GET /api/booking/khung-gio/**
       - POST /api/booking/lich-hen
       - GET /api/booking/phieu-kham/**
+      # Hủy / đổi lịch bằng link phiếu khám + SĐT liên hệ
+      - POST /api/booking/phieu-kham/**
+      # API nội bộ cho catalog-service (bác sĩ ngừng công tác): không qua gateway, kiểm tra khoá nội bộ thay cho JWT
+      - POST /noi-bo/bac-si/**
+  lich-lam-viec:
+    # Bác sĩ chỉ gửi được yêu cầu đổi ca / xin nghỉ khi ca còn cách giờ bắt đầu ít nhất khoảng này
+    gui-yeu-cau-truoc-toi-thieu: ${SHIFT_REQUEST_LEAD:24h}
+    # Quản trị viên chỉ xếp được ca trong số ngày tới này (tính từ hôm nay)
+    so-ngay-xep-truoc-toi-da: ${SHIFT_MAX_DAYS:90}
+  thong-bao:
+    # Thông báo trong ứng dụng: booking-service ghi sự kiện vào bảng su_kien_thong_bao, job gửi sang notification-service
+    url: ${NOTIFICATION_URL:http://localhost:8086}
+    # Khoảng nghỉ giữa 2 lần job gửi các sự kiện chưa gửi (cũng là độ trễ tối đa của 1 thông báo)
+    chu-ky-gui: ${BOOKING_NOTIFY_INTERVAL:5s}
+    # Thời gian chờ kết nối / chờ phản hồi của notification-service
+    thoi-gian-cho: 5s
   phieu-kham:
     # Link phiếu khám (cũng là nội dung mã QR) = frontend-url + duong-dan + mã phiếu khám
     frontend-url: ${FRONTEND_URL:http://localhost:5173}
@@ -36,3 +52,10 @@ app:
     # Số lần gọi đặt lịch tối đa từ 1 địa chỉ IP trong 1 cửa sổ (đếm trên Redis; Redis lỗi thì bỏ qua giới hạn này)
     so-lan-dat-toi-da-moi-ip: ${BOOKING_IP_LIMIT:20}
     cua-so-gioi-han-ip: ${BOOKING_IP_WINDOW:10m}
+    # Bệnh nhân chỉ hủy / đổi được lịch khi còn cách giờ khám ít nhất khoảng này
+    huy-doi-truoc-toi-thieu: ${BOOKING_CHANGE_LEAD:2h}
+    # Số lần đổi lịch tối đa của 1 lần đặt
+    so-lan-doi-lich-toi-da: ${BOOKING_MAX_RESCHEDULES:2}
+  danh-gia:
+    # Bệnh nhân sửa được đánh giá đã gửi trong số ngày này kể từ lúc gửi
+    so-ngay-duoc-sua: ${RATING_EDIT_DAYS:7}

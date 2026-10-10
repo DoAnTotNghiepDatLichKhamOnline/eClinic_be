@@ -31,6 +31,7 @@ public class KhoiTaoDuLieuMauRunner implements ApplicationRunner {
         // Bắt mọi lỗi: dữ liệu mẫu hỏng (vd trùng số điện thoại với tài khoản đã có) không được làm service ngừng khởi động
         try {
             duLieuMauService.taoDuLieuNen();
+            duLieuMauService.boSungHoSoBacSi();
             int soCa = duLieuMauService.boSungLichLamViec(LocalDate.now());
             log.info("Đã bổ sung {} ca làm việc mẫu", soCa);
         } catch (RuntimeException e) {

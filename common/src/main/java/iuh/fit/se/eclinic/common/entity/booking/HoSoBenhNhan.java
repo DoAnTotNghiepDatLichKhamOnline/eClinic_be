@@ -29,7 +29,9 @@ import lombok.Setter;
  *   <li>1 tài khoản gắn tối đa 1 hồ sơ (quy tắc #13). Liên kết hồ sơ cũ khi kích hoạt tài khoản phải qua xác minh
  *       (quy tắc #3 — Q2): SĐT khớp -> DA_LIEN_KET, không khớp -> CHO_XAC_MINH chờ Admin.</li>
  * </ul>
- * Khác ERD: thêm {@code tienSuBenhLy} (PAT-01) và {@code trangThaiLienKet} (Q2).
+ * Bệnh nhân dưới 18 tuổi chưa có CCCD (quy tắc #10): {@code cccd == null}, hồ sơ nhận diện bằng {@code khoaNhanDien}.
+ * <p>
+ * Khác ERD: thêm {@code tienSuBenhLy} (PAT-01), {@code trangThaiLienKet} (Q2) và {@code khoaNhanDien}.
  */
 @Getter
 @Setter
@@ -43,8 +45,16 @@ public class HoSoBenhNhan extends CreatableEntity {
     @JoinColumn(name = "id_tai_khoan", unique = true)
     private TaiKhoan taiKhoan;
 
-    @Column(name = "cccd", nullable = false, unique = true, length = 12)
+    /** null chỉ với bệnh nhân dưới 18 tuổi chưa có CCCD (quy tắc #10): khi đó phải có {@link #khoaNhanDien}. */
+    @Column(name = "cccd", unique = true, length = 12)
     private String cccd;
+
+    /**
+     * Khoá nhận diện của hồ sơ tạo khi chưa có CCCD: SHA-256 của (họ tên đã chuẩn hoá | ngày sinh | CCCD người giám
+     * hộ). Giữ nguyên sau khi hồ sơ được điền CCCD.
+     */
+    @Column(name = "khoa_nhan_dien", unique = true, length = 64)
+    private String khoaNhanDien;
 
     @Column(name = "ho_ten", nullable = false, length = 150)
     private String hoTen;

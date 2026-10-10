@@ -6,6 +6,9 @@ package iuh.fit.se.eclinic.common.enums;
 public enum TrangThaiKhungGio {
     CON_TRONG,
     DA_DAT,
-    /** Khung giờ thuộc ca đã bị hủy/thay đổi -> đặt lịch trả lỗi SLOT_UNAVAILABLE (BOOK-04). */
+    /**
+     * Lượt khám thuộc ca đã bị hủy, hoặc bị bỏ khi quản trị viên sửa giờ / sức chứa của ca: không đặt được nữa. Dòng
+     * không bị xoá vì lịch hẹn cũ còn trỏ tới; sửa ca cho lượt đó có lại thì dòng trở về CON_TRONG.
+     */
     DA_HUY
 }

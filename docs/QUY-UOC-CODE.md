@@ -103,6 +103,11 @@ File mẫu trong `catalog-service/src/main/java/iuh/fit/se/eclinic/catalog/`:
         - GET /api/catalog/chuyen-khoa/**
   ```
 - Giới hạn vai trò: `@PreAuthorize("hasRole('QUAN_TRI_VIEN')")` (vai trò: `BENH_NHAN`, `BAC_SI`, `QUAN_TRI_VIEN`).
+- Đường dẫn theo người gọi: API chỉ quản trị viên dùng nằm dưới `/api/<service>/quan-tri/...` (vd
+  `/api/catalog/quan-tri/bac-si/{id}`, `/api/booking/quan-tri/lich-lam-viec`); API của bác sĩ về dữ liệu của chính mình nằm
+  dưới `/api/booking/bac-si/toi/...` và **không nhận id bác sĩ**: lấy bác sĩ từ token bằng
+  `TaiKhoanService.layBacSiDangHoatDong(idTaiKhoan)`. Đường dẫn công khai của booking-service: `GET /api/booking/khung-gio/**`,
+  `POST /api/booking/lich-hen`, `GET /api/booking/phieu-kham/**`.
 - Lấy người đang gọi API: `NguoiDungHienTai.layIdTaiKhoan()`, `NguoiDungHienTai.layVaiTro()`,
   `NguoiDungHienTai.layMaPhien()` (mã phiên đăng nhập = thiết bị đang dùng; `null` nếu token không có claim `phien`).
 - Access token còn hạn tối đa 30 phút sau khi tài khoản bị vô hiệu hoá / xoá. API nào cần chắc tài khoản còn hoạt động
@@ -116,7 +121,7 @@ File mẫu trong `catalog-service/src/main/java/iuh/fit/se/eclinic/catalog/`:
   trên đường dẫn công khai vẫn được đọc; token hết hạn / sai thì request nhận 401 dù API công khai, nên client chỉ gửi
   `Authorization` khi đang có phiên. `@PreAuthorize` không dùng được cho trường hợp này: tự kiểm tra vai trò trong controller.
 - Thử API cần đăng nhập: lấy `accessToken` từ `POST /api/auth/login` (Swagger, hoặc trang demo
-  `node scripts/demo-xac-thuc/server.js`, xem README). Có sẵn tài khoản mẫu cho cả 3 vai trò: `admin@eclinic.local`,
+  `node scripts/demo/server.js`, xem README). Có sẵn tài khoản mẫu cho cả 3 vai trò: `admin@eclinic.local`,
   `bacsi01@eclinic.local`, `benhnhan01@eclinic.local` (mật khẩu xem README).
 - Refresh token nằm trong cookie HttpOnly `eclinic_rt` (`Path=/api/auth`), không có trong body. Không ghi mật khẩu,
   token, email ra log; sự kiện bảo mật chỉ ghi id (xem [BAO-MAT-XAC-THUC.md](BAO-MAT-XAC-THUC.md)).
@@ -125,7 +130,7 @@ File mẫu trong `catalog-service/src/main/java/iuh/fit/se/eclinic/catalog/`:
 ## 6. Database và migration
 
 - Schema do **Flyway** quản lý, file nằm trong `common/src/main/resources/db/migration`.
-- Muốn đổi schema: tạo file **mới** `V<số tiếp theo>__mo_ta_ngan.sql` (hiện đã có V1–V5, file tiếp theo là `V6__...sql`).
+- Muốn đổi schema: tạo file **mới** `V<số tiếp theo>__mo_ta_ngan.sql` (hiện đã có V1–V9, file tiếp theo là `V10__...sql`).
   **Không bao giờ sửa file đã chạy** (kể cả `V1__init_schema.sql`): Flyway so checksum và service sẽ không khởi động.
 - Sửa entity trong `common` cho khớp: Hibernate chạy `ddl-auto: validate`, entity lệch schema thì service báo lỗi.
 - DB dùng collation `utf8mb4_unicode_ci`: so sánh `=` và `LIKE` không phân biệt hoa thường và dấu
@@ -139,9 +144,40 @@ File mẫu trong `catalog-service/src/main/java/iuh/fit/se/eclinic/catalog/`:
 - Mỗi service **chỉ ghi** vào bảng thuộc miền của mình.
   Ngoại lệ duy nhất: dữ liệu mẫu (package `dulieumau` của identity-service, chỉ chạy khi `SEED_DATA=true`) ghi cả bảng của
   catalog và booking, vì ca làm việc cần admin, bác sĩ, phòng khám có trước mà các service khởi động song song.
+  Ngoại lệ thứ hai, có chủ đích: khi bác sĩ ghi nhận kết quả khám, medical-service đổi `lich_hen.trang_thai` sang
+  `DA_HOAN_THANH` trong cùng transaction với việc lưu hồ sơ bệnh án (`LichHenKhamRepository`, `KhamBenhServiceImpl`), để
+  bệnh án và trạng thái lịch hẹn không bao giờ lệch nhau. Qua repository đó chỉ được đổi `trangThai`.
 - Cần ghi vào bảng của miền khác → gọi REST sang service sở hữu, bằng `RestClient` đặt trong package `client/`.
   Địa chỉ lấy từ cấu hình (ví dụ `${CATALOG_URL:http://localhost:8082}`); trong Docker là `http://catalog-service:8082`.
-  Ví dụ đầu tiên: tạo tài khoản bác sĩ (AUTH-04/ADM-02) — tài khoản do identity ghi, hồ sơ bác sĩ do catalog ghi.
+  Mẫu: quản lý bác sĩ — tài khoản do identity ghi, hồ sơ bác sĩ do catalog ghi, ca làm việc do booking ghi
+  (`catalog/client/TaiKhoanClient`, `LichLamViecClient`, `QuanLyBacSiServiceImpl`).
+- Một thao tác phải ghi ở nhiều service (thêm bác sĩ, cho bác sĩ ngừng công tác): **không** giữ transaction của mình trong
+  lúc gọi service khác. Chia thành các bước, mỗi bước 1 transaction ngắn (`TransactionTemplate`) hoặc 1 lời gọi, và làm
+  cho từng bước **gọi lại được** (đã ở trạng thái đích thì không làm gì). Bước sau lỗi thì trả 503
+  `DICH_VU_NOI_BO_LOI` và người dùng gửi lại request; chỉ viết bước hoàn tác khi bước đầu tạo ra thứ không được để lại
+  (tài khoản bác sĩ không có hồ sơ → `DELETE /noi-bo/tai-khoan/bac-si/{id}`).
+- Client gọi API nội bộ đổi lỗi của bên kia qua `catalog/client/GoiNoiBo`: 4xx có thân `PhanHoiApi` (trừ 401) được ném lại
+  nguyên mã lỗi cho người dùng; mất kết nối, quá thời gian chờ, 5xx, 401 (sai khoá nội bộ) thành `DICH_VU_NOI_BO_LOI`.
+- API để service khác gọi đặt dưới `/noi-bo/**`, không dưới `/api/**`: gateway chỉ chuyển tiếp `/api/<service>/**` nên
+  đường dẫn này không ra được bên ngoài. Bên nhận khai đường dẫn trong `app.bao-mat.duong-dan-cong-khai` (không có JWT của
+  người dùng) và gọi `KhoaNoiBo.kiemTra(...)` ở đầu controller; bên gọi gửi `KhoaNoiBo.giaTri()` trong header
+  `X-Khoa-Noi-Bo` (khoá chung `INTERNAL_API_KEY`). Mẫu: `booking/client/ThongBaoClient` gọi
+  `notification/controller/NoiBoThongBaoController`. Các đường dẫn nội bộ đang có: `POST /noi-bo/thong-bao`
+  (notification), `/noi-bo/tai-khoan/**` (identity: tạo / xoá tài khoản bác sĩ, sửa họ tên và số điện thoại, vô hiệu hoá,
+  kích hoạt lại), `POST /noi-bo/bac-si/{id}/huy-ca-sap-toi` (booking).
+- Sự kiện của miền này phải tới miền khác và **không được mất** (thông báo cho lịch hẹn): không gọi REST trong transaction,
+  cũng không gọi 1 lần sau khi commit. Ghi sự kiện vào bảng chờ gửi của chính service trong cùng transaction
+  (`su_kien_thong_bao`), một job `@Scheduled` gửi các dòng chưa gửi và chỉ đánh dấu đã gửi khi bên nhận trả 2xx; bên nhận
+  nhận ra sự kiện gửi lại bằng 1 mã duy nhất (`thong_bao.ma_nguon`). Mẫu: `ThongBaoLichHenServiceImpl`,
+  `GuiThongBaoServiceImpl`, `GuiThongBaoJob`.
+- Kho ảnh (Cloudinary) dùng chung nằm ở `common/luutru` (`LuuTruAnh`); service nào cần tải ảnh lên thì đặt
+  `app.cloudinary.bat: true` trong `application.yml` của mình (identity-service, catalog-service).
+  `application-common.yml` được **import** nên giá trị ở đó **đè** lên `application.yml` của service: khoá nào mỗi service
+  cần đặt khác nhau thì không được khai trong file chung.
+- Việc của miền này phải xảy ra "khi" miền khác có sự kiện mà chưa có lời gọi REST giữa 2 service: làm ở lần đọc kế tiếp
+  của miền sở hữu dữ liệu. Mẫu: identity chỉ lưu số CCCD khai khi đăng ký (`tai_khoan.cccd_dang_ky`); booking-service liên
+  kết hồ sơ bệnh nhân ở lần đọc đầu tiên của bệnh nhân (`LienKetHoSoService.thuLienKet`, transaction riêng, không bao giờ
+  làm hỏng lần đọc). Nhờ vậy đăng nhập không phụ thuộc booking-service.
 - Việc cần cập nhật nhiều bảng trong **một transaction** phải nằm trong cùng một service
   (vì vậy lịch làm việc và lịch hẹn đều ở `booking-service`).
 - Gọi dịch vụ bên ngoài (Cloudinary, Google...) **không nằm trong transaction DB**: gọi xong mới mở transaction ngắn để lưu

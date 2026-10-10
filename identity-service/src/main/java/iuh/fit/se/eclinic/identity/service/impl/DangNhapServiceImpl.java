@@ -16,6 +16,7 @@ import iuh.fit.se.eclinic.common.security.JwtService;
 import iuh.fit.se.eclinic.common.util.TokenNgauNhien;
 import iuh.fit.se.eclinic.identity.config.DangNhapProperties;
 import iuh.fit.se.eclinic.identity.dto.request.DangNhapRequest;
+import iuh.fit.se.eclinic.identity.dto.request.DatMatKhauLanDauRequest;
 import iuh.fit.se.eclinic.identity.dto.response.DangNhapResponse;
 import iuh.fit.se.eclinic.identity.mapper.TaiKhoanMapper;
 import iuh.fit.se.eclinic.identity.repository.TaiKhoanRepository;
@@ -67,14 +68,47 @@ public class DangNhapServiceImpl implements DangNhapService {
     @Override
     @Transactional
     public DangNhapResponse dangNhap(DangNhapRequest request, String thongTinThietBi) {
-        String email = ChuanHoa.email(request.email());
+        TaiKhoan taiKhoan = xacMinhMatKhau(request.email(), request.matKhau());
+        if (taiKhoan.isPhaiDoiMatKhau()) {
+            // Mật khẩu mặc định không mở được phiên: chỉ dùng để đặt mật khẩu mới (datMatKhauLanDau)
+            log.info("Từ chối đăng nhập id={}: phải đặt mật khẩu ở lần đăng nhập đầu", taiKhoan.getId());
+            throw new LoiNghiepVu(MaLoi.PHAI_DOI_MAT_KHAU);
+        }
+        log.info("Đăng nhập thành công id={}", taiKhoan.getId());
+        return capPhien(taiKhoan, thongTinThietBi);
+    }
+
+    @Override
+    @Transactional
+    public void datMatKhauLanDau(DatMatKhauLanDauRequest request) {
+        TaiKhoan taiKhoan = xacMinhMatKhau(request.email(), request.matKhauHienTai());
+        if (!taiKhoan.isPhaiDoiMatKhau()) {
+            throw new LoiNghiepVu(MaLoi.TRANG_THAI_TAI_KHOAN_KHONG_HOP_LE,
+                    "Tài khoản đã có mật khẩu riêng, hãy đăng nhập như bình thường");
+        }
+        // Mật khẩu hiện tại đã đúng nên so sánh chuỗi là đủ
+        if (request.matKhauMoi().equals(request.matKhauHienTai())) {
+            throw new LoiNghiepVu(MaLoi.MAT_KHAU_MOI_TRUNG_MAT_KHAU_CU);
+        }
+        taiKhoan.setMatKhauHash(passwordEncoder.encode(request.matKhauMoi()));
+        taiKhoan.setPhaiDoiMatKhau(false);
+        log.info("Đặt mật khẩu lần đầu id={}", taiKhoan.getId());
+    }
+
+    /**
+     * Kiểm tra email + mật khẩu (có bộ đếm sai) rồi mới báo trạng thái tài khoản.
+     *
+     * @return tài khoản đã kích hoạt, mật khẩu đúng
+     */
+    private TaiKhoan xacMinhMatKhau(String emailNhap, String matKhau) {
+        String email = ChuanHoa.email(emailNhap);
         // Đang bị khoá thì từ chối ngay, không chạy BCrypt (429 không phải bí mật)
         if (gioiHanDangNhapService.dangBiKhoa(email)) {
             throw new LoiNghiepVu(MaLoi.DANG_NHAP_SAI_QUA_NHIEU);
         }
 
         TaiKhoan taiKhoan = taiKhoanRepository.findByEmail(email).orElse(null);
-        if (!khopMatKhau(taiKhoan, request.matKhau())) {
+        if (!khopMatKhau(taiKhoan, matKhau)) {
             long soLanSai = gioiHanDangNhapService.ghiNhanThatBai(email);
             // Nhật ký bảo mật: chỉ ghi id ("-" khi email chưa đăng ký), không ghi email / mật khẩu
             String id = taiKhoan != null ? taiKhoan.getId().toString() : "-";
@@ -100,8 +134,7 @@ public class DangNhapServiceImpl implements DangNhapService {
                 // Được đăng nhập
             }
         }
-        log.info("Đăng nhập thành công id={}", taiKhoan.getId());
-        return capPhien(taiKhoan, thongTinThietBi);
+        return taiKhoan;
     }
 
     /**

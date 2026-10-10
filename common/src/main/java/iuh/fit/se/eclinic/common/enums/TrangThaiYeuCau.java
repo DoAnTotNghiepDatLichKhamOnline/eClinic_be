@@ -6,5 +6,7 @@ package iuh.fit.se.eclinic.common.enums;
 public enum TrangThaiYeuCau {
     CHO_DUYET,
     DA_DUYET,
-    TU_CHOI
+    TU_CHOI,
+    /** Bác sĩ tự rút yêu cầu khi còn CHO_DUYET. */
+    DA_RUT
 }

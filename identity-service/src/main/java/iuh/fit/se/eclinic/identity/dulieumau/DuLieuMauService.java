@@ -20,6 +20,15 @@ public interface DuLieuMauService {
     boolean taoDuLieuNen();
 
     /**
+     * Điền hồ sơ giới thiệu mẫu (chức vụ, giới thiệu ngắn, đào tạo, công tác, lĩnh vực khám chữa, ảnh đại diện và 3 ảnh
+     * giới thiệu giữ chỗ) cho các bác sĩ mẫu CHƯA có giới thiệu ngắn. Chạy mỗi lần khởi động nên DB đã có dữ liệu mẫu
+     * từ trước cũng được bổ sung; bác sĩ đã được quản trị viên sửa hồ sơ thì không bị ghi đè.
+     *
+     * @return số bác sĩ được bổ sung
+     */
+    int boSungHoSoBacSi();
+
+    /**
      * Bổ sung ca làm việc + khung giờ còn thiếu của các bác sĩ mẫu trong {@code soNgay} ngày tính từ {@code tuNgay}.
      * Bỏ qua ngày bác sĩ đã có ca (kể cả ca đã huỷ) và ca trùng giờ với ca đang hoạt động của phòng.
      *

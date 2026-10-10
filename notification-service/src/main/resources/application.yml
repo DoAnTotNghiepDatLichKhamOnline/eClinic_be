@@ -6,3 +6,10 @@ spring:
     name: notification-service
   config:
     import: classpath:application-common.yml
+
+app:
+  bao-mat:
+    # API nội bộ: không có JWT của người dùng, NoiBoThongBaoController tự kiểm tra khoá nội bộ (header X-Khoa-Noi-Bo).
+    # Gateway chỉ chuyển tiếp /api/notification/** nên đường dẫn này không ra được bên ngoài.
+    duong-dan-cong-khai:
+      - POST /noi-bo/thong-bao

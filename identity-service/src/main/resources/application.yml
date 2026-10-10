@@ -56,6 +56,10 @@ app:
     thoi-gian-cho-gui-lai: 60s
     thoi-han-dat-lai-mat-khau: 15m
     thoi-han-doi-email: 1h
+  bac-si:
+    # Mật khẩu ban đầu của tài khoản bác sĩ do quản trị viên tạo. Chỉ dùng được để đặt mật khẩu mới ở lần đăng nhập
+    # đầu (POST /api/auth/first-password); đăng nhập bằng nó không được cấp phiên.
+    mat-khau-mac-dinh: ${DOCTOR_DEFAULT_PASSWORD:Doctor@123}
   dang-nhap:
     # Sai mật khẩu 5 lần thì khoá email 15 phút tính từ lần sai thứ 5
     so-lan-sai-toi-da: 5
@@ -76,17 +80,10 @@ app:
     # Khoá công khai của Google để kiểm tra chữ ký ID token (được cache)
     jwk-set-uri: https://www.googleapis.com/oauth2/v3/certs
     thoi-gian-cho: 5s
-  # Kho ảnh Cloudinary (gói miễn phí, không cần thẻ): xem .env.example. Thiếu 1 trong 3 giá trị: tải ảnh đại diện trả 503,
-  # service vẫn khởi động bình thường.
+  # Dùng kho ảnh Cloudinary cho ảnh đại diện (cấu hình kết nối: app.cloudinary trong application-common.yml).
+  # Mỗi tài khoản 1 ảnh: <thu-muc>/avatar/<idTaiKhoan>.
   cloudinary:
-    cloud-name: ${CLOUDINARY_CLOUD_NAME:}
-    api-key: ${CLOUDINARY_API_KEY:}
-    api-secret: ${CLOUDINARY_API_SECRET:}
-    # Mỗi tài khoản 1 ảnh: <thu-muc>/avatar/<idTaiKhoan>. 2 DB dùng chung 1 tài khoản Cloudinary thì đặt thư mục khác nhau.
-    thu-muc: ${CLOUDINARY_FOLDER:eclinic}
-    url-api: https://api.cloudinary.com
-    # Nhỏ hơn read-timeout của gateway (30s) để lỗi kho ảnh ra 503 chứ không ra 504
-    thoi-gian-cho: 20s
+    bat: true
   anh-dai-dien:
     # Mỗi tài khoản tải ảnh lên tối đa 10 lần / giờ (mỗi lần tải tốn hạn mức của gói miễn phí)
     so-lan-tai-len-toi-da: 10
@@ -99,12 +96,17 @@ app:
       - POST /api/auth/verify-email
       - POST /api/auth/resend-verification
       - POST /api/auth/login
+      - POST /api/auth/first-password
       - POST /api/auth/refresh-token
       - POST /api/auth/logout
       - POST /api/auth/forgot-password
       - POST /api/auth/reset-password
       - POST /api/auth/google
       - POST /api/auth/confirm-email-change
+      # API nội bộ cho catalog-service (quản lý bác sĩ): không qua gateway, kiểm tra khoá nội bộ thay cho JWT
+      - POST /noi-bo/tai-khoan/**
+      - PUT /noi-bo/tai-khoan/**
+      - DELETE /noi-bo/tai-khoan/**
   # Tài khoản quản trị tạo sẵn khi DB chưa có admin (KhoiTaoAdminRunner)
   admin-mac-dinh:
     email: ${ADMIN_EMAIL:admin@eclinic.local}

@@ -119,6 +119,8 @@ public class XacThucServiceImpl implements XacThucService {
     private void ganThongTin(TaiKhoan taiKhoan, DangKyRequest request, String soDienThoai) {
         taiKhoan.setHoTen(request.hoTen().trim());
         taiKhoan.setSoDienThoai(soDienThoai);
+        // Chỉ lưu lời khai; booking-service liên kết hồ sơ bệnh nhân theo số này khi bệnh nhân đăng nhập (quy tắc #3)
+        taiKhoan.setCccdDangKy(request.cccd() == null || request.cccd().isBlank() ? null : request.cccd());
         taiKhoan.setMatKhauHash(passwordEncoder.encode(request.matKhau()));
     }
 

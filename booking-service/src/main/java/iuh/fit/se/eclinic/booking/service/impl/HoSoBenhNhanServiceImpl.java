@@ -10,6 +10,7 @@ import iuh.fit.se.eclinic.booking.dto.response.HoSoCuaToiResponse;
 import iuh.fit.se.eclinic.booking.mapper.HoSoBenhNhanMapper;
 import iuh.fit.se.eclinic.booking.repository.HoSoBenhNhanRepository;
 import iuh.fit.se.eclinic.booking.service.HoSoBenhNhanService;
+import iuh.fit.se.eclinic.booking.service.LienKetHoSoService;
 import iuh.fit.se.eclinic.booking.service.TaiKhoanService;
 import iuh.fit.se.eclinic.booking.util.ChuanHoaTen;
 import iuh.fit.se.eclinic.common.entity.booking.HoSoBenhNhan;
@@ -28,6 +29,7 @@ public class HoSoBenhNhanServiceImpl implements HoSoBenhNhanService {
     private final HoSoBenhNhanRepository hoSoBenhNhanRepository;
     private final TaiKhoanService taiKhoanService;
     private final HoSoBenhNhanMapper hoSoBenhNhanMapper;
+    private final LienKetHoSoService lienKetHoSoService;
 
     @Override
     public HoSoBenhNhan layTheoId(Long id) {
@@ -43,6 +45,12 @@ public class HoSoBenhNhanServiceImpl implements HoSoBenhNhanService {
     @Override
     public Optional<HoSoBenhNhan> timTheoCccd(String cccd) {
         return hoSoBenhNhanRepository.findByCccd(cccd);
+    }
+
+    @Override
+    public Optional<HoSoBenhNhan> timDaLienKetCuaTaiKhoan(Long idTaiKhoan) {
+        return hoSoBenhNhanRepository.findByTaiKhoanId(idTaiKhoan)
+                .filter(hoSo -> hoSo.getTrangThaiLienKet() == TrangThaiLienKet.DA_LIEN_KET);
     }
 
     @Override
@@ -64,14 +72,27 @@ public class HoSoBenhNhanServiceImpl implements HoSoBenhNhanService {
             if (cccd == null) {
                 throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE, "Số CCCD không được để trống khi tạo hồ sơ bệnh nhân");
             }
-            if (hoSoBenhNhanRepository.existsByCccd(cccd)) {
-                // Gắn hồ sơ đã có vào tài khoản phải qua xác minh (quy tắc #3)
-                throw new LoiNghiepVu(MaLoi.CCCD_DA_CO_HO_SO);
+            Optional<HoSoBenhNhan> theoCccd = hoSoBenhNhanRepository.findByCccdForUpdate(cccd);
+            if (theoCccd.isPresent()) {
+                // Gắn hồ sơ đã có (tạo khi đặt lịch như khách) vào tài khoản phải qua xác minh (quy tắc #3)
+                hoSo = theoCccd.get();
+                if (hoSo.getTaiKhoan() != null || lienKetHoSoService.daBiTuChoi(idTaiKhoan, hoSo.getId())) {
+                    throw new LoiNghiepVu(MaLoi.CCCD_DA_CO_HO_SO);
+                }
+                boolean khop = ChuanHoaTen.giongNhau(request.hoTen(), hoSo.getHoTen())
+                        && (request.ngaySinh().equals(hoSo.getNgaySinh())
+                                || request.soDienThoai().equals(hoSo.getSoDienThoai()));
+                lienKetHoSoService.lienKet(taiKhoan, hoSo, khop);
+                if (!khop) {
+                    // Chờ quản trị viên xác minh: không ghi thông tin trong form lên hồ sơ, chỉ trả trạng thái
+                    return hoSoBenhNhanMapper.toHoSoCuaToi(hoSo);
+                }
+            } else {
+                hoSo = new HoSoBenhNhan();
+                hoSo.setCccd(cccd);
+                hoSo.setTaiKhoan(taiKhoan);
+                hoSo.setTrangThaiLienKet(TrangThaiLienKet.DA_LIEN_KET);
             }
-            hoSo = new HoSoBenhNhan();
-            hoSo.setCccd(cccd);
-            hoSo.setTaiKhoan(taiKhoan);
-            hoSo.setTrangThaiLienKet(TrangThaiLienKet.DA_LIEN_KET);
         } else {
             hoSo = daCo.get();
             if (hoSo.getTrangThaiLienKet() != TrangThaiLienKet.DA_LIEN_KET) {

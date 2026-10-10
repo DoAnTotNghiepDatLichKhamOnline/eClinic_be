@@ -30,7 +30,7 @@ import iuh.fit.se.eclinic.common.exception.LoiNghiepVu;
 import iuh.fit.se.eclinic.common.exception.MaLoi;
 import iuh.fit.se.eclinic.common.testsupport.MySqlTestcontainersConfiguration;
 import iuh.fit.se.eclinic.common.testsupport.RedisTestcontainersConfiguration;
-import iuh.fit.se.eclinic.identity.client.LuuTruAnh;
+import iuh.fit.se.eclinic.common.luutru.LuuTruAnh;
 import iuh.fit.se.eclinic.identity.config.AnhDaiDienProperties;
 import iuh.fit.se.eclinic.identity.dto.response.HoSoCaNhanResponse;
 import iuh.fit.se.eclinic.identity.repository.TaiKhoanRepository;

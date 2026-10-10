@@ -15,6 +15,12 @@ public interface HoSoBenhNhanService {
     Optional<HoSoBenhNhan> timTheoCccd(String cccd);
 
     /**
+     * Hồ sơ bệnh nhân ĐÃ LIÊN KẾT của tài khoản. Hồ sơ chờ xác minh chưa được tính là của tài khoản: lịch hẹn và kết
+     * quả khám của hồ sơ đó chưa hiện (quy tắc #3).
+     */
+    Optional<HoSoBenhNhan> timDaLienKetCuaTaiKhoan(Long idTaiKhoan);
+
+    /**
      * PAT-01: hồ sơ bệnh nhân của tài khoản đang đăng nhập.
      * <p>
      * Ném: KHONG_TIM_THAY (tài khoản chưa có hồ sơ) và các mã của {@link TaiKhoanService#layBenhNhanDangHoatDong}.

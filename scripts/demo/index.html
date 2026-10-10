@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>eClinic — demo (dev)</title>
+    <link rel="stylesheet" href="/_demo/chung.css">
+</head>
+<body>
+<!-- Khung trang dùng chung cho mọi đường dẫn. Nội dung từng màn hình nằm ở man-hinh/<tên>.js, vẽ vào <main id="man-hinh">. -->
+<header id="dau-trang">
+    <a href="/" class="thuong-hieu">eClinic <small>demo</small></a>
+    <nav id="nav-tren"></nav>
+    <div id="khu-tai-khoan"></div>
+</header>
+<p id="thong-bao-chung" class="canh-bao an"></p>
+<div id="than">
+    <aside id="thanh-ben" class="an"></aside>
+    <main id="man-hinh"><p class="ghi-chu">Đang tải…</p></main>
+</div>
+<details id="khoi-ket-qua-api" open>
+    <summary>Kết quả gọi API gần nhất</summary>
+    <pre id="ket-qua">(chưa gọi)</pre>
+</details>
+<p class="ghi-chu">Chỉ dùng khi dev (thay frontend). Refresh token nằm trong cookie HttpOnly <code>eclinic_rt</code>; access token
+    chỉ giữ trong bộ nhớ trang. Dùng Chrome/Edge/Firefox.</p>
+
+<script>
+    window.CAU_HINH = { apiUrl: "__API_URL__", googleClientId: "__GOOGLE_CLIENT_ID__" };
+</script>
+<script src="/_demo/chung.js"></script>
+<!--__MAN_HINH__-->
+<script>khoiDong();</script>
+</body>
+</html>

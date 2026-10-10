@@ -84,6 +84,8 @@ public class MatKhauServiceImpl implements MatKhauService {
         }
 
         taiKhoan.setMatKhauHash(passwordEncoder.encode(matKhauMoi));
+        // Chủ email vừa tự đặt mật khẩu: tài khoản bác sĩ mới không còn mang mật khẩu mặc định
+        taiKhoan.setPhaiDoiMatKhau(false);
         // revokeAllByTaiKhoanId flush trước rồi mới clear persistence context, nên mật khẩu mới không bị mất
         int soPhien = refreshTokenService.thuHoiTatCaCuaTaiKhoan(idTaiKhoan);
         gioiHanDangNhapService.xoa(taiKhoan.getEmail());
@@ -105,6 +107,7 @@ public class MatKhauServiceImpl implements MatKhauService {
         }
 
         taiKhoan.setMatKhauHash(passwordEncoder.encode(request.matKhauMoi()));
+        taiKhoan.setPhaiDoiMatKhau(false);
         // UPDATE thu hồi flush trước rồi mới clear persistence context, nên mật khẩu mới không bị mất
         int soPhien = refreshTokenService.thuHoiCacPhienKhac(idTaiKhoan, maPhienHienTai);
         gioiHanDangNhapService.xoa(taiKhoan.getEmail());

@@ -22,6 +22,7 @@ import iuh.fit.se.eclinic.identity.dto.request.DangKyRequest;
 import iuh.fit.se.eclinic.identity.dto.request.DangNhapGoogleRequest;
 import iuh.fit.se.eclinic.identity.dto.request.DangNhapRequest;
 import iuh.fit.se.eclinic.identity.dto.request.DatLaiMatKhauRequest;
+import iuh.fit.se.eclinic.identity.dto.request.DatMatKhauLanDauRequest;
 import iuh.fit.se.eclinic.identity.dto.request.GuiLaiXacThucRequest;
 import iuh.fit.se.eclinic.identity.dto.request.PhienDangNhapRequest;
 import iuh.fit.se.eclinic.identity.dto.request.QuenMatKhauRequest;
@@ -87,6 +88,14 @@ public class XacThucController {
     public ResponseEntity<PhanHoiApi<DangNhapResponse>> dangNhap(@Valid @RequestBody DangNhapRequest request,
             @RequestHeader(value = "User-Agent", required = false) String thongTinThietBi) {
         return capCookie(dangNhapService.dangNhap(request, thongTinThietBi), "Đăng nhập thành công");
+    }
+
+    @Operation(summary = "Lần đăng nhập đầu của tài khoản bác sĩ mới (đăng nhập trả 403 PHAI_DOI_MAT_KHAU): đặt mật khẩu của"
+            + " mình bằng email + mật khẩu mặc định; sau đó đăng nhập lại bằng mật khẩu mới")
+    @PostMapping("/first-password")
+    public PhanHoiApi<Void> datMatKhauLanDau(@Valid @RequestBody DatMatKhauLanDauRequest request) {
+        dangNhapService.datMatKhauLanDau(request);
+        return PhanHoiApi.ok(null, "Đã đặt mật khẩu, vui lòng đăng nhập bằng mật khẩu mới");
     }
 
     @Operation(summary = "Đổi refresh token (cookie, hoặc body khi thử API) lấy cặp token mới; token cũ hết hiệu lực")

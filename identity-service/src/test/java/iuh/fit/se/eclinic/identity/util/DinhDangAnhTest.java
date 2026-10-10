@@ -6,6 +6,8 @@ import java.nio.charset.StandardCharsets;
 
 import org.junit.jupiter.api.Test;
 
+import iuh.fit.se.eclinic.common.util.DinhDangAnh;
+
 class DinhDangAnhTest {
 
     @Test

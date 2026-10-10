@@ -2,6 +2,7 @@ package iuh.fit.se.eclinic.identity.service;
 
 import iuh.fit.se.eclinic.common.entity.identity.TaiKhoan;
 import iuh.fit.se.eclinic.identity.dto.request.DangNhapRequest;
+import iuh.fit.se.eclinic.identity.dto.request.DatMatKhauLanDauRequest;
 import iuh.fit.se.eclinic.identity.dto.response.DangNhapResponse;
 
 /**
@@ -15,6 +16,14 @@ public interface DangNhapService {
      * @param thongTinThietBi User-Agent của client, lưu cùng phiên (có thể null)
      */
     DangNhapResponse dangNhap(DangNhapRequest request, String thongTinThietBi);
+
+    /**
+     * Lần đăng nhập đầu của tài khoản đang mang mật khẩu mặc định ({@code phaiDoiMatKhau}): kiểm tra mật khẩu hiện tại
+     * như {@link #dangNhap} (cùng bộ đếm sai mật khẩu), đặt mật khẩu mới và gỡ cờ. Không mở phiên: người dùng đăng nhập
+     * lại bằng mật khẩu mới. Ném SAI_THONG_TIN_DANG_NHAP, DANG_NHAP_SAI_QUA_NHIEU, TAI_KHOAN_BI_VO_HIEU_HOA,
+     * TRANG_THAI_TAI_KHOAN_KHONG_HOP_LE (tài khoản không cần đặt mật khẩu lần đầu), MAT_KHAU_MOI_TRUNG_MAT_KHAU_CU.
+     */
+    void datMatKhauLanDau(DatMatKhauLanDauRequest request);
 
     /**
      * Đổi refresh token lấy cặp token mới của cùng phiên đăng nhập; token cũ hết hiệu lực.

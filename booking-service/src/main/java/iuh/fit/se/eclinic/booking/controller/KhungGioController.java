@@ -12,7 +12,9 @@ import org.springframework.web.bind.annotation.RestController;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import iuh.fit.se.eclinic.booking.dto.response.CaKhamResponse;
+import iuh.fit.se.eclinic.booking.dto.response.KhungGioGopResponse;
 import iuh.fit.se.eclinic.booking.dto.response.NgayConChoResponse;
+import iuh.fit.se.eclinic.booking.dto.response.NgaySomNhatResponse;
 import iuh.fit.se.eclinic.booking.service.TraCuuLichKhamService;
 import iuh.fit.se.eclinic.common.dto.PhanHoiApi;
 import lombok.RequiredArgsConstructor;
@@ -46,6 +48,29 @@ public class KhungGioController {
             @RequestParam(required = false) Long idBacSi,
             @RequestParam(required = false) Long idChuyenKhoa) {
         return PhanHoiApi.ok(traCuuLichKhamService.timNgayConCho(tuNgay, denNgay, idBacSi, idChuyenKhoa));
+    }
+
+    @Operation(summary = "Các ca và khung giờ 1 tiếng của 1 bác sĩ trong tối đa 7 ngày liền (mặc định từ hôm nay)")
+    @GetMapping("/nhieu-ngay")
+    public PhanHoiApi<List<CaKhamResponse>> timNhieuNgay(
+            @RequestParam Long idBacSi,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate tuNgay,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate denNgay) {
+        return PhanHoiApi.ok(traCuuLichKhamService.timKhungGioNhieuNgay(idBacSi, tuNgay, denNgay));
+    }
+
+    @Operation(summary = "Khung giờ của chuyên khoa trong 1 ngày, gộp mọi bác sĩ theo giờ bắt đầu (cho \"bác sĩ bất kỳ\")")
+    @GetMapping("/gop")
+    public PhanHoiApi<List<KhungGioGopResponse>> timGop(
+            @RequestParam Long idChuyenKhoa,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate ngay) {
+        return PhanHoiApi.ok(traCuuLichKhamService.timKhungGioGop(idChuyenKhoa, ngay));
+    }
+
+    @Operation(summary = "Ngày còn chỗ sớm nhất của từng bác sĩ thuộc chuyên khoa (bác sĩ hết chỗ thì không có trong kết quả)")
+    @GetMapping("/ngay-som-nhat")
+    public PhanHoiApi<List<NgaySomNhatResponse>> timNgaySomNhat(@RequestParam Long idChuyenKhoa) {
+        return PhanHoiApi.ok(traCuuLichKhamService.timNgaySomNhat(idChuyenKhoa));
     }
 
 }

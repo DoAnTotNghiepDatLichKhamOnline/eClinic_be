@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import iuh.fit.se.eclinic.common.entity.booking.HoSoBenhNhan;
+import iuh.fit.se.eclinic.common.entity.catalog.AnhBacSi;
 import iuh.fit.se.eclinic.common.entity.catalog.BacSi;
 import iuh.fit.se.eclinic.common.entity.catalog.ChuyenKhoa;
 import iuh.fit.se.eclinic.common.entity.catalog.PhongKham;
@@ -24,6 +25,7 @@ import iuh.fit.se.eclinic.common.entity.identity.QuanTriVien;
 import iuh.fit.se.eclinic.common.entity.identity.TaiKhoan;
 import iuh.fit.se.eclinic.common.entity.scheduling.KhungGioKham;
 import iuh.fit.se.eclinic.common.entity.scheduling.LichLamViec;
+import iuh.fit.se.eclinic.common.enums.LoaiAnhBacSi;
 import iuh.fit.se.eclinic.common.enums.TrangThaiBacSi;
 import iuh.fit.se.eclinic.common.enums.TrangThaiLichLamViec;
 import iuh.fit.se.eclinic.common.enums.TrangThaiLienKet;
@@ -123,6 +125,67 @@ public class DuLieuMauServiceImpl implements DuLieuMauService {
         log.info("Đã tạo dữ liệu mẫu: {} chuyên khoa, {} bác sĩ, {} tài khoản bệnh nhân ({} hồ sơ bệnh nhân)",
                 DuLieuMau.CHUYEN_KHOA.size(), DuLieuMau.BAC_SI.size(), DuLieuMau.BENH_NHAN.size(), soHoSo);
         return true;
+    }
+
+    @Override
+    @Transactional
+    public int boSungHoSoBacSi() {
+        Map<String, BacSiMau> mauTheoEmail = DuLieuMau.BAC_SI.stream()
+                .collect(Collectors.toMap(BacSiMau::email, Function.identity()));
+        List<BacSi> chuaCoHoSo = entityManager.createQuery("""
+                select b from BacSi b join fetch b.taiKhoan t
+                where t.email in :emails and b.gioiThieuNgan is null
+                order by b.id
+                """, BacSi.class)
+                .setParameter("emails", mauTheoEmail.keySet())
+                .getResultList();
+
+        for (BacSi bacSi : chuaCoHoSo) {
+            BacSiMau mau = mauTheoEmail.get(bacSi.getTaiKhoan().getEmail());
+            HoSoBacSiMau hoSo = HoSoBacSiMau.THEO_SO.get(mau.so());
+            bacSi.setChucVu(hoSo.chucVu());
+            bacSi.setGioiThieuNgan(hoSo.gioiThieuNgan());
+            bacSi.setQuaTrinhDaoTao(String.join("\n", hoSo.daoTao()));
+            bacSi.setQuaTrinhCongTac(String.join("\n", hoSo.congTac()));
+            bacSi.setLinhVucKhamChua(String.join("\n", hoSo.linhVuc()));
+            if (bacSi.getTaiKhoan().getAnhDaiDien() == null) {
+                bacSi.getTaiKhoan().setAnhDaiDien(anhGiu(400, 400, "0f766e", "ffffff", "BS " + mau.so()));
+            }
+
+            Long soAnh = entityManager.createQuery("select count(a) from AnhBacSi a where a.bacSi.id = :id", Long.class)
+                    .setParameter("id", bacSi.getId())
+                    .getSingleResult();
+            if (soAnh == 0) {
+                String tenChuyenKhoa = mau.chuyenKhoa();
+                taoAnhMau(bacSi, 1, LoaiAnhBacSi.ANH_CONG_VIEC, anhGiu(1200, 800, "e0f2f1", "0f766e", "eClinic"),
+                        "Bác sĩ " + mau.hoTen() + " tại phòng khám " + tenChuyenKhoa);
+                taoAnhMau(bacSi, 2, LoaiAnhBacSi.ANH_CONG_VIEC, anhGiu(1200, 800, "e3f2fd", "1565c0", "eClinic"),
+                        "Tư vấn cho người bệnh");
+                taoAnhMau(bacSi, 3, LoaiAnhBacSi.CHUNG_CHI, anhGiu(900, 1200, "fff8e1", "8d6e63", mau.soGiayPhep()),
+                        "Chứng chỉ hành nghề số " + mau.soGiayPhep());
+            }
+        }
+        if (!chuaCoHoSo.isEmpty()) {
+            log.info("Đã bổ sung hồ sơ giới thiệu mẫu cho {} bác sĩ", chuaCoHoSo.size());
+        }
+        return chuaCoHoSo.size();
+    }
+
+    /** Ảnh mẫu không nằm trong kho ảnh ({@code maLuuTru} null): tạo dữ liệu mẫu không gọi Cloudinary. */
+    private void taoAnhMau(BacSi bacSi, int thuTu, LoaiAnhBacSi loai, String url, String chuThich) {
+        AnhBacSi anh = new AnhBacSi();
+        anh.setBacSi(bacSi);
+        anh.setLoai(loai);
+        anh.setUrl(url);
+        anh.setChuThich(chuThich);
+        anh.setThuTu(thuTu);
+        entityManager.persist(anh);
+    }
+
+    /** Ảnh giữ chỗ (nền màu + 1 dòng chữ không dấu) của placehold.co, thay cho ảnh thật khi demo. */
+    private static String anhGiu(int rong, int cao, String mauNen, String mauChu, String chu) {
+        return "https://placehold.co/%dx%d/%s/%s/png?text=%s".formatted(rong, cao, mauNen, mauChu,
+                chu.replace(' ', '+'));
     }
 
     @Override

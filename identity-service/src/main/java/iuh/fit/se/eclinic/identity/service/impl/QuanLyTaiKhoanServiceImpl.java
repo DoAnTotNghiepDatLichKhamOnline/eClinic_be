@@ -29,9 +29,6 @@ import iuh.fit.se.eclinic.common.exception.MaLoi;
 import iuh.fit.se.eclinic.identity.dto.request.CapNhatTrangThaiTaiKhoanRequest;
 import iuh.fit.se.eclinic.identity.dto.response.ChiTietTaiKhoanResponse;
 import iuh.fit.se.eclinic.identity.dto.response.TaiKhoanQuanTriResponse;
-import iuh.fit.se.eclinic.identity.enums.MucDichLienKet;
-import iuh.fit.se.eclinic.identity.event.EmailKichHoatLaiTaiKhoanEvent;
-import iuh.fit.se.eclinic.identity.event.EmailVoHieuHoaTaiKhoanEvent;
 import iuh.fit.se.eclinic.identity.event.TaiKhoanDaXoaEvent;
 import iuh.fit.se.eclinic.identity.mapper.TaiKhoanQuanTriMapper;
 import iuh.fit.se.eclinic.identity.repository.BacSiChiDocRepository;
@@ -41,9 +38,8 @@ import iuh.fit.se.eclinic.identity.repository.PhienChatChiDocRepository;
 import iuh.fit.se.eclinic.identity.repository.TaiKhoanRepository;
 import iuh.fit.se.eclinic.identity.repository.ThongBaoChiDocRepository;
 import iuh.fit.se.eclinic.identity.service.QuanLyTaiKhoanService;
-import iuh.fit.se.eclinic.identity.service.RefreshTokenService;
 import iuh.fit.se.eclinic.identity.service.TaiKhoanService;
-import iuh.fit.se.eclinic.identity.service.TokenLienKetService;
+import iuh.fit.se.eclinic.identity.service.TrangThaiTaiKhoanService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -65,8 +61,7 @@ public class QuanLyTaiKhoanServiceImpl implements QuanLyTaiKhoanService {
     private final LichHenChiDocRepository lichHenChiDocRepository;
     private final ThongBaoChiDocRepository thongBaoChiDocRepository;
     private final PhienChatChiDocRepository phienChatChiDocRepository;
-    private final RefreshTokenService refreshTokenService;
-    private final TokenLienKetService tokenLienKetService;
+    private final TrangThaiTaiKhoanService trangThaiTaiKhoanService;
     private final ApplicationEventPublisher eventPublisher;
     private final TaiKhoanQuanTriMapper taiKhoanQuanTriMapper;
 
@@ -154,7 +149,7 @@ public class QuanLyTaiKhoanServiceImpl implements QuanLyTaiKhoanService {
         } catch (DataIntegrityViolationException e) {
             throw new LoiNghiepVu(MaLoi.TAI_KHOAN_DANG_DUOC_SU_DUNG);
         }
-        huyMoiLienKet(id);
+        trangThaiTaiKhoanService.huyMoiLienKet(id);
         eventPublisher.publishEvent(new TaiKhoanDaXoaEvent(id, anhDaiDien));
         log.info("Quản trị viên id={} xoá tài khoản id={}", idNguoiThucHien, id);
     }
@@ -172,32 +167,14 @@ public class QuanLyTaiKhoanServiceImpl implements QuanLyTaiKhoanService {
                         + " lịch hẹn sắp tới, hãy chuyển hoặc huỷ các lịch hẹn này trước khi vô hiệu hoá tài khoản");
             }
         }
-        String email = taiKhoan.getEmail();
-        String hoTen = taiKhoan.getHoTen();
-        taiKhoan.setTrangThai(TrangThaiTaiKhoan.VO_HIEU_HOA);
-        taiKhoan.setLyDoVoHieuHoa(lyDo);
-        // UPDATE thu hồi flush trước rồi mới clear persistence context, nên trạng thái mới không bị mất
-        int soPhien = refreshTokenService.thuHoiTatCaCuaTaiKhoan(id);
-        // Liên kết đã gửi trước khi vô hiệu hoá không được dùng lại sau khi tài khoản được kích hoạt lại
-        huyMoiLienKet(id);
-        eventPublisher.publishEvent(new EmailVoHieuHoaTaiKhoanEvent(email, hoTen, lyDo));
+        int soPhien = trangThaiTaiKhoanService.voHieuHoa(taiKhoan, lyDo);
         log.info("Quản trị viên id={} vô hiệu hoá tài khoản id={}, thu hồi {} phiên", idNguoiThucHien, id, soPhien);
     }
 
     /** Không khôi phục phiên nào: người dùng đăng nhập lại. */
     private void kichHoatLai(Long idNguoiThucHien, TaiKhoan taiKhoan) {
-        taiKhoan.setTrangThai(TrangThaiTaiKhoan.DA_KICH_HOAT);
-        taiKhoan.setLyDoVoHieuHoa(null);
-        // Flush ngay để ngayCapNhat trong response là giá trị mới
-        taiKhoanRepository.flush();
-        eventPublisher.publishEvent(new EmailKichHoatLaiTaiKhoanEvent(taiKhoan.getEmail(), taiKhoan.getHoTen()));
+        trangThaiTaiKhoanService.kichHoatLai(taiKhoan);
         log.info("Quản trị viên id={} kích hoạt lại tài khoản id={}", idNguoiThucHien, taiKhoan.getId());
-    }
-
-    private void huyMoiLienKet(Long idTaiKhoan) {
-        for (MucDichLienKet mucDich : MucDichLienKet.values()) {
-            tokenLienKetService.huy(idTaiKhoan, mucDich);
-        }
     }
 
     /** Xem javadoc của {@link QuanLyTaiKhoanService}. */

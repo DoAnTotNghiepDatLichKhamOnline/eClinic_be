@@ -1,5 +1,6 @@
 package iuh.fit.se.eclinic.booking.repository;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
@@ -8,10 +9,12 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 
 import iuh.fit.se.eclinic.common.entity.booking.LichHen;
 import iuh.fit.se.eclinic.common.enums.TrangThaiLichHen;
+import jakarta.persistence.LockModeType;
 
 public interface LichHenRepository extends JpaRepository<LichHen, Long> {
 
@@ -19,7 +22,7 @@ public interface LichHenRepository extends JpaRepository<LichHen, Long> {
     String LICH_HEN_KEM_CHI_TIET = """
             select l from LichHen l
             join fetch l.hoSoBenhNhan
-            left join fetch l.nguoiGiamHo
+            left join fetch l.nguoiGiamHo g
             join fetch l.bacSi b
             join fetch b.taiKhoan
             join fetch b.chuyenKhoa
@@ -42,41 +45,267 @@ public interface LichHenRepository extends JpaRepository<LichHen, Long> {
     @Query(LICH_HEN_KEM_CHI_TIET + "where l.maTokenPhieuKham = :maPhieuKham")
     Optional<LichHen> timTheoMaPhieuKham(String maPhieuKham);
 
+    /** Điều kiện "lịch hẹn của tài khoản" dùng chung cho 3 truy vấn bên dưới; {@code g} là người giám hộ (left join). */
+    String CUA_TAI_KHOAN = "(l.taiKhoanDat.id = :idTaiKhoan or l.hoSoBenhNhan.id = :idHoSoCuaToi or g.cccd = :cccdCuaToi)";
+
+    String DEM_LICH_HEN = "select count(l) from LichHen l left join l.nguoiGiamHo g ";
+
     /**
-     * BOOK-07: lịch hẹn do tài khoản này đặt khi đã đăng nhập (cho bản thân hoặc người thân), giờ khám muộn nhất trước.
-     * Thứ tự viết trong JPQL nên {@code pageable} không kèm Sort.
+     * Lọc theo người khám, nối sau {@link #CUA_TAI_KHOAN}: {@code chiBanThan} = chỉ lịch của hồ sơ đã liên kết của tài
+     * khoản (tài khoản chưa có hồ sơ thì không có dòng nào); {@code chiNguoiKhac} = chỉ lịch của hồ sơ khác (tài khoản
+     * chưa có hồ sơ thì là mọi lịch). Cả hai false = không lọc.
      */
-    @Query(value = LICH_HEN_KEM_CHI_TIET + "where l.taiKhoanDat.id = :idTaiKhoan order by k.gioBatDau desc, l.id desc",
-            countQuery = "select count(l) from LichHen l where l.taiKhoanDat.id = :idTaiKhoan")
-    Page<LichHen> timCuaTaiKhoan(Long idTaiKhoan, Pageable pageable);
+    String THEO_NGUOI_KHAM = " and (:chiBanThan = false or l.hoSoBenhNhan.id = :idHoSoCuaToi)"
+            + " and (:chiNguoiKhac = false or l.hoSoBenhNhan.id <> coalesce(:idHoSoCuaToi, 0L)) ";
+
+    /**
+     * BOOK-07: lịch hẹn của tài khoản, giờ khám muộn nhất trước. Gồm lịch tài khoản đặt khi đã đăng nhập (cho bản thân
+     * hoặc người thân), lịch của hồ sơ bệnh nhân đã liên kết với tài khoản (kể cả lịch đặt như khách trước khi có tài
+     * khoản, quy tắc #3) và lịch của người khám mà người giám hộ khai đúng số CCCD của hồ sơ đó.
+     * {@code idHoSoCuaToi}, {@code cccdCuaToi}: null nếu tài khoản chưa có hồ sơ ở trạng thái DA_LIEN_KET (so sánh với
+     * null không khớp dòng nào). Thứ tự viết trong JPQL nên {@code pageable} không kèm Sort.
+     */
+    @Query(value = LICH_HEN_KEM_CHI_TIET + "where " + CUA_TAI_KHOAN + THEO_NGUOI_KHAM
+            + " order by k.gioBatDau desc, l.id desc",
+            countQuery = DEM_LICH_HEN + "where " + CUA_TAI_KHOAN + THEO_NGUOI_KHAM)
+    Page<LichHen> timCuaTaiKhoan(Long idTaiKhoan, Long idHoSoCuaToi, String cccdCuaToi, boolean chiBanThan,
+            boolean chiNguoiKhac, Pageable pageable);
+
+    /**
+     * Lịch hẹn (mọi trạng thái) của tài khoản có giờ khám dự kiến trong [tu, den), theo giờ khám. Cho màn hình lịch của
+     * bệnh nhân; cùng điều kiện và bộ lọc người khám với {@link #timCuaTaiKhoan}.
+     */
+    @Query(LICH_HEN_KEM_CHI_TIET + "where " + CUA_TAI_KHOAN + THEO_NGUOI_KHAM + """
+              and k.gioBatDau >= :tu
+              and k.gioBatDau < :den
+            order by k.gioBatDau asc, l.id asc
+            """)
+    List<LichHen> timCuaTaiKhoanTrongKhoang(Long idTaiKhoan, Long idHoSoCuaToi, String cccdCuaToi,
+            boolean chiBanThan, boolean chiNguoiKhac, LocalDateTime tu, LocalDateTime den);
+
+    /**
+     * 1 lịch hẹn mà tài khoản được xem (cùng điều kiện với {@link #timCuaTaiKhoan}) theo mã phiếu khám. Cột mã dùng
+     * collation không phân biệt hoa thường nên nơi gọi phải so lại chính xác bằng {@code equals}.
+     */
+    @Query(LICH_HEN_KEM_CHI_TIET + "where " + CUA_TAI_KHOAN + " and l.maTokenPhieuKham = :maPhieuKham")
+    Optional<LichHen> timCuaTaiKhoanTheoMaPhieuKham(Long idTaiKhoan, Long idHoSoCuaToi, String cccdCuaToi,
+            String maPhieuKham);
 
     /** Lịch sắp tới của tài khoản: còn hiệu lực ({@code trangThai}) và lượt khám chưa kết thúc; gần nhất trước. */
-    @Query(value = LICH_HEN_KEM_CHI_TIET + """
-            where l.taiKhoanDat.id = :idTaiKhoan
+    @Query(value = LICH_HEN_KEM_CHI_TIET + "where " + CUA_TAI_KHOAN + THEO_NGUOI_KHAM + """
               and l.trangThai in :trangThai
               and k.gioKetThuc > :bayGio
             order by k.gioBatDau asc, l.id asc
-            """, countQuery = """
-            select count(l) from LichHen l
-            where l.taiKhoanDat.id = :idTaiKhoan
+            """, countQuery = DEM_LICH_HEN + "where " + CUA_TAI_KHOAN + THEO_NGUOI_KHAM + """
               and l.trangThai in :trangThai
               and l.khungGio.gioKetThuc > :bayGio
             """)
-    Page<LichHen> timSapToiCuaTaiKhoan(Long idTaiKhoan, Collection<TrangThaiLichHen> trangThai, LocalDateTime bayGio,
-            Pageable pageable);
+    Page<LichHen> timSapToiCuaTaiKhoan(Long idTaiKhoan, Long idHoSoCuaToi, String cccdCuaToi, boolean chiBanThan,
+            boolean chiNguoiKhac, Collection<TrangThaiLichHen> trangThai, LocalDateTime bayGio, Pageable pageable);
 
     /** Phần còn lại của {@link #timSapToiCuaTaiKhoan}: lịch đã khám, đã hủy, bị từ chối hoặc đã qua giờ; mới nhất trước. */
-    @Query(value = LICH_HEN_KEM_CHI_TIET + """
-            where l.taiKhoanDat.id = :idTaiKhoan
+    @Query(value = LICH_HEN_KEM_CHI_TIET + "where " + CUA_TAI_KHOAN + THEO_NGUOI_KHAM + """
               and (l.trangThai not in :trangThai or k.gioKetThuc <= :bayGio)
             order by k.gioBatDau desc, l.id desc
-            """, countQuery = """
-            select count(l) from LichHen l
-            where l.taiKhoanDat.id = :idTaiKhoan
+            """, countQuery = DEM_LICH_HEN + "where " + CUA_TAI_KHOAN + THEO_NGUOI_KHAM + """
               and (l.trangThai not in :trangThai or l.khungGio.gioKetThuc <= :bayGio)
             """)
-    Page<LichHen> timLichSuCuaTaiKhoan(Long idTaiKhoan, Collection<TrangThaiLichHen> trangThai, LocalDateTime bayGio,
+    Page<LichHen> timLichSuCuaTaiKhoan(Long idTaiKhoan, Long idHoSoCuaToi, String cccdCuaToi, boolean chiBanThan,
+            boolean chiNguoiKhac, Collection<TrangThaiLichHen> trangThai, LocalDateTime bayGio, Pageable pageable);
+
+    /**
+     * Điều kiện "tài khoản được xem kết quả khám": người khám là chủ tài khoản (hồ sơ đã liên kết, bất kể ai đặt) hoặc
+     * chính tài khoản này đã đặt lịch. Lịch tài khoản chỉ thấy vì là người giám hộ theo CCCD thì KHÔNG được xem kết quả.
+     */
+    String DUOC_XEM_KET_QUA = "(l.hoSoBenhNhan.id = :idHoSoCuaToi or l.taiKhoanDat.id = :idTaiKhoan)";
+
+    /**
+     * Các lượt đã khám xong mà tài khoản được xem kết quả, giờ khám muộn nhất trước. {@code idHoSoCuaToi} null nếu tài
+     * khoản chưa có hồ sơ ở trạng thái DA_LIEN_KET. Thứ tự viết trong JPQL nên {@code pageable} không kèm Sort.
+     */
+    @Query(value = LICH_HEN_KEM_CHI_TIET + "where l.trangThai = :daKham and " + DUOC_XEM_KET_QUA + THEO_NGUOI_KHAM
+            + " order by k.gioBatDau desc, l.id desc",
+            countQuery = "select count(l) from LichHen l where l.trangThai = :daKham and " + DUOC_XEM_KET_QUA
+                    + THEO_NGUOI_KHAM)
+    Page<LichHen> timDaKhamDuocXemKetQua(Long idTaiKhoan, Long idHoSoCuaToi, TrangThaiLichHen daKham,
+            boolean chiBanThan, boolean chiNguoiKhac, Pageable pageable);
+
+    long countByHoSoBenhNhanId(Long hoSoBenhNhanId);
+
+    interface SoLichHenTheoHoSo {
+
+        Long getIdHoSo();
+
+        long getSoLichHen();
+    }
+
+    /** Số lịch hẹn (mọi trạng thái) của từng hồ sơ trong danh sách; hồ sơ chưa có lịch hẹn nào không có dòng. */
+    @Query("""
+            select l.hoSoBenhNhan.id as idHoSo, count(l) as soLichHen from LichHen l
+            where l.hoSoBenhNhan.id in :idCacHoSo
+            group by l.hoSoBenhNhan.id
+            """)
+    List<SoLichHenTheoHoSo> demTheoHoSo(Collection<Long> idCacHoSo);
+
+    /** Lịch hẹn (mọi trạng thái) của 1 hồ sơ bệnh nhân cho quản trị viên, giờ khám muộn nhất trước. */
+    @Query(value = LICH_HEN_KEM_CHI_TIET + "where l.hoSoBenhNhan.id = :idHoSoBenhNhan"
+            + " order by k.gioBatDau desc, l.id desc",
+            countQuery = "select count(l) from LichHen l where l.hoSoBenhNhan.id = :idHoSoBenhNhan")
+    Page<LichHen> timCuaHoSo(Long idHoSoBenhNhan, Pageable pageable);
+
+    /**
+     * Lịch hẹn (mọi trạng thái) của 1 bác sĩ có giờ khám dự kiến trong [tu, den), theo giờ khám. Cho bác sĩ xem lịch
+     * hẹn trong ngày của mình.
+     */
+    @Query(LICH_HEN_KEM_CHI_TIET + """
+            where b.id = :idBacSi
+              and k.gioBatDau >= :tu
+              and k.gioBatDau < :den
+            order by k.gioBatDau asc, l.id asc
+            """)
+    List<LichHen> timCuaBacSiTrongKhoang(Long idBacSi, LocalDateTime tu, LocalDateTime den);
+
+    /** Id các lịch hẹn của 1 ca đang ở 1 trong các trạng thái cho trước. Đọc không khoá. */
+    @Query("select l.id from LichHen l where l.khungGio.lichLamViec.id = :idLichLamViec and l.trangThai in :trangThai")
+    List<Long> timIdTheoCaVaTrangThai(Long idLichLamViec, Collection<TrangThaiLichHen> trangThai);
+
+    /**
+     * Khoá (SELECT ... FOR UPDATE) nhiều lịch hẹn theo id tăng dần. Không join: chỉ khoá dòng lich_hen, để giữ thứ tự
+     * "lịch hẹn trước, lượt khám sau" như {@link #findByIdForUpdate}.
+     */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select l from LichHen l where l.id in :cacId order by l.id")
+    List<LichHen> khoaTheoId(Collection<Long> cacId);
+
+    /**
+     * Lịch hẹn còn hiệu lực đang chờ bệnh nhân đổi lịch vì ca khám bị hủy ({@code canDoiLich}), giờ khám cũ sớm nhất
+     * trước. Cho quản trị viên theo dõi.
+     */
+    @Query(value = LICH_HEN_KEM_CHI_TIET + """
+            where l.canDoiLich = true and l.trangThai in :trangThai
+            order by k.gioBatDau asc, l.id asc
+            """, countQuery = "select count(l) from LichHen l where l.canDoiLich = true and l.trangThai in :trangThai")
+    Page<LichHen> timCanDoiLich(Collection<TrangThaiLichHen> trangThai, Pageable pageable);
+
+    /** Lịch hẹn ở 1 trong các trạng thái cho trước của 1 phòng khám trong 1 ngày, kèm lượt khám: để đánh lại số thứ tự. */
+    @Query("""
+            select l from LichHen l join fetch l.khungGio k
+            where l.phongKham.id = :idPhongKham
+              and k.lichLamViec.ngayLamViec = :ngay
+              and l.trangThai in :trangThai
+            """)
+    List<LichHen> timCuaPhongTrongNgay(Long idPhongKham, LocalDate ngay, Collection<TrangThaiLichHen> trangThai);
+
+    /** Lịch hẹn (mọi trạng thái) của 1 ca làm việc, theo giờ khám. Cho quản trị viên. */
+    @Query(LICH_HEN_KEM_CHI_TIET + """
+            where k.lichLamViec.id = :idLichLamViec
+            order by k.gioBatDau asc, l.id asc
+            """)
+    List<LichHen> timTheoCa(Long idLichLamViec);
+
+    /** 1 lịch hẹn theo id, kèm mọi thứ danh sách của bác sĩ / quản trị viên hiển thị. */
+    @Query(LICH_HEN_KEM_CHI_TIET + "where l.id = :id")
+    Optional<LichHen> timTheoIdKemChiTiet(Long id);
+
+    /**
+     * Khoá dòng lịch hẹn (SELECT ... FOR UPDATE) trước khi đổi trạng thái. Không join: chỉ khoá đúng dòng lich_hen, các
+     * quan hệ tải sau. Phải gọi trong transaction.
+     */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select l from LichHen l where l.id = :id")
+    Optional<LichHen> findByIdForUpdate(Long id);
+
+    /** Như {@link #findByIdForUpdate}, theo mã phiếu khám; nơi gọi phải so lại mã chính xác bằng {@code equals}. */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select l from LichHen l where l.maTokenPhieuKham = :maPhieuKham")
+    Optional<LichHen> findByMaPhieuKhamForUpdate(String maPhieuKham);
+
+    /**
+     * Lịch hẹn của 1 bác sĩ ở 1 trạng thái mà lượt khám bắt đầu sau {@code bayGio}, giờ khám sớm nhất trước. Thứ tự viết
+     * trong JPQL nên {@code pageable} không kèm Sort.
+     */
+    @Query(value = LICH_HEN_KEM_CHI_TIET + """
+            where b.id = :idBacSi
+              and l.trangThai = :trangThai
+              and l.canDoiLich = false
+              and k.gioBatDau > :bayGio
+            order by k.gioBatDau asc, l.id asc
+            """, countQuery = """
+            select count(l) from LichHen l
+            where l.bacSi.id = :idBacSi
+              and l.trangThai = :trangThai
+              and l.canDoiLich = false
+              and l.khungGio.gioBatDau > :bayGio
+            """)
+    Page<LichHen> timCuaBacSiTheoTrangThaiTu(Long idBacSi, TrangThaiLichHen trangThai, LocalDateTime bayGio,
             Pageable pageable);
+
+    // ----- Dashboard: các câu đếm, định nghĩa từng số ở TongQuanBacSiResponse / TongQuanQuanTriResponse -----
+
+    /** Đếm đúng tập của {@link #timCuaBacSiTheoTrangThaiTu} (danh sách yêu cầu chờ bác sĩ xác nhận). */
+    @Query("""
+            select count(l) from LichHen l
+            where l.bacSi.id = :idBacSi
+              and l.trangThai = :trangThai
+              and l.canDoiLich = false
+              and l.khungGio.gioBatDau > :bayGio
+            """)
+    long demYeuCauChoXacNhan(Long idBacSi, TrangThaiLichHen trangThai, LocalDateTime bayGio);
+
+    /** Số lịch hẹn của bác sĩ có giờ khám trong [tu, den), trạng thái KHÔNG thuộc {@code trangThai}. */
+    @Query("""
+            select count(l) from LichHen l
+            where l.bacSi.id = :idBacSi
+              and l.khungGio.gioBatDau >= :tu
+              and l.khungGio.gioBatDau < :den
+              and l.trangThai not in :trangThai
+            """)
+    long demCuaBacSiTrongKhoangKhongThuoc(Long idBacSi, LocalDateTime tu, LocalDateTime den,
+            Collection<TrangThaiLichHen> trangThai);
+
+    /** Số lịch hẹn của bác sĩ có giờ khám trong [tu, den), trạng thái thuộc {@code trangThai}. */
+    @Query("""
+            select count(l) from LichHen l
+            where l.bacSi.id = :idBacSi
+              and l.khungGio.gioBatDau >= :tu
+              and l.khungGio.gioBatDau < :den
+              and l.trangThai in :trangThai
+            """)
+    long demCuaBacSiTrongKhoangThuoc(Long idBacSi, LocalDateTime tu, LocalDateTime den,
+            Collection<TrangThaiLichHen> trangThai);
+
+    /** Như {@link #demCuaBacSiTrongKhoangThuoc} nhưng bỏ lịch hẹn đang chờ đổi lịch (ca đã bị hủy, sẽ không khám). */
+    @Query("""
+            select count(l) from LichHen l
+            where l.bacSi.id = :idBacSi
+              and l.khungGio.gioBatDau >= :tu
+              and l.khungGio.gioBatDau < :den
+              and l.trangThai in :trangThai
+              and l.canDoiLich = false
+            """)
+    long demChuaKhamCuaBacSiTrongKhoang(Long idBacSi, LocalDateTime tu, LocalDateTime den,
+            Collection<TrangThaiLichHen> trangThai);
+
+    /** Số lịch hẹn được tạo từ {@code tu} trở đi, trừ 1 trạng thái (lịch cũ của 1 lần đổi lịch). */
+    @Query("select count(l) from LichHen l where l.ngayTao >= :tu and l.trangThai <> :khongTinh")
+    long demDaTaoTu(LocalDateTime tu, TrangThaiLichHen khongTinh);
+
+    /**
+     * Các lịch hẹn (mọi trạng thái, mọi bác sĩ) của 1 hồ sơ bệnh nhân có giờ khám dự kiến trước {@code truoc}, mới nhất
+     * trước. Cho bác sĩ xem các lần khám trước của bệnh nhân.
+     */
+    @Query(LICH_HEN_KEM_CHI_TIET + """
+            where l.hoSoBenhNhan.id = :idHoSoBenhNhan
+              and k.gioBatDau < :truoc
+            order by k.gioBatDau desc, l.id desc
+            """)
+    List<LichHen> timCuaHoSoTruoc(Long idHoSoBenhNhan, LocalDateTime truoc);
+
+    boolean existsByMaTraCuu(String maTraCuu);
+
+    /** Lịch hẹn theo mã tra cứu ngắn, kèm mọi thứ danh sách của bác sĩ / quản trị viên hiển thị. */
+    @Query(LICH_HEN_KEM_CHI_TIET + "where l.maTraCuu = :maTraCuu")
+    Optional<LichHen> timTheoMaTraCuu(String maTraCuu);
 
     /** Mã phiếu khám đang lưu, để biết phiếu có tồn tại mà không tải cả lịch hẹn (so lại bằng {@code equals}). */
     @Query("select l.maTokenPhieuKham from LichHen l where l.maTokenPhieuKham = :maPhieuKham")

@@ -14,6 +14,8 @@ public enum LoaiThongBao {
     LICH_HEN_DA_XAC_NHAN,
     LICH_HEN_BI_TU_CHOI,
     LICH_HEN_CAN_DOI,
+    /** Ca khám đổi phòng: lịch hẹn giữ nguyên giờ, chỉ đổi phòng khám. */
+    LICH_HEN_DOI_PHONG,
     NHAC_LICH_KHAM,
     // Admin
     YEU_CAU_DOI_LICH_MOI,

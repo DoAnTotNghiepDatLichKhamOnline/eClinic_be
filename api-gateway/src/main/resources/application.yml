@@ -68,7 +68,8 @@ app:
     # (body tới 4 lần giới hạn được đọc bỏ trước khi trả lời để client chắc chắn nhận được thông báo, xem GioiHanKichThuocFilter).
     # Gateway KHÔNG đọc multipart (Spring Cloud Gateway MVC tắt spring.servlet.multipart ở gateway) mà chuyển nguyên
     # body cho service, nên đây là giới hạn duy nhất tại gateway. Phải NHỎ HƠN server.tomcat.max-swallow-size của
-    # các service nhận upload (identity-service: 10MB); giới hạn nghiệp vụ nhỏ hơn do từng service tự đặt (ảnh 2MB).
+    # các service nhận upload (identity-service, catalog-service: 10MB); giới hạn nghiệp vụ nhỏ hơn do từng service tự
+    # đặt (ảnh đại diện 2MB, ảnh giới thiệu bác sĩ 4MB).
     kich-thuoc-request-toi-da: ${GATEWAY_MAX_REQUEST_SIZE:5MB}
   cors:
     # Các địa chỉ frontend được gọi API (phân cách bằng dấu phẩy).

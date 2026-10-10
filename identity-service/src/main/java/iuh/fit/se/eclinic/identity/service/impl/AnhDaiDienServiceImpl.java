@@ -8,14 +8,14 @@ import org.springframework.transaction.event.TransactionalEventListener;
 
 import iuh.fit.se.eclinic.common.exception.LoiNghiepVu;
 import iuh.fit.se.eclinic.common.exception.MaLoi;
-import iuh.fit.se.eclinic.identity.client.LuuTruAnh;
+import iuh.fit.se.eclinic.common.luutru.LuuTruAnh;
 import iuh.fit.se.eclinic.identity.config.AnhDaiDienProperties;
 import iuh.fit.se.eclinic.identity.dto.response.HoSoCaNhanResponse;
 import iuh.fit.se.eclinic.identity.event.TaiKhoanDaXoaEvent;
 import iuh.fit.se.eclinic.identity.service.AnhDaiDienService;
 import iuh.fit.se.eclinic.identity.service.HoSoCaNhanService;
 import iuh.fit.se.eclinic.identity.service.TaiKhoanService;
-import iuh.fit.se.eclinic.identity.util.DinhDangAnh;
+import iuh.fit.se.eclinic.common.util.DinhDangAnh;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 

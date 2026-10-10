@@ -25,7 +25,8 @@ public final class ChuanHoaTen {
         return khongDau(hoTen1).equals(khongDau(hoTen2));
     }
 
-    private static String khongDau(String hoTen) {
+    /** Dạng để so sánh / tạo khoá: không dấu tiếng Việt, chữ thường, không khoảng trắng thừa. */
+    public static String khongDau(String hoTen) {
         // NFD tách dấu khỏi chữ cái; đ/Đ không phải chữ có dấu tổ hợp nên đổi riêng
         String tachDau = Normalizer.normalize(gon(hoTen), Normalizer.Form.NFD);
         return DAU.matcher(tachDau).replaceAll("").replace('đ', 'd').replace('Đ', 'D').toLowerCase(Locale.ROOT);
