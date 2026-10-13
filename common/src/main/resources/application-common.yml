@@ -25,6 +25,16 @@ spring:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
 
+  # Thông điệp 2 ngôn ngữ (common/src/main/resources/thong-diep): <ten>.properties là tiếng Việt, <ten>_en.properties là
+  # tiếng Anh. Request chọn ngôn ngữ bằng header Accept-Language (xem NgonNgu, docs/QUY-UOC-CODE.md mục 4).
+  messages:
+    basename: thong-diep/chung,thong-diep/identity,thong-diep/catalog,thong-diep/booking,thong-diep/medical,thong-diep/notification,thong-diep/chatbot
+    # Ngôn ngữ không có file riêng (vd "fr") dùng file tiếng Việt, không dùng ngôn ngữ của JVM
+    fallback-to-system-locale: false
+  web:
+    # Request không gửi Accept-Language: tiếng Việt (JVM trong container mặc định là tiếng Anh)
+    locale: vi
+
 management:
   endpoints:
     web:

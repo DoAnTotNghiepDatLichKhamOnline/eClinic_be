@@ -5,6 +5,7 @@ import org.hibernate.type.SqlTypes;
 
 import iuh.fit.se.eclinic.common.entity.CreatableEntity;
 import iuh.fit.se.eclinic.common.enums.LoaiAnhBacSi;
+import iuh.fit.se.eclinic.common.enums.NgonNgu;
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -50,8 +51,15 @@ public class AnhBacSi extends CreatableEntity {
     @Column(name = "chu_thich", length = 200)
     private String chuThich;
 
+    @Column(name = "chu_thich_en", length = 200)
+    private String chuThichEn;
+
     /** Thứ tự hiển thị, nhỏ đứng trước. */
     @Column(name = "thu_tu", nullable = false)
     private int thuTu;
 
+    // Chữ theo ngôn ngữ: bản tiếng Anh nếu được yêu cầu và đã nhập, không thì bản tiếng Việt (NgonNgu.chon).
+    public String chuThich(NgonNgu ngonNgu) {
+        return ngonNgu.chon(chuThich, chuThichEn);
+    }
 }

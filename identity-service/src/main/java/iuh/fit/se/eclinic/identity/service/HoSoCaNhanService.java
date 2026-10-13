@@ -1,5 +1,6 @@
 package iuh.fit.se.eclinic.identity.service;
 
+import iuh.fit.se.eclinic.common.enums.NgonNgu;
 import iuh.fit.se.eclinic.identity.dto.request.CapNhatHoSoRequest;
 import iuh.fit.se.eclinic.identity.dto.response.HoSoCaNhanResponse;
 
@@ -17,5 +18,8 @@ public interface HoSoCaNhanService {
      * Không đụng tới hồ sơ bệnh nhân.
      */
     HoSoCaNhanResponse capNhat(Long idTaiKhoan, CapNhatHoSoRequest request);
+
+    /** Lưu ngôn ngữ ưa dùng của tài khoản (dùng cho email, nhắc lịch). */
+    HoSoCaNhanResponse doiNgonNgu(Long idTaiKhoan, NgonNgu ngonNgu);
 
 }

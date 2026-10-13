@@ -40,7 +40,7 @@ public class DanhGiaCuaToiController {
     public PhanHoiApi<DanhGiaCuaToiResponse> gui(@PathVariable String maPhieuKham,
             @Valid @RequestBody DanhGiaRequest request) {
         return PhanHoiApi.ok(danhGiaService.gui(NguoiDungHienTai.layIdTaiKhoan(), maPhieuKham, request),
-                "Đã gửi đánh giá");
+                "thanhCong.guiDanhGia");
     }
 
     @Operation(summary = "Sửa đánh giá đã gửi trong thời hạn sửa (mặc định 7 ngày; quá hạn: 409 HET_HAN_SUA_DANH_GIA)")
@@ -48,6 +48,6 @@ public class DanhGiaCuaToiController {
     public PhanHoiApi<DanhGiaCuaToiResponse> sua(@PathVariable String maPhieuKham,
             @Valid @RequestBody DanhGiaRequest request) {
         return PhanHoiApi.ok(danhGiaService.sua(NguoiDungHienTai.layIdTaiKhoan(), maPhieuKham, request),
-                "Đã cập nhật đánh giá");
+                "thanhCong.capNhatDanhGia");
     }
 }

@@ -13,38 +13,59 @@ import jakarta.validation.constraints.Size;
  * Chuyên khoa, số giấy phép, trạng thái không sửa ở đây.
  * <p>
  * 3 mục danh sách: mỗi phần tử 1 ý, không chứa ký tự xuống dòng (lưu mỗi dòng 1 ý).
+ * <p>
+ * Các trường {@code ...En} là bản tiếng Anh, cùng giới hạn với bản tiếng Việt; bỏ trống thì người xem tiếng Anh thấy bản
+ * tiếng Việt của trường đó. Học vị (chữ viết tắt) không có bản tiếng Anh.
  */
 public record CapNhatHoSoBacSiRequest(
 
-        @Size(max = 100, message = "Học vị tối đa 100 ký tự")
+        @Size(max = 100, message = "{kiemTra.hocVi.toiDa}")
         String hocVi,
 
-        @Size(max = 150, message = "Chức vụ tối đa 150 ký tự")
+        @Size(max = 150, message = "{kiemTra.chucVu.toiDa}")
         String chucVu,
 
-        @Min(value = 0, message = "Số năm kinh nghiệm không được âm")
-        @Max(value = 80, message = "Số năm kinh nghiệm tối đa 80")
+        @Size(max = 150, message = "{kiemTra.chucVuEn.toiDa}")
+        String chucVuEn,
+
+        @Min(value = 0, message = "{kiemTra.soNamKinhNghiem.khongAm}")
+        @Max(value = 80, message = "{kiemTra.soNamKinhNghiem.toiDa}")
         Integer soNamKinhNghiem,
 
-        @Size(max = 300, message = "Giới thiệu ngắn tối đa 300 ký tự")
+        @Size(max = 300, message = "{kiemTra.gioiThieuNgan.toiDa}")
         String gioiThieuNgan,
 
-        @Size(max = 5000, message = "Tiểu sử tối đa 5000 ký tự")
+        @Size(max = 300, message = "{kiemTra.gioiThieuNganEn.toiDa}")
+        String gioiThieuNganEn,
+
+        @Size(max = 5000, message = "{kiemTra.tieuSu.toiDa}")
         String tieuSu,
 
-        @Size(max = SO_Y_TOI_DA, message = "Quá trình đào tạo tối đa 20 ý")
+        @Size(max = 5000, message = "{kiemTra.tieuSuEn.toiDa}")
+        String tieuSuEn,
+
+        @Size(max = SO_Y_TOI_DA, message = "{kiemTra.quaTrinhDaoTao.toiDa}")
         List<@NotBlank(message = MOI_Y_KHONG_TRONG) @Size(max = DO_DAI_Y, message = MOI_Y_TOI_DA) @Pattern(regexp = MOT_DONG, message = MOI_Y_MOT_DONG) String> quaTrinhDaoTao,
 
-        @Size(max = SO_Y_TOI_DA, message = "Quá trình công tác tối đa 20 ý")
+        @Size(max = SO_Y_TOI_DA, message = "{kiemTra.quaTrinhDaoTaoEn.toiDa}")
+        List<@NotBlank(message = MOI_Y_KHONG_TRONG) @Size(max = DO_DAI_Y, message = MOI_Y_TOI_DA) @Pattern(regexp = MOT_DONG, message = MOI_Y_MOT_DONG) String> quaTrinhDaoTaoEn,
+
+        @Size(max = SO_Y_TOI_DA, message = "{kiemTra.quaTrinhCongTac.toiDa}")
         List<@NotBlank(message = MOI_Y_KHONG_TRONG) @Size(max = DO_DAI_Y, message = MOI_Y_TOI_DA) @Pattern(regexp = MOT_DONG, message = MOI_Y_MOT_DONG) String> quaTrinhCongTac,
 
-        @Size(max = SO_Y_TOI_DA, message = "Lĩnh vực khám chữa tối đa 20 ý")
-        List<@NotBlank(message = MOI_Y_KHONG_TRONG) @Size(max = DO_DAI_Y, message = MOI_Y_TOI_DA) @Pattern(regexp = MOT_DONG, message = MOI_Y_MOT_DONG) String> linhVucKhamChua) {
+        @Size(max = SO_Y_TOI_DA, message = "{kiemTra.quaTrinhCongTacEn.toiDa}")
+        List<@NotBlank(message = MOI_Y_KHONG_TRONG) @Size(max = DO_DAI_Y, message = MOI_Y_TOI_DA) @Pattern(regexp = MOT_DONG, message = MOI_Y_MOT_DONG) String> quaTrinhCongTacEn,
+
+        @Size(max = SO_Y_TOI_DA, message = "{kiemTra.linhVucKhamChua.toiDa}")
+        List<@NotBlank(message = MOI_Y_KHONG_TRONG) @Size(max = DO_DAI_Y, message = MOI_Y_TOI_DA) @Pattern(regexp = MOT_DONG, message = MOI_Y_MOT_DONG) String> linhVucKhamChua,
+
+        @Size(max = SO_Y_TOI_DA, message = "{kiemTra.linhVucKhamChuaEn.toiDa}")
+        List<@NotBlank(message = MOI_Y_KHONG_TRONG) @Size(max = DO_DAI_Y, message = MOI_Y_TOI_DA) @Pattern(regexp = MOT_DONG, message = MOI_Y_MOT_DONG) String> linhVucKhamChuaEn) {
 
     private static final int SO_Y_TOI_DA = 20;
     private static final int DO_DAI_Y = 300;
     private static final String MOT_DONG = "[^\r\n]*";
-    private static final String MOI_Y_KHONG_TRONG = "Mỗi ý không được để trống";
-    private static final String MOI_Y_TOI_DA = "Mỗi ý tối đa 300 ký tự";
-    private static final String MOI_Y_MOT_DONG = "Mỗi ý không được chứa ký tự xuống dòng";
+    private static final String MOI_Y_KHONG_TRONG = "{kiemTra.moiY.batBuoc}";
+    private static final String MOI_Y_TOI_DA = "{kiemTra.moiY.toiDa}";
+    private static final String MOI_Y_MOT_DONG = "{kiemTra.moiY.motDong}";
 }

@@ -4,6 +4,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import iuh.fit.se.eclinic.common.entity.identity.TaiKhoan;
+import iuh.fit.se.eclinic.common.enums.NgonNgu;
 import iuh.fit.se.eclinic.common.enums.TrangThaiTaiKhoan;
 import iuh.fit.se.eclinic.common.enums.VaiTro;
 import iuh.fit.se.eclinic.common.exception.LoiNghiepVu;
@@ -98,6 +99,7 @@ public class DangNhapGoogleServiceImpl implements DangNhapGoogleService {
         taiKhoan.setGoogleId(google.sub());
         taiKhoan.setVaiTro(VaiTro.BENH_NHAN);
         taiKhoan.setTrangThai(TrangThaiTaiKhoan.DA_KICH_HOAT);
+        taiKhoan.setNgonNgu(NgonNgu.hienTai());
         ganHoSoGoogle(taiKhoan, google);
         taiKhoan = taiKhoanRepository.saveAndFlush(taiKhoan);
         log.info("Tạo tài khoản từ Google id={}", taiKhoan.getId());

@@ -21,6 +21,7 @@ import org.springframework.test.context.event.RecordApplicationEvents;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import iuh.fit.se.eclinic.common.enums.NgonNgu;
 import iuh.fit.se.eclinic.common.dto.TrangDuLieu;
 import iuh.fit.se.eclinic.common.entity.booking.HoSoBenhNhan;
 import iuh.fit.se.eclinic.common.entity.booking.LichHen;
@@ -315,7 +316,7 @@ class QuanLyTaiKhoanServiceTest {
         assertMaLoi(() -> dangNhapService.lamMoi(mayB.refreshToken()), MaLoi.PHIEN_DANG_NHAP_KHONG_HOP_LE);
         assertMaLoi(() -> dangNhap(taiKhoan), MaLoi.TAI_KHOAN_BI_VO_HIEU_HOA);
         assertThat(applicationEvents.stream(EmailVoHieuHoaTaiKhoanEvent.class).toList()).containsExactly(
-                new EmailVoHieuHoaTaiKhoanEvent(taiKhoan.getEmail(), taiKhoan.getHoTen(), "Vi phạm quy định"));
+                new EmailVoHieuHoaTaiKhoanEvent(taiKhoan.getEmail(), taiKhoan.getHoTen(), "Vi phạm quy định", NgonNgu.VI));
         assertThat(applicationEvents.stream(EmailKichHoatLaiTaiKhoanEvent.class).toList()).isEmpty();
     }
 
@@ -335,7 +336,7 @@ class QuanLyTaiKhoanServiceTest {
         assertThat(sau.getTrangThai()).isEqualTo(TrangThaiTaiKhoan.DA_KICH_HOAT);
         assertThat(sau.getLyDoVoHieuHoa()).isNull();
         assertThat(applicationEvents.stream(EmailKichHoatLaiTaiKhoanEvent.class).toList())
-                .containsExactly(new EmailKichHoatLaiTaiKhoanEvent(taiKhoan.getEmail(), taiKhoan.getHoTen()));
+                .containsExactly(new EmailKichHoatLaiTaiKhoanEvent(taiKhoan.getEmail(), taiKhoan.getHoTen(), NgonNgu.VI));
         assertThat(dangNhap(taiKhoan).accessToken()).isNotBlank();
         assertMaLoi(() -> dangNhapService.lamMoi(phienCu.refreshToken()), MaLoi.PHIEN_DANG_NHAP_KHONG_HOP_LE);
     }
@@ -368,7 +369,7 @@ class QuanLyTaiKhoanServiceTest {
         for (String lyDo : new String[] { null, "", "   " }) {
             assertThatThrownBy(() -> quanLyTaiKhoanService.capNhatTrangThai(idAdmin, taiKhoan.getId(), voHieuHoa(lyDo)))
                     .isInstanceOf(LoiNghiepVu.class)
-                    .hasMessage("Phải nhập lý do khi vô hiệu hoá tài khoản")
+                    .hasMessage("loi.DU_LIEU_KHONG_HOP_LE.lyDoVoHieuHoa")
                     .extracting(e -> ((LoiNghiepVu) e).getMaLoi())
                     .isEqualTo(MaLoi.DU_LIEU_KHONG_HOP_LE);
         }
@@ -441,7 +442,8 @@ class QuanLyTaiKhoanServiceTest {
 
         assertThatThrownBy(() -> quanLyTaiKhoanService.capNhatTrangThai(idAdmin, taiKhoan.getId(), voHieuHoa("Nghỉ việc")))
                 .isInstanceOf(LoiNghiepVu.class)
-                .hasMessageContaining("còn 1 lịch hẹn sắp tới")
+                .hasMessage("loi.BAC_SI_CON_LICH_HEN.soLuong")
+                .satisfies(e -> assertThat(((LoiNghiepVu) e).getThamSo()).containsExactly("1"))
                 .extracting(e -> ((LoiNghiepVu) e).getMaLoi())
                 .isEqualTo(MaLoi.BAC_SI_CON_LICH_HEN);
         doiTrangThaiLichHen(idLichHen, TrangThaiLichHen.DA_XAC_NHAN);
@@ -537,21 +539,22 @@ class QuanLyTaiKhoanServiceTest {
         fixtures.persist(thongBaoKhac);
         taoHoSoBenhNhan(coCaHai, TrangThaiLienKet.DA_LIEN_KET, null);
 
-        assertKhongXoaDuoc(bacSi, "Tài khoản đang có hồ sơ bác sĩ nên không thể xoá");
-        assertKhongXoaDuoc(coHoSo, "Tài khoản đang có hồ sơ bệnh nhân nên không thể xoá");
-        assertKhongXoaDuoc(coThongBao, "Tài khoản đang có thông báo nên không thể xoá");
-        assertKhongXoaDuoc(coPhienChat, "Tài khoản đang có phiên chat nên không thể xoá");
-        assertKhongXoaDuoc(coCaHai, "Tài khoản đang có hồ sơ bệnh nhân, thông báo nên không thể xoá");
+        assertKhongXoaDuoc(bacSi, "hồ sơ bác sĩ");
+        assertKhongXoaDuoc(coHoSo, "hồ sơ bệnh nhân");
+        assertKhongXoaDuoc(coThongBao, "thông báo");
+        assertKhongXoaDuoc(coPhienChat, "phiên chat");
+        assertKhongXoaDuoc(coCaHai, "hồ sơ bệnh nhân, thông báo");
         assertThat(applicationEvents.stream(TaiKhoanDaXoaEvent.class).toList()).isEmpty();
     }
 
     // ---------- Hỗ trợ ----------
 
-    private void assertKhongXoaDuoc(TaiKhoan taiKhoan, String thongDiep) {
+    /** @param duLieuDangGiu tên các loại dữ liệu đang giữ tài khoản (tham số của thông điệp lỗi), tiếng Việt vì test không có request */
+    private void assertKhongXoaDuoc(TaiKhoan taiKhoan, String duLieuDangGiu) {
         assertThatThrownBy(() -> quanLyTaiKhoanService.xoa(idAdmin, taiKhoan.getId()))
                 .isInstanceOf(LoiNghiepVu.class)
-                .hasMessageStartingWith(thongDiep)
-                .hasMessageContaining("hãy vô hiệu hoá tài khoản")
+                .hasMessage("loi.TAI_KHOAN_DANG_DUOC_SU_DUNG.chiTiet")
+                .satisfies(e -> assertThat(((LoiNghiepVu) e).getThamSo()).containsExactly(duLieuDangGiu))
                 .extracting(e -> ((LoiNghiepVu) e).getMaLoi())
                 .isEqualTo(MaLoi.TAI_KHOAN_DANG_DUOC_SU_DUNG);
         assertThat(taiKhoanRepository.existsById(taiKhoan.getId())).isTrue();

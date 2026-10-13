@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.springframework.context.MessageSource;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -23,6 +24,7 @@ import iuh.fit.se.eclinic.booking.repository.LichLamViecRepository;
 import iuh.fit.se.eclinic.booking.repository.LichLamViecRepository.SoLuotCuaCa;
 import iuh.fit.se.eclinic.booking.repository.PhongKhamChiDocRepository;
 import iuh.fit.se.eclinic.booking.repository.YeuCauDoiLichRepository;
+import iuh.fit.se.eclinic.booking.service.LyDoHuyCa;
 import iuh.fit.se.eclinic.booking.service.QuanLyCaService;
 import iuh.fit.se.eclinic.booking.service.TaiKhoanService;
 import iuh.fit.se.eclinic.booking.service.ThongBaoLichLamViecService;
@@ -34,11 +36,13 @@ import iuh.fit.se.eclinic.common.entity.identity.QuanTriVien;
 import iuh.fit.se.eclinic.common.entity.scheduling.LichLamViec;
 import iuh.fit.se.eclinic.common.entity.scheduling.YeuCauDoiLich;
 import iuh.fit.se.eclinic.common.enums.LoaiYeuCauDoiLich;
+import iuh.fit.se.eclinic.common.enums.NgonNgu;
 import iuh.fit.se.eclinic.common.enums.TrangThaiLichLamViec;
 import iuh.fit.se.eclinic.common.enums.TrangThaiPhongKham;
 import iuh.fit.se.eclinic.common.enums.TrangThaiYeuCau;
 import iuh.fit.se.eclinic.common.exception.LoiNghiepVu;
 import iuh.fit.se.eclinic.common.exception.MaLoi;
+import iuh.fit.se.eclinic.common.thongbao.VanBanHeThong;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -60,6 +64,7 @@ public class YeuCauDoiLichServiceImpl implements YeuCauDoiLichService {
     private final LichLamViecProperties lichLamViecProperties;
     private final LichLamViecMapper lichLamViecMapper;
     private final CaKhamMapper caKhamMapper;
+    private final MessageSource messageSource;
 
     @Override
     @Transactional(isolation = Isolation.READ_COMMITTED)
@@ -68,14 +73,13 @@ public class YeuCauDoiLichServiceImpl implements YeuCauDoiLichService {
         // Ca không có và ca của bác sĩ khác trả cùng 1 lỗi
         LichLamViec ca = lichLamViecRepository.timTheoIdKemBacSiVaPhongKham(request.idLichLamViec())
                 .filter(timThay -> timThay.getBacSi().getId().equals(bacSi.getId()))
-                .orElseThrow(() -> new LoiNghiepVu(MaLoi.KHONG_TIM_THAY, "Không tìm thấy ca làm việc"));
+                .orElseThrow(() -> new LoiNghiepVu(MaLoi.KHONG_TIM_THAY, "loi.KHONG_TIM_THAY.caLamViec"));
         if (ca.getTrangThai() != TrangThaiLichLamViec.HOAT_DONG) {
             throw new LoiNghiepVu(MaLoi.CA_KHONG_SUA_DUOC);
         }
         LocalDateTime hanChot = LocalDateTime.now().plus(lichLamViecProperties.guiYeuCauTruocToiThieu());
         if (ca.getNgayLamViec().atTime(ca.getGioBatDau()).isBefore(hanChot)) {
-            throw new LoiNghiepVu(MaLoi.QUA_HAN_GUI_YEU_CAU, "Chỉ gửi được yêu cầu trước giờ bắt đầu ca ít nhất "
-                    + lichLamViecProperties.guiYeuCauTruocToiThieu().toHours() + " giờ");
+            throw new LoiNghiepVu(MaLoi.QUA_HAN_GUI_YEU_CAU, "loi.QUA_HAN_GUI_YEU_CAU.truocGio", String.valueOf(lichLamViecProperties.guiYeuCauTruocToiThieu().toHours()));
         }
 
         YeuCauDoiLich yeuCau = new YeuCauDoiLich();
@@ -106,19 +110,17 @@ public class YeuCauDoiLichServiceImpl implements YeuCauDoiLichService {
         if (request.ngayMongMuon() == null || request.gioBatDauMongMuon() == null
                 || request.gioKetThucMongMuon() == null) {
             throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE,
-                    "Yêu cầu đổi ca cần ngayMongMuon, gioBatDauMongMuon, gioKetThucMongMuon");
+                    "loi.DU_LIEU_KHONG_HOP_LE.doiCaThieuThongTin");
         }
         if (!request.gioKetThucMongMuon().isAfter(request.gioBatDauMongMuon())) {
-            throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE, "Giờ kết thúc mong muốn phải sau giờ bắt đầu");
+            throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE, "loi.DU_LIEU_KHONG_HOP_LE.gioKetThucMongMuon");
         }
         if (request.ngayMongMuon().atTime(request.gioBatDauMongMuon()).isBefore(hanChot)) {
-            throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE, "Ca mong muốn phải cách hiện tại ít nhất "
-                    + lichLamViecProperties.guiYeuCauTruocToiThieu().toHours() + " giờ");
+            throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE, "loi.DU_LIEU_KHONG_HOP_LE.caMongMuonQuaGan", String.valueOf(lichLamViecProperties.guiYeuCauTruocToiThieu().toHours()));
         }
         if (request.ngayMongMuon().isAfter(LocalDateTime.now().toLocalDate()
                 .plusDays(lichLamViecProperties.soNgayXepTruocToiDa()))) {
-            throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE, "Chỉ xếp được ca trong "
-                    + lichLamViecProperties.soNgayXepTruocToiDa() + " ngày tới");
+            throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE, "loi.DU_LIEU_KHONG_HOP_LE.caQuaXa", String.valueOf(lichLamViecProperties.soNgayXepTruocToiDa()));
         }
         PhongKham phongMongMuon = null;
         Long idPhong = request.idPhongKhamMongMuon();
@@ -127,13 +129,13 @@ public class YeuCauDoiLichServiceImpl implements YeuCauDoiLichService {
                     .filter(phong -> phong.getTrangThai() == TrangThaiPhongKham.HOAT_DONG
                             && phong.getChuyenKhoa().getId().equals(ca.getBacSi().getChuyenKhoa().getId()))
                     .orElseThrow(() -> new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE,
-                            "Phòng khám mong muốn không có, đã ngừng hoạt động hoặc không thuộc chuyên khoa của bạn"));
+                            "loi.DU_LIEU_KHONG_HOP_LE.phongMongMuon"));
         }
         boolean khongDoiGi = phongMongMuon == null && request.ngayMongMuon().equals(ca.getNgayLamViec())
                 && request.gioBatDauMongMuon().equals(ca.getGioBatDau())
                 && request.gioKetThucMongMuon().equals(ca.getGioKetThuc());
         if (khongDoiGi) {
-            throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE, "Ca mong muốn phải khác ca hiện tại");
+            throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE, "loi.DU_LIEU_KHONG_HOP_LE.caMongMuonTrung");
         }
         yeuCau.setNgayMongMuon(request.ngayMongMuon());
         yeuCau.setGioBatDauMongMuon(request.gioBatDauMongMuon());
@@ -182,7 +184,7 @@ public class YeuCauDoiLichServiceImpl implements YeuCauDoiLichService {
         quanLyCaService.khoaCaConSuaDuoc(idCa);
 
         if (yeuCau.getLoaiYeuCau() == LoaiYeuCauDoiLich.XIN_NGHI) {
-            quanLyCaService.huyCaDaKhoa(ca, quanTri, "Bác sĩ nghỉ ca này.", idYeuCau);
+            quanLyCaService.huyCaDaKhoa(ca, quanTri, LyDoHuyCa.BAC_SI_NGHI_CA, idYeuCau);
         } else {
             Long idPhongMoi = yeuCau.getPhongKhamMongMuon() == null ? ca.getPhongKham().getId()
                     : yeuCau.getPhongKhamMongMuon().getId();
@@ -193,7 +195,7 @@ public class YeuCauDoiLichServiceImpl implements YeuCauDoiLichService {
                 quanLyCaService.suaCaDaKhoa(ca, idPhongMoi, ca.getGioBatDau(), ca.getGioKetThuc(),
                         ca.getSoLuotToiDaMoiGio(), ca.getThoiLuongLuotPhut());
             } else {
-                quanLyCaService.huyCaDaKhoa(ca, quanTri, "Bác sĩ đổi sang ca khác.", idYeuCau);
+                quanLyCaService.huyCaDaKhoa(ca, quanTri, LyDoHuyCa.BAC_SI_DOI_CA, idYeuCau);
                 // Ca cũ đã DA_HUY nên không tự trùng với ca mới (kiểm tra trùng chỉ xét ca còn hoạt động)
                 lichLamViecRepository.flush();
                 quanLyCaService.taoCaMoi(ca.getBacSi().getId(), idPhongMoi, quanTri, yeuCau.getNgayMongMuon(),
@@ -212,7 +214,7 @@ public class YeuCauDoiLichServiceImpl implements YeuCauDoiLichService {
     public YeuCauDoiLichResponse tuChoi(Long idTaiKhoanQuanTri, Long idYeuCau, String ghiChu) {
         QuanTriVien quanTri = quanLyCaService.layQuanTriVien(idTaiKhoanQuanTri);
         if (ghiChu == null || ghiChu.isBlank()) {
-            throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE, "Từ chối yêu cầu phải có ghi chú");
+            throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE, "loi.DU_LIEU_KHONG_HOP_LE.ghiChuTuChoi");
         }
         Long idCa = idCaCuaYeuCau(idYeuCau);
         lichLamViecRepository.findByIdForUpdate(idCa).orElseThrow(YeuCauDoiLichServiceImpl::khongTimThay);
@@ -245,7 +247,7 @@ public class YeuCauDoiLichServiceImpl implements YeuCauDoiLichService {
     }
 
     private static LoiNghiepVu khongTimThay() {
-        return new LoiNghiepVu(MaLoi.KHONG_TIM_THAY, "Không tìm thấy yêu cầu");
+        return new LoiNghiepVu(MaLoi.KHONG_TIM_THAY, "loi.KHONG_TIM_THAY.yeuCau");
     }
 
     private YeuCauDoiLichResponse toResponse(YeuCauDoiLich yeuCau) {
@@ -275,7 +277,8 @@ public class YeuCauDoiLichServiceImpl implements YeuCauDoiLichService {
                 yeuCau.getGioKetThucMongMuon(),
                 yeuCau.getPhongKhamMongMuon() == null ? null
                         : caKhamMapper.toPhongKhamTomTat(yeuCau.getPhongKhamMongMuon()),
-                yeuCau.getGhiChuXuLy(), yeuCau.getNgayGui(), yeuCau.getNgayXuLy());
+                VanBanHeThong.doc(yeuCau.getGhiChuXuLy(), messageSource, NgonNgu.hienTai()), yeuCau.getNgayGui(),
+                yeuCau.getNgayXuLy());
     }
 
 }

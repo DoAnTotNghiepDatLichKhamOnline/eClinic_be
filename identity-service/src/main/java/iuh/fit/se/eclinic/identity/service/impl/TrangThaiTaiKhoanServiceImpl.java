@@ -37,7 +37,7 @@ public class TrangThaiTaiKhoanServiceImpl implements TrangThaiTaiKhoanService {
         int soPhien = refreshTokenService.thuHoiTatCaCuaTaiKhoan(id);
         // Liên kết đã gửi trước khi vô hiệu hoá không được dùng lại sau khi tài khoản được kích hoạt lại
         huyMoiLienKet(id);
-        eventPublisher.publishEvent(new EmailVoHieuHoaTaiKhoanEvent(email, hoTen, lyDo));
+        eventPublisher.publishEvent(new EmailVoHieuHoaTaiKhoanEvent(email, hoTen, lyDo, taiKhoan.getNgonNgu()));
         return soPhien;
     }
 
@@ -47,7 +47,8 @@ public class TrangThaiTaiKhoanServiceImpl implements TrangThaiTaiKhoanService {
         taiKhoan.setLyDoVoHieuHoa(null);
         // Flush ngay để ngayCapNhat trong response là giá trị mới
         taiKhoanRepository.flush();
-        eventPublisher.publishEvent(new EmailKichHoatLaiTaiKhoanEvent(taiKhoan.getEmail(), taiKhoan.getHoTen()));
+        eventPublisher.publishEvent(new EmailKichHoatLaiTaiKhoanEvent(taiKhoan.getEmail(), taiKhoan.getHoTen(),
+                taiKhoan.getNgonNgu()));
     }
 
     @Override

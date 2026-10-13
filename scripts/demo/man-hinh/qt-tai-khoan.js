@@ -22,16 +22,16 @@
 
     function hangTaiKhoan(tk) {
         const trangThai = tk.trangThai + (tk.lyDoVoHieuHoa ? ` (${tk.lyDoVoHieuHoa})` : '');
-        const thaoTac = [nut('Xem', () => lay(`${TAI_KHOAN}/${tk.id}`), 'phu nho')];
+        const thaoTac = [nut(t('Xem', 'View'), () => lay(`${TAI_KHOAN}/${tk.id}`), 'phu nho')];
         // Tài khoản chưa xác thực email chỉ xoá được
         if (tk.vaiTro !== 'QUAN_TRI_VIEN') {
             if (tk.trangThai === 'DA_KICH_HOAT') {
-                thaoTac.push(nut('Vô hiệu hoá', () => doiTrangThai(tk.id, 'VO_HIEU_HOA'), 'nguy-hiem nho'));
+                thaoTac.push(nut(t('Vô hiệu hoá', 'Deactivate'), () => doiTrangThai(tk.id, 'VO_HIEU_HOA'), 'nguy-hiem nho'));
             }
             if (tk.trangThai === 'VO_HIEU_HOA') {
-                thaoTac.push(nut('Kích hoạt lại', () => doiTrangThai(tk.id, 'DA_KICH_HOAT')));
+                thaoTac.push(nut(t('Kích hoạt lại', 'Reactivate'), () => doiTrangThai(tk.id, 'DA_KICH_HOAT')));
             }
-            thaoTac.push(nut('Xoá', () => xoaTaiKhoan(tk), 'nguy-hiem nho'));
+            thaoTac.push(nut(t('Xoá', 'Delete'), () => xoaTaiKhoan(tk), 'nguy-hiem nho'));
         }
         return dong([tk.id, tk.hoTen, tk.email, tk.vaiTro, trangThai, thaoTac]);
     }
@@ -45,14 +45,17 @@
         const than = $('ds-tai-khoan');
         if (!than) return;
         if (status !== 200) {
-            than.replaceChildren(hangThongBao(thongDiepLoi(json, 'Không tải được danh sách.')));
+            than.replaceChildren(hangThongBao(thongDiepLoi(json, t('Không tải được danh sách.', 'Could not load the list.'))));
             $('trang-tai-khoan').textContent = '';
             return;
         }
         const duLieu = json.duLieu;
         tongSoTrang = duLieu.tongSoTrang;
-        than.replaceChildren(...(duLieu.noiDung.length ? duLieu.noiDung.map(hangTaiKhoan) : [hangThongBao('Không có tài khoản nào.')]));
-        $('trang-tai-khoan').textContent = `Trang ${duLieu.trang + 1} / ${Math.max(duLieu.tongSoTrang, 1)} · ${duLieu.tongSoPhanTu} tài khoản`;
+        than.replaceChildren(...(duLieu.noiDung.length ? duLieu.noiDung.map(hangTaiKhoan)
+            : [hangThongBao(t('Không có tài khoản nào.', 'No accounts found.'))]));
+        $('trang-tai-khoan').textContent = t(
+            `Trang ${duLieu.trang + 1} / ${Math.max(duLieu.tongSoTrang, 1)} · ${duLieu.tongSoPhanTu} tài khoản`,
+            `Page ${duLieu.trang + 1} / ${Math.max(duLieu.tongSoTrang, 1)} · ${duLieu.tongSoPhanTu} accounts`);
     }
 
     async function doiTrangThai(id, trangThai) {
@@ -66,7 +69,8 @@
     }
 
     async function xoaTaiKhoan(tk) {
-        if (!confirm(`Xoá hẳn tài khoản ${tk.email} (id=${tk.id})? Không khôi phục được.`)) return;
+        if (!confirm(t(`Xoá hẳn tài khoản ${tk.email} (id=${tk.id})? Không khôi phục được.`,
+            `Permanently delete account ${tk.email} (id=${tk.id})? This cannot be undone.`))) return;
         const { status } = await goi(`${TAI_KHOAN}/${tk.id}`, undefined, 'DELETE');
         if (status === 200) await taiTaiKhoan(true);
     }
@@ -74,38 +78,39 @@
     dangKy({
         duongDan: '/admin/accounts',
         vaiTro: 'QUAN_TRI_VIEN',
-        tieuDe: 'Accounts',
+        tieuDe: cap('Tài khoản', 'Accounts'),
         async ve(khung) {
             khuon(khung, `
                 <section>
-                    <h2>Quản trị tài khoản</h2>
+                    <h2>${t('Quản trị tài khoản', 'Account administration')}</h2>
                     <form id="form-tim-tai-khoan" class="hang-loc">
-                        <input name="tuKhoa" placeholder="Từ khoá: họ tên, email, số điện thoại">
+                        <input name="tuKhoa" placeholder="${t('Từ khoá: họ tên, email, số điện thoại', 'Keyword: full name, email, phone number')}">
                         <select name="vaiTro">
-                            <option value="">Mọi vai trò</option>
+                            <option value="">${t('Mọi vai trò', 'All roles')}</option>
                             <option>BENH_NHAN</option>
                             <option>BAC_SI</option>
                             <option>QUAN_TRI_VIEN</option>
                         </select>
                         <select name="trangThai">
-                            <option value="">Mọi trạng thái</option>
+                            <option value="">${t('Mọi trạng thái', 'All statuses')}</option>
                             <option>DA_KICH_HOAT</option>
                             <option>CHO_XAC_NHAN</option>
                             <option>VO_HIEU_HOA</option>
                         </select>
-                        <button>Tìm</button>
+                        <button>${t('Tìm', 'Search')}</button>
                     </form>
-                    <input id="ly-do" placeholder="Lý do vô hiệu hoá (nhập trước khi bấm Vô hiệu hoá)" maxlength="500">
+                    <input id="ly-do" placeholder="${t('Lý do vô hiệu hoá (nhập trước khi bấm Vô hiệu hoá)', 'Reason for deactivation (enter it before pressing Deactivate)')}" maxlength="500">
                     <div class="bang">
                         <table>
-                            <thead><tr><th>Id</th><th>Họ tên</th><th>Email</th><th>Vai trò</th><th>Trạng thái</th><th>Thao tác</th></tr></thead>
+                            <thead><tr><th>${t('Id', 'ID')}</th><th>${t('Họ tên', 'Full name')}</th><th>Email</th><th>${t('Vai trò', 'Role')}</th><th>${t('Trạng thái', 'Status')}</th><th>${t('Thao tác', 'Actions')}</th></tr></thead>
                             <tbody id="ds-tai-khoan"></tbody>
                         </table>
                     </div>
                     <p id="trang-tai-khoan" class="ghi-chu"></p>
-                    <button id="nut-trang-truoc" class="phu nho">‹ Trang trước</button>
-                    <button id="nut-trang-sau" class="phu nho">Trang sau ›</button>
-                    <p class="ghi-chu">Nút "Xem" và lỗi của các thao tác hiện ở ô "Kết quả gọi API gần nhất".</p>
+                    <button id="nut-trang-truoc" class="phu nho">${t('‹ Trang trước', '‹ Previous page')}</button>
+                    <button id="nut-trang-sau" class="phu nho">${t('Trang sau ›', 'Next page ›')}</button>
+                    <p class="ghi-chu">${t('Nút "Xem" và lỗi của các thao tác hiện ở ô "Kết quả gọi API gần nhất".',
+                        'The View button and errors of the actions are shown in the latest API call result box.')}</p>
                 </section>`);
             boLoc = {};
             trang = 0;

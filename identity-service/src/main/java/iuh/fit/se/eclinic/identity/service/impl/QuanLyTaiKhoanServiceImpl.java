@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.MessageSource;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -20,6 +21,7 @@ import iuh.fit.se.eclinic.common.dto.TrangDuLieu;
 import iuh.fit.se.eclinic.common.entity.booking.HoSoBenhNhan;
 import iuh.fit.se.eclinic.common.entity.catalog.BacSi;
 import iuh.fit.se.eclinic.common.entity.identity.TaiKhoan;
+import iuh.fit.se.eclinic.common.enums.NgonNgu;
 import iuh.fit.se.eclinic.common.enums.TrangThaiLichHen;
 import iuh.fit.se.eclinic.common.enums.TrangThaiLienKet;
 import iuh.fit.se.eclinic.common.enums.TrangThaiTaiKhoan;
@@ -64,6 +66,7 @@ public class QuanLyTaiKhoanServiceImpl implements QuanLyTaiKhoanService {
     private final TrangThaiTaiKhoanService trangThaiTaiKhoanService;
     private final ApplicationEventPublisher eventPublisher;
     private final TaiKhoanQuanTriMapper taiKhoanQuanTriMapper;
+    private final MessageSource messageSource;
 
     @Override
     public TrangDuLieu<TaiKhoanQuanTriResponse> timKiem(Long idNguoiThucHien, String tuKhoa, VaiTro vaiTro,
@@ -92,17 +95,16 @@ public class QuanLyTaiKhoanServiceImpl implements QuanLyTaiKhoanService {
         TrangThaiTaiKhoan trangThaiMoi = request.trangThai();
         if (trangThaiMoi == TrangThaiTaiKhoan.CHO_XAC_NHAN) {
             throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE,
-                    "Chỉ có thể chuyển tài khoản sang VO_HIEU_HOA (vô hiệu hoá) hoặc DA_KICH_HOAT (kích hoạt lại)");
+                    "loi.DU_LIEU_KHONG_HOP_LE.trangThaiTaiKhoan");
         }
         // Tài khoản chưa xác thực email: vô hiệu hoá rồi kích hoạt lại sẽ thành kích hoạt mà không qua xác thực email
         if (taiKhoan.getTrangThai() == TrangThaiTaiKhoan.CHO_XAC_NHAN) {
-            throw new LoiNghiepVu(MaLoi.TRANG_THAI_TAI_KHOAN_KHONG_HOP_LE, "Tài khoản chưa xác thực email nên không thể"
-                    + " vô hiệu hoá hay kích hoạt; nếu không cần nữa hãy xoá tài khoản");
+            throw new LoiNghiepVu(MaLoi.TRANG_THAI_TAI_KHOAN_KHONG_HOP_LE, "loi.TRANG_THAI_TAI_KHOAN_KHONG_HOP_LE.chuaXacThuc");
         }
         if (taiKhoan.getTrangThai() == trangThaiMoi) {
             throw new LoiNghiepVu(MaLoi.TRANG_THAI_TAI_KHOAN_KHONG_HOP_LE,
-                    trangThaiMoi == TrangThaiTaiKhoan.VO_HIEU_HOA ? "Tài khoản đã bị vô hiệu hoá từ trước"
-                            : "Tài khoản đang hoạt động, không cần kích hoạt lại");
+                    trangThaiMoi == TrangThaiTaiKhoan.VO_HIEU_HOA ? "loi.TRANG_THAI_TAI_KHOAN_KHONG_HOP_LE.daVoHieuHoa"
+                            : "loi.TRANG_THAI_TAI_KHOAN_KHONG_HOP_LE.dangHoatDong");
         }
         if (trangThaiMoi == TrangThaiTaiKhoan.VO_HIEU_HOA) {
             voHieuHoa(idNguoiThucHien, taiKhoan, request.lyDo());
@@ -122,23 +124,22 @@ public class QuanLyTaiKhoanServiceImpl implements QuanLyTaiKhoanService {
         // Kiểm tra từng bảng để thông điệp nói rõ dữ liệu nào đang giữ tài khoản (khoá ngoại của các bảng này là RESTRICT)
         List<String> dangThamChieu = new ArrayList<>();
         if (bacSiChiDocRepository.existsByTaiKhoanId(id)) {
-            dangThamChieu.add("hồ sơ bác sĩ");
+            dangThamChieu.add(tenDuLieu("duLieu.hoSoBacSi"));
         }
         if (hoSoBenhNhanChiDocRepository.existsByTaiKhoanId(id)) {
-            dangThamChieu.add("hồ sơ bệnh nhân");
+            dangThamChieu.add(tenDuLieu("duLieu.hoSoBenhNhan"));
         }
         if (lichHenChiDocRepository.existsByTaiKhoanDatId(id)) {
-            dangThamChieu.add("lịch hẹn đã đặt");
+            dangThamChieu.add(tenDuLieu("duLieu.lichHenDaDat"));
         }
         if (thongBaoChiDocRepository.existsByTaiKhoanId(id)) {
-            dangThamChieu.add("thông báo");
+            dangThamChieu.add(tenDuLieu("duLieu.thongBao"));
         }
         if (phienChatChiDocRepository.existsByTaiKhoanId(id)) {
-            dangThamChieu.add("phiên chat");
+            dangThamChieu.add(tenDuLieu("duLieu.phienChat"));
         }
         if (!dangThamChieu.isEmpty()) {
-            throw new LoiNghiepVu(MaLoi.TAI_KHOAN_DANG_DUOC_SU_DUNG, "Tài khoản đang có " + String.join(", ", dangThamChieu)
-                    + " nên không thể xoá, hãy vô hiệu hoá tài khoản thay cho xoá");
+            throw new LoiNghiepVu(MaLoi.TAI_KHOAN_DANG_DUOC_SU_DUNG, "loi.TAI_KHOAN_DANG_DUOC_SU_DUNG.chiTiet", String.join(", ", dangThamChieu));
         }
         String anhDaiDien = taiKhoan.getAnhDaiDien();
         try {
@@ -158,13 +159,12 @@ public class QuanLyTaiKhoanServiceImpl implements QuanLyTaiKhoanService {
         Long id = taiKhoan.getId();
         String lyDo = lyDoNhap == null ? "" : lyDoNhap.trim();
         if (lyDo.isEmpty()) {
-            throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE, "Phải nhập lý do khi vô hiệu hoá tài khoản");
+            throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE, "loi.DU_LIEU_KHONG_HOP_LE.lyDoVoHieuHoa");
         }
         if (taiKhoan.getVaiTro() == VaiTro.BAC_SI) {
             long soLichHen = lichHenChiDocRepository.countSapToiCuaBacSi(id, LICH_HEN_CON_HIEU_LUC, LocalDateTime.now());
             if (soLichHen > 0) {
-                throw new LoiNghiepVu(MaLoi.BAC_SI_CON_LICH_HEN, "Bác sĩ còn " + soLichHen
-                        + " lịch hẹn sắp tới, hãy chuyển hoặc huỷ các lịch hẹn này trước khi vô hiệu hoá tài khoản");
+                throw new LoiNghiepVu(MaLoi.BAC_SI_CON_LICH_HEN, "loi.BAC_SI_CON_LICH_HEN.soLuong", String.valueOf(soLichHen));
             }
         }
         int soPhien = trangThaiTaiKhoanService.voHieuHoa(taiKhoan, lyDo);
@@ -182,6 +182,11 @@ public class QuanLyTaiKhoanServiceImpl implements QuanLyTaiKhoanService {
         if (taiKhoanService.layDangHoatDong(idNguoiThucHien).getVaiTro() != VaiTro.QUAN_TRI_VIEN) {
             throw new LoiNghiepVu(MaLoi.KHONG_CO_QUYEN);
         }
+    }
+
+    /** Tên 1 loại dữ liệu theo ngôn ngữ của request, để ghép vào thông điệp lỗi. */
+    private String tenDuLieu(String khoa) {
+        return messageSource.getMessage(khoa, null, khoa, NgonNgu.hienTai().locale());
     }
 
     private static void kiemTraKhongPhaiQuanTriVien(TaiKhoan taiKhoan) {

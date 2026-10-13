@@ -15,6 +15,12 @@ React (5173)  ──►  api-gateway :8080  ──►  identity :8081   catalog 
   Riêng `/api/auth/**` và `/api/users/**` (theo tài liệu API, không có tên service) cũng về `identity-service`.
 - Toàn bộ entity, enum, exception, bảo mật dùng chung và Flyway migration nằm trong module `common`.
 - Cách viết code (đặt tên, thêm API mới, migration...): xem [docs/QUY-UOC-CODE.md](docs/QUY-UOC-CODE.md).
+- Bàn giao cho frontend: [docs/BAN-GIAO-FRONTEND-05-10.md](docs/BAN-GIAO-FRONTEND-05-10.md) (từng màn hình) và
+  [docs/BAN-GIAO-FRONTEND-NGON-NGU-EMAIL-CHATBOT.md](docs/BAN-GIAO-FRONTEND-NGON-NGU-EMAIL-CHATBOT.md) (đổi ngôn ngữ EN / VI,
+  email lịch hẹn, chatbot).
+- Tài liệu API cho frontend (tài khoản và đặt lịch khám phía bệnh nhân): `eClinic_API_XacThuc_TaiKhoan.docx`, bản 2.1.
+  Mục 2 "Danh sách route" có cột **Thay đổi** ghi route mới / cập nhật theo phiên bản; ngôn ngữ EN / VI ở mục 3.12,
+  email và lời nhắc lịch hẹn ở mục 3.13, trợ lý AI (chatbot) ở mục 19. Tài liệu được dựng bằng `python scripts/api-doc/build.py`, không sửa tay.
 
 Công nghệ: Java 17, Spring Boot 4.1, Spring Cloud Gateway (WebMVC), Spring Security (JWT HS256), Spring Data JPA,
 Flyway, MySQL 8.4, Redis, springdoc (Swagger), Maven, Docker Compose.
@@ -29,7 +35,7 @@ Flyway, MySQL 8.4, Redis, springdoc (Swagger), Maven, Docker Compose.
 | `booking-service` | 8084 | BOOK-01..12, SCHED-01..05, PAT-01..03, ADM-03, ADM-04 | http://localhost:8084/swagger-ui.html |
 | `medical-service` | 8085 | EXAM-01..05, DOC-02 | http://localhost:8085/swagger-ui.html |
 | `notification-service` | 8086 | NOTI-01: thông báo trong ứng dụng (chuông) | http://localhost:8086/swagger-ui.html |
-| `chatbot-service` | 8087 | UC-CHAT-01 (ngoài MVP) | http://localhost:8087/swagger-ui.html |
+| `chatbot-service` | 8087 | UC-CHAT-01: chatbot (trợ lý AI) | http://localhost:8087/swagger-ui.html |
 | `report-service` | 8088 | DASH-01..04, ADM-05 | http://localhost:8088/swagger-ui.html |
 | `common` | – | Thư viện dùng chung (không chạy riêng) | – |
 
@@ -121,6 +127,7 @@ Các API dưới đây đều cần access token và gọi qua gateway `http://l
 | Nhóm | API | Ghi chú |
 |---|---|---|
 | Hồ sơ cá nhân | `GET /api/users/me`, `PUT /api/users/me` | Sửa họ tên, số điện thoại; bác sĩ chỉ sửa được số điện thoại. Bác sĩ thấy hồ sơ bác sĩ, bệnh nhân thấy hồ sơ bệnh nhân đã liên kết (chỉ xem) |
+| Ngôn ngữ ưa dùng | `PUT /api/users/me/language` `{ ngonNgu: "VI" \| "EN" }` | Ngôn ngữ của email và lời nhắc gửi cho tài khoản; trả về ở `taiKhoan.ngonNgu` khi đăng nhập. Xem mục "Ngôn ngữ (EN / VI)" |
 | Đổi mật khẩu | `PUT /api/users/me/change-password` | Phải nhập mật khẩu hiện tại; các thiết bị khác bị đăng xuất |
 | Thiết bị đăng nhập | `GET /api/users/me/sessions`, `DELETE /api/users/me/sessions/{id}`, `DELETE /api/users/me/sessions` | Xem, đăng xuất 1 thiết bị khác, đăng xuất mọi thiết bị khác |
 | Ảnh đại diện | `POST /api/users/me/avatar`, `DELETE /api/users/me/avatar` | `multipart/form-data`, phần tệp `anh`: JPEG / PNG / WebP, tối đa 2 MB, 10 lần / giờ |
@@ -173,6 +180,15 @@ môi trường hoặc từ `.env`. Đăng nhập ở `/login` bằng tài khoả
 `/appointment`, bác sĩ về `/doctor/dashboard`, quản trị viên về `/admin/dashboard`; mở màn hình của vai trò khác sẽ thấy
 báo "Sai vai trò". Liên kết kích hoạt / đặt lại mật khẩu / xác nhận đổi email trong email và link phiếu khám trong mã QR mở
 đúng trang này. Kết quả của mỗi lần gọi API hiện ở ô "Kết quả gọi API gần nhất" cuối trang.
+
+- **Nút EN | VI** (thanh trên, mọi màn hình): đổi cả chữ của chính trang demo (nhãn, nút, thanh điều hướng, câu báo lỗi phía
+  trình duyệt) lẫn dữ liệu từ API (mọi request gửi `Accept-Language`; màn hình đang mở được tải lại). Họ tên, mã và chữ
+  người dùng gõ giữ nguyên. Chữ trong mã nguồn viết thành cặp `t('Tiếng Việt', 'English')`; sau khi sửa màn hình chạy
+  `node scripts/kiem-tra-demo-ngon-ngu.js` để tìm chuỗi tiếng Việt chưa có bản tiếng Anh.
+- **Nút "Hỏi trợ lý"** (góc dưới phải, mọi màn hình, mọi vai trò): khung chat với chatbot. Vẽ thẻ chuyên khoa / bác sĩ /
+  khung giờ từ `goiY` của câu trả lời; bấm thẻ mở `/appointment` đã chọn sẵn. Bệnh nhân đã đăng nhập hỏi về lịch hẹn của
+  mình sẽ thấy nút "Đồng ý" trước khi chatbot đọc dữ liệu. Đăng nhập / đăng xuất thì khung chat mở phiên mới. Cần
+  chatbot-service đang chạy và có `CHATBOT_API_KEY` (xem mục "Chatbot"); không có khoá thì gửi tin báo lỗi 503.
 
 | Đường dẫn | Vai trò | Màn hình UI | File trong `scripts/demo/man-hinh/` |
 |---|---|---|---|
@@ -556,12 +572,13 @@ Lỗi mới (đều 409): `CA_KHONG_SUA_DUOC`, `CA_CON_LICH_HEN`, `CA_DA_CO_YEU_
 
 ## Thông báo trong ứng dụng
 
-Chuông thông báo: lưu, liệt kê, đếm chưa đọc, đánh dấu đã đọc. Không gửi email, không đẩy realtime: frontend hỏi lại
-`so-chua-doc` định kỳ (trang mẫu: 30 giây, bỏ qua khi tab đang ẩn, hỏi ngay khi tab hiện lại).
+Chuông thông báo: lưu, liệt kê, đếm chưa đọc, đánh dấu đã đọc. Không đẩy realtime: frontend hỏi lại
+`so-chua-doc` định kỳ (trang mẫu: 30 giây, bỏ qua khi tab đang ẩn, hỏi ngay khi tab hiện lại). notification-service cũng gửi
+email lịch hẹn (mục "Email lịch hẹn" bên dưới).
 
 | API | Ai gọi | Ghi chú |
 |---|---|---|
-| `GET /api/notification/thong-bao?chuaDoc=&trang=&kichThuoc=` | Mọi tài khoản đã đăng nhập | Thông báo của tôi, mới nhất trước, dạng `TrangDuLieu`. `chuaDoc=true` chỉ lấy thông báo chưa đọc; `kichThuoc` mặc định 20, tối đa 100. Mỗi dòng: `{ id, loai, noiDung, daDoc, ngayTao, idLichHen, maPhieuKham, idYeuCau }`. `noiDung` là câu tiếng Việt đã soạn sẵn, hiển thị nguyên văn. `maPhieuKham` chỉ có khi người đọc là bệnh nhân (dùng để mở chi tiết lịch hẹn); bác sĩ dùng `idLichHen` |
+| `GET /api/notification/thong-bao?chuaDoc=&trang=&kichThuoc=` | Mọi tài khoản đã đăng nhập | Thông báo của tôi, mới nhất trước, dạng `TrangDuLieu`. `chuaDoc=true` chỉ lấy thông báo chưa đọc; `kichThuoc` mặc định 20, tối đa 100. Mỗi dòng: `{ id, loai, noiDung, daDoc, ngayTao, idLichHen, maPhieuKham, idYeuCau }`. `noiDung` là câu đã soạn sẵn theo `Accept-Language` của request đọc (đổi ngôn ngữ rồi tải lại là câu đổi theo; tên người, mã và lý do người dùng gõ giữ nguyên văn; thông báo tạo trước khi có 2 ngôn ngữ chỉ có câu tiếng Việt), hiển thị nguyên văn. `maPhieuKham` chỉ có khi người đọc là bệnh nhân (dùng để mở chi tiết lịch hẹn); bác sĩ dùng `idLichHen` |
 | `GET /api/notification/thong-bao/so-chua-doc` | Mọi tài khoản đã đăng nhập | `{ soChuaDoc }`: số trên biểu tượng chuông |
 | `POST /api/notification/thong-bao/{id}/da-doc` | Mọi tài khoản đã đăng nhập | Đánh dấu 1 thông báo của tôi đã đọc, gọi lại nhiều lần vẫn được. Thông báo của tài khoản khác hoặc không có -> 404 `KHONG_TIM_THAY_THONG_BAO` |
 | `POST /api/notification/thong-bao/da-doc-tat-ca` | Mọi tài khoản đã đăng nhập | `{ soDaDanhDau }` |
@@ -581,7 +598,13 @@ Chuông thông báo: lưu, liệt kê, đếm chưa đọc, đánh dấu đã đ
 | Quản trị viên duyệt / từ chối yêu cầu | `KET_QUA_DUYET_DOI_LICH` (có `idYeuCau`, câu thông báo có ghi chú) | Bác sĩ đã gửi |
 
 Người làm thao tác không nhận thông báo về thao tác của chính mình. Khách đặt không đăng nhập và người giám hộ chỉ khớp theo
-CCCD không nhận thông báo. Chưa có nhắc lịch khám.
+CCCD không nhận thông báo. Nhắc lịch khám (`NHAC_LICH_KHAM`, bệnh nhân): trước giờ khám 3 ngày và 1 ngày (cấu hình
+`BOOKING_REMINDER_*`), kèm 1 email cho người đặt; lịch đã hủy / bị từ chối / đang chờ đổi không được nhắc. Nhắc tái khám
+(`NHAC_TAI_KHAM`, bệnh nhân): bác sĩ ghi hoặc đổi `ngayTaiKhamDeXuat` thì sau nhiều nhất 1 chu kỳ nhắc (5 phút) bệnh nhân
+nhận thông báo + email nêu bác sĩ và ngày tái khám, rồi được nhắc lại 1 lần trước ngày đó 7 ngày
+(`FOLLOWUP_REMINDER_DAYS`). Không có lịch hẹn nào được tạo; xoá ngày tái khám thì không nhắc; bệnh nhân đã có lịch hẹn
+sắp tới với bác sĩ cùng chuyên khoa thì bỏ lần nhắc trước. medical-service không gửi gì: booking-service tự so ngày tái
+khám với ngày đã báo (bảng `nhac_tai_kham`).
 
 Cách thông báo đi từ booking-service sang notification-service (không mất khi notification-service ngừng chạy):
 
@@ -597,6 +620,122 @@ Cách thông báo đi từ booking-service sang notification-service (không m�
 `INTERNAL_API_KEY` trong header `X-Khoa-Noi-Bo`. Cấu hình: `INTERNAL_API_KEY`, `NOTIFICATION_URL`,
 `BOOKING_NOTIFY_INTERVAL` (xem `.env.example`). Chạy trong IntelliJ: phải chạy cả `notification-service` thì chuông mới
 có dữ liệu; không chạy thì đặt lịch vẫn bình thường, thông báo nằm chờ.
+
+## Email lịch hẹn
+
+notification-service gửi email cho người đặt lịch; booking-service ghi sự kiện vào `su_kien_thong_bao` trong cùng
+transaction rồi `GuiThongBaoJob` chuyển sang `POST /noi-bo/email` (cùng đường đi với chuông: service ngừng chạy thì
+email nằm chờ, không mất và không gửi 2 lần).
+
+| Email | Khi nào |
+|---|---|
+| Đã nhận yêu cầu đặt lịch (chờ bác sĩ xác nhận) | Ngay sau khi đặt lịch (khách hoặc tài khoản); sau khi đổi lịch: 1 email cho lịch mới |
+| Nhắc lịch khám | Trước giờ khám 3 ngày và 1 ngày (`BOOKING_REMINDER_BEFORE`), chỉ trong `BOOKING_REMINDER_FROM` đến `BOOKING_REMINDER_TO` (07:00 - 21:00); kèm thông báo `NHAC_LICH_KHAM` trên chuông |
+| Bác sĩ hẹn / đổi ngày tái khám, nhắc tái khám | Sau khi bác sĩ ghi `ngayTaiKhamDeXuat` (chậm nhất `BOOKING_REMINDER_INTERVAL`), và trước ngày đó `FOLLOWUP_REMINDER_DAYS` ngày; kèm thông báo `NHAC_TAI_KHAM`. Không tạo lịch hẹn |
+
+- Người nhận: email liên hệ nhập lúc đặt lịch, không có thì email của tài khoản đã đặt; khách không nhập email thì không
+  nhận gì. Ngôn ngữ: `ngonNgu` của tài khoản, với khách là ngôn ngữ của request đặt lịch.
+- Nội dung: bệnh nhân, ngày giờ, bác sĩ, phòng, mã tra cứu, nút mở phiếu khám (email tái khám: nút mở
+  `FRONTEND_URL` + `FOLLOWUP_BOOKING_PATH`). Không có lý do khám, chẩn đoán, số điện thoại, CCCD.
+- Chế độ gửi theo `MAIL_MODE` như identity-service (`console`: chỉ ghi log notification-service; `smtp`: gửi thật). Muốn
+  notification-service gửi tới máy chủ nhận thử (vd Mailpit) trong khi identity-service vẫn ở chế độ khác: đặt
+  `NOTIFICATION_MAIL_MODE`, `MAIL_HOST`, `MAIL_PORT`, `MAIL_SMTP_AUTH`, `MAIL_SMTP_STARTTLS`. Gửi lỗi thì thử lại theo
+  `NOTIFICATION_MAIL_RETRY_WAITS` (1 phút, 5 phút, 30 phút, 2 giờ) rồi bỏ; chu kỳ gửi `NOTIFICATION_MAIL_INTERVAL`. Lượt khám
+  còn cách ít hơn `BOOKING_REMINDER_MIN_LEAD` thì không nhắc. Giải thích từng biến: `.env.example`.
+
+## Ngôn ngữ (EN / VI)
+
+Request gửi header `Accept-Language: en` thì nhận tiếng Anh; không gửi (hoặc ngôn ngữ khác) thì nhận tiếng Việt như
+trước. Đổi theo header: `thongDiep` (lỗi, kiểm tra dữ liệu, thành công, 401 / 403, lỗi của gateway), nội dung danh mục
+(chuyên khoa, phòng khám, hồ sơ bác sĩ, chú thích ảnh, đơn vị và mô tả thuốc; chưa có bản tiếng Anh thì trả bản tiếng
+Việt), câu thông báo trên chuông, câu cố định của chatbot. Không đổi: `maLoi`, tên trường, giá trị enum. Không bao giờ
+dịch: họ tên, học vị, tên thuốc và mọi chữ người dùng tự gõ.
+
+- Tài khoản lưu ngôn ngữ ưa dùng `ngonNgu` (`VI` / `EN`): lấy từ `Accept-Language` lúc đăng ký, đổi bằng
+  `PUT /api/users/me/language`; dùng cho email và lời nhắc (những thứ gửi khi không có request của người dùng).
+- API quản lý danh mục (`/quan-tri/`, và `POST` / `PUT` chuyên khoa) nhận và trả cả 2 bản: trường cũ là tiếng Việt, trường
+  `…En` là tiếng Anh.
+- Thêm câu chữ mới ở backend: `docs/QUY-UOC-CODE.md` mục 4, kiểm tra bằng `node scripts/kiem-tra-thong-diep.js`.
+- Hợp đồng đầy đủ cho frontend: [docs/BAN-GIAO-FRONTEND-NGON-NGU-EMAIL-CHATBOT.md](docs/BAN-GIAO-FRONTEND-NGON-NGU-EMAIL-CHATBOT.md).
+
+## Chatbot (trợ lý AI)
+
+Hội thoại với trợ lý AI: hướng dẫn dùng trang (đặt lịch, phiếu khám, đổi / hủy lịch, nhắc lịch) và trả lời câu hỏi sức khỏe
+thông thường. Từ triệu chứng người dùng kể, chatbot gợi ý chuyên khoa rồi bác sĩ, phòng và khung giờ còn chỗ, đọc từ dữ
+liệu của phòng khám. Khách và mọi tài khoản đã đăng nhập đều dùng được. Bệnh nhân đã đăng nhập còn hỏi được về lịch hẹn
+sắp tới, các lượt đã khám và ngày tái khám của **chính mình**, sau khi đồng ý trong phiên chat.
+
+| API | Ai gọi | Ghi chú |
+|---|---|---|
+| `POST /api/chatbot/phien` | Khách, tài khoản đã đăng nhập | Mở phiên mới -> 201 `{ idPhien, maKhach, thoiGianBatDau, tinNhan[] }`; `tinNhan` có sẵn câu chào (nói rõ là AI, không thay bác sĩ). `maKhach` chỉ có khi **chưa đăng nhập** và chỉ trả lần này: frontend giữ lại (vd `sessionStorage`) và gửi ở header `X-Chat-Khach` trong các request sau của phiên |
+| `POST /api/chatbot/phien/{idPhien}/tin-nhan` | Chủ phiên | Body `{ noiDung }` (1 đến 1000 ký tự) -> `{ tinNhan, traLoi }`, mỗi tin `{ id, nguoiGui, loai, noiDung, ngayTao, goiY }`. Trả lời sau vài giây, tới khoảng 25 giây khi có tra cứu (không stream) |
+| `GET /api/chatbot/phien/{idPhien}/tin-nhan` | Chủ phiên | Toàn bộ tin nhắn của phiên, cũ nhất trước |
+| `GET /api/chatbot/phien` | Tài khoản đã đăng nhập | Các phiên gần nhất của tôi `{ idPhien, thoiGianBatDau, daDongYDuLieu }`, mới nhất trước, tối đa 50 |
+| `POST /api/chatbot/phien/{idPhien}/dong-y` | Bệnh nhân, phiên của chính tài khoản | Đồng ý cho chatbot đọc lịch hẹn, lượt khám của mình trong phiên này. Phiên của người khác và phiên của khách: 404 |
+| `DELETE /api/chatbot/phien/{idPhien}/dong-y` | Bệnh nhân, phiên của chính tài khoản | Rút lại đồng ý của phiên |
+
+- **Chủ phiên**: tài khoản đã mở phiên (JWT), hoặc người cầm `maKhach` của phiên khách. Phiên không tồn tại và phiên của
+  người khác cùng trả 404 `KHONG_TIM_THAY`; chỉ biết `idPhien` thì không đọc, không gửi được gì. Phiên khách không chuyển
+  sang tài khoản khi đăng nhập (người đã đăng nhập vẫn dùng tiếp được phiên khách nếu gửi kèm `X-Chat-Khach`).
+- `nguoiGui`: `NGUOI_DUNG` / `CHATBOT`. `loai`: `CAU_HOI` (tin của người dùng); của chatbot: `LOI_CHAO`, `TRA_LOI` (mô hình trả
+  lời), `NGOAI_PHAM_VI` (câu từ chối cố định khi hỏi việc không liên quan, vd mua sắm), `KHAN_CAP` (tin có dấu hiệu cấp cứu:
+  câu "gọi 115" cố định, không qua mô hình), `CAN_DONG_Y` (câu cố định xin bệnh nhân đồng ý, xem "Lịch hẹn của chính
+  người hỏi" bên dưới). `noiDung` giữ nguyên như lúc gửi / trả lời, không đổi theo `Accept-Language`
+  của request đọc lại.
+- **`goiY`** (chỉ ở `TRA_LOI` mà chatbot đã tra cứu dữ liệu phòng khám, còn lại là `null`):
+  `{ chuyenKhoa: { id, ten }, bacSi: [{ id, hoTen, hocVi, chucVu, anhDaiDien, ngaySomNhat, soChoConLai }],
+  lichKham: [{ idBacSi, hoTenBacSi, idLichLamViec, ngay, tenPhong, tang, khungGio: [{ gioBatDau, gioKetThuc, soChoConLai }] }],
+  lichHenCuaToi, lanKham }` (2 trường cuối: xem "Lịch hẹn của chính người hỏi").
+  - `bacSi`: tối đa 6 bác sĩ của chuyên khoa, người còn chỗ sớm nhất đứng trước; `ngaySomNhat` là `null` khi bác sĩ hết
+    chỗ. `lichKham`: các ca còn chỗ của 1 bác sĩ trong 7 ngày, chỉ gồm khung giờ còn chỗ. Mảng rỗng = chưa tra cứu phần đó.
+  - **Do server dựng từ dữ liệu, không lấy từ câu chữ của mô hình**: frontend vẽ thẻ bác sĩ / khung giờ từ `goiY` và mở
+    form đặt lịch bằng `chuyenKhoa.id`, `bacSi[].id`, `idLichLamViec` + `khungGio[].gioBatDau`. Câu trong `noiDung` do
+    mô hình viết nên chỉ để đọc, không lấy bác sĩ hay giờ khám từ đó.
+  - Là ảnh chụp lúc trả lời (đọc lại phiên vẫn trả đúng như vậy): số chỗ có thể đã đổi, form đặt lịch phải đọc lại khung
+    giờ. Chữ trong `goiY` theo `Accept-Language` của request đã gửi tin nhắn.
+- Chatbot chọn chuyên khoa dựa trên tên, mô tả và **triệu chứng thường gặp** của từng chuyên khoa. Quản trị viên nhập
+  triệu chứng ở 2 trường tuỳ chọn `trieuChung`, `trieuChungEn` (tối đa 2000 ký tự) của `POST` / `PUT /api/catalog/chuyen-khoa`;
+  `GET /api/catalog/quan-tri/chuyen-khoa` trả lại 2 trường này, API chuyên khoa công khai thì không. Dữ liệu mẫu có sẵn
+  triệu chứng cho 8 chuyên khoa.
+- Với khách và mọi tài khoản, chatbot có 2 hàm tra cứu cố định, chỉ đọc dữ liệu công khai: bác sĩ của 1 chuyên khoa và
+  lịch còn chỗ của 1 bác sĩ (đúng những gì trang đặt lịch hiển thị cho khách). catalog-service hoặc booking-service không chạy thì chatbot vẫn trả
+  lời, chỉ không có `goiY`.
+- **Lịch hẹn của chính người hỏi.** Chỉ khi request có JWT vai trò `BENH_NHAN` **và** phiên chat thuộc chính tài khoản đó
+  (phiên của khách không bao giờ được, kể cả khi người dùng đã đăng nhập), chatbot có thêm 2 hàm không tham số: lịch hẹn
+  sắp tới và các lượt đã khám của người đang chat. "Của ai" là JWT của request, chatbot-service gửi tiếp JWT đó tới API
+  "của tôi" của booking-service; không có cách nào hỏi về người khác, dù gõ tên, số điện thoại hay mã nào.
+  - **Đồng ý theo từng phiên**: lần đầu bệnh nhân hỏi về lịch hẹn của mình, câu trả lời có `loai: CAN_DONG_Y` (câu cố
+    định nói rõ cái gì sẽ được gửi cho dịch vụ AI bên ngoài), chưa có gì được đọc. Frontend hiện nút "Đồng ý", gọi
+    `POST .../dong-y` rồi **gửi lại câu hỏi**. `DELETE .../dong-y` rút lại; `daDongYDuLieu` ở danh sách phiên cho biết
+    trạng thái.
+  - **Gửi cho mô hình**: chỉ ngày giờ khám, bác sĩ, chuyên khoa, phòng, tầng, trạng thái, lịch của mình hay đặt cho người
+    khác, ngày tái khám đề xuất. **Không gửi**: họ tên bệnh nhân, mã tra cứu, mã phiếu khám, lý do khám, lý do hủy, chẩn
+    đoán, lời dặn, đơn thuốc.
+  - **Thẻ cho người dùng** (do server dựng, có họ tên và mã): `goiY.lichHenCuaToi: [{ maPhieuKham, maTraCuu,
+    linkPhieuKham, trangThai, ngay, gioBatDauKhung, gioKetThucKhung, hoTenBacSi, tenChuyenKhoa, tenPhong, tang,
+    hoTenBenhNhan, laBanThan, canDoiLich }]` (tối đa 10, gần nhất trước) và `goiY.lanKham: [{ maPhieuKham, maTraCuu, ngay,
+    hoTenBacSi, tenChuyenKhoa, hoTenBenhNhan, laBanThan, ngayTaiKhamDeXuat }]` (tối đa 10, mới nhất trước). `null` = câu
+    trả lời không tra cứu phần đó, mảng rỗng = đã tra cứu mà không có. Mở chi tiết bằng `maPhieuKham`
+    (`GET /api/booking/lich-hen/cua-toi/{maPhieuKham}`); chẩn đoán và đơn thuốc chỉ có ở màn hình lịch sử khám.
+  - Phạm vi dữ liệu đúng như màn hình "Lịch hẹn của tôi" và "Lịch sử khám" (gồm lịch tài khoản đặt cho người thân).
+  - `CHATBOT_PERSONAL_DATA=false` tắt hẳn tính năng này.
+- Ngôn ngữ: câu chào, câu từ chối, câu cấp cứu, câu xin đồng ý theo `Accept-Language`; mô hình trả lời theo `Accept-Language`, trừ khi người
+  dùng viết rõ bằng ngôn ngữ còn lại.
+- Lỗi: 400 `DU_LIEU_KHONG_HOP_LE` (tin rỗng / quá 1000 ký tự); 429 `CHAT_QUA_NHIEU` (mặc định 20 tin / 10 phút và 100 tin /
+  ngày cho mỗi tài khoản hoặc mỗi địa chỉ IP của khách, 10 phiên / giờ, 1000 lần gọi mô hình / ngày cho cả hệ thống);
+  503 `CHATBOT_KHONG_KHA_DUNG` (chưa đặt khoá API hoặc mô hình không trả lời: **không lưu gì**, cho người dùng gửi lại).
+- Gửi cho nhà cung cấp mô hình: chỉ dẫn hệ thống (kèm danh sách chuyên khoa), tối đa 10 tin gần nhất của chính phiên đó,
+  câu hỏi mới và kết quả tra cứu (tên bác sĩ, phòng, khung giờ: dữ liệu công khai; với bệnh nhân đã đồng ý thì thêm phần
+  tối thiểu về lịch hẹn của họ như trên). Họ tên người dùng không bao giờ được gửi. Rút lại đồng ý thì các câu trả lời cũ
+  về lịch hẹn cũng thôi được gửi lại. Câu trả lời chép lại chỉ dẫn hệ thống bị thay bằng câu từ chối. Log không ghi nội
+  dung tin nhắn, không ghi JWT.
+
+Mô hình được gọi qua API kiểu OpenAI nên đổi nhà cung cấp bằng cấu hình: `CHATBOT_BASE_URL`, `CHATBOT_API_KEY`,
+`CHATBOT_MODEL` (mặc định Gemini; khoá miễn phí ở https://aistudio.google.com/apikey). **Chưa đặt `CHATBOT_API_KEY` thì
+chatbot tắt**: mở phiên vẫn được, gửi tin nhắn trả 503. 1 tin nhắn có tra cứu gọi mô hình 2 - 3 lần (tối đa
+`CHATBOT_MAX_MODEL_CALLS`, trong `CHATBOT_TOTAL_TIMEOUT`), mỗi lần đều tính vào `CHATBOT_LIMIT_TOTAL_DAILY`. chatbot-service
+đọc bác sĩ và lịch khám ở `CATALOG_URL`, `BOOKING_URL`. Các giới hạn và biến khác: xem `.env.example`. Chỉ dẫn hệ thống và
+danh sách dấu hiệu cấp cứu là các file văn bản trong `chatbot-service/src/main/resources/chatbot/`.
 
 ## Chạy test
 

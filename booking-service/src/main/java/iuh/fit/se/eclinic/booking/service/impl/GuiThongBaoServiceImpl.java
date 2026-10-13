@@ -4,16 +4,19 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientException;
 
 import iuh.fit.se.eclinic.booking.client.ThongBaoClient;
+import iuh.fit.se.eclinic.booking.client.ThongBaoClient.EmailCanGui;
 import iuh.fit.se.eclinic.booking.client.ThongBaoClient.ThongBaoCanGui;
 import iuh.fit.se.eclinic.booking.repository.SuKienThongBaoRepository;
 import iuh.fit.se.eclinic.booking.service.GuiThongBaoService;
 import iuh.fit.se.eclinic.common.entity.booking.SuKienThongBao;
+import iuh.fit.se.eclinic.common.enums.KenhThongBao;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -21,6 +24,9 @@ import lombok.extern.slf4j.Slf4j;
  * Không có {@code @Transactional}: lời gọi sang notification-service không nằm trong transaction DB. Đọc các dòng chờ
  * gửi, gọi, rồi mới đánh dấu đã gửi bằng 1 lệnh update ngắn. Gọi xong mà chưa kịp đánh dấu (service tắt giữa chừng) thì
  * lần sau gửi lại; notification-service nhận ra nhờ {@code maNguon} nên không tạo thông báo trùng.
+ * <p>
+ * Dòng kênh EMAIL đi cùng job này sang hàng chờ gửi email của notification-service; "đã gửi" ở đây nghĩa là
+ * notification-service đã nhận, việc gửi tới máy chủ mail (và thử lại) là của nó.
  * <p>
  * Chỉ 1 thread của scheduler gọi class này (booking-service chạy 1 bản), nên không cần khoá dòng khi đọc.
  */
@@ -49,21 +55,13 @@ public class GuiThongBaoServiceImpl implements GuiThongBaoService {
             return 0;
         }
         List<Long> daGui = new ArrayList<>();
-        try {
-            thongBaoClient.gui(choGui.stream().map(GuiThongBaoServiceImpl::toCanGui).toList());
-            choGui.forEach(suKien -> daGui.add(suKien.getId()));
-        } catch (HttpClientErrorException.Unauthorized | HttpClientErrorException.Forbidden ex) {
-            // Sai khoá nội bộ: lỗi cấu hình của cả 2 service, không phải của từng dòng
-            baoMatKetNoi("HTTP " + ex.getStatusCode().value() + " (kiểm tra INTERNAL_API_KEY)");
-            return 0;
-        } catch (HttpClientErrorException ex) {
-            // Cả lô bị từ chối vì có dòng sai: gửi từng dòng để tìm ra, các dòng đúng vẫn đi
-            guiTungDong(choGui, daGui);
-        } catch (RestClientException ex) {
-            baoMatKetNoi(ex.getClass().getSimpleName());
-            return 0;
-        }
-        if (dangMatKetNoi) {
+        // 2 kênh đi 2 API của notification-service; mất kết nối ở kênh đầu thì không thử kênh sau
+        boolean thongSuot = guiLo(theoKenh(choGui, KenhThongBao.CHUONG),
+                lo -> thongBaoClient.gui(lo.stream().map(GuiThongBaoServiceImpl::toCanGui).toList()), daGui)
+                && guiLo(theoKenh(choGui, KenhThongBao.EMAIL),
+                        lo -> thongBaoClient.guiEmail(lo.stream().map(GuiThongBaoServiceImpl::toEmailCanGui).toList()),
+                        daGui);
+        if (thongSuot && dangMatKetNoi) {
             dangMatKetNoi = false;
             log.info("Đã gửi lại được thông báo sang notification-service");
         }
@@ -73,21 +71,52 @@ public class GuiThongBaoServiceImpl implements GuiThongBaoService {
         return daGui.size();
     }
 
-    private void guiTungDong(List<SuKienThongBao> choGui, List<Long> daGui) {
-        for (SuKienThongBao suKien : choGui) {
+    private static List<SuKienThongBao> theoKenh(List<SuKienThongBao> choGui, KenhThongBao kenh) {
+        return choGui.stream().filter(suKien -> suKien.getKenh() == kenh).toList();
+    }
+
+    /**
+     * Gửi 1 lô cùng kênh; dòng đã được nhận thêm vào {@code daGui}.
+     *
+     * @return false = không nối được notification-service (hoặc sai khoá nội bộ): dừng lần chạy này
+     */
+    private boolean guiLo(List<SuKienThongBao> lo, Consumer<List<SuKienThongBao>> gui, List<Long> daGui) {
+        if (lo.isEmpty()) {
+            return true;
+        }
+        try {
+            gui.accept(lo);
+            lo.forEach(suKien -> daGui.add(suKien.getId()));
+            return true;
+        } catch (HttpClientErrorException.Unauthorized | HttpClientErrorException.Forbidden ex) {
+            // Sai khoá nội bộ: lỗi cấu hình của cả 2 service, không phải của từng dòng
+            baoMatKetNoi("HTTP " + ex.getStatusCode().value() + " (kiểm tra INTERNAL_API_KEY)");
+            return false;
+        } catch (HttpClientErrorException ex) {
+            // Cả lô bị từ chối vì có dòng sai: gửi từng dòng để tìm ra, các dòng đúng vẫn đi
+            return guiTungDong(lo, gui, daGui);
+        } catch (RestClientException ex) {
+            baoMatKetNoi(ex.getClass().getSimpleName());
+            return false;
+        }
+    }
+
+    private boolean guiTungDong(List<SuKienThongBao> lo, Consumer<List<SuKienThongBao>> gui, List<Long> daGui) {
+        for (SuKienThongBao suKien : lo) {
             try {
-                thongBaoClient.gui(List.of(toCanGui(suKien)));
+                gui.accept(List.of(suKien));
                 daGui.add(suKien.getId());
             } catch (HttpClientErrorException ex) {
                 suKienThongBaoRepository.tangSoLanLoi(suKien.getId());
-                // Không ghi nội dung thông báo ra log (có họ tên bệnh nhân)
+                // Không ghi nội dung thông báo ra log (có họ tên bệnh nhân, địa chỉ email)
                 log.warn("notification-service từ chối sự kiện thông báo id={} (HTTP {}), lần {}/{}", suKien.getId(),
                         ex.getStatusCode().value(), suKien.getSoLanLoi() + 1, SO_LAN_LOI_TOI_DA);
             } catch (RestClientException ex) {
                 baoMatKetNoi(ex.getClass().getSimpleName());
-                return;
+                return false;
             }
         }
+        return true;
     }
 
     private void baoMatKetNoi(String lyDo) {
@@ -99,7 +128,13 @@ public class GuiThongBaoServiceImpl implements GuiThongBaoService {
 
     private static ThongBaoCanGui toCanGui(SuKienThongBao suKien) {
         return new ThongBaoCanGui(NGUON + suKien.getId(), suKien.getLoai(), suKien.getIdTaiKhoan(),
-                suKien.getIdLichHen(), suKien.getIdYeuCau(), suKien.getNoiDung());
+                suKien.getIdLichHen(), suKien.getIdYeuCau(), suKien.getKhoaMau(), suKien.getThamSo(),
+                suKien.getNoiDung());
+    }
+
+    private static EmailCanGui toEmailCanGui(SuKienThongBao suKien) {
+        return new EmailCanGui(NGUON + suKien.getId(), suKien.getEmailNhan(), suKien.getNgonNgu(), suKien.getKhoaMau(),
+                suKien.getThamSo(), suKien.getIdLichHen());
     }
 
     @Override

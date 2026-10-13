@@ -54,7 +54,7 @@ public class PhieuKhamServiceImpl implements PhieuKhamService {
 
     /** Một thông điệp chung cho mọi trường hợp, không cho biết mã sai dạng hay không tồn tại. */
     private static LoiNghiepVu khongTimThay() {
-        return new LoiNghiepVu(MaLoi.KHONG_TIM_THAY, "Phiếu khám không tồn tại");
+        return new LoiNghiepVu(MaLoi.KHONG_TIM_THAY, "loi.KHONG_TIM_THAY.phieuKham");
     }
 
 }

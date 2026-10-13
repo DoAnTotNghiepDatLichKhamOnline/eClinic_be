@@ -8,6 +8,11 @@ xem Swagger của từng service. Trang mẫu chạy được: `node scripts/dem
 cùng thanh bên của bác sĩ và quản trị viên. Mỗi màn hình là một file trong `scripts/demo/man-hinh/`, mở đầu bằng khối chú
 thích ghi các API màn hình đó gọi. Lịch dùng FullCalendar 6 tải từ CDN.
 
+**Bổ sung sau tài liệu này**: đổi ngôn ngữ EN / VI (header `Accept-Language`, các trường `…En` của danh mục), email lịch
+hẹn và chatbot nằm ở [BAN-GIAO-FRONTEND-NGON-NGU-EMAIL-CHATBOT.md](BAN-GIAO-FRONTEND-NGON-NGU-EMAIL-CHATBOT.md). Mọi câu chữ
+API trả về trong tài liệu này (`thongDiep`, tên chuyên khoa, phòng, chức vụ..., câu thông báo) nay theo ngôn ngữ của
+request; hình dạng phản hồi không đổi. Trang mẫu có nút EN | VI và khung chat ở mọi màn hình.
+
 | Đường dẫn | Vai trò | Màn hình UI | File trong `scripts/demo/man-hinh/` |
 |---|---|---|---|
 | `/login`, `/register`, `/forgot-password`, `/reset-password` | công khai | Authentication | `dang-nhap.js`, `dang-ky.js`, `quen-mat-khau.js`, `dat-lai-mat-khau.js` |
@@ -96,7 +101,7 @@ từ chối), nên trang mẫu hiện chuông cho mọi tài khoản.
 
 | API | Ai gọi | Ghi chú |
 |---|---|---|
-| `GET /api/notification/thong-bao?chuaDoc=&trang=&kichThuoc=` | Mọi tài khoản đã đăng nhập | Thông báo của tôi, mới nhất trước, dạng `TrangDuLieu`. `chuaDoc=true` chỉ lấy thông báo chưa đọc; `kichThuoc` mặc định 20, tối đa 100. Mỗi dòng: `{ id, loai, noiDung, daDoc, ngayTao, idLichHen, maPhieuKham, idYeuCau }`. `noiDung` là câu tiếng Việt đã soạn sẵn, hiển thị nguyên văn. `maPhieuKham` chỉ có khi người đọc là bệnh nhân (dùng để mở chi tiết lịch hẹn); bác sĩ dùng `idLichHen` |
+| `GET /api/notification/thong-bao?chuaDoc=&trang=&kichThuoc=` | Mọi tài khoản đã đăng nhập | Thông báo của tôi, mới nhất trước, dạng `TrangDuLieu`. `chuaDoc=true` chỉ lấy thông báo chưa đọc; `kichThuoc` mặc định 20, tối đa 100. Mỗi dòng: `{ id, loai, noiDung, daDoc, ngayTao, idLichHen, maPhieuKham, idYeuCau }`. `noiDung` là câu đã soạn sẵn theo `Accept-Language` của request đọc (đổi ngôn ngữ rồi tải lại là câu đổi theo; tên người, mã và lý do người dùng gõ giữ nguyên văn; thông báo tạo trước khi có 2 ngôn ngữ chỉ có câu tiếng Việt), hiển thị nguyên văn. `maPhieuKham` chỉ có khi người đọc là bệnh nhân (dùng để mở chi tiết lịch hẹn); bác sĩ dùng `idLichHen` |
 | `GET /api/notification/thong-bao/so-chua-doc` | Mọi tài khoản đã đăng nhập | `{ soChuaDoc }`: số trên biểu tượng chuông |
 | `POST /api/notification/thong-bao/{id}/da-doc` | Mọi tài khoản đã đăng nhập | Đánh dấu 1 thông báo của tôi đã đọc, gọi lại nhiều lần vẫn được. Thông báo của tài khoản khác hoặc không có -> 404 `KHONG_TIM_THAY_THONG_BAO` |
 | `POST /api/notification/thong-bao/da-doc-tat-ca` | Mọi tài khoản đã đăng nhập | `{ soDaDanhDau }` |
@@ -119,8 +124,11 @@ từ chối), nên trang mẫu hiện chuông cho mọi tài khoản.
   (`document.hidden`), gọi ngay khi tab hiện lại. Thông báo xuất hiện chậm nhất khoảng 5 giây sau sự kiện, cộng chu kỳ hỏi.
 - Bấm 1 thông báo: gọi `da-doc` rồi chuyển màn hình. Trang mẫu: bác sĩ sang Appointment Requests (`LICH_HEN_MOI`,
   `LICH_HEN_DA_DOI`) hoặc Work Schedule; bệnh nhân sang chi tiết lịch hẹn theo `maPhieuKham`.
-- Người làm thao tác không nhận thông báo về thao tác của chính mình; khách đặt không đăng nhập không có thông báo. Chưa có
-  nhắc lịch khám, chưa có xoá thông báo.
+- Người làm thao tác không nhận thông báo về thao tác của chính mình; khách đặt không đăng nhập không có thông báo. Bệnh
+  nhân nhận thêm `NHAC_LICH_KHAM` (nhắc trước giờ khám, có `maPhieuKham`) và `NHAC_TAI_KHAM` (bác sĩ hẹn / đổi ngày tái
+  khám, và lời nhắc trước ngày đó 7 ngày). Với `NHAC_TAI_KHAM`, `idLichHen` / `maPhieuKham` là của lượt khám **đã xong**:
+  chưa có lịch hẹn mới nào, bấm vào thì mở trang đặt lịch (có thể chọn sẵn bác sĩ của lượt khám đó). Email cùng nội dung
+  có nút mở `FRONTEND_URL` + `FOLLOWUP_BOOKING_PATH` (mặc định `/dat-lich`). Chưa có xoá thông báo.
 
 `/doctor/appointment-requests` là đường dẫn backend tự chọn (ảnh chụp màn hình Appointment Requests không có thanh địa chỉ):
 frontend dùng đường dẫn khác thì báo lại để trang mẫu đổi theo.

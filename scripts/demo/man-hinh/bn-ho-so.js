@@ -19,35 +19,40 @@
         const { status, json } = await lay('/api/booking/trang-ca-nhan/cua-toi', true);
         if (!$('bn-so-lich')) return;
         if (status !== 200) {
-            bao('bn-ca-nhan-trang-thai', thongDiepLoi(json, 'Không tải được trang cá nhân.'), 'loi');
+            bao('bn-ca-nhan-trang-thai', thongDiepLoi(json, t('Không tải được trang cá nhân.', 'Could not load the personal page.')), 'loi');
             return;
         }
         caNhan = json.duLieu;
-        bao('bn-ca-nhan-trang-thai', 'Tài khoản: ' + caNhan.emailTaiKhoan);
+        bao('bn-ca-nhan-trang-thai', t('Tài khoản: ', 'Account: ') + caNhan.emailTaiKhoan);
         const so = caNhan.soLich;
         $('bn-so-lich').replaceChildren(thongTin([
-            ['Sắp tới của tôi', String(so.sapToiCuaToi)], ['Sắp tới của người khác', String(so.sapToiCuaNguoiKhac)],
-            ['Lịch sử (đã khám, đã hủy, đã qua giờ)', String(so.lichSu)], ['Đã khám, xem được kết quả', String(so.daKham)],
+            [t('Sắp tới của tôi', 'My upcoming'), String(so.sapToiCuaToi)],
+            [t('Sắp tới của người khác', 'Upcoming for others'), String(so.sapToiCuaNguoiKhac)],
+            [t('Lịch sử (đã khám, đã hủy, đã qua giờ)', 'History (completed, cancelled, past)'), String(so.lichSu)],
+            [t('Đã khám, xem được kết quả', 'Completed, results available'), String(so.daKham)],
         ]));
         hienNguoiThan();
         const cacLan = caNhan.lanKhamGanDay.map((lan) => {
             const khoi = the('div', null, 'lan-kham');
-            khoi.append(the('b', `${ngayGioVn(lan.lichHen.gioKhamDuKien)} · ${lan.lichHen.hoTenBenhNhan} · BS ${lan.lichHen.bacSi.hoTen} (${lan.lichHen.tenChuyenKhoa})`),
+            khoi.append(the('b', t(`${ngayGioVn(lan.lichHen.gioKhamDuKien)} · ${lan.lichHen.hoTenBenhNhan} · BS ${lan.lichHen.bacSi.hoTen} (${lan.lichHen.tenChuyenKhoa})`,
+                `${ngayGioVn(lan.lichHen.gioKhamDuKien)} · ${lan.lichHen.hoTenBenhNhan} · Dr. ${lan.lichHen.bacSi.hoTen} (${lan.lichHen.tenChuyenKhoa})`)),
                 ketQuaKham(lan.ketQua));
             return khoi;
         });
-        $('bn-lan-kham').replaceChildren(...(cacLan.length ? cacLan : [ghiChu('Chưa có lần khám nào có kết quả.')]));
+        $('bn-lan-kham').replaceChildren(...(cacLan.length ? cacLan : [ghiChu(t('Chưa có lần khám nào có kết quả.', 'No visits with results yet.'))]));
     }
 
     function hienNguoiThan() {
         const ds = caNhan.nguoiThan;
         if (!ds.length) {
-            $('bn-nguoi-than').replaceChildren(ghiChu('Chưa lưu người thân nào (người thân được lưu khi bạn đặt lịch hộ).'));
+            $('bn-nguoi-than').replaceChildren(ghiChu(t('Chưa lưu người thân nào (người thân được lưu khi bạn đặt lịch hộ).',
+                'No saved relatives yet (a relative is saved when you book an appointment for them).')));
             return;
         }
-        $('bn-nguoi-than').replaceChildren(bang(['Họ tên', 'Ngày sinh', 'CCCD', 'Số điện thoại', 'Người giám hộ', ''], ds.map((nt) => dong([
-            nt.hoTen, ngayVn(nt.ngaySinh), nt.cccd || '(chưa có)', nt.soDienThoai, nt.nguoiGiamHo ? nt.nguoiGiamHo.hoTen : '',
-            [nut('Sửa', () => moSuaNguoiThan(nt)), nut('Bỏ', () => boNguoiThan(nt))],
+        $('bn-nguoi-than').replaceChildren(bang([t('Họ tên', 'Full name'), t('Ngày sinh', 'Date of birth'), t('CCCD', 'National ID'),
+            t('Số điện thoại', 'Phone number'), t('Người giám hộ', 'Guardian'), ''], ds.map((nt) => dong([
+            nt.hoTen, ngayVn(nt.ngaySinh), nt.cccd || t('(chưa có)', '(none)'), nt.soDienThoai, nt.nguoiGiamHo ? nt.nguoiGiamHo.hoTen : '',
+            [nut(t('Sửa', 'Edit'), () => moSuaNguoiThan(nt)), nut(t('Bỏ', 'Remove'), () => boNguoiThan(nt))],
         ]))));
     }
 
@@ -55,13 +60,15 @@
         nguoiThanDangSua = nt;
         const f = $('form-nguoi-than');
         for (const ten of TRUONG_NGUOI_THAN) f.elements[ten].value = nt[ten] || (ten === 'gioiTinh' ? 'NAM' : '');
-        $('tieu-de-nguoi-than').textContent = `Sửa người thân: ${nt.hoTen}` + (nt.cccd ? ` (CCCD ${nt.cccd})` : '');
+        $('tieu-de-nguoi-than').textContent = t(`Sửa người thân: ${nt.hoTen}`, `Edit relative: ${nt.hoTen}`)
+            + (nt.cccd ? t(` (CCCD ${nt.cccd})`, ` (national ID ${nt.cccd})`) : '');
         bao('nguoi-than-trang-thai', '');
         f.classList.remove('an');
     }
 
     async function boNguoiThan(nt) {
-        if (!confirm(`Bỏ "${nt.hoTen}" khỏi danh sách người thân đã lưu? Lịch đã đặt không bị ảnh hưởng.`)) return;
+        if (!confirm(t(`Bỏ "${nt.hoTen}" khỏi danh sách người thân đã lưu? Lịch đã đặt không bị ảnh hưởng.`,
+            `Remove "${nt.hoTen}" from your saved relatives? Booked appointments are not affected.`))) return;
         await goi('/api/booking/thong-tin-dat-lich/cua-toi/nguoi-than/' + nt.id, undefined, 'DELETE');
         $('form-nguoi-than').classList.add('an');
         await taiCaNhan();
@@ -74,10 +81,13 @@
         // Số CCCD chỉ nhập được khi tạo hồ sơ; đã có hồ sơ thì khoá
         form.elements.cccd.readOnly = !!(hs && hs.cccd);
         $('ho-so-trang-thai').textContent = !hs
-            ? 'Tài khoản chưa có hồ sơ bệnh nhân: nhập đủ thông tin (kể cả số CCCD) rồi bấm Lưu để tạo.'
+            ? t('Tài khoản chưa có hồ sơ bệnh nhân: nhập đủ thông tin (kể cả số CCCD) rồi bấm Lưu để tạo.',
+                'This account has no patient profile yet: fill in all the details (including the national ID number), then click Save to create it.')
             : hs.trangThaiLienKet === 'CHO_XAC_MINH'
-                ? 'Số CCCD của bạn đã có hồ sơ bệnh nhân nhưng thông tin không khớp: hồ sơ đang chờ phòng khám xác minh, chưa xem / sửa được.'
-                : `Trạng thái liên kết: ${LIEN_KET[hs.trangThaiLienKet] || hs.trangThaiLienKet}.`;
+                ? t('Số CCCD của bạn đã có hồ sơ bệnh nhân nhưng thông tin không khớp: hồ sơ đang chờ phòng khám xác minh, chưa xem / sửa được.',
+                    'Your national ID number already has a patient profile but the details do not match: the profile is awaiting verification by the clinic and cannot be viewed or edited yet.')
+                : t(`Trạng thái liên kết: ${LIEN_KET[hs.trangThaiLienKet] || hs.trangThaiLienKet}.`,
+                    `Link status: ${LIEN_KET[hs.trangThaiLienKet] || hs.trangThaiLienKet}.`);
     }
 
     async function taiHoSo() {
@@ -85,64 +95,65 @@
         if (!$('form-ho-so')) return;
         if (status === 200) hienHoSo(json.duLieu);
         else if (status === 404) hienHoSo(null);
-        else $('ho-so-trang-thai').textContent = thongDiepLoi(json, 'Không tải được hồ sơ.');
+        else $('ho-so-trang-thai').textContent = thongDiepLoi(json, t('Không tải được hồ sơ.', 'Could not load the profile.'));
     }
 
     dangKy({
         duongDan: '/patient/profile',
         vaiTro: 'BENH_NHAN',
-        tieuDe: 'My Patient Profile',
+        tieuDe: cap('Hồ sơ bệnh nhân của tôi', 'My Patient Profile'),
         async ve(khung) {
             khuon(khung, `
                 <section>
-                    <h2>Hồ sơ bệnh nhân của tôi</h2>
-                    <p id="ho-so-trang-thai" class="ghi-chu">Đang tải…</p>
+                    <h2>${t('Hồ sơ bệnh nhân của tôi', 'My patient profile')}</h2>
+                    <p id="ho-so-trang-thai" class="ghi-chu">${t('Đang tải…', 'Loading…')}</p>
                     <form id="form-ho-so">
                         <div class="hai-cot">
-                            <div><label>Họ tên</label><input name="hoTen" required maxlength="150"></div>
-                            <div><label>Ngày sinh</label><input name="ngaySinh" type="date" required></div>
-                            <div><label>Giới tính</label>
+                            <div><label>${t('Họ tên', 'Full name')}</label><input name="hoTen" required maxlength="150"></div>
+                            <div><label>${t('Ngày sinh', 'Date of birth')}</label><input name="ngaySinh" type="date" required></div>
+                            <div><label>${t('Giới tính', 'Gender')}</label>
                                 <select name="gioiTinh">
-                                    <option value="">(không chọn)</option>
-                                    <option value="NAM">Nam</option>
-                                    <option value="NU">Nữ</option>
-                                    <option value="KHAC">Khác</option>
+                                    <option value="">${t('(không chọn)', '(not selected)')}</option>
+                                    <option value="NAM">${t('Nam', 'Male')}</option>
+                                    <option value="NU">${t('Nữ', 'Female')}</option>
+                                    <option value="KHAC">${t('Khác', 'Other')}</option>
                                 </select></div>
-                            <div><label>Số điện thoại</label><input name="soDienThoai" required></div>
-                            <div><label>Số CCCD (không đổi được sau khi đã có hồ sơ)</label><input name="cccd"></div>
-                            <div><label>Số bảo hiểm y tế</label><input name="soBaoHiemYTe" maxlength="50"></div>
+                            <div><label>${t('Số điện thoại', 'Phone number')}</label><input name="soDienThoai" required></div>
+                            <div><label>${t('Số CCCD (không đổi được sau khi đã có hồ sơ)', 'National ID number (cannot be changed once the profile exists)')}</label><input name="cccd"></div>
+                            <div><label>${t('Số bảo hiểm y tế', 'Health insurance number')}</label><input name="soBaoHiemYTe" maxlength="50"></div>
                         </div>
-                        <label>Địa chỉ</label>
+                        <label>${t('Địa chỉ', 'Address')}</label>
                         <input name="diaChi" maxlength="500">
-                        <label>Tiền sử bệnh lý</label>
+                        <label>${t('Tiền sử bệnh lý', 'Medical history')}</label>
                         <textarea name="tienSuBenhLy" rows="2" maxlength="5000"></textarea>
-                        <button>Lưu hồ sơ</button>
+                        <button>${t('Lưu hồ sơ', 'Save profile')}</button>
                     </form>
                     <p id="thong-bao-ho-so" class="ghi-chu"></p>
                 </section>
                 <section>
-                    <h2>Trang cá nhân</h2>
+                    <h2>${t('Trang cá nhân', 'Personal page')}</h2>
                     <p id="bn-ca-nhan-trang-thai" class="ghi-chu"></p>
-                    <h3>Số lịch hẹn</h3>
+                    <h3>${t('Số lịch hẹn', 'Appointment counts')}</h3>
                     <div id="bn-so-lich"></div>
-                    <h3>Người thân đã lưu</h3>
+                    <h3>${t('Người thân đã lưu', 'Saved relatives')}</h3>
                     <div id="bn-nguoi-than" class="bang"></div>
                     <form id="form-nguoi-than" class="an">
-                        <h3 id="tieu-de-nguoi-than">Sửa người thân</h3>
+                        <h3 id="tieu-de-nguoi-than">${t('Sửa người thân', 'Edit relative')}</h3>
                         <div class="hai-cot">
-                            <div><label>Họ tên</label><input name="hoTen" required maxlength="150"></div>
-                            <div><label>Ngày sinh</label><input name="ngaySinh" type="date" required></div>
-                            <div><label>Giới tính</label><select name="gioiTinh"><option value="NAM">Nam</option><option value="NU">Nữ</option><option value="KHAC">Khác</option></select></div>
-                            <div><label>Số điện thoại</label><input name="soDienThoai" required pattern="0\\d{9}"></div>
+                            <div><label>${t('Họ tên', 'Full name')}</label><input name="hoTen" required maxlength="150"></div>
+                            <div><label>${t('Ngày sinh', 'Date of birth')}</label><input name="ngaySinh" type="date" required></div>
+                            <div><label>${t('Giới tính', 'Gender')}</label><select name="gioiTinh"><option value="NAM">${t('Nam', 'Male')}</option><option value="NU">${t('Nữ', 'Female')}</option><option value="KHAC">${t('Khác', 'Other')}</option></select></div>
+                            <div><label>${t('Số điện thoại', 'Phone number')}</label><input name="soDienThoai" required pattern="0\\d{9}"></div>
                             <div><label>Email</label><input name="email" type="email"></div>
-                            <div><label>Số thẻ bảo hiểm y tế</label><input name="soBaoHiemYTe" maxlength="50"></div>
+                            <div><label>${t('Số thẻ bảo hiểm y tế', 'Health insurance number')}</label><input name="soBaoHiemYTe" maxlength="50"></div>
                         </div>
-                        <label>Địa chỉ</label><input name="diaChi" maxlength="500">
-                        <p class="ghi-chu">Số CCCD không đổi được. Người giám hộ đã lưu (nếu có) được giữ nguyên. Chỉ sửa bản lưu của tài khoản, không sửa hồ sơ ở phòng khám.</p>
-                        <div class="hai-cot"><button>Lưu</button><button type="button" id="nut-huy-nguoi-than" class="phu">Hủy</button></div>
+                        <label>${t('Địa chỉ', 'Address')}</label><input name="diaChi" maxlength="500">
+                        <p class="ghi-chu">${t('Số CCCD không đổi được. Người giám hộ đã lưu (nếu có) được giữ nguyên. Chỉ sửa bản lưu của tài khoản, không sửa hồ sơ ở phòng khám.',
+                            'The national ID number cannot be changed. The saved guardian (if any) is kept. This only edits the copy saved in your account, not the profile at the clinic.')}</p>
+                        <div class="hai-cot"><button>${t('Lưu', 'Save')}</button><button type="button" id="nut-huy-nguoi-than" class="phu">${t('Hủy', 'Cancel')}</button></div>
                         <p id="nguoi-than-trang-thai" class="ghi-chu"></p>
                     </form>
-                    <h3>Các lần khám gần đây</h3>
+                    <h3>${t('Các lần khám gần đây', 'Recent visits')}</h3>
                     <div id="bn-lan-kham"></div>
                 </section>`);
 
@@ -154,11 +165,11 @@
                 for (const ten of TRUONG_HO_SO) than[ten] = v[ten] || null;
                 const { status, json } = await goi('/api/booking/ho-so-benh-nhan/cua-toi', than, 'PUT');
                 if (status !== 200) {
-                    bao('thong-bao-ho-so', thongDiepLoi(json, 'Lưu hồ sơ thất bại.'), 'loi');
+                    bao('thong-bao-ho-so', thongDiepLoi(json, t('Lưu hồ sơ thất bại.', 'Could not save the profile.')), 'loi');
                     return;
                 }
                 hienHoSo(json.duLieu);
-                bao('thong-bao-ho-so', json.thongDiep || 'Đã lưu hồ sơ.', 'tot');
+                bao('thong-bao-ho-so', json.thongDiep || t('Đã lưu hồ sơ.', 'Profile saved.'), 'tot');
             });
             $('nut-huy-nguoi-than').addEventListener('click', () => $('form-nguoi-than').classList.add('an'));
             $('form-nguoi-than').addEventListener('submit', async (e) => {
@@ -167,7 +178,7 @@
                 if (nguoiThanDangSua.nguoiGiamHo) than.nguoiGiamHo = nguoiThanDangSua.nguoiGiamHo;
                 const { status, json } = await goi('/api/booking/thong-tin-dat-lich/cua-toi/nguoi-than/' + nguoiThanDangSua.id, than, 'PUT');
                 if (status !== 200) {
-                    bao('nguoi-than-trang-thai', thongDiepLoi(json, 'Không lưu được.'), 'loi');
+                    bao('nguoi-than-trang-thai', thongDiepLoi(json, t('Không lưu được.', 'Could not save.')), 'loi');
                     return;
                 }
                 e.target.classList.add('an');

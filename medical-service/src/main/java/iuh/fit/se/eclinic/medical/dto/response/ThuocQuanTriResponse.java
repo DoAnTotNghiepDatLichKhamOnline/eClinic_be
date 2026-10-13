@@ -3,7 +3,8 @@ package iuh.fit.se.eclinic.medical.dto.response;
 import iuh.fit.se.eclinic.common.enums.TrangThaiThuoc;
 
 /**
- * 1 thuốc trong danh mục của quản trị viên.
+ * 1 thuốc trong danh mục của quản trị viên. Đơn vị, mô tả là chữ đã lưu của cả 2 ngôn ngữ ({@code ...En} = tiếng Anh,
+ * null khi chưa nhập).
  *
  * @param daXacMinh   false = bác sĩ tự thêm khi kê đơn, quản trị viên chưa xác minh
  * @param trangThai   NGUNG_DUNG: không được gợi ý, không kê mới được; đơn thuốc cũ vẫn hiển thị
@@ -14,7 +15,9 @@ public record ThuocQuanTriResponse(
         Long id,
         String tenThuoc,
         String donVi,
+        String donViEn,
         String moTa,
+        String moTaEn,
         boolean daXacMinh,
         TrangThaiThuoc trangThai,
         String tenBacSiTao,

@@ -1,0 +1,101 @@
+# Dấu hiệu cấp cứu (KiemTraKhanCap). Tin nhắn trúng 1 dòng thì chatbot trả câu "gọi 115" cố định, không gọi mô hình.
+# Mỗi dòng 1 dấu hiệu; nhiều phần nối bằng "+" thì tin nhắn phải có đủ mọi phần. Mỗi phần khớp từ đầu 1 từ.
+# Viết KHÔNG DẤU để người dùng gõ có dấu hay không đều trúng. Chỉ viết CÓ DẤU khi bỏ dấu thì trùng với từ thường gặp
+# (vd "tự tử" bỏ dấu thành "tu tu" = "từ từ"); phần có dấu chỉ khớp tin nhắn gõ đúng dấu.
+# Trúng nhầm chỉ làm người dùng nhận 1 câu khuyên gọi 115, nên thà rộng còn hơn sót.
+
+# --- Tiếng Việt: tim mạch, hô hấp ---
+dau nguc + kho tho
+dau that nguc
+dau nguc du doi
+tuc nguc du doi
+khong tho duoc
+khong tho noi
+ngung tho
+ngung tim
+ngat tho
+tim tai
+
+# --- đột quỵ ---
+dot quy
+tai bien mach mau nao
+meo mieng
+liet nua nguoi
+yeu nua nguoi
+te nua nguoi
+
+# --- mất ý thức, co giật ---
+bat tinh
+ngat xiu
+hôn mê
+goi khong day
+goi khong tinh
+co giat
+len con dong kinh
+
+# --- chảy máu ---
+chay mau nhieu
+chay mau khong cam
+chay mau khong ngung
+mat mau nhieu
+non ra mau
+oi ra mau
+ho ra mau
+
+# --- ý định tự hại ---
+tự tử
+muon tu tu
+dinh tu tu
+tu sat
+tự vẫn
+muon chet
+khong muon song
+ket lieu cuoc doi
+
+# --- dị ứng nặng, ngộ độc, quá liều ---
+soc phan ve
+ngo doc
+uong qua lieu
+qua lieu thuoc
+uong nham thuoc
+nuot phai
+
+# --- English ---
+chest pain + breath
+chest pain + sweat
+crushing chest pain
+cant breathe
+cannot breathe
+can not breathe
+unable to breathe
+not breathing
+stopped breathing
+struggling to breathe
+heart attack
+cardiac arrest
+stroke
+face drooping
+face is drooping
+slurred speech
+unconscious
+passed out
+unresponsive
+seizure
+convulsion
+severe bleeding
+heavy bleeding
+bleeding heavily
+bleeding wont stop
+wont stop bleeding
+coughing up blood
+vomiting blood
+suicid
+kill myself
+killing myself
+want to die
+end my life
+overdose
+poisoned
+poisoning
+anaphyla
+severe allergic reaction

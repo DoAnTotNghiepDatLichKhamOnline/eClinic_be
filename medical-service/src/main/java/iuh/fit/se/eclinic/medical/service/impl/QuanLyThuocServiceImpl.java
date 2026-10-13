@@ -57,7 +57,9 @@ public class QuanLyThuocServiceImpl implements QuanLyThuocService {
         thuoc.setTenThuoc(ThuocServiceImpl.collapseWhitespace(request.tenThuoc()));
         thuoc.setTenChuanHoa(tenChuanHoa);
         thuoc.setDonVi(rongThanhNull(request.donVi()));
+        thuoc.setDonViEn(rongThanhNull(request.donViEn()));
         thuoc.setMoTa(rongThanhNull(request.moTa()));
+        thuoc.setMoTaEn(rongThanhNull(request.moTaEn()));
         thuoc.setDaXacMinh(true);
         thuoc.setTrangThai(TrangThaiThuoc.DANG_DUNG);
         // Flush ngay: bác sĩ vừa thêm cùng tên khi kê đơn thì vi phạm UNIQUE -> 409 XUNG_DOT_DU_LIEU
@@ -84,7 +86,9 @@ public class QuanLyThuocServiceImpl implements QuanLyThuocService {
         }
         thuoc.setTenThuoc(ThuocServiceImpl.collapseWhitespace(request.tenThuoc()));
         thuoc.setDonVi(rongThanhNull(request.donVi()));
+        thuoc.setDonViEn(rongThanhNull(request.donViEn()));
         thuoc.setMoTa(rongThanhNull(request.moTa()));
+        thuoc.setMoTaEn(rongThanhNull(request.moTaEn()));
         thuocRepository.saveAndFlush(thuoc);
         log.info("Sửa thuốc id={}", id);
         return toResponse(thuoc, soLanKe);
@@ -121,8 +125,8 @@ public class QuanLyThuocServiceImpl implements QuanLyThuocService {
     }
 
     private static ThuocQuanTriResponse toResponse(Thuoc thuoc, long soLanKe) {
-        return new ThuocQuanTriResponse(thuoc.getId(), thuoc.getTenThuoc(), thuoc.getDonVi(), thuoc.getMoTa(),
-                thuoc.isDaXacMinh(), thuoc.getTrangThai(),
+        return new ThuocQuanTriResponse(thuoc.getId(), thuoc.getTenThuoc(), thuoc.getDonVi(), thuoc.getDonViEn(),
+                thuoc.getMoTa(), thuoc.getMoTaEn(), thuoc.isDaXacMinh(), thuoc.getTrangThai(),
                 thuoc.getBacSiTao() == null ? null : thuoc.getBacSiTao().getTaiKhoan().getHoTen(), soLanKe);
     }
 

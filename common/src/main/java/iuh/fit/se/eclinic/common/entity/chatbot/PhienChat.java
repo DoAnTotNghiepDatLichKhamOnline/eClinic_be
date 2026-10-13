@@ -25,8 +25,8 @@ import lombok.Setter;
 /**
  * Phiên chat với chatbot (ERD: PhienChat — CHAT-01). Khách và Bệnh nhân dùng được, không cần đăng nhập.
  * <p>
- * Khác ERD: {@code taiKhoan} cho phép NULL (Khách); thêm {@code maDinhDanhKhach} — định danh phía client
- * để Khách chưa đăng nhập mở lại phiên chat.
+ * Khác ERD: {@code taiKhoan} cho phép NULL (Khách); thêm {@code maDinhDanhKhach}: SHA-256 (hex) của mã bí mật server
+ * cấp cho Khách khi mở phiên. Khách gửi lại mã gốc ở header X-Chat-Khach để dùng tiếp phiên; id phiên không mở được gì.
  */
 @Getter
 @Setter
@@ -53,6 +53,13 @@ public class PhienChat extends BaseEntity {
     @JdbcTypeCode(SqlTypes.VARCHAR)
     @Column(name = "trang_thai", nullable = false, length = 20)
     private TrangThaiPhienChat trangThai = TrangThaiPhienChat.DANG_MO;
+
+    /**
+     * Lúc bệnh nhân đồng ý cho chatbot đọc lịch hẹn, lượt khám của mình trong phiên này và gửi phần tối thiểu tới nhà
+     * cung cấp mô hình; null = chưa đồng ý hoặc đã rút lại. Chỉ phiên của tài khoản mới có.
+     */
+    @Column(name = "dong_y_du_lieu_luc")
+    private LocalDateTime dongYDuLieuLuc;
 
     @PrePersist
     void onPrePersist() {

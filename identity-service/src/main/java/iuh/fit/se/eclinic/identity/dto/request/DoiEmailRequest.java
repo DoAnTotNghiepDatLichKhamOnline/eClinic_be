@@ -10,13 +10,13 @@ import jakarta.validation.constraints.Size;
  */
 public record DoiEmailRequest(
 
-        @NotBlank(message = "Email mới không được để trống")
-        @Email(message = "Email mới không đúng định dạng")
-        @Size(max = 255, message = "Email mới quá dài")
+        @NotBlank(message = "{kiemTra.emailMoi.batBuoc}")
+        @Email(message = "{kiemTra.emailMoi.dinhDang}")
+        @Size(max = 255, message = "{kiemTra.emailMoi.quaDai}")
         String emailMoi,
 
-        @NotBlank(message = "Mật khẩu hiện tại không được để trống")
-        @Size(max = 1000, message = "Mật khẩu quá dài")
+        @NotBlank(message = "{kiemTra.matKhauHienTai.batBuoc}")
+        @Size(max = 1000, message = "{kiemTra.matKhau.quaDai}")
         String matKhauHienTai) {
 
     /** Không in mật khẩu (tránh lộ khi request bị log). */

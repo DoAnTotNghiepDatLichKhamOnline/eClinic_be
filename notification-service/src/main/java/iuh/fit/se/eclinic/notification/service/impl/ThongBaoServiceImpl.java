@@ -13,9 +13,11 @@ import iuh.fit.se.eclinic.common.entity.booking.LichHen;
 import iuh.fit.se.eclinic.common.entity.identity.TaiKhoan;
 import iuh.fit.se.eclinic.common.entity.notification.ThongBao;
 import iuh.fit.se.eclinic.common.entity.scheduling.YeuCauDoiLich;
+import iuh.fit.se.eclinic.common.enums.NgonNgu;
 import iuh.fit.se.eclinic.common.enums.VaiTro;
 import iuh.fit.se.eclinic.common.exception.LoiNghiepVu;
 import iuh.fit.se.eclinic.common.exception.MaLoi;
+import iuh.fit.se.eclinic.common.thongbao.SoanThongBao;
 import iuh.fit.se.eclinic.notification.dto.request.TaoThongBaoRequest;
 import iuh.fit.se.eclinic.notification.dto.response.DanhDauDaDocResponse;
 import iuh.fit.se.eclinic.notification.dto.response.KetQuaNhanThongBaoResponse;
@@ -41,6 +43,7 @@ public class ThongBaoServiceImpl implements ThongBaoService {
     private final LichHenChiDocRepository lichHenChiDocRepository;
     private final ThongBaoMapper thongBaoMapper;
     private final EntityManager entityManager;
+    private final SoanThongBao soanThongBao;
 
     @Override
     public TrangDuLieu<ThongBaoResponse> danhSach(Long idTaiKhoan, VaiTro vaiTro, boolean chiChuaDoc, int trang,
@@ -92,7 +95,14 @@ public class ThongBaoServiceImpl implements ThongBaoService {
             ThongBao thongBao = new ThongBao();
             thongBao.setMaNguon(request.maNguon());
             thongBao.setLoai(request.loai());
-            thongBao.setNoiDung(request.noiDung());
+            if (request.khoaMau() == null || request.khoaMau().isBlank()) {
+                thongBao.setNoiDung(request.noiDung());
+            } else {
+                thongBao.setKhoaMau(request.khoaMau());
+                thongBao.setThamSo(request.thamSo());
+                // Bản tiếng Việt: dự phòng, và để cột noi_dung luôn đọc được khi xem thẳng trong DB
+                thongBao.setNoiDung(soanTiengViet(request));
+            }
             thongBao.setTaiKhoan(entityManager.getReference(TaiKhoan.class, request.idTaiKhoan()));
             if (request.idLichHen() != null && lichHenChiDocRepository.existsById(request.idLichHen())) {
                 thongBao.setLichHen(entityManager.getReference(LichHen.class, request.idLichHen()));
@@ -106,4 +116,13 @@ public class ThongBaoServiceImpl implements ThongBaoService {
         return new KetQuaNhanThongBaoResponse(daTao, danhSach.size() - daTao);
     }
 
+
+    private String soanTiengViet(TaoThongBaoRequest request) {
+        try {
+            return soanThongBao.soan(request.khoaMau(), request.thamSo(), NgonNgu.VI);
+        } catch (IllegalArgumentException ex) {
+            // Service nguồn gửi sai: 400 để nó ghi nhận lỗi của riêng dòng này
+            throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE, "loi.DU_LIEU_KHONG_HOP_LE.thamSoThongBao");
+        }
+    }
 }

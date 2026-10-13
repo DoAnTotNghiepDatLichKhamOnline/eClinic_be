@@ -19,29 +19,29 @@ import jakarta.validation.constraints.Size;
  * @param nguoiGiamHo bỏ trống thì bản lưu không còn người giám hộ
  */
 public record NguoiThanDaLuuRequest(
-        @NotBlank(message = "Họ tên không được để trống")
-        @Size(max = 150, message = "Họ tên tối đa 150 ký tự")
+        @NotBlank(message = "{kiemTra.hoTen.batBuoc}")
+        @Size(max = 150, message = "{kiemTra.hoTen.toiDa}")
         String hoTen,
 
-        @NotNull(message = "Ngày sinh không được để trống")
-        @PastOrPresent(message = "Ngày sinh không được ở tương lai")
+        @NotNull(message = "{kiemTra.ngaySinh.batBuoc}")
+        @PastOrPresent(message = "{kiemTra.ngaySinh.tuongLai}")
         LocalDate ngaySinh,
 
-        @NotNull(message = "Chưa chọn giới tính")
+        @NotNull(message = "{kiemTra.gioiTinh.batBuoc}")
         GioiTinh gioiTinh,
 
-        @NotBlank(message = "Số điện thoại không được để trống")
-        @Pattern(regexp = "^0\\d{9}$", message = "Số điện thoại gồm 10 chữ số, bắt đầu bằng 0")
+        @NotBlank(message = "{kiemTra.soDienThoai.batBuoc}")
+        @Pattern(regexp = "^0\\d{9}$", message = "{kiemTra.soDienThoai.dinhDang}")
         String soDienThoai,
 
-        @Email(message = "Email không hợp lệ")
-        @Size(max = 255, message = "Email tối đa 255 ký tự")
+        @Email(message = "{kiemTra.email.khongHopLe}")
+        @Size(max = 255, message = "{kiemTra.email.toiDa}")
         String email,
 
-        @Size(max = 50, message = "Số thẻ bảo hiểm y tế tối đa 50 ký tự")
+        @Size(max = 50, message = "{kiemTra.soTheBaoHiemYTe.toiDa}")
         String soBaoHiemYTe,
 
-        @Size(max = 500, message = "Địa chỉ tối đa 500 ký tự")
+        @Size(max = 500, message = "{kiemTra.diaChi.toiDa}")
         String diaChi,
 
         @Valid

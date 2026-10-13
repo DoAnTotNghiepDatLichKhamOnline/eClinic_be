@@ -9,9 +9,12 @@ import jakarta.validation.constraints.Size;
  */
 public record CapNhatAnhBacSiRequest(
 
-        @NotNull(message = "Loại ảnh không được để trống")
+        @NotNull(message = "{kiemTra.loaiAnh.batBuoc}")
         LoaiAnhBacSi loai,
 
-        @Size(max = 200, message = "Chú thích tối đa 200 ký tự")
-        String chuThich) {
+        @Size(max = 200, message = "{kiemTra.chuThich.toiDa}")
+        String chuThich,
+
+        @Size(max = 200, message = "{kiemTra.chuThichEn.toiDa}")
+        String chuThichEn) {
 }

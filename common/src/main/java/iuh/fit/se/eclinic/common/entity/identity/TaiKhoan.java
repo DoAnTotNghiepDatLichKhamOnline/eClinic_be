@@ -4,6 +4,7 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 import iuh.fit.se.eclinic.common.entity.AuditableEntity;
+import iuh.fit.se.eclinic.common.enums.NgonNgu;
 import iuh.fit.se.eclinic.common.enums.TrangThaiTaiKhoan;
 import iuh.fit.se.eclinic.common.enums.VaiTro;
 import jakarta.persistence.AttributeOverride;
@@ -71,6 +72,15 @@ public class TaiKhoan extends AuditableEntity {
     @JdbcTypeCode(SqlTypes.VARCHAR)
     @Column(name = "trang_thai", nullable = false, length = 20)
     private TrangThaiTaiKhoan trangThai = TrangThaiTaiKhoan.CHO_XAC_NHAN;
+
+    /**
+     * Ngôn ngữ ưa dùng (V16). Chỉ dùng khi soạn nội dung không gắn với request nào (email, nhắc lịch); thông điệp của
+     * API theo header Accept-Language của từng request, không theo cột này.
+     */
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
+    @Column(name = "ngon_ngu", nullable = false, length = 5)
+    private NgonNgu ngonNgu = NgonNgu.VI;
 
     /** Bổ sung ngoài ERD: lý do Admin vô hiệu hóa tài khoản (ADM-03 bắt buộc chọn lý do). */
     @Column(name = "ly_do_vo_hieu_hoa", length = 500)

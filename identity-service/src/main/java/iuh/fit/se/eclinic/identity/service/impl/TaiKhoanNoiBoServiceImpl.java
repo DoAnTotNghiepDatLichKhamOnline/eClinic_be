@@ -85,9 +85,9 @@ public class TaiKhoanNoiBoServiceImpl implements TaiKhoanNoiBoService {
             taiKhoan = taiKhoanRepository.saveAndFlush(taiKhoan);
         } catch (DataIntegrityViolationException e) {
             // 2 request tạo cùng email / số điện thoại cùng lúc: khoá duy nhất của bảng chặn request sau
-            throw new LoiNghiepVu(MaLoi.EMAIL_DA_TON_TAI, "Email hoặc số điện thoại đã được đăng ký");
+            throw new LoiNghiepVu(MaLoi.EMAIL_DA_TON_TAI, "loi.EMAIL_DA_TON_TAI.hoacSoDienThoai");
         }
-        eventPublisher.publishEvent(new EmailChaoBacSiEvent(email, taiKhoan.getHoTen()));
+        eventPublisher.publishEvent(new EmailChaoBacSiEvent(email, taiKhoan.getHoTen(), taiKhoan.getNgonNgu()));
         log.info("Tạo tài khoản bác sĩ id={} (mật khẩu mặc định, phải đặt mật khẩu ở lần đăng nhập đầu)",
                 taiKhoan.getId());
         return toResponse(taiKhoan);

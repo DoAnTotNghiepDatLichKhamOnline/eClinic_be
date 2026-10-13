@@ -7,10 +7,10 @@ import jakarta.validation.constraints.Size;
 /** API nội bộ: catalog-service nhờ hủy mọi ca sắp tới của bác sĩ ngừng công tác. */
 public record HuyCaCuaBacSiRequest(
 
-        @NotNull(message = "Thiếu tài khoản quản trị viên thực hiện")
+        @NotNull(message = "{kiemTra.taiKhoanQuanTri.batBuoc}")
         Long idTaiKhoanQuanTri,
 
-        @NotBlank(message = "Phải nhập lý do")
-        @Size(max = 500, message = "Lý do tối đa 500 ký tự")
+        @NotBlank(message = "{kiemTra.lyDo.batBuoc}")
+        @Size(max = 500, message = "{kiemTra.lyDo.toiDa}")
         String lyDo) {
 }

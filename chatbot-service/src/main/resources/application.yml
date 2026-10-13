@@ -6,3 +6,51 @@ spring:
     name: chatbot-service
   config:
     import: classpath:application-common.yml
+  data:
+    redis:
+      # Redis chỉ dùng để giới hạn số tin nhắn / số phiên chat; chậm hoặc mất kết nối thì bỏ qua giới hạn, không treo request
+      timeout: 2s
+      connect-timeout: 2s
+
+app:
+  bao-mat:
+    # Không cần đăng nhập: mở phiên chat, gửi tin nhắn, đọc lại phiên (khách chứng minh bằng mã bí mật ở header
+    # X-Chat-Khach). GET /api/chatbot/phien (danh sách phiên của tôi) không nằm ở đây nên cần JWT.
+    duong-dan-cong-khai:
+      - POST /api/chatbot/phien
+      - POST /api/chatbot/phien/*/tin-nhan
+      - GET /api/chatbot/phien/*/tin-nhan
+  chatbot:
+    # Mô hình ngôn ngữ, gọi qua API kiểu OpenAI (POST <url-goc>/chat/completions): đổi nhà cung cấp chỉ cần đổi 3 giá trị
+    # này. Mặc định là Gemini (khoá miễn phí ở https://aistudio.google.com/apikey). Để trống khoá = chatbot tắt:
+    # mở phiên vẫn được, gửi tin nhắn trả 503.
+    url-goc: ${CHATBOT_BASE_URL:https://generativelanguage.googleapis.com/v1beta/openai}
+    khoa-api: ${CHATBOT_API_KEY:}
+    mo-hinh: ${CHATBOT_MODEL:gemini-3.8-flash}
+    # reasoning_effort gửi kèm (minimal / low / medium / high); để trống = không gửi (nhà cung cấp không hỗ trợ)
+    muc-suy-luan: ${CHATBOT_REASONING_EFFORT:low}
+    # Thời gian chờ của 1 lần gọi mô hình
+    thoi-gian-cho: ${CHATBOT_TIMEOUT:20s}
+    # 1 tin nhắn có thể cần vài lần gọi mô hình (mô hình xin tra cứu bác sĩ / lịch khám rồi mới trả lời). Tổng thời gian
+    # của cả tin nhắn phải nhỏ hơn read-timeout của gateway (30s) để mô hình chậm ra 503 chứ không ra 504.
+    tong-thoi-gian-cho: ${CHATBOT_TOTAL_TIMEOUT:27s}
+    so-lan-goi-mo-hinh-toi-da: ${CHATBOT_MAX_MODEL_CALLS:3}
+    # Tra cứu bác sĩ và lịch khám còn chỗ: gọi thẳng (không qua gateway) API CÔNG KHAI của catalog-service và
+    # booking-service, không kèm JWT hay khoá nội bộ. Service kia không trả lời thì chatbot vẫn trả lời, chỉ thiếu gợi ý.
+    catalog-url: ${CATALOG_URL:http://localhost:8082}
+    booking-url: ${BOOKING_URL:http://localhost:8084}
+    # Bệnh nhân đã đăng nhập hỏi về lịch hẹn, lượt khám của CHÍNH MÌNH: chatbot gọi API "của tôi" của booking-service kèm
+    # JWT của người đang chat, sau khi họ đồng ý trong phiên. false = tắt hẳn, chatbot chỉ dùng dữ liệu công khai.
+    tra-cuu-ca-nhan: ${CHATBOT_PERSONAL_DATA:true}
+    # max_tokens của 1 câu trả lời (mô hình có suy luận tính cả phần suy luận vào đây)
+    so-token-tra-loi-toi-da: ${CHATBOT_MAX_TOKENS:2048}
+    # Số tin nhắn gần nhất của phiên gửi kèm cho mô hình
+    so-tin-nhan-lich-su: 10
+    # Giới hạn (đếm trên Redis; Redis lỗi thì bỏ qua): theo tài khoản khi đã đăng nhập, theo địa chỉ IP với khách
+    so-tin-nhan-moi-cua-so: ${CHATBOT_LIMIT_MESSAGES:20}
+    cua-so: ${CHATBOT_LIMIT_WINDOW:10m}
+    so-tin-nhan-moi-ngay: ${CHATBOT_LIMIT_DAILY:100}
+    so-phien-moi-gio: ${CHATBOT_LIMIT_SESSIONS:10}
+    # Số lần gọi mô hình của cả hệ thống trong 24 giờ (1 tin nhắn có tra cứu tính 2 - 3 lần): giữ cho hạn mức miễn phí
+    # của nhà cung cấp không bị dùng hết
+    so-tin-nhan-toan-he-thong-moi-ngay: ${CHATBOT_LIMIT_TOTAL_DAILY:1000}

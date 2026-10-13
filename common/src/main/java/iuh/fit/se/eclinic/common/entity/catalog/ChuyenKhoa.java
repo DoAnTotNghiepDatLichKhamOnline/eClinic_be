@@ -1,6 +1,7 @@
 package iuh.fit.se.eclinic.common.entity.catalog;
 
 import iuh.fit.se.eclinic.common.entity.BaseEntity;
+import iuh.fit.se.eclinic.common.enums.NgonNgu;
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -23,7 +24,32 @@ public class ChuyenKhoa extends BaseEntity {
     @Column(name = "ten_chuyen_khoa", nullable = false, unique = true, length = 150)
     private String tenChuyenKhoa;
 
+    @Column(name = "ten_chuyen_khoa_en", unique = true, length = 150)
+    private String tenChuyenKhoaEn;
+
     @Column(name = "mo_ta", columnDefinition = "TEXT")
     private String moTa;
 
+    @Column(name = "mo_ta_en", columnDefinition = "TEXT")
+    private String moTaEn;
+
+    /** Triệu chứng, vấn đề thường gặp mà chuyên khoa tiếp nhận: chỉ để chatbot chọn chuyên khoa, API công khai không trả. */
+    @Column(name = "trieu_chung", columnDefinition = "TEXT")
+    private String trieuChung;
+
+    @Column(name = "trieu_chung_en", columnDefinition = "TEXT")
+    private String trieuChungEn;
+
+    // Chữ theo ngôn ngữ: bản tiếng Anh nếu được yêu cầu và đã nhập, không thì bản tiếng Việt (NgonNgu.chon).
+    public String ten(NgonNgu ngonNgu) {
+        return ngonNgu.chon(tenChuyenKhoa, tenChuyenKhoaEn);
+    }
+
+    public String moTa(NgonNgu ngonNgu) {
+        return ngonNgu.chon(moTa, moTaEn);
+    }
+
+    public String trieuChung(NgonNgu ngonNgu) {
+        return ngonNgu.chon(trieuChung, trieuChungEn);
+    }
 }

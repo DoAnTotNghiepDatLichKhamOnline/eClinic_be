@@ -9,6 +9,7 @@ import iuh.fit.se.eclinic.catalog.repository.PhongKhamRepository;
 import iuh.fit.se.eclinic.catalog.service.PhongKhamService;
 import iuh.fit.se.eclinic.catalog.dto.response.PhongKhamResponse;
 import iuh.fit.se.eclinic.common.entity.catalog.PhongKham;
+import iuh.fit.se.eclinic.common.enums.NgonNgu;
 import iuh.fit.se.eclinic.common.enums.TrangThaiPhongKham;
 import iuh.fit.se.eclinic.common.exception.LoiKhongTimThay;
 import lombok.RequiredArgsConstructor;
@@ -39,9 +40,10 @@ public class PhongKhamServiceImpl implements PhongKhamService {
     @Override
     public List<PhongKhamResponse> danhSachDangHoatDong(Long idChuyenKhoa) {
         // Trong transaction chỉ đọc của class: tên chuyên khoa (quan hệ lazy) được tải tại đây
+        NgonNgu ngonNgu = NgonNgu.hienTai();
         return (idChuyenKhoa == null ? layDangHoatDong() : layDangHoatDongTheoChuyenKhoa(idChuyenKhoa)).stream()
-                .map(phong -> new PhongKhamResponse(phong.getId(), phong.getTenPhong(), phong.getTang(),
-                        phong.getChuyenKhoa().getId(), phong.getChuyenKhoa().getTenChuyenKhoa()))
+                .map(phong -> new PhongKhamResponse(phong.getId(), phong.ten(ngonNgu), phong.tang(ngonNgu),
+                        phong.getChuyenKhoa().getId(), phong.getChuyenKhoa().ten(ngonNgu)))
                 .toList();
     }
 

@@ -54,7 +54,7 @@ public class QuanTriPhongKhamController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public PhanHoiApi<PhongKhamQuanTriResponse> them(@Valid @RequestBody PhongKhamRequest request) {
-        return PhanHoiApi.ok(quanLyPhongKhamService.them(request), "Đã thêm phòng khám");
+        return PhanHoiApi.ok(quanLyPhongKhamService.them(request), "thanhCong.themPhongKham");
     }
 
     @Operation(summary = "Sửa tên phòng, tầng, chuyên khoa (đổi chuyên khoa khi phòng còn ca sắp tới: 409"
@@ -62,19 +62,19 @@ public class QuanTriPhongKhamController {
     @PutMapping("/{id}")
     public PhanHoiApi<PhongKhamQuanTriResponse> sua(@PathVariable Long id,
             @Valid @RequestBody PhongKhamRequest request) {
-        return PhanHoiApi.ok(quanLyPhongKhamService.sua(id, request), "Đã cập nhật phòng khám");
+        return PhanHoiApi.ok(quanLyPhongKhamService.sua(id, request), "thanhCong.capNhatPhongKham");
     }
 
     @Operation(summary = "Cho phòng ngừng hoạt động: không xếp ca mới vào phòng được nữa (409 PHONG_CON_CA_LAM_VIEC nếu"
             + " phòng còn ca sắp tới, chuyển các ca đó sang phòng khác trước)")
     @PostMapping("/{id}/ngung-hoat-dong")
     public PhanHoiApi<PhongKhamQuanTriResponse> ngungHoatDong(@PathVariable Long id) {
-        return PhanHoiApi.ok(quanLyPhongKhamService.ngungHoatDong(id), "Phòng khám đã ngừng hoạt động");
+        return PhanHoiApi.ok(quanLyPhongKhamService.ngungHoatDong(id), "thanhCong.phongNgungHoatDong");
     }
 
     @Operation(summary = "Cho phòng hoạt động lại")
     @PostMapping("/{id}/hoat-dong-lai")
     public PhanHoiApi<PhongKhamQuanTriResponse> hoatDongLai(@PathVariable Long id) {
-        return PhanHoiApi.ok(quanLyPhongKhamService.hoatDongLai(id), "Phòng khám đã hoạt động lại");
+        return PhanHoiApi.ok(quanLyPhongKhamService.hoatDongLai(id), "thanhCong.phongHoatDongLai");
     }
 }

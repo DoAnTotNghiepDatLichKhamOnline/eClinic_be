@@ -25,13 +25,13 @@
     async function nguonCa(info, xong, hong) {
         const { status, json } = await lay(`/api/booking/bac-si/toi/lich-lam-viec?${khoangNgay(info)}`, true);
         if (status !== 200) {
-            bao('bs-lich-trang-thai', thongDiepLoi(json, 'Không tải được lịch làm việc.'), 'loi');
+            bao('bs-lich-trang-thai', thongDiepLoi(json, t('Không tải được lịch làm việc.', 'Could not load the work schedule.')), 'loi');
             hong(new Error('HTTP ' + status));
             return;
         }
         xong(json.duLieu.map((ca) => ({
-            title: `Ca ${ca.gioBatDau.slice(0, 5)}–${ca.gioKetThuc.slice(0, 5)} · ${ca.phongKham.tenPhong} · ${ca.soLuotDaDat}/${ca.tongSoLuot}`
-                + (ca.trangThai === 'DA_HUY' ? ' (đã hủy)' : ''),
+            title: `${t('Ca', 'Shift')} ${ca.gioBatDau.slice(0, 5)}–${ca.gioKetThuc.slice(0, 5)} · ${ca.phongKham.tenPhong} · ${ca.soLuotDaDat}/${ca.tongSoLuot}`
+                + (ca.trangThai === 'DA_HUY' ? t(' (đã hủy)', ' (cancelled)') : ''),
             start: `${ca.ngay}T${ca.gioBatDau}`,
             end: `${ca.ngay}T${ca.gioKetThuc}`,
             color: ca.trangThai === 'DA_HUY' ? MAU.daHuy : MAU.ca,
@@ -47,7 +47,7 @@
             return;
         }
         xong(json.duLieu.map((lich) => ({
-            title: `STT ${lich.soThuTu} · ${lich.benhNhan.hoTen}`,
+            title: `${t('STT', 'No.')} ${lich.soThuTu} · ${lich.benhNhan.hoTen}`,
             start: lich.gioKhamDuKien,
             color: mauLichBacSi(lich),
             extendedProps: { lich },
@@ -57,33 +57,36 @@
     dangKy({
         duongDan: '/doctor/work-schedule',
         vaiTro: 'BAC_SI',
-        tieuDe: 'Work Schedule',
+        tieuDe: cap('Lịch làm việc', 'Work Schedule'),
         async ve(khung) {
             khuon(khung, `
                 <section>
-                    <h2>Lịch làm việc và lịch hẹn của tôi</h2>
-                    <p class="chu-thich"><span><i style="background:#57606a"></i>Ca làm việc (đã đặt / tổng số lượt)</span><span><i style="background:#1f6feb"></i>Lịch hẹn chờ khám</span>
-                        <span><i style="background:#1a7f37"></i>Đã khám</span><span><i style="background:#cf222e"></i>Cần đối chiếu giấy tờ</span><span><i style="background:#8c959f"></i>Đã hủy</span></p>
+                    <h2>${t('Lịch làm việc và lịch hẹn của tôi', 'My work schedule and appointments')}</h2>
+                    <p class="chu-thich"><span><i style="background:#57606a"></i>${t('Ca làm việc (đã đặt / tổng số lượt)', 'Shift (booked / total visit slots)')}</span><span><i style="background:#1f6feb"></i>${t('Lịch hẹn chờ khám', 'Appointment waiting for the visit')}</span>
+                        <span><i style="background:#1a7f37"></i>${t('Đã khám', 'Visit done')}</span><span><i style="background:#cf222e"></i>${t('Cần đối chiếu giấy tờ', 'Identity check needed')}</span><span><i style="background:#8c959f"></i>${t('Đã hủy', 'Cancelled')}</span></p>
                     <div id="lich-bs"></div>
-                    <p id="bs-lich-trang-thai" class="ghi-chu">Bấm vào 1 ngày hoặc 1 ca để xem danh sách bệnh nhân; bấm vào 1 lịch hẹn để mở hồ sơ khám.</p>
+                    <p id="bs-lich-trang-thai" class="ghi-chu">${t('Bấm vào 1 ngày hoặc 1 ca để xem danh sách bệnh nhân; bấm vào 1 lịch hẹn để mở hồ sơ khám.',
+                        'Click a day or a shift to see the patient list; click an appointment to open the medical record.')}</p>
                 </section>`);
             khuon(khung, `
                 <section>
                     <h2>Request a shift change / leave</h2>
-                    <p class="ghi-chu">Gửi trước giờ bắt đầu ca ít nhất 24 giờ. Quản trị viên duyệt thì ca bị hủy (xin nghỉ) hoặc được
-                        chuyển sang ngày / giờ / phòng mong muốn (đổi ca); bệnh nhân đã đặt trong ca được báo để đổi lịch.</p>
+                    <p class="ghi-chu">${t(`Gửi trước giờ bắt đầu ca ít nhất 24 giờ. Quản trị viên duyệt thì ca bị hủy (xin nghỉ) hoặc được
+                        chuyển sang ngày / giờ / phòng mong muốn (đổi ca); bệnh nhân đã đặt trong ca được báo để đổi lịch.`,
+                        `Send it at least 24 hours before the shift starts. When the administrator approves, the shift is cancelled (leave) or
+                        moved to the requested day / time / room (shift change); patients booked in the shift are told to reschedule.`)}</p>
                     <form id="form-yeu-cau-ca" class="hai-cot">
-                        <div><label>Ca của tôi (42 ngày tới)</label><select name="idLichLamViec" id="bs-yc-ca" required></select></div>
-                        <div><label>Loại</label><select name="loaiYeuCau" id="bs-yc-loai"><option value="XIN_NGHI">Xin nghỉ</option><option value="DOI_CA">Đổi ca</option></select></div>
-                        <div class="ca-dong"><label>Lý do</label><input name="lyDo" required maxlength="1000"></div>
-                        <div class="bs-yc-doi an"><label>Ngày mong muốn</label><input name="ngayMongMuon" type="date"></div>
-                        <div class="bs-yc-doi an"><label>Giờ bắt đầu</label><input name="gioBatDauMongMuon" type="time"></div>
-                        <div class="bs-yc-doi an"><label>Giờ kết thúc</label><input name="gioKetThucMongMuon" type="time"></div>
-                        <div class="bs-yc-doi an"><label>Phòng mong muốn</label><select name="idPhongKhamMongMuon" id="bs-yc-phong"><option value="">Giữ phòng hiện tại</option></select></div>
-                        <button>Gửi yêu cầu</button>
+                        <div><label>${t('Ca của tôi (42 ngày tới)', 'My shifts (next 42 days)')}</label><select name="idLichLamViec" id="bs-yc-ca" required></select></div>
+                        <div><label>${t('Loại', 'Type')}</label><select name="loaiYeuCau" id="bs-yc-loai"><option value="XIN_NGHI">${t('Xin nghỉ', 'Leave')}</option><option value="DOI_CA">${t('Đổi ca', 'Shift change')}</option></select></div>
+                        <div class="ca-dong"><label>${t('Lý do', 'Reason')}</label><input name="lyDo" required maxlength="1000"></div>
+                        <div class="bs-yc-doi an"><label>${t('Ngày mong muốn', 'Requested date')}</label><input name="ngayMongMuon" type="date"></div>
+                        <div class="bs-yc-doi an"><label>${t('Giờ bắt đầu', 'Start time')}</label><input name="gioBatDauMongMuon" type="time"></div>
+                        <div class="bs-yc-doi an"><label>${t('Giờ kết thúc', 'End time')}</label><input name="gioKetThucMongMuon" type="time"></div>
+                        <div class="bs-yc-doi an"><label>${t('Phòng mong muốn', 'Requested room')}</label><select name="idPhongKhamMongMuon" id="bs-yc-phong"><option value="">${t('Giữ phòng hiện tại', 'Keep the current room')}</option></select></div>
+                        <button>${t('Gửi yêu cầu', 'Send request')}</button>
                     </form>
                     <p id="bs-yc-trang-thai" class="ghi-chu"></p>
-                    <h3>Yêu cầu đã gửi</h3>
+                    <h3>${t('Yêu cầu đã gửi', 'Sent requests')}</h3>
                     <div id="bs-yc-ds" class="bang"></div>
                 </section>`);
 
@@ -94,7 +97,7 @@
                 const o = $('bs-yc-ca');
                 if (status !== 200 || !o) return;
                 o.replaceChildren(...json.duLieu.filter((ca) => ca.trangThai === 'HOAT_DONG').map((ca) => {
-                    const lua = the('option', `${moTaCa(ca)} · đã đặt ${ca.soLuotDaDat}/${ca.tongSoLuot}`);
+                    const lua = the('option', `${moTaCa(ca)} · ${t('đã đặt', 'booked')} ${ca.soLuotDaDat}/${ca.tongSoLuot}`);
                     lua.value = ca.idLichLamViec;
                     return lua;
                 }));
@@ -104,21 +107,23 @@
                 const ds = $('bs-yc-ds');
                 if (!ds) return;
                 if (status !== 200) {
-                    ds.replaceChildren(the('p', thongDiepLoi(json, 'Không tải được yêu cầu.'), 'ghi-chu loi'));
+                    ds.replaceChildren(the('p', thongDiepLoi(json, t('Không tải được yêu cầu.', 'Could not load the requests.')), 'ghi-chu loi'));
                     return;
                 }
                 if (!json.duLieu.noiDung.length) {
-                    ds.replaceChildren(ghiChu('Chưa gửi yêu cầu nào.'));
+                    ds.replaceChildren(ghiChu(t('Chưa gửi yêu cầu nào.', 'No requests sent yet.')));
                     return;
                 }
-                ds.replaceChildren(bang(['Gửi lúc', 'Loại', 'Ca', 'Mong muốn', 'Lý do', 'Trạng thái', 'Ghi chú của quản trị viên', 'Thao tác'], json.duLieu.noiDung.map((yc) => dong([
-                    ngayGioVn(yc.ngayGui), LOAI_YEU_CAU[yc.loaiYeuCau], moTaCa(yc.ca) + (yc.ca.trangThai === 'DA_HUY' ? ' (đã hủy)' : ''),
+                ds.replaceChildren(bang([t('Gửi lúc', 'Sent at'), t('Loại', 'Type'), t('Ca', 'Shift'), t('Mong muốn', 'Requested'), t('Lý do', 'Reason'),
+                    t('Trạng thái', 'Status'), t('Ghi chú của quản trị viên', 'Administrator\'s note'), t('Thao tác', 'Actions')], json.duLieu.noiDung.map((yc) => dong([
+                    ngayGioVn(yc.ngayGui), LOAI_YEU_CAU[yc.loaiYeuCau], moTaCa(yc.ca) + (yc.ca.trangThai === 'DA_HUY' ? t(' (đã hủy)', ' (cancelled)') : ''),
                     yc.ngayMongMuon ? `${ngayVn(yc.ngayMongMuon)} ${yc.gioBatDauMongMuon.slice(0, 5)}–${yc.gioKetThucMongMuon.slice(0, 5)}`
                         + (yc.phongKhamMongMuon ? ' · ' + tenPhong(yc.phongKhamMongMuon) : '') : null,
                     yc.lyDo, TRANG_THAI_YEU_CAU[yc.trangThai], yc.ghiChuXuLy,
-                    yc.trangThai === 'CHO_DUYET' ? nut('Rút', async () => {
+                    yc.trangThai === 'CHO_DUYET' ? nut(t('Rút', 'Withdraw'), async () => {
                         const kq = await goi(`${YC}/${yc.id}/rut`);
-                        bao('bs-yc-trang-thai', kq.status === 200 ? 'Đã rút yêu cầu.' : thongDiepLoi(kq.json, 'Không rút được.'), kq.status === 200 ? 'tot' : 'loi');
+                        bao('bs-yc-trang-thai', kq.status === 200 ? t('Đã rút yêu cầu.', 'Request withdrawn.')
+                            : thongDiepLoi(kq.json, t('Không rút được.', 'Could not withdraw the request.')), kq.status === 200 ? 'tot' : 'loi');
                         taiYeuCau();
                     }, 'phu nho') : null,
                 ]))));
@@ -131,7 +136,8 @@
                     ? ['idLichLamViec', 'loaiYeuCau', 'lyDo', 'ngayMongMuon', 'gioBatDauMongMuon', 'gioKetThucMongMuon', 'idPhongKhamMongMuon']
                     : ['idLichLamViec', 'loaiYeuCau', 'lyDo']);
                 const { status, json } = await goi(YC, than);
-                bao('bs-yc-trang-thai', status === 201 ? 'Đã gửi yêu cầu, chờ quản trị viên duyệt.' : thongDiepLoi(json, 'Không gửi được.'), status === 201 ? 'tot' : 'loi');
+                bao('bs-yc-trang-thai', status === 201 ? t('Đã gửi yêu cầu, chờ quản trị viên duyệt.', 'Request sent, waiting for the administrator to approve.')
+                    : thongDiepLoi(json, t('Không gửi được.', 'Could not send the request.')), status === 201 ? 'tot' : 'loi');
                 if (status === 201) taiYeuCau();
             });
             lay('/api/catalog/phong-kham', true).then(({ status, json }) => {

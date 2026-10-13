@@ -9,7 +9,7 @@
     </parent>
     <artifactId>chatbot-service</artifactId>
     <name>chatbot-service</name>
-    <description>UC-CHAT-01 (ngoài MVP, hướng phát triển): chatbot gợi ý chuyên khoa, hướng dẫn đặt lịch</description>
+    <description>UC-CHAT-01: chatbot (trợ lý AI) hướng dẫn dùng trang, trả lời câu hỏi sức khỏe thông thường</description>
 
     <dependencies>
         <dependency>
@@ -19,6 +19,11 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webmvc</artifactId>
+        </dependency>
+        <!-- Redis: đếm số tin nhắn / số phiên chat theo tài khoản hoặc địa chỉ IP -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
         </dependency>
 
         <!-- Test -->

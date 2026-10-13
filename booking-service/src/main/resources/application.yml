@@ -35,6 +35,24 @@ app:
     chu-ky-gui: ${BOOKING_NOTIFY_INTERVAL:5s}
     # Thời gian chờ kết nối / chờ phản hồi của notification-service
     thoi-gian-cho: 5s
+  nhac-lich:
+    # Nhắc lịch khám (thông báo + email) trước giờ khám ở từng mốc; để trống = không nhắc. Lịch đặt khi đã ở trong
+    # khoảng của 1 mốc thì bỏ mốc đó; mỗi mốc của 1 lịch hẹn nhắc nhiều nhất 1 lần (bảng nhac_lich_hen).
+    cac-moc: ${BOOKING_REMINDER_BEFORE:3d,1d}
+    # Khoảng nghỉ giữa 2 lần job tìm lịch hẹn đến hạn nhắc
+    chu-ky: ${BOOKING_REMINDER_INTERVAL:5m}
+    # Chỉ nhắc trong khoảng giờ này (giờ của phòng khám); lịch đến hạn ban đêm được nhắc vào lần chạy đầu buổi sáng
+    gui-tu: ${BOOKING_REMINDER_FROM:07:00}
+    gui-den: ${BOOKING_REMINDER_TO:21:00}
+    # Lượt khám còn cách ít hơn khoảng này thì không nhắc nữa
+    con-toi-thieu: ${BOOKING_REMINDER_MIN_LEAD:2h}
+    kich-thuoc-lo: 200
+  nhac-tai-kham:
+    # Báo khi bác sĩ hẹn / đổi ngày tái khám và nhắc lại trước ngày đó bấy nhiêu ngày (0 = không nhắc trước). Không tạo
+    # lịch hẹn. Chu kỳ job và khoảng giờ được gửi dùng chung của nhac-lich ở trên.
+    truoc-ngay: ${FOLLOWUP_REMINDER_DAYS:7}
+    # Trang đặt lịch của frontend: link trong email tái khám = phieu-kham.frontend-url + đường dẫn này
+    duong-dan-dat-lich: ${FOLLOWUP_BOOKING_PATH:/dat-lich}
   phieu-kham:
     # Link phiếu khám (cũng là nội dung mã QR) = frontend-url + duong-dan + mã phiếu khám
     frontend-url: ${FRONTEND_URL:http://localhost:5173}

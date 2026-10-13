@@ -7,10 +7,10 @@ import jakarta.validation.constraints.Size;
 
 /** Bệnh nhân gửi / sửa đánh giá 1 lượt khám đã hoàn thành. */
 public record DanhGiaRequest(
-        @NotNull(message = "Chưa chọn số sao")
-        @Min(value = 1, message = "Số sao từ 1 đến 5")
-        @Max(value = 5, message = "Số sao từ 1 đến 5")
+        @NotNull(message = "{kiemTra.soSao.batBuoc}")
+        @Min(value = 1, message = "{kiemTra.soSao.khoang}")
+        @Max(value = 5, message = "{kiemTra.soSao.khoang}")
         Integer soSao,
-        @Size(max = 1000, message = "Nhận xét tối đa 1000 ký tự")
+        @Size(max = 1000, message = "{kiemTra.nhanXet.toiDa}")
         String nhanXet) {
 }

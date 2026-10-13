@@ -2,6 +2,7 @@ package iuh.fit.se.eclinic.common.entity.medical;
 
 import iuh.fit.se.eclinic.common.entity.BaseEntity;
 import iuh.fit.se.eclinic.common.entity.catalog.BacSi;
+import iuh.fit.se.eclinic.common.enums.NgonNgu;
 import iuh.fit.se.eclinic.common.enums.TrangThaiThuoc;
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.Column;
@@ -44,8 +45,14 @@ public class Thuoc extends BaseEntity {
     @Column(name = "don_vi", length = 30)
     private String donVi;
 
+    @Column(name = "don_vi_en", length = 30)
+    private String donViEn;
+
     @Column(name = "mo_ta", columnDefinition = "TEXT")
     private String moTa;
+
+    @Column(name = "mo_ta_en", columnDefinition = "TEXT")
+    private String moTaEn;
 
     @Column(name = "da_xac_minh", nullable = false)
     private boolean daXacMinh;
@@ -60,4 +67,12 @@ public class Thuoc extends BaseEntity {
     @JoinColumn(name = "id_bac_si_tao")
     private BacSi bacSiTao;
 
+    // Chữ theo ngôn ngữ: bản tiếng Anh nếu được yêu cầu và đã nhập, không thì bản tiếng Việt (NgonNgu.chon).
+    public String donVi(NgonNgu ngonNgu) {
+        return ngonNgu.chon(donVi, donViEn);
+    }
+
+    public String moTa(NgonNgu ngonNgu) {
+        return ngonNgu.chon(moTa, moTaEn);
+    }
 }

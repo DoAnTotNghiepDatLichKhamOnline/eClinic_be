@@ -55,7 +55,7 @@ public class KhoaNoiBo {
     public void kiemTra(String khoaDaGui) {
         byte[] daGui = khoaDaGui == null ? new byte[0] : khoaDaGui.getBytes(StandardCharsets.UTF_8);
         if (!MessageDigest.isEqual(khoa, daGui)) {
-            throw new LoiNghiepVu(MaLoi.CHUA_DANG_NHAP, "Thiếu hoặc sai khoá nội bộ");
+            throw new LoiNghiepVu(MaLoi.CHUA_DANG_NHAP, "loi.CHUA_DANG_NHAP.khoaNoiBo");
         }
     }
 

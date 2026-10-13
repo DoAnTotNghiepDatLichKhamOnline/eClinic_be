@@ -104,7 +104,7 @@ public class QuanLyBacSiServiceImpl implements QuanLyBacSiService {
             // Chuyên khoa vừa bị xoá hoặc số giấy phép vừa bị người khác dùng: khoá của bảng chặn
             if (ex instanceof DataIntegrityViolationException) {
                 throw new LoiNghiepVu(MaLoi.XUNG_DOT_DU_LIEU,
-                        "Chuyên khoa hoặc số giấy phép vừa thay đổi, vui lòng tải lại và thử lại");
+                        "loi.XUNG_DOT_DU_LIEU.bacSiVuaThayDoi");
             }
             throw ex;
         }
@@ -158,7 +158,7 @@ public class QuanLyBacSiServiceImpl implements QuanLyBacSiService {
             });
         } catch (DataIntegrityViolationException ex) {
             throw new LoiNghiepVu(MaLoi.XUNG_DOT_DU_LIEU,
-                    "Chuyên khoa hoặc số giấy phép vừa thay đổi, vui lòng tải lại và thử lại");
+                    "loi.XUNG_DOT_DU_LIEU.bacSiVuaThayDoi");
         }
         log.info("Sửa thông tin cơ bản của bác sĩ id={}", idBacSi);
         return hoSoBacSiService.layHoSo(idBacSi);

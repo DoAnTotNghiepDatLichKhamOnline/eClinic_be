@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.springframework.context.MessageSource;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
@@ -34,6 +35,7 @@ import iuh.fit.se.eclinic.booking.repository.PhongKhamChiDocRepository;
 import iuh.fit.se.eclinic.booking.repository.QuanTriVienChiDocRepository;
 import iuh.fit.se.eclinic.booking.repository.YeuCauDoiLichRepository;
 import iuh.fit.se.eclinic.booking.service.LuotKhamService;
+import iuh.fit.se.eclinic.booking.service.LyDoHuyCa;
 import iuh.fit.se.eclinic.booking.service.QuanLyCaService;
 import iuh.fit.se.eclinic.booking.service.ThongBaoLichLamViecService;
 import iuh.fit.se.eclinic.common.dto.TrangDuLieu;
@@ -43,6 +45,7 @@ import iuh.fit.se.eclinic.common.entity.catalog.PhongKham;
 import iuh.fit.se.eclinic.common.entity.identity.QuanTriVien;
 import iuh.fit.se.eclinic.common.entity.scheduling.KhungGioKham;
 import iuh.fit.se.eclinic.common.entity.scheduling.LichLamViec;
+import iuh.fit.se.eclinic.common.enums.NgonNgu;
 import iuh.fit.se.eclinic.common.enums.TrangThaiBacSi;
 import iuh.fit.se.eclinic.common.enums.TrangThaiKhungGio;
 import iuh.fit.se.eclinic.common.enums.TrangThaiLichHen;
@@ -53,6 +56,7 @@ import iuh.fit.se.eclinic.common.enums.TrangThaiYeuCau;
 import iuh.fit.se.eclinic.common.exception.LoiKhongTimThay;
 import iuh.fit.se.eclinic.common.exception.LoiNghiepVu;
 import iuh.fit.se.eclinic.common.exception.MaLoi;
+import iuh.fit.se.eclinic.common.thongbao.VanBanHeThong;
 import iuh.fit.se.eclinic.common.util.ChiaCaLamViec;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -85,6 +89,7 @@ public class QuanLyCaServiceImpl implements QuanLyCaService {
     private final LichLamViecProperties lichLamViecProperties;
     private final LichLamViecMapper lichLamViecMapper;
     private final LichHenMapper lichHenMapper;
+    private final MessageSource messageSource;
 
     /** Lịch hẹn còn hiệu lực và mọi lượt khám của 1 ca, đều đã khoá. */
     private record DaKhoa(List<LichHen> lichHen, List<KhungGioKham> luot) {
@@ -111,26 +116,20 @@ public class QuanLyCaServiceImpl implements QuanLyCaService {
                 if (!lapLai) {
                     throw new LoiNghiepVu(MaLoi.TRUNG_LICH_LAM_VIEC, lyDoTrung);
                 }
-                boQua.add(new NgayBoQua(ngay, lyDoTrung));
+                boQua.add(new NgayBoQua(ngay,
+                        messageSource.getMessage(lyDoTrung, null, lyDoTrung, NgonNgu.hienTai().locale())));
                 continue;
             }
             daTao.add(luuCa(bacSi, phongKham, quanTri, ngay, request.gioBatDau(), request.gioKetThuc(),
                     request.soLuotToiDaMoiGio(), request.thoiLuongLuotPhut()));
         }
         if (daTao.isEmpty()) {
-            throw new LoiNghiepVu(MaLoi.TRUNG_LICH_LAM_VIEC, "Mọi ngày đã chọn đều trùng giờ với ca khác");
+            throw new LoiNghiepVu(MaLoi.TRUNG_LICH_LAM_VIEC, "loi.TRUNG_LICH_LAM_VIEC.moiNgay");
         }
         for (LichLamViec ca : daTao) {
             luotKhamService.danhLaiSoThuTu(phongKham.getId(), ca.getNgayLamViec());
         }
-        LichLamViec dau = daTao.get(0);
-        thongBaoLichLamViecService.caThayDoi(bacSi, daTao.size() == 1
-                ? "Bạn được xếp ca làm việc mới: " + ThongBaoLichLamViecServiceImpl.moTaCa(dau) + ", phòng "
-                        + phongKham.getTenPhong() + "."
-                : "Bạn được xếp " + daTao.size() + " ca làm việc mới, ca đầu "
-                        + ThongBaoLichLamViecServiceImpl.moTaCa(dau) + ", ca cuối "
-                        + ThongBaoLichLamViecServiceImpl.moTaCa(daTao.get(daTao.size() - 1)) + ", phòng "
-                        + phongKham.getTenPhong() + ".");
+        thongBaoLichLamViecService.caMoi(bacSi, daTao, phongKham);
         log.info("Quản trị viên id={} xếp {} ca cho bác sĩ id={} (bỏ qua {} ngày trùng)", quanTri.getId(),
                 daTao.size(), bacSi.getId(), boQua.size());
         return new KetQuaTaoCaResponse(toResponses(daTao), boQua);
@@ -144,8 +143,7 @@ public class QuanLyCaServiceImpl implements QuanLyCaService {
         boolean coDoi = suaCaDaKhoa(ca, request.idPhongKham(), request.gioBatDau(), request.gioKetThuc(),
                 request.soLuotToiDaMoiGio(), request.thoiLuongLuotPhut());
         if (coDoi) {
-            thongBaoLichLamViecService.caThayDoi(ca.getBacSi(), "Một ca làm việc của bạn đã được sửa, hiện là: "
-                    + ThongBaoLichLamViecServiceImpl.moTaCa(ca) + ", phòng " + ca.getPhongKham().getTenPhong() + ".");
+            thongBaoLichLamViecService.caDaSua(ca);
             log.info("Quản trị viên id={} sửa ca id={}", quanTri.getId(), idLichLamViec);
         }
         return toResponse(ca);
@@ -156,9 +154,9 @@ public class QuanLyCaServiceImpl implements QuanLyCaService {
     public KetQuaHuyCaResponse huy(Long idTaiKhoanQuanTri, Long idLichLamViec, String lyDo) {
         QuanTriVien quanTri = layQuanTriVien(idTaiKhoanQuanTri);
         LichLamViec ca = khoaCaConSuaDuoc(idLichLamViec);
-        int soLichHen = huyCaDaKhoa(ca, quanTri, lyDo.trim(), null);
-        thongBaoLichLamViecService.caThayDoi(ca.getBacSi(), "Ca làm việc "
-                + ThongBaoLichLamViecServiceImpl.moTaCa(ca) + " của bạn đã bị hủy. Lý do: " + ketThucCau(lyDo.trim()));
+        LyDoHuyCa lyDoHuy = LyDoHuyCa.nguoiDungGo(lyDo);
+        int soLichHen = huyCaDaKhoa(ca, quanTri, lyDoHuy, null);
+        thongBaoLichLamViecService.caBiHuy(ca, lyDoHuy);
         log.info("Quản trị viên id={} hủy ca id={}, {} lịch hẹn cần đổi lịch", quanTri.getId(), idLichLamViec,
                 soLichHen);
         return new KetQuaHuyCaResponse(toResponse(ca), soLichHen);
@@ -169,7 +167,7 @@ public class QuanLyCaServiceImpl implements QuanLyCaService {
     public int huyKhongBaoBacSi(Long idTaiKhoanQuanTri, Long idLichLamViec, String lyDo) {
         QuanTriVien quanTri = layQuanTriVien(idTaiKhoanQuanTri);
         LichLamViec ca = khoaCaConSuaDuoc(idLichLamViec);
-        return huyCaDaKhoa(ca, quanTri, lyDo.trim(), null);
+        return huyCaDaKhoa(ca, quanTri, LyDoHuyCa.nguoiDungGo(lyDo), null);
     }
 
     @Override
@@ -200,14 +198,13 @@ public class QuanLyCaServiceImpl implements QuanLyCaService {
 
     @Override
     @Transactional(isolation = Isolation.READ_COMMITTED)
-    public int huyCaDaKhoa(LichLamViec ca, QuanTriVien quanTri, String lyDo, Long idYeuCauDangDuyet) {
+    public int huyCaDaKhoa(LichLamViec ca, QuanTriVien quanTri, LyDoHuyCa lyDo, Long idYeuCauDangDuyet) {
         DaKhoa daKhoa = khoaLichHenVaLuot(ca.getId());
         daKhoa.luot().forEach(luot -> luot.setTrangThai(TrangThaiKhungGio.DA_HUY));
         ca.setTrangThai(TrangThaiLichLamViec.DA_HUY);
-        String lyDoTronCau = ketThucCau(lyDo);
         for (LichHen lichHen : daKhoa.lichHen()) {
             lichHen.setCanDoiLich(true);
-            thongBaoLichLamViecService.lichHenCanDoi(lichHen, lyDoTronCau);
+            thongBaoLichLamViecService.lichHenCanDoi(lichHen, lyDo);
         }
         // Yêu cầu đang chờ duyệt của ca không còn gì để duyệt: đóng lại, bác sĩ được báo
         yeuCauDoiLichRepository.findByLichLamViecIdAndTrangThai(ca.getId(), TrangThaiYeuCau.CHO_DUYET)
@@ -215,9 +212,10 @@ public class QuanLyCaServiceImpl implements QuanLyCaService {
                 .ifPresent(yeuCau -> {
                     yeuCau.setTrangThai(TrangThaiYeuCau.TU_CHOI);
                     yeuCau.setAdminXuLy(quanTri);
-                    yeuCau.setGhiChuXuLy("Ca làm việc đã bị quản trị viên hủy: " + lyDoTronCau);
+                    // Câu của hệ thống: lưu khoá + lý do quản trị viên gõ, lúc đọc mới thành câu (xem VanBanHeThong)
+                    yeuCau.setGhiChuXuLy(VanBanHeThong.ghi("heThong.caBiQuanTriHuy", lyDo.chu()));
                     yeuCau.setNgayXuLy(LocalDateTime.now());
-                    thongBaoLichLamViecService.ketQuaYeuCau(yeuCau);
+                    thongBaoLichLamViecService.yeuCauDongDoHuyCa(yeuCau, lyDo);
                 });
         return daKhoa.lichHen().size();
     }
@@ -239,7 +237,7 @@ public class QuanLyCaServiceImpl implements QuanLyCaService {
         PhongKham phongMoi = khoaPhongKham(idPhongKham, bacSi, doiPhong);
         kiemTraSucChua(gioBatDau, gioKetThuc, soLuotToiDaMoiGio, thoiLuongLuotPhut);
         if (!ngay.atTime(gioBatDau).isAfter(LocalDateTime.now())) {
-            throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE, "Ca phải bắt đầu sau thời điểm hiện tại");
+            throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE, "loi.DU_LIEU_KHONG_HOP_LE.caTrongQuaKhu");
         }
         kiemTraKhongTrungLich(bacSi.getId(), phongMoi.getId(), ngay, gioBatDau, gioKetThuc, ca.getId());
 
@@ -300,13 +298,14 @@ public class QuanLyCaServiceImpl implements QuanLyCaService {
      *
      * @param idCaDangSua ca đang sửa (không tự trùng với chính nó); null khi xếp ca mới
      */
+    /** @return khoá thông điệp của lý do trùng (thong-diep/booking*.properties); null nếu không trùng */
     private String lyDoTrungLich(Long idBacSi, Long idPhongKham, LocalDate ngay, LocalTime gioBatDau,
             LocalTime gioKetThuc, Long idCaDangSua) {
         if (lichLamViecRepository.existsTrungCaCuaBacSi(idBacSi, ngay, gioBatDau, gioKetThuc, idCaDangSua)) {
-            return "Bác sĩ đã có ca làm việc trùng giờ";
+            return "loi.TRUNG_LICH_LAM_VIEC.bacSi";
         }
         if (lichLamViecRepository.existsTrungCaCuaPhongKham(idPhongKham, ngay, gioBatDau, gioKetThuc, idCaDangSua)) {
-            return "Phòng khám đã được xếp ca trùng giờ";
+            return "loi.TRUNG_LICH_LAM_VIEC.phongKham";
         }
         return null;
     }
@@ -328,11 +327,10 @@ public class QuanLyCaServiceImpl implements QuanLyCaService {
             return cacNgay;
         }
         if (lapLai.denNgay().isBefore(request.ngay())) {
-            throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE, "lapLai.denNgay phải từ ngày của ca trở đi");
+            throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE, "loi.DU_LIEU_KHONG_HOP_LE.lapLaiDenNgay");
         }
         if (lapLai.denNgay().isAfter(homNay.plusDays(lichLamViecProperties.soNgayXepTruocToiDa()))) {
-            throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE, "Chỉ xếp được ca trong "
-                    + lichLamViecProperties.soNgayXepTruocToiDa() + " ngày tới");
+            throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE, "loi.DU_LIEU_KHONG_HOP_LE.caQuaXa", String.valueOf(lichLamViecProperties.soNgayXepTruocToiDa()));
         }
         Set<Integer> cacThu = new HashSet<>(lapLai.cacThu());
         for (LocalDate ngay = request.ngay().plusDays(1); !ngay.isAfter(lapLai.denNgay()); ngay = ngay.plusDays(1)) {
@@ -345,25 +343,24 @@ public class QuanLyCaServiceImpl implements QuanLyCaService {
 
     private void kiemTraNgay(LocalDate ngay, LocalTime gioBatDau, LocalDate homNay) {
         if (!ngay.atTime(gioBatDau).isAfter(LocalDateTime.now())) {
-            throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE, "Ca phải bắt đầu sau thời điểm hiện tại");
+            throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE, "loi.DU_LIEU_KHONG_HOP_LE.caTrongQuaKhu");
         }
         if (ngay.isAfter(homNay.plusDays(lichLamViecProperties.soNgayXepTruocToiDa()))) {
-            throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE, "Chỉ xếp được ca trong "
-                    + lichLamViecProperties.soNgayXepTruocToiDa() + " ngày tới");
+            throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE, "loi.DU_LIEU_KHONG_HOP_LE.caQuaXa", String.valueOf(lichLamViecProperties.soNgayXepTruocToiDa()));
         }
     }
 
     private static void kiemTraSucChua(LocalTime gioBatDau, LocalTime gioKetThuc, int soLuotToiDaMoiGio,
             int thoiLuongLuotPhut) {
         if (!gioKetThuc.isAfter(gioBatDau)) {
-            throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE, "Giờ kết thúc phải sau giờ bắt đầu");
+            throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE, "loi.DU_LIEU_KHONG_HOP_LE.gioKetThuc");
         }
         if (soLuotToiDaMoiGio * thoiLuongLuotPhut > ChiaCaLamViec.SO_PHUT_MOI_KHUNG) {
             throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE,
-                    "Số lượt mỗi giờ x số phút mỗi lượt không được quá 60");
+                    "loi.DU_LIEU_KHONG_HOP_LE.sucChuaMoiGio");
         }
         if (ChiaCaLamViec.gioBatDauCacLuot(gioBatDau, gioKetThuc, soLuotToiDaMoiGio, thoiLuongLuotPhut).isEmpty()) {
-            throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE, "Ca quá ngắn, không đủ cho 1 lượt khám");
+            throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE, "loi.DU_LIEU_KHONG_HOP_LE.caQuaNgan");
         }
     }
 
@@ -373,7 +370,7 @@ public class QuanLyCaServiceImpl implements QuanLyCaService {
         if (phaiDangCongTac && (bacSi.getTrangThai() != TrangThaiBacSi.DANG_CONG_TAC
                 || bacSi.getTaiKhoan().getTrangThai() != TrangThaiTaiKhoan.DA_KICH_HOAT)) {
             throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE,
-                    "Bác sĩ đã ngừng công tác hoặc tài khoản chưa hoạt động, không xếp ca được");
+                    "loi.DU_LIEU_KHONG_HOP_LE.bacSiKhongHoatDong");
         }
         return bacSi;
     }
@@ -386,10 +383,10 @@ public class QuanLyCaServiceImpl implements QuanLyCaService {
             return phongKham;
         }
         if (phongKham.getTrangThai() != TrangThaiPhongKham.HOAT_DONG) {
-            throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE, "Phòng khám đã ngừng hoạt động");
+            throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE, "loi.DU_LIEU_KHONG_HOP_LE.phongNgungHoatDong");
         }
         if (!phongKham.getChuyenKhoa().getId().equals(bacSi.getChuyenKhoa().getId())) {
-            throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE, "Phòng khám không thuộc chuyên khoa của bác sĩ");
+            throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE, "loi.DU_LIEU_KHONG_HOP_LE.phongKhacChuyenKhoa");
         }
         return phongKham;
     }
@@ -464,8 +461,7 @@ public class QuanLyCaServiceImpl implements QuanLyCaService {
             }
         }
         if (soLuotBiMat > 0) {
-            throw new LoiNghiepVu(MaLoi.CA_CON_LICH_HEN, "Thay đổi này làm mất " + soLuotBiMat
-                    + " lượt khám đã có người đặt; hãy giữ các lượt đó hoặc hủy cả ca");
+            throw new LoiNghiepVu(MaLoi.CA_CON_LICH_HEN, "loi.CA_CON_LICH_HEN.soLuot", String.valueOf(soLuotBiMat));
         }
         List<KhungGioKham> luotThem = new ArrayList<>();
         for (LocalDateTime gio : gioMoi) {
@@ -484,10 +480,6 @@ public class QuanLyCaServiceImpl implements QuanLyCaService {
         }
         khungGioKhamRepository.saveAll(luotThem);
         ca.setSoBenhNhanToiDa(gioMoi.size());
-    }
-
-    private static String ketThucCau(String cau) {
-        return cau.endsWith(".") || cau.endsWith("!") || cau.endsWith("?") ? cau : cau + ".";
     }
 
 }

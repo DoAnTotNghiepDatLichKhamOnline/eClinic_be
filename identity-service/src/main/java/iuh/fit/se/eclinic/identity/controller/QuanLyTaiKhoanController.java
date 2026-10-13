@@ -64,15 +64,15 @@ public class QuanLyTaiKhoanController {
             @Valid @RequestBody CapNhatTrangThaiTaiKhoanRequest request) {
         ChiTietTaiKhoanResponse ketQua = quanLyTaiKhoanService.capNhatTrangThai(NguoiDungHienTai.layIdTaiKhoan(), id,
                 request);
-        return PhanHoiApi.ok(ketQua, request.trangThai() == TrangThaiTaiKhoan.VO_HIEU_HOA ? "Đã vô hiệu hoá tài khoản"
-                : "Đã kích hoạt lại tài khoản");
+        return PhanHoiApi.ok(ketQua, request.trangThai() == TrangThaiTaiKhoan.VO_HIEU_HOA ? "thanhCong.voHieuHoaTaiKhoan"
+                : "thanhCong.kichHoatLaiTaiKhoan");
     }
 
     @Operation(summary = "Xoá tài khoản — chỉ khi chưa có dữ liệu nào tham chiếu (hồ sơ, thông báo, phiên chat); nếu có thì 409, hãy vô hiệu hoá")
     @DeleteMapping("/{id}")
     public PhanHoiApi<Void> xoa(@PathVariable Long id) {
         quanLyTaiKhoanService.xoa(NguoiDungHienTai.layIdTaiKhoan(), id);
-        return PhanHoiApi.ok(null, "Đã xoá tài khoản");
+        return PhanHoiApi.ok(null, "thanhCong.xoaTaiKhoan");
     }
 
 }

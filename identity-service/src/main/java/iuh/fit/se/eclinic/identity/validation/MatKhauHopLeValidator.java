@@ -2,6 +2,8 @@ package iuh.fit.se.eclinic.identity.validation;
 
 import java.nio.charset.StandardCharsets;
 
+import org.hibernate.validator.constraintvalidation.HibernateConstraintValidatorContext;
+
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
@@ -13,19 +15,24 @@ public class MatKhauHopLeValidator implements ConstraintValidator<MatKhauHopLe, 
 
     @Override
     public boolean isValid(String matKhau, ConstraintValidatorContext context) {
-        String thongDiep = null;
+        // Khoá trong thong-diep/identity*.properties; {toiThieu}, {toiDaByte} được điền từ hằng số bên trên
+        String khoa = null;
         if (matKhau == null || matKhau.isEmpty()) {
-            thongDiep = "Mật khẩu không được để trống";
+            khoa = "kiemTra.matKhau.batBuoc";
         } else if (matKhau.length() < DO_DAI_TOI_THIEU) {
-            thongDiep = "Mật khẩu tối thiểu " + DO_DAI_TOI_THIEU + " ký tự";
+            khoa = "kiemTra.matKhau.toiThieu";
         } else if (matKhau.getBytes(StandardCharsets.UTF_8).length > SO_BYTE_TOI_DA) {
-            thongDiep = "Mật khẩu quá dài (tối đa " + SO_BYTE_TOI_DA + " byte)";
+            khoa = "kiemTra.matKhau.toiDaByte";
         }
-        if (thongDiep == null) {
+        if (khoa == null) {
             return true;
         }
         context.disableDefaultConstraintViolation();
-        context.buildConstraintViolationWithTemplate(thongDiep).addConstraintViolation();
+        context.unwrap(HibernateConstraintValidatorContext.class)
+                .addMessageParameter("toiThieu", DO_DAI_TOI_THIEU)
+                .addMessageParameter("toiDaByte", SO_BYTE_TOI_DA)
+                .buildConstraintViolationWithTemplate("{" + khoa + "}")
+                .addConstraintViolation();
         return false;
     }
 

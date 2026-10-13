@@ -25,6 +25,7 @@ import iuh.fit.se.eclinic.common.entity.booking.LichHen;
 import iuh.fit.se.eclinic.common.entity.booking.NguoiGiamHo;
 import iuh.fit.se.eclinic.common.entity.identity.TaiKhoan;
 import iuh.fit.se.eclinic.common.entity.scheduling.LichLamViec;
+import iuh.fit.se.eclinic.common.enums.NgonNgu;
 import iuh.fit.se.eclinic.common.enums.TrangThaiLichHen;
 import iuh.fit.se.eclinic.common.util.ChiaCaLamViec;
 import lombok.RequiredArgsConstructor;
@@ -93,7 +94,7 @@ public class LichHenMapper {
                 phieuKhamProperties.lienKet(lichHen.getMaTokenPhieuKham()), lichHen.getTrangThai(),
                 lichHen.getSoThuTu(), ngay, gioKhamDuKien, ngay.atTime(gioBatDauKhung), ngay.atTime(gioKetThucKhung),
                 caKhamMapper.toBacSiTomTat(lichHen.getBacSi()),
-                lichHen.getBacSi().getChuyenKhoa().getTenChuyenKhoa(),
+                lichHen.getBacSi().getChuyenKhoa().ten(NgonNgu.hienTai()),
                 caKhamMapper.toPhongKhamTomTat(lichHen.getPhongKham()),
                 laBanThan ? hoSo.getHoTen() : hoTenBenhNhanDaNhap(lichHen), laBanThan, hoTenGiamHoDaNhap(lichHen),
                 lichHen.getLyDoKham(), lichHen.getNgayTao(), nguoiDat,
@@ -154,7 +155,7 @@ public class LichHenMapper {
                 phieuKhamProperties.lienKet(lichHen.getMaTokenPhieuKham()), lichHen.getTrangThai(),
                 lichHen.getSoThuTu(), ngay, gioKhamDuKien, ngay.atTime(gioBatDauKhung), ngay.atTime(gioKetThucKhung),
                 caKhamMapper.toBacSiTomTat(lichHen.getBacSi()),
-                lichHen.getBacSi().getChuyenKhoa().getTenChuyenKhoa(),
+                lichHen.getBacSi().getChuyenKhoa().ten(NgonNgu.hienTai()),
                 caKhamMapper.toPhongKhamTomTat(lichHen.getPhongKham()), lichHen.getLyDoKham(), lichHen.getNgayTao(),
                 benhNhan, nguoiGiamHo == null ? null : toNguoiGiamHoPhieuKham(lichHen, nguoiGiamHo),
                 nguoiGiamHo != null, lichHen.getLyDoHuy(), conHuyDoiDuoc(lichHen), hanHuyDoi(lichHen),

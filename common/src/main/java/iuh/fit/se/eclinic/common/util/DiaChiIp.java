@@ -1,4 +1,4 @@
-package iuh.fit.se.eclinic.booking.util;
+package iuh.fit.se.eclinic.common.util;
 
 import jakarta.servlet.http.HttpServletRequest;
 

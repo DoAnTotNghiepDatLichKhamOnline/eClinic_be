@@ -8,13 +8,13 @@ import jakarta.validation.constraints.Size;
 /** Đặt mật khẩu ở lần đăng nhập đầu của tài khoản đang mang mật khẩu mặc định (đăng nhập trả PHAI_DOI_MAT_KHAU). */
 public record DatMatKhauLanDauRequest(
 
-        @NotBlank(message = "Email không được để trống")
-        @Email(message = "Email không đúng định dạng")
-        @Size(max = 255, message = "Email tối đa 255 ký tự")
+        @NotBlank(message = "{kiemTra.email.batBuoc}")
+        @Email(message = "{kiemTra.email.dinhDang}")
+        @Size(max = 255, message = "{kiemTra.email.toiDa}")
         String email,
 
-        @NotBlank(message = "Mật khẩu hiện tại không được để trống")
-        @Size(max = 200, message = "Mật khẩu hiện tại không hợp lệ")
+        @NotBlank(message = "{kiemTra.matKhauHienTai.batBuoc}")
+        @Size(max = 200, message = "{kiemTra.matKhauHienTai.khongHopLe}")
         String matKhauHienTai,
 
         @MatKhauHopLe

@@ -19,65 +19,65 @@
     let hoSoKham = null;                   // hồ sơ khám đang mở
     let luongCamera = null, henQuet = null, henGoiY = null;
 
-    const KHUNG = `
+    const KHUNG = () => `
         <section>
-            <h2>Mở hồ sơ khám bằng mã hoặc QR</h2>
+            <h2>${t('Mở hồ sơ khám bằng mã hoặc QR', 'Open a medical record by code or QR')}</h2>
             <form id="form-ma" class="hai-cot">
-                <div><label>Mã tra cứu (ECL-…), mã phiếu khám, hoặc cả link phiếu khám</label><input name="ma" required></div>
-                <button>Mở hồ sơ khám</button>
+                <div><label>${t('Mã tra cứu (ECL-…), mã phiếu khám, hoặc cả link phiếu khám', 'Lookup code (ECL-…), ticket code, or the whole appointment ticket link')}</label><input name="ma" required></div>
+                <button>${t('Mở hồ sơ khám', 'Open medical record')}</button>
             </form>
             <div class="hai-cot">
-                <button type="button" id="nut-quet" class="phu">Quét QR bằng camera</button>
-                <div><label>Hoặc chọn ảnh mã QR</label><input type="file" id="anh-qr" accept="image/*"></div>
+                <button type="button" id="nut-quet" class="phu">${t('Quét QR bằng camera', 'Scan QR with the camera')}</button>
+                <div><label>${t('Hoặc chọn ảnh mã QR', 'Or choose a QR code image')}</label><input type="file" id="anh-qr" accept="image/*"></div>
             </div>
             <video id="camera" class="an" playsinline muted></video>
             <p id="qr-trang-thai" class="ghi-chu"></p>
         </section>
         <section>
-            <h2>Danh sách bệnh nhân trong ngày</h2>
+            <h2>${t('Danh sách bệnh nhân trong ngày', 'Patients of the day')}</h2>
             <form id="form-danh-sach" class="hai-cot">
-                <div><label>Ngày</label><input name="ngay" type="date"></div>
-                <div><label>Ca (id ca làm việc, bỏ trống = cả ngày)</label><input name="idLichLamViec" type="number" min="1"></div>
-                <div><label>Số thứ tự</label><input name="soThuTu" type="number" min="1"></div>
-                <div><label>Họ tên (không cần dấu)</label><input name="tuKhoa"></div>
-                <button>Tìm</button>
+                <div><label>${t('Ngày', 'Date')}</label><input name="ngay" type="date"></div>
+                <div><label>${t('Ca (id ca làm việc, bỏ trống = cả ngày)', 'Shift (shift id, empty = whole day)')}</label><input name="idLichLamViec" type="number" min="1"></div>
+                <div><label>${t('Số thứ tự', 'Queue number')}</label><input name="soThuTu" type="number" min="1"></div>
+                <div><label>${t('Họ tên (không cần dấu)', 'Full name (diacritics not needed)')}</label><input name="tuKhoa"></div>
+                <button>${t('Tìm', 'Search')}</button>
             </form>
             <div id="bs-danh-sach" class="bang"></div>
         </section>
         <section id="bs-khoi-ho-so" class="an">
-            <h2>Hồ sơ khám</h2>
+            <h2>${t('Hồ sơ khám', 'Medical record')}</h2>
             <p id="bs-ho-so-trang-thai" class="ghi-chu"></p>
             <div id="bs-ho-so"></div>
             <div id="bs-khoi-sua">
-            <h3>Sửa hồ sơ bệnh nhân sau khi đối chiếu giấy tờ</h3>
+            <h3>${t('Sửa hồ sơ bệnh nhân sau khi đối chiếu giấy tờ', 'Edit the patient profile after the identity check')}</h3>
             <form id="form-sua-benh-nhan">
                 <div class="hai-cot">
-                    <div><label>Họ tên</label><input name="hoTen" required maxlength="150"></div>
-                    <div><label>Ngày sinh</label><input name="ngaySinh" type="date" required></div>
-                    <div><label>Giới tính</label><select name="gioiTinh"><option value="">(chưa rõ)</option><option value="NAM">Nam</option><option value="NU">Nữ</option><option value="KHAC">Khác</option></select></div>
-                    <div><label>Số điện thoại</label><input name="soDienThoai" required pattern="0\\d{9}"></div>
-                    <div><label>Số CCCD (chỉ điền được khi hồ sơ chưa có)</label><input name="cccd" pattern="\\d{12}"></div>
-                    <div><label>Số thẻ bảo hiểm y tế</label><input name="soBaoHiemYTe" maxlength="50"></div>
+                    <div><label>${t('Họ tên', 'Full name')}</label><input name="hoTen" required maxlength="150"></div>
+                    <div><label>${t('Ngày sinh', 'Date of birth')}</label><input name="ngaySinh" type="date" required></div>
+                    <div><label>${t('Giới tính', 'Gender')}</label><select name="gioiTinh"><option value="">${t('(chưa rõ)', '(unknown)')}</option><option value="NAM">${t('Nam', 'Male')}</option><option value="NU">${t('Nữ', 'Female')}</option><option value="KHAC">${t('Khác', 'Other')}</option></select></div>
+                    <div><label>${t('Số điện thoại', 'Phone number')}</label><input name="soDienThoai" required pattern="0\\d{9}"></div>
+                    <div><label>${t('Số CCCD (chỉ điền được khi hồ sơ chưa có)', 'National ID (can only be filled in when the profile has none)')}</label><input name="cccd" pattern="\\d{12}"></div>
+                    <div><label>${t('Số thẻ bảo hiểm y tế', 'Health insurance number')}</label><input name="soBaoHiemYTe" maxlength="50"></div>
                 </div>
-                <label>Địa chỉ</label><input name="diaChi" maxlength="500">
+                <label>${t('Địa chỉ', 'Address')}</label><input name="diaChi" maxlength="500">
                 <div class="hai-cot">
-                    <button type="button" id="nut-dien-da-nhap" class="phu">Điền theo thông tin người đặt đã nhập</button>
-                    <button>Lưu hồ sơ bệnh nhân</button>
-                    <button type="button" id="nut-da-doi-chieu" class="phu">Đã đối chiếu giấy tờ</button>
+                    <button type="button" id="nut-dien-da-nhap" class="phu">${t('Điền theo thông tin người đặt đã nhập', 'Fill in from what the booker entered')}</button>
+                    <button>${t('Lưu hồ sơ bệnh nhân', 'Save patient profile')}</button>
+                    <button type="button" id="nut-da-doi-chieu" class="phu">${t('Đã đối chiếu giấy tờ', 'Identity checked')}</button>
                 </div>
             </form>
-            <h3 id="tieu-de-ket-qua">Ghi kết quả khám</h3>
+            <h3 id="tieu-de-ket-qua">${t('Ghi kết quả khám', 'Record the visit result')}</h3>
             <form id="form-ket-qua">
-                <label>Chẩn đoán</label><textarea name="chanDoan" rows="2" required maxlength="5000"></textarea>
-                <label>Lời dặn</label><textarea name="ghiChu" rows="2" maxlength="5000"></textarea>
-                <div class="hai-cot"><div><label>Ngày tái khám đề xuất</label><input name="ngayTaiKhamDeXuat" type="date"></div></div>
-                <label>Đơn thuốc (tên thuốc · đơn vị · liều dùng · lần/ngày · số ngày · ghi chú)</label>
+                <label>${t('Chẩn đoán', 'Diagnosis')}</label><textarea name="chanDoan" rows="2" required maxlength="5000"></textarea>
+                <label>${t('Lời dặn', 'Doctor\'s advice')}</label><textarea name="ghiChu" rows="2" maxlength="5000"></textarea>
+                <div class="hai-cot"><div><label>${t('Ngày tái khám đề xuất', 'Suggested follow-up date')}</label><input name="ngayTaiKhamDeXuat" type="date"></div></div>
+                <label>${t('Đơn thuốc (tên thuốc · đơn vị · liều dùng · lần/ngày · số ngày · ghi chú)', 'Prescription (medicine name · unit · dosage · times/day · days · note)')}</label>
                 <div id="don-thuoc"></div>
                 <datalist id="goi-y-thuoc"></datalist>
-                <div class="hai-cot"><button type="button" id="nut-them-thuoc" class="phu">Thêm dòng thuốc</button><button id="nut-luu-ket-qua">Lưu kết quả khám</button></div>
+                <div class="hai-cot"><button type="button" id="nut-them-thuoc" class="phu">${t('Thêm dòng thuốc', 'Add a medicine row')}</button><button id="nut-luu-ket-qua">${t('Lưu kết quả khám', 'Save visit result')}</button></div>
             </form>
             <p id="bs-ket-qua-trang-thai" class="ghi-chu"></p>
-            <h3>Các lần khám trước</h3>
+            <h3>${t('Các lần khám trước', 'Previous visits')}</h3>
             <div id="bs-lan-kham-truoc"></div>
             </div>
         </section>`;
@@ -94,15 +94,16 @@
         const khung = $('bs-danh-sach');
         if (!khung) return;
         if (status !== 200) {
-            khung.replaceChildren(the('p', thongDiepLoi(json, 'Không tải được danh sách.'), 'ghi-chu loi'));
+            khung.replaceChildren(the('p', thongDiepLoi(json, t('Không tải được danh sách.', 'Could not load the list.')), 'ghi-chu loi'));
             return;
         }
         if (!json.duLieu.length) {
-            khung.replaceChildren(ghiChu('Không có lịch hẹn nào khớp.'));
+            khung.replaceChildren(ghiChu(t('Không có lịch hẹn nào khớp.', 'No matching appointments.')));
             return;
         }
-        khung.replaceChildren(bang(['STT', 'Giờ', 'Bệnh nhân', 'Tuổi', 'Lý do khám', 'Trạng thái', 'Mã tra cứu'], json.duLieu.map((lich) => {
-            const hang = dong([lich.soThuTu, gio(lich.gioKhamDuKien), lich.benhNhan.hoTen + (lich.doiChieu.canDoiChieu ? ' ⚠ cần đối chiếu' : ''),
+        khung.replaceChildren(bang([t('STT', 'No.'), t('Giờ', 'Time'), t('Bệnh nhân', 'Patient'), t('Tuổi', 'Age'), t('Lý do khám', 'Reason for visit'),
+            t('Trạng thái', 'Status'), t('Mã tra cứu', 'Lookup code')], json.duLieu.map((lich) => {
+            const hang = dong([lich.soThuTu, gio(lich.gioKhamDuKien), lich.benhNhan.hoTen + (lich.doiChieu.canDoiChieu ? t(' ⚠ cần đối chiếu', ' ⚠ identity check needed') : ''),
                 lich.benhNhan.tuoi, lich.lyDoKham, TRANG_THAI[lich.trangThai] || lich.trangThai, lich.maTraCuu], 'bam');
             hang.addEventListener('click', () => moHoSoKham(duongDanHoSo(lich.id)));
             return hang;
@@ -115,7 +116,7 @@
         $('bs-khoi-ho-so').classList.remove('an');
         if (status !== 200) {
             hoSoKham = null;
-            bao('bs-ho-so-trang-thai', thongDiepLoi(json, 'Không mở được hồ sơ khám.'), 'loi');
+            bao('bs-ho-so-trang-thai', thongDiepLoi(json, t('Không mở được hồ sơ khám.', 'Could not open the medical record.')), 'loi');
             $('bs-ho-so').replaceChildren();
             $('bs-khoi-sua').classList.add('an');
             return false;
@@ -133,24 +134,27 @@
         bao('bs-ket-qua-trang-thai', '');
         const cacPhan = [];
         if (dc.canDoiChieu) {
-            cacPhan.push(the('p', 'Thông tin người đặt nhập KHÁC hồ sơ bệnh nhân: đối chiếu giấy tờ, sửa hồ sơ nếu hồ sơ sai, rồi bấm "Đã đối chiếu giấy tờ".', 'canh-bao'));
+            cacPhan.push(the('p', t('Thông tin người đặt nhập KHÁC hồ sơ bệnh nhân: đối chiếu giấy tờ, sửa hồ sơ nếu hồ sơ sai, rồi bấm "Đã đối chiếu giấy tờ".',
+                'What the booker entered DIFFERS from the patient profile: check the identity papers, fix the profile if it is wrong, then press "Identity checked".'), 'canh-bao'));
         }
-        cacPhan.push(the('h3', 'Lịch hẹn'), thongTin([
-            ['Mã tra cứu', lich.maTraCuu], ['Số thứ tự', lich.soThuTu], ['Giờ khám dự kiến', ngayGioVn(lich.gioKhamDuKien)],
-            ['Trạng thái', TRANG_THAI[lich.trangThai] || lich.trangThai], ['Lý do từ chối / hủy', lich.lyDoHuy], ['Phòng khám', lich.phongKham ? lich.phongKham.tenPhong : null],
-            ['Lý do khám', lich.lyDoKham], ['SĐT liên hệ', lich.benhNhan.soDienThoai],
-            ['Người giám hộ', lich.nguoiGiamHo ? `${lich.nguoiGiamHo.hoTen} (${lich.nguoiGiamHo.soDienThoai})` : null],
+        cacPhan.push(the('h3', t('Lịch hẹn', 'Appointment')), thongTin([
+            [t('Mã tra cứu', 'Lookup code'), lich.maTraCuu], [t('Số thứ tự', 'Queue number'), lich.soThuTu], [t('Giờ khám dự kiến', 'Expected visit time'), ngayGioVn(lich.gioKhamDuKien)],
+            [t('Trạng thái', 'Status'), TRANG_THAI[lich.trangThai] || lich.trangThai], [t('Lý do từ chối / hủy', 'Reason for declining / cancelling'), lich.lyDoHuy], [t('Phòng khám', 'Room'), lich.phongKham ? lich.phongKham.tenPhong : null],
+            [t('Lý do khám', 'Reason for visit'), lich.lyDoKham], [t('SĐT liên hệ', 'Contact phone'), lich.benhNhan.soDienThoai],
+            [t('Người giám hộ', 'Guardian'), lich.nguoiGiamHo ? `${lich.nguoiGiamHo.hoTen} (${lich.nguoiGiamHo.soDienThoai})` : null],
         ]));
-        cacPhan.push(the('h3', 'Hồ sơ bệnh nhân (đang lưu)'), thongTin([
-            ['Họ tên', bn.hoTen], ['Số CCCD', bn.cccd || '(chưa có)'], ['Ngày sinh', bn.ngaySinh ? `${ngayVn(bn.ngaySinh)} (${bn.tuoi} tuổi)` : null],
-            ['Giới tính', GIOI_TINH[bn.gioiTinh]], ['Số điện thoại', bn.soDienThoai], ['Địa chỉ', bn.diaChi], ['Số thẻ BHYT', bn.soBaoHiemYTe],
-            ['Tiền sử bệnh lý', bn.tienSuBenhLy], ['Tài khoản', bn.daLienKetTaiKhoan ? 'Đã liên kết tài khoản bệnh nhân' : 'Chưa liên kết tài khoản'],
+        cacPhan.push(the('h3', t('Hồ sơ bệnh nhân (đang lưu)', 'Patient profile (as stored)')), thongTin([
+            [t('Họ tên', 'Full name'), bn.hoTen], [t('Số CCCD', 'National ID'), bn.cccd || t('(chưa có)', '(none)')],
+            [t('Ngày sinh', 'Date of birth'), bn.ngaySinh ? t(`${ngayVn(bn.ngaySinh)} (${bn.tuoi} tuổi)`, `${ngayVn(bn.ngaySinh)} (age ${bn.tuoi})`) : null],
+            [t('Giới tính', 'Gender'), GIOI_TINH[bn.gioiTinh]], [t('Số điện thoại', 'Phone number'), bn.soDienThoai], [t('Địa chỉ', 'Address'), bn.diaChi], [t('Số thẻ BHYT', 'Health insurance number'), bn.soBaoHiemYTe],
+            [t('Tiền sử bệnh lý', 'Medical history'), bn.tienSuBenhLy],
+            [t('Tài khoản', 'Account'), bn.daLienKetTaiKhoan ? t('Đã liên kết tài khoản bệnh nhân', 'Linked to a patient account') : t('Chưa liên kết tài khoản', 'Not linked to an account')],
         ]));
         if (dc.hoTenDaNhap) {
-            cacPhan.push(the('h3', 'Người đặt đã nhập cho lượt khám này'), thongTin([
-                ['Họ tên', dc.hoTenDaNhap], ['Ngày sinh', dc.ngaySinhDaNhap ? ngayVn(dc.ngaySinhDaNhap) : null],
-                ['Giới tính', GIOI_TINH[dc.gioiTinhDaNhap]], ['Người giám hộ', dc.hoTenGiamHoDaNhap],
-                ['Cần đối chiếu', dc.canDoiChieu ? 'Có' : 'Không'],
+            cacPhan.push(the('h3', t('Người đặt đã nhập cho lượt khám này', 'What the booker entered for this visit')), thongTin([
+                [t('Họ tên', 'Full name'), dc.hoTenDaNhap], [t('Ngày sinh', 'Date of birth'), dc.ngaySinhDaNhap ? ngayVn(dc.ngaySinhDaNhap) : null],
+                [t('Giới tính', 'Gender'), GIOI_TINH[dc.gioiTinhDaNhap]], [t('Người giám hộ', 'Guardian'), dc.hoTenGiamHoDaNhap],
+                [t('Cần đối chiếu', 'Identity check needed'), dc.canDoiChieu ? t('Có', 'Yes') : t('Không', 'No')],
             ]));
         }
         $('bs-ho-so').replaceChildren(...cacPhan);
@@ -166,24 +170,29 @@
         const kq = hs.ketQua;
         const fk = $('form-ket-qua');
         const khamDuoc = ['CHO_XAC_NHAN', 'DA_XAC_NHAN'].includes(lich.trangThai);
-        $('tieu-de-ket-qua').textContent = kq ? 'Kết quả khám đã ghi (sửa được)' : 'Ghi kết quả khám';
+        $('tieu-de-ket-qua').textContent = kq ? t('Kết quả khám đã ghi (sửa được)', 'Recorded visit result (editable)') : t('Ghi kết quả khám', 'Record the visit result');
         fk.classList.toggle('an', !kq && !khamDuoc);
-        if (!kq && !khamDuoc) bao('bs-ket-qua-trang-thai', 'Lịch hẹn đã hủy hoặc bị từ chối: không ghi kết quả khám được.');
+        if (!kq && !khamDuoc) {
+            bao('bs-ket-qua-trang-thai', t('Lịch hẹn đã hủy hoặc bị từ chối: không ghi kết quả khám được.',
+                'The appointment was cancelled or declined: a visit result cannot be recorded.'));
+        }
         fk.elements.chanDoan.value = kq ? kq.chanDoan : '';
         fk.elements.ghiChu.value = kq && kq.ghiChu ? kq.ghiChu : '';
         fk.elements.ngayTaiKhamDeXuat.value = kq && kq.ngayTaiKhamDeXuat ? kq.ngayTaiKhamDeXuat : '';
         $('don-thuoc').replaceChildren();
         (kq ? kq.donThuoc : []).forEach(themDongThuoc);
-        $('nut-luu-ket-qua').textContent = kq ? 'Lưu thay đổi' : 'Lưu kết quả khám (lịch hẹn chuyển sang đã hoàn thành)';
+        $('nut-luu-ket-qua').textContent = kq ? t('Lưu thay đổi', 'Save changes')
+            : t('Lưu kết quả khám (lịch hẹn chuyển sang đã hoàn thành)', 'Save visit result (the appointment becomes completed)');
 
         const truoc = hs.lanKhamTruoc.map((lan) => {
             const khoi = the('div', null, 'lan-kham');
-            khoi.append(the('b', `${ngayGioVn(lan.gioKhamDuKien)} · BS ${lan.bacSi.hoTen} (${lan.tenChuyenKhoa}) · ${TRANG_THAI[lan.trangThai] || lan.trangThai}`),
-                the('p', lan.lyDoKham ? 'Lý do khám: ' + lan.lyDoKham : null, 'ghi-chu'),
-                lan.ketQua ? ketQuaKham(lan.ketQua) : ghiChu('Chưa có kết quả khám.'));
+            khoi.append(the('b', `${ngayGioVn(lan.gioKhamDuKien)} · ${t('BS', 'Dr.')} ${lan.bacSi.hoTen} (${lan.tenChuyenKhoa}) · ${TRANG_THAI[lan.trangThai] || lan.trangThai}`),
+                the('p', lan.lyDoKham ? t('Lý do khám: ', 'Reason for visit: ') + lan.lyDoKham : null, 'ghi-chu'),
+                lan.ketQua ? ketQuaKham(lan.ketQua) : ghiChu(t('Chưa có kết quả khám.', 'No visit result yet.')));
             return khoi;
         });
-        $('bs-lan-kham-truoc').replaceChildren(...(truoc.length ? truoc : [ghiChu('Bệnh nhân chưa có lần khám nào trước lượt này.')]));
+        $('bs-lan-kham-truoc').replaceChildren(...(truoc.length ? truoc
+            : [ghiChu(t('Bệnh nhân chưa có lần khám nào trước lượt này.', 'The patient has no visits before this one.'))]));
     }
 
     // ===== Đơn thuốc =====
@@ -197,12 +206,14 @@
             i.value = giaTri === null || giaTri === undefined ? '' : giaTri;
             return i;
         };
-        const t = thuoc || {};
-        const ten = o('tenThuoc', t.tenThuoc, null, 'Tên thuốc');
+        const muc = thuoc || {};
+        const ten = o('tenThuoc', muc.tenThuoc, null, t('Tên thuốc', 'Medicine name'));
         ten.setAttribute('list', 'goi-y-thuoc');
         ten.addEventListener('input', () => goiYThuoc(ten.value));
-        hang.append(ten, o('donVi', t.donVi, null, 'Đơn vị'), o('lieuDung', t.lieuDung, null, 'Liều dùng'), o('soLanMoiNgay', t.soLanMoiNgay, 'number', 'Lần/ngày'),
-            o('soNgayDung', t.soNgayDung, 'number', 'Số ngày'), o('ghiChuSuDung', t.ghiChuSuDung, null, 'Ghi chú'), nut('Xóa', () => hang.remove()));
+        hang.append(ten, o('donVi', muc.donVi, null, t('Đơn vị', 'Unit')), o('lieuDung', muc.lieuDung, null, t('Liều dùng', 'Dosage')),
+            o('soLanMoiNgay', muc.soLanMoiNgay, 'number', t('Lần/ngày', 'Times/day')),
+            o('soNgayDung', muc.soNgayDung, 'number', t('Số ngày', 'Days')), o('ghiChuSuDung', muc.ghiChuSuDung, null, t('Ghi chú', 'Note')),
+            nut(t('Xóa', 'Remove'), () => hang.remove()));
         $('don-thuoc').append(hang);
     }
     function goiYThuoc(tuKhoa) {
@@ -211,10 +222,10 @@
         henGoiY = setTimeout(async () => {
             const { status, json } = await lay('/api/medical/bac-si/toi/thuoc?tuKhoa=' + encodeURIComponent(tuKhoa.trim()), true);
             if (status !== 200 || !$('goi-y-thuoc')) return;
-            $('goi-y-thuoc').replaceChildren(...json.duLieu.map((t) => {
+            $('goi-y-thuoc').replaceChildren(...json.duLieu.map((muc) => {
                 const lc = document.createElement('option');
-                lc.value = t.tenThuoc;
-                lc.label = (t.donVi || '') + (t.daXacMinh ? '' : ' (chưa xác minh)');
+                lc.value = muc.tenThuoc;
+                lc.label = (muc.donVi || '') + (muc.daXacMinh ? '' : t(' (chưa xác minh)', ' (not verified)'));
                 return lc;
             }));
         }, 250);
@@ -252,19 +263,20 @@
         return ketQua ? ketQua.data : null;
     }
     async function moTheoMa(ma) {
-        bao('qr-trang-thai', 'Đang mở hồ sơ khám theo mã…');
+        bao('qr-trang-thai', t('Đang mở hồ sơ khám theo mã…', 'Opening the medical record by code…'));
         $('form-ma').elements.ma.value = ma;
         // Gửi nguyên chuỗi đọc được: API tự nhận mã tra cứu, mã phiếu khám hoặc cả link phiếu khám
         const duoc = await moHoSoKham('/api/booking/bac-si/toi/lich-hen/tra-cuu/ho-so-kham?ma=' + encodeURIComponent(ma));
-        bao('qr-trang-thai', duoc ? 'Đã mở hồ sơ khám.' : 'Không tìm thấy lịch hẹn của bạn với mã này.', duoc ? 'tot' : 'loi');
+        bao('qr-trang-thai', duoc ? t('Đã mở hồ sơ khám.', 'Medical record opened.')
+            : t('Không tìm thấy lịch hẹn của bạn với mã này.', 'None of your appointments matches this code.'), duoc ? 'tot' : 'loi');
     }
     function tatCamera() {
         clearTimeout(henQuet);
-        if (luongCamera) luongCamera.getTracks().forEach((t) => t.stop());
+        if (luongCamera) luongCamera.getTracks().forEach((luong) => luong.stop());
         luongCamera = null;
         if ($('camera')) {
             $('camera').classList.add('an');
-            $('nut-quet').textContent = 'Quét QR bằng camera';
+            $('nut-quet').textContent = t('Quét QR bằng camera', 'Scan QR with the camera');
         }
     }
     async function batCamera() {
@@ -275,7 +287,7 @@
         try {
             luongCamera = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
         } catch (e) {
-            bao('qr-trang-thai', 'Không mở được camera: ' + String(e), 'loi');
+            bao('qr-trang-thai', t('Không mở được camera: ', 'Could not open the camera: ') + String(e), 'loi');
             return;
         }
         const video = $('camera');
@@ -286,8 +298,8 @@
         video.srcObject = luongCamera;
         video.classList.remove('an');
         await video.play();
-        $('nut-quet').textContent = 'Tắt camera';
-        bao('qr-trang-thai', 'Đưa mã QR trên phiếu khám vào khung hình…');
+        $('nut-quet').textContent = t('Tắt camera', 'Turn off the camera');
+        bao('qr-trang-thai', t('Đưa mã QR trên phiếu khám vào khung hình…', 'Hold the QR code of the appointment ticket in the frame…'));
         const quet = async () => {
             if (!luongCamera) return;
             let ma = null;
@@ -311,10 +323,10 @@
     dangKy({
         duongDan: '/doctor/consultation',
         vaiTro: 'BAC_SI',
-        tieuDe: 'Consultation / EMR',
+        tieuDe: cap('Khám bệnh / bệnh án', 'Consultation / EMR'),
         async ve(khung, { thamSo }) {
             hoSoKham = null;
-            khuon(khung, KHUNG);
+            khuon(khung, KHUNG());
 
             $('form-danh-sach').addEventListener('submit', (e) => { e.preventDefault(); taiDanhSach(); });
             $('form-ma').addEventListener('submit', (e) => { e.preventDefault(); moTheoMa(e.target.elements.ma.value.trim()); });
@@ -326,9 +338,9 @@
                     const hinh = await createImageBitmap(tep);
                     const ma = await docQr(hinh, hinh.width, hinh.height);
                     if (ma) await moTheoMa(ma);
-                    else bao('qr-trang-thai', 'Không đọc được mã QR trong ảnh này.', 'loi');
+                    else bao('qr-trang-thai', t('Không đọc được mã QR trong ảnh này.', 'Could not read a QR code in this image.'), 'loi');
                 } catch (loi) {
-                    bao('qr-trang-thai', 'Không đọc được ảnh: ' + String(loi.message || loi), 'loi');
+                    bao('qr-trang-thai', t('Không đọc được ảnh: ', 'Could not read the image: ') + String(loi.message || loi), 'loi');
                 }
                 e.target.value = '';
             });
@@ -344,21 +356,21 @@
                 const than = thanForm(e.target, ['hoTen', 'ngaySinh', 'gioiTinh', 'soDienThoai', 'cccd', 'soBaoHiemYTe', 'diaChi']);
                 const { status, json } = await goi(`/api/booking/bac-si/toi/lich-hen/${hoSoKham.lichHen.id}/benh-nhan`, than, 'PUT');
                 if (status !== 200) {
-                    bao('bs-ho-so-trang-thai', thongDiepLoi(json, 'Không lưu được hồ sơ bệnh nhân.'), 'loi');
+                    bao('bs-ho-so-trang-thai', thongDiepLoi(json, t('Không lưu được hồ sơ bệnh nhân.', 'Could not save the patient profile.')), 'loi');
                     return;
                 }
                 hienHoSoKham(json.duLieu);
-                bao('bs-ho-so-trang-thai', 'Đã cập nhật hồ sơ bệnh nhân.', 'tot');
+                bao('bs-ho-so-trang-thai', t('Đã cập nhật hồ sơ bệnh nhân.', 'Patient profile updated.'), 'tot');
             });
             $('nut-da-doi-chieu').addEventListener('click', async () => {
                 const id = hoSoKham.lichHen.id;
                 const { status, json } = await goi(`/api/booking/bac-si/toi/lich-hen/${id}/da-doi-chieu`);
                 if (status !== 200) {
-                    bao('bs-ho-so-trang-thai', thongDiepLoi(json, 'Không ghi nhận được.'), 'loi');
+                    bao('bs-ho-so-trang-thai', thongDiepLoi(json, t('Không ghi nhận được.', 'Could not record it.')), 'loi');
                     return;
                 }
                 await moHoSoKham(duongDanHoSo(id));
-                bao('bs-ho-so-trang-thai', 'Đã ghi nhận đối chiếu giấy tờ.', 'tot');
+                bao('bs-ho-so-trang-thai', t('Đã ghi nhận đối chiếu giấy tờ.', 'Identity check recorded.'), 'tot');
                 taiDanhSach();
             });
             $('nut-them-thuoc').addEventListener('click', () => themDongThuoc(null));
@@ -369,11 +381,11 @@
                 than.donThuoc = docDonThuoc();
                 const { status, json } = await goi(`/api/medical/bac-si/toi/lich-hen/${id}/benh-an`, than, hoSoKham.ketQua ? 'PUT' : 'POST');
                 if (status !== 200 && status !== 201) {
-                    bao('bs-ket-qua-trang-thai', thongDiepLoi(json, 'Không lưu được kết quả khám.'), 'loi');
+                    bao('bs-ket-qua-trang-thai', thongDiepLoi(json, t('Không lưu được kết quả khám.', 'Could not save the visit result.')), 'loi');
                     return;
                 }
                 await moHoSoKham(duongDanHoSo(id));
-                bao('bs-ket-qua-trang-thai', 'Đã lưu kết quả khám.', 'tot');
+                bao('bs-ket-qua-trang-thai', t('Đã lưu kết quả khám.', 'Visit result saved.'), 'tot');
                 taiDanhSach();
             });
 

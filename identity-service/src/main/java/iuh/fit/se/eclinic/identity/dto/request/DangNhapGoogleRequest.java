@@ -8,8 +8,8 @@ import jakarta.validation.constraints.Size;
  */
 public record DangNhapGoogleRequest(
 
-        @NotBlank(message = "ID token Google không được để trống")
-        @Size(max = 4096, message = "ID token Google không hợp lệ")
+        @NotBlank(message = "{kiemTra.idTokenGoogle.batBuoc}")
+        @Size(max = 4096, message = "{kiemTra.idTokenGoogle.khongHopLe}")
         String idToken) {
 
     /** Không in token (tránh lộ khi request bị log). */

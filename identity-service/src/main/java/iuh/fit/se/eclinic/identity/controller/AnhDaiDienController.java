@@ -36,13 +36,13 @@ public class AnhDaiDienController {
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public PhanHoiApi<HoSoCaNhanResponse> taiLen(@RequestPart("anh") MultipartFile anh) throws IOException {
         return PhanHoiApi.ok(anhDaiDienService.taiLen(NguoiDungHienTai.layIdTaiKhoan(), anh.getBytes()),
-                "Đã đổi ảnh đại diện");
+                "thanhCong.doiAnhDaiDien");
     }
 
     @Operation(summary = "Bỏ ảnh đại diện (kể cả ảnh lấy từ Google); chưa có ảnh thì không làm gì")
     @DeleteMapping
     public PhanHoiApi<HoSoCaNhanResponse> xoa() {
-        return PhanHoiApi.ok(anhDaiDienService.xoa(NguoiDungHienTai.layIdTaiKhoan()), "Đã bỏ ảnh đại diện");
+        return PhanHoiApi.ok(anhDaiDienService.xoa(NguoiDungHienTai.layIdTaiKhoan()), "thanhCong.boAnhDaiDien");
     }
 
 }

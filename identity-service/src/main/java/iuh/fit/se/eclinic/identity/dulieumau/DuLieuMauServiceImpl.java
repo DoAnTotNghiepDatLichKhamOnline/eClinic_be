@@ -37,6 +37,8 @@ import iuh.fit.se.eclinic.identity.dulieumau.DuLieuMau.BacSiMau;
 import iuh.fit.se.eclinic.identity.dulieumau.DuLieuMau.BenhNhanMau;
 import iuh.fit.se.eclinic.identity.dulieumau.DuLieuMau.Buoi;
 import iuh.fit.se.eclinic.identity.dulieumau.DuLieuMau.ChuyenKhoaMau;
+import iuh.fit.se.eclinic.identity.dulieumau.DuLieuMauTiengAnh.ChuyenKhoaEn;
+import iuh.fit.se.eclinic.identity.dulieumau.DuLieuMauTiengAnh.HoSoBacSiEn;
 import iuh.fit.se.eclinic.identity.repository.TaiKhoanRepository;
 import iuh.fit.se.eclinic.identity.util.ChuanHoa;
 import jakarta.persistence.EntityManager;
@@ -156,19 +158,130 @@ public class DuLieuMauServiceImpl implements DuLieuMauService {
                     .setParameter("id", bacSi.getId())
                     .getSingleResult();
             if (soAnh == 0) {
-                String tenChuyenKhoa = mau.chuyenKhoa();
                 taoAnhMau(bacSi, 1, LoaiAnhBacSi.ANH_CONG_VIEC, anhGiu(1200, 800, "e0f2f1", "0f766e", "eClinic"),
-                        "Bác sĩ " + mau.hoTen() + " tại phòng khám " + tenChuyenKhoa);
+                        chuThichMau(mau, 1));
                 taoAnhMau(bacSi, 2, LoaiAnhBacSi.ANH_CONG_VIEC, anhGiu(1200, 800, "e3f2fd", "1565c0", "eClinic"),
-                        "Tư vấn cho người bệnh");
+                        chuThichMau(mau, 2));
                 taoAnhMau(bacSi, 3, LoaiAnhBacSi.CHUNG_CHI, anhGiu(900, 1200, "fff8e1", "8d6e63", mau.soGiayPhep()),
-                        "Chứng chỉ hành nghề số " + mau.soGiayPhep());
+                        chuThichMau(mau, 3));
             }
         }
         if (!chuaCoHoSo.isEmpty()) {
             log.info("Đã bổ sung hồ sơ giới thiệu mẫu cho {} bác sĩ", chuaCoHoSo.size());
         }
         return chuaCoHoSo.size();
+    }
+
+    /** Chú thích tiếng Việt của ảnh mẫu thứ {@code thuTu} (1-3). */
+    private static String chuThichMau(BacSiMau mau, int thuTu) {
+        return switch (thuTu) {
+            case 1 -> "Bác sĩ " + mau.hoTen() + " tại phòng khám " + mau.chuyenKhoa();
+            case 2 -> "Tư vấn cho người bệnh";
+            default -> "Chứng chỉ hành nghề số " + mau.soGiayPhep();
+        };
+    }
+
+    /** Bản tiếng Anh của {@link #chuThichMau}; họ tên bác sĩ giữ nguyên. */
+    private static String chuThichMauTiengAnh(BacSiMau mau, int thuTu) {
+        return switch (thuTu) {
+            case 1 -> "Dr. " + mau.hoTen() + " at the "
+                    + DuLieuMauTiengAnh.CHUYEN_KHOA.get(mau.chuyenKhoa()).ten() + " clinic";
+            case 2 -> "Consulting a patient";
+            default -> "Practising certificate no. " + mau.soGiayPhep();
+        };
+    }
+
+    @Override
+    @Transactional
+    public int boSungTiengAnh() {
+        int soDong = 0;
+        for (ChuyenKhoaMau mau : DuLieuMau.CHUYEN_KHOA) {
+            ChuyenKhoaEn en = DuLieuMauTiengAnh.CHUYEN_KHOA.get(mau.ten());
+            ChuyenKhoa chuyenKhoa = entityManager
+                    .createQuery("select c from ChuyenKhoa c where c.tenChuyenKhoa = :ten", ChuyenKhoa.class)
+                    .setParameter("ten", mau.ten()).getResultStream().findFirst().orElse(null);
+            // Tên tiếng Anh là UNIQUE: quản trị viên đã đặt tên đó cho chuyên khoa khác thì bỏ qua
+            if (chuyenKhoa != null && chuyenKhoa.getTenChuyenKhoaEn() == null
+                    && chuaCo("select count(c) from ChuyenKhoa c where c.tenChuyenKhoaEn = :ten", en.ten())) {
+                chuyenKhoa.setTenChuyenKhoaEn(en.ten());
+                chuyenKhoa.setMoTaEn(banTiengAnh(chuyenKhoa.getMoTa(), mau.moTa(), chuyenKhoa.getMoTaEn(), en.moTa()));
+                soDong++;
+            }
+            PhongKham phongKham = timPhongKham(mau.tenPhong());
+            if (phongKham != null && phongKham.getTenPhongEn() == null
+                    && chuaCo("select count(p) from PhongKham p where p.tenPhongEn = :ten", en.tenPhong())) {
+                phongKham.setTenPhongEn(en.tenPhong());
+                phongKham.setTangEn(banTiengAnh(phongKham.getTang(), mau.tang(), phongKham.getTangEn(), en.tang()));
+                soDong++;
+            }
+        }
+
+        Map<String, BacSiMau> mauTheoEmail = DuLieuMau.BAC_SI.stream()
+                .collect(Collectors.toMap(BacSiMau::email, Function.identity()));
+        List<BacSi> chuaCoTiengAnh = entityManager.createQuery("""
+                select b from BacSi b join fetch b.taiKhoan t
+                where t.email in :emails and b.gioiThieuNgan is not null and b.gioiThieuNganEn is null
+                order by b.id
+                """, BacSi.class)
+                .setParameter("emails", mauTheoEmail.keySet())
+                .getResultList();
+        for (BacSi bacSi : chuaCoTiengAnh) {
+            BacSiMau mau = mauTheoEmail.get(bacSi.getTaiKhoan().getEmail());
+            HoSoBacSiMau vi = HoSoBacSiMau.THEO_SO.get(mau.so());
+            HoSoBacSiEn en = DuLieuMauTiengAnh.BAC_SI.get(mau.so());
+            bacSi.setTieuSuEn(banTiengAnh(bacSi.getTieuSu(), mau.tieuSu(), bacSi.getTieuSuEn(), en.tieuSu()));
+            bacSi.setChucVuEn(banTiengAnh(bacSi.getChucVu(), vi.chucVu(), bacSi.getChucVuEn(), en.chucVu()));
+            bacSi.setGioiThieuNganEn(banTiengAnh(bacSi.getGioiThieuNgan(), vi.gioiThieuNgan(), null,
+                    en.gioiThieuNgan()));
+            bacSi.setQuaTrinhDaoTaoEn(banTiengAnh(bacSi.getQuaTrinhDaoTao(), String.join("\n", vi.daoTao()),
+                    bacSi.getQuaTrinhDaoTaoEn(), String.join("\n", en.daoTao())));
+            bacSi.setQuaTrinhCongTacEn(banTiengAnh(bacSi.getQuaTrinhCongTac(), String.join("\n", vi.congTac()),
+                    bacSi.getQuaTrinhCongTacEn(), String.join("\n", en.congTac())));
+            bacSi.setLinhVucKhamChuaEn(banTiengAnh(bacSi.getLinhVucKhamChua(), String.join("\n", vi.linhVuc()),
+                    bacSi.getLinhVucKhamChuaEn(), String.join("\n", en.linhVuc())));
+
+            // Ảnh mẫu: không nằm trong kho ảnh (maLuuTru null), chú thích còn đúng như lúc tạo
+            List<AnhBacSi> anhMau = entityManager.createQuery(
+                    "select a from AnhBacSi a where a.bacSi.id = :id and a.maLuuTru is null and a.chuThichEn is null",
+                    AnhBacSi.class).setParameter("id", bacSi.getId()).getResultList();
+            for (AnhBacSi anh : anhMau) {
+                if (anh.getThuTu() >= 1 && anh.getThuTu() <= 3) {
+                    anh.setChuThichEn(banTiengAnh(anh.getChuThich(), chuThichMau(mau, anh.getThuTu()), null,
+                            chuThichMauTiengAnh(mau, anh.getThuTu())));
+                }
+            }
+            soDong++;
+        }
+        if (soDong > 0) {
+            log.info("Đã bổ sung bản tiếng Anh cho {} chuyên khoa / phòng khám / bác sĩ mẫu", soDong);
+        }
+        return soDong;
+    }
+
+    @Override
+    @Transactional
+    public int boSungTrieuChung() {
+        int soDong = 0;
+        for (ChuyenKhoaMau mau : DuLieuMau.CHUYEN_KHOA) {
+            ChuyenKhoa chuyenKhoa = entityManager
+                    .createQuery("select c from ChuyenKhoa c where c.tenChuyenKhoa = :ten", ChuyenKhoa.class)
+                    .setParameter("ten", mau.ten()).getResultStream().findFirst().orElse(null);
+            if (chuyenKhoa != null && chuyenKhoa.getTrieuChung() == null && chuyenKhoa.getTrieuChungEn() == null) {
+                chuyenKhoa.setTrieuChung(DuLieuMau.TRIEU_CHUNG.get(mau.ten()));
+                chuyenKhoa.setTrieuChungEn(DuLieuMauTiengAnh.TRIEU_CHUNG.get(mau.ten()));
+                soDong++;
+            }
+        }
+        return soDong;
+    }
+
+    private boolean chuaCo(String cauDem, String ten) {
+        return entityManager.createQuery(cauDem, Long.class).setParameter("ten", ten).getSingleResult() == 0;
+    }
+
+    /** Bản tiếng Anh mẫu, chỉ khi chưa có bản tiếng Anh và bản tiếng Việt vẫn đúng như dữ liệu mẫu. */
+    private static String banTiengAnh(String tiengViet, String tiengVietMau, String tiengAnh, String tiengAnhMau) {
+        return tiengAnh == null && tiengVietMau.equals(tiengViet) ? tiengAnhMau : tiengAnh;
     }
 
     /** Ảnh mẫu không nằm trong kho ảnh ({@code maLuuTru} null): tạo dữ liệu mẫu không gọi Cloudinary. */

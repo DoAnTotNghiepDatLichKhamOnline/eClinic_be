@@ -111,7 +111,7 @@ public class HuyDoiLichServiceImpl implements HuyDoiLichService {
         // Lịch đang chờ đổi vì ca khám bị hủy: không phải bệnh nhân muốn đổi, nên không tính vào giới hạn
         if (!lichHen.isCanDoiLich() && soLanDaDoi(lichHen) >= toiDa) {
             throw new LoiNghiepVu(MaLoi.VUOT_SO_LAN_DOI_LICH,
-                    "Lịch hẹn này đã được đổi " + toiDa + " lần, không đổi thêm được; bạn vẫn có thể hủy lịch");
+                    "loi.VUOT_SO_LAN_DOI_LICH.soLan", String.valueOf(toiDa));
         }
         lichHen.setTrangThai(TrangThaiLichHen.DA_HUY_DO_DOI_LICH);
         traLuotKham(lichHen);
@@ -139,7 +139,7 @@ public class HuyDoiLichServiceImpl implements HuyDoiLichService {
     }
 
     private static LoiNghiepVu khongTimThay() {
-        return new LoiNghiepVu(MaLoi.KHONG_TIM_THAY, "Không tìm thấy lịch hẹn");
+        return new LoiNghiepVu(MaLoi.KHONG_TIM_THAY, "loi.KHONG_TIM_THAY.lichHen");
     }
 
     /** Cùng quy tắc với "được xem kết quả khám" (LichHenRepository#DUOC_XEM_KET_QUA). */
@@ -156,7 +156,7 @@ public class HuyDoiLichServiceImpl implements HuyDoiLichService {
                 && hoSoCuaToi.getCccd().equals(nguoiGiamHo.getCccd());
         if (laNguoiGiamHo) {
             throw new LoiNghiepVu(MaLoi.KHONG_CO_QUYEN,
-                    "Chỉ người đã đặt lịch hoặc người khám mới hủy / đổi được lịch hẹn này");
+                    "loi.KHONG_CO_QUYEN.huyDoi");
         }
         throw khongTimThay();
     }
@@ -169,7 +169,7 @@ public class HuyDoiLichServiceImpl implements HuyDoiLichService {
         String daNhap = soDienThoai == null ? "" : soDienThoai.trim();
         if (!DANG_SO_DIEN_THOAI.matcher(daNhap).matches()) {
             throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE,
-                    "Nhập số điện thoại đã dùng khi đặt lịch (10 chữ số, bắt đầu bằng 0)");
+                    "loi.DU_LIEU_KHONG_HOP_LE.soDienThoaiDatLich");
         }
         String daLuu = lichHen.getSoDienThoaiLienHe();
         if (daLuu == null && lichHen.getNguoiGiamHo() != null) {

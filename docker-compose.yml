@@ -196,6 +196,15 @@ services:
       BOOKING_IP_WINDOW: ${BOOKING_IP_WINDOW:-10m}
       BOOKING_CHANGE_LEAD: ${BOOKING_CHANGE_LEAD:-2h}
       BOOKING_MAX_RESCHEDULES: ${BOOKING_MAX_RESCHEDULES:-2}
+      # Nhắc lịch khám (xem .env.example): các mốc trước giờ khám, chu kỳ job, khoảng giờ được gửi, khoảng cách tối thiểu
+      BOOKING_REMINDER_BEFORE: ${BOOKING_REMINDER_BEFORE:-3d,1d}
+      BOOKING_REMINDER_INTERVAL: ${BOOKING_REMINDER_INTERVAL:-5m}
+      BOOKING_REMINDER_FROM: ${BOOKING_REMINDER_FROM:-07:00}
+      BOOKING_REMINDER_TO: ${BOOKING_REMINDER_TO:-21:00}
+      BOOKING_REMINDER_MIN_LEAD: ${BOOKING_REMINDER_MIN_LEAD:-2h}
+      # Nhắc tái khám (xem .env.example): nhắc trước ngày tái khám bao nhiêu ngày, trang đặt lịch của frontend
+      FOLLOWUP_REMINDER_DAYS: ${FOLLOWUP_REMINDER_DAYS:-7}
+      FOLLOWUP_BOOKING_PATH: ${FOLLOWUP_BOOKING_PATH:-/dat-lich}
       # Ca làm việc: hạn gửi yêu cầu đổi ca / xin nghỉ trước giờ bắt đầu ca, số ngày tới được xếp ca
       SHIFT_REQUEST_LEAD: ${SHIFT_REQUEST_LEAD:-24h}
       SHIFT_MAX_DAYS: ${SHIFT_MAX_DAYS:-90}
@@ -235,6 +244,16 @@ services:
       - "8086:8086"
     environment:
       <<: *moi-truong-chung
+      # Email lịch hẹn (xem .env.example). Mặc định theo MAIL_MODE của identity-service; console: chỉ ghi ra log.
+      NOTIFICATION_MAIL_MODE: ${NOTIFICATION_MAIL_MODE:-${MAIL_MODE:-console}}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_APP_PASSWORD: ${MAIL_APP_PASSWORD:-}
+      MAIL_HOST: ${MAIL_HOST:-smtp.gmail.com}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_SMTP_AUTH: ${MAIL_SMTP_AUTH:-true}
+      MAIL_SMTP_STARTTLS: ${MAIL_SMTP_STARTTLS:-true}
+      NOTIFICATION_MAIL_INTERVAL: ${NOTIFICATION_MAIL_INTERVAL:-5s}
+      NOTIFICATION_MAIL_RETRY_WAITS: ${NOTIFICATION_MAIL_RETRY_WAITS:-1m,5m,30m,2h}
     healthcheck:
       <<: *kiem-tra
       test: ["CMD", "curl", "-fsS", "http://localhost:8086/actuator/health"]
@@ -250,11 +269,31 @@ services:
       - "8087:8087"
     environment:
       <<: *moi-truong-chung
+      # Mô hình ngôn ngữ (API kiểu OpenAI). Thiếu CHATBOT_API_KEY: service vẫn chạy, gửi tin nhắn trả 503.
+      CHATBOT_BASE_URL: ${CHATBOT_BASE_URL:-https://generativelanguage.googleapis.com/v1beta/openai}
+      CHATBOT_API_KEY: ${CHATBOT_API_KEY:-}
+      CHATBOT_MODEL: ${CHATBOT_MODEL:-gemini-3.8-flash}
+      CHATBOT_REASONING_EFFORT: ${CHATBOT_REASONING_EFFORT-low}
+      CHATBOT_TIMEOUT: ${CHATBOT_TIMEOUT:-20s}
+      CHATBOT_TOTAL_TIMEOUT: ${CHATBOT_TOTAL_TIMEOUT:-27s}
+      CHATBOT_MAX_MODEL_CALLS: ${CHATBOT_MAX_MODEL_CALLS:-3}
+      CHATBOT_PERSONAL_DATA: ${CHATBOT_PERSONAL_DATA:-true}
+      # Tra cứu bác sĩ, lịch khám còn chỗ: API công khai của 2 service này (gọi thẳng, không qua gateway)
+      CATALOG_URL: http://catalog-service:8082
+      BOOKING_URL: http://booking-service:8084
+      CHATBOT_MAX_TOKENS: ${CHATBOT_MAX_TOKENS:-2048}
+      CHATBOT_LIMIT_MESSAGES: ${CHATBOT_LIMIT_MESSAGES:-20}
+      CHATBOT_LIMIT_WINDOW: ${CHATBOT_LIMIT_WINDOW:-10m}
+      CHATBOT_LIMIT_DAILY: ${CHATBOT_LIMIT_DAILY:-100}
+      CHATBOT_LIMIT_SESSIONS: ${CHATBOT_LIMIT_SESSIONS:-10}
+      CHATBOT_LIMIT_TOTAL_DAILY: ${CHATBOT_LIMIT_TOTAL_DAILY:-1000}
     healthcheck:
       <<: *kiem-tra
       test: ["CMD", "curl", "-fsS", "http://localhost:8087/actuator/health"]
     depends_on:
       mysql:
+        condition: service_healthy
+      redis:
         condition: service_healthy
 
   report-service:

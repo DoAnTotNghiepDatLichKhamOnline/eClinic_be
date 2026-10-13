@@ -23,8 +23,8 @@ import iuh.fit.se.eclinic.booking.dto.response.PhieuKhamResponse;
 import iuh.fit.se.eclinic.booking.service.GioiHanDatLichService;
 import iuh.fit.se.eclinic.booking.service.HuyDoiLichService;
 import iuh.fit.se.eclinic.booking.service.PhieuKhamService;
-import iuh.fit.se.eclinic.booking.util.DiaChiIp;
 import iuh.fit.se.eclinic.common.dto.PhanHoiApi;
+import iuh.fit.se.eclinic.common.util.DiaChiIp;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
@@ -59,7 +59,7 @@ public class PhieuKhamController {
     public PhanHoiApi<PhieuKhamResponse> huy(@PathVariable String maPhieuKham,
             @Valid @RequestBody HuyLichRequest request, HttpServletRequest httpRequest) {
         gioiHanDatLichService.ghiNhan(DiaChiIp.cua(httpRequest));
-        return PhanHoiApi.ok(huyDoiLichService.huyTheoPhieu(maPhieuKham, request), "Đã hủy lịch hẹn");
+        return PhanHoiApi.ok(huyDoiLichService.huyTheoPhieu(maPhieuKham, request), "thanhCong.huyLichHen");
     }
 
     @Operation(summary = "Đổi lịch hẹn bằng link phiếu khám (kèm SĐT liên hệ) sang khung giờ khác: trả lịch mới (chờ xác"
@@ -69,7 +69,7 @@ public class PhieuKhamController {
     public PhanHoiApi<DatLichResponse> doiLich(@PathVariable String maPhieuKham,
             @Valid @RequestBody DoiLichRequest request, HttpServletRequest httpRequest) {
         gioiHanDatLichService.ghiNhan(DiaChiIp.cua(httpRequest));
-        return PhanHoiApi.ok(huyDoiLichService.doiTheoPhieu(maPhieuKham, request), "Đổi lịch thành công");
+        return PhanHoiApi.ok(huyDoiLichService.doiTheoPhieu(maPhieuKham, request), "thanhCong.doiLich");
     }
 
     /**

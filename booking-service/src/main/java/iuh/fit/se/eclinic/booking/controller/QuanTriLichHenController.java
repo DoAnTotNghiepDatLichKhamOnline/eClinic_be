@@ -40,7 +40,7 @@ public class QuanTriLichHenController {
     @PostMapping("/{id}/da-doi-chieu")
     public PhanHoiApi<Void> daDoiChieu(@PathVariable Long id) {
         lichHenService.danhDauDaDoiChieu(id);
-        return PhanHoiApi.ok(null, "Đã ghi nhận đối chiếu thông tin bệnh nhân");
+        return PhanHoiApi.ok(null, "thanhCong.doiChieuBenhNhan");
     }
 
 }

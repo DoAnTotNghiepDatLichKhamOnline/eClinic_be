@@ -19,7 +19,7 @@ import jakarta.validation.Payload;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface MatKhauHopLe {
 
-    String message() default "Mật khẩu không hợp lệ";
+    String message() default "{kiemTra.matKhau.khongHopLe}";
 
     Class<?>[] groups() default {};
 

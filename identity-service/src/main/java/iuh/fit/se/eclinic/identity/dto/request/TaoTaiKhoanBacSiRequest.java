@@ -8,15 +8,15 @@ import jakarta.validation.constraints.Size;
 /** API nội bộ: catalog-service nhờ tạo tài khoản cho bác sĩ mới. */
 public record TaoTaiKhoanBacSiRequest(
 
-        @NotBlank(message = "Họ tên không được để trống")
-        @Size(max = 150, message = "Họ tên tối đa 150 ký tự")
+        @NotBlank(message = "{kiemTra.hoTen.batBuoc}")
+        @Size(max = 150, message = "{kiemTra.hoTen.toiDa}")
         String hoTen,
 
-        @NotBlank(message = "Email không được để trống")
-        @Email(message = "Email không đúng định dạng")
-        @Size(max = 255, message = "Email tối đa 255 ký tự")
+        @NotBlank(message = "{kiemTra.email.batBuoc}")
+        @Email(message = "{kiemTra.email.dinhDang}")
+        @Size(max = 255, message = "{kiemTra.email.toiDa}")
         String email,
 
-        @Pattern(regexp = "^(0\\d{9})?$", message = "Số điện thoại gồm 10 chữ số, bắt đầu bằng 0")
+        @Pattern(regexp = "^(0\\d{9})?$", message = "{kiemTra.soDienThoai.dinhDang}")
         String soDienThoai) {
 }

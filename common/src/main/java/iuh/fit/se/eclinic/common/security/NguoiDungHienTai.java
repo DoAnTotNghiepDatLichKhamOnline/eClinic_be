@@ -37,6 +37,14 @@ public final class NguoiDungHienTai {
         return layToken().getToken().getClaimAsString(JwtConfig.CLAIM_PHIEN);
     }
 
+    /**
+     * Chuỗi JWT của request đang xử lý, để gọi tiếp 1 service khác THAY MẶT chính người gọi (service kia tự kiểm tra
+     * token và tự biết là ai). Không ghi vào log, không lưu, không gửi ra ngoài hệ thống.
+     */
+    public static String layGiaTriToken() {
+        return layToken().getToken().getTokenValue();
+    }
+
     private static JwtAuthenticationToken layToken() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication instanceof JwtAuthenticationToken token) {

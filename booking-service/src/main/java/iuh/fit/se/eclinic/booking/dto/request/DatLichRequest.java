@@ -29,18 +29,18 @@ public record DatLichRequest(
 
         Long idChuyenKhoa,
 
-        @NotNull(message = "Chưa chọn khung giờ khám")
+        @NotNull(message = "{kiemTra.khungGio.batBuoc}")
         LocalDateTime gioBatDauKhung,
 
-        @NotNull(message = "Thiếu thông tin bệnh nhân")
+        @NotNull(message = "{kiemTra.benhNhan.batBuoc}")
         @Valid
         BenhNhanRequest benhNhan,
 
         @Valid
         NguoiGiamHoRequest nguoiGiamHo,
 
-        @NotBlank(message = "Lý do khám không được để trống")
-        @Size(max = 500, message = "Lý do khám tối đa 500 ký tự")
+        @NotBlank(message = "{kiemTra.lyDoKham.batBuoc}")
+        @Size(max = 500, message = "{kiemTra.lyDoKham.toiDa}")
         String lyDoKham,
 
         Boolean datChoBanThan,

@@ -49,6 +49,12 @@ spring:
               predicates:
                 - Path=/api/report/**
 
+  # Thông điệp lỗi của gateway bằng 2 ngôn ngữ (thong-diep/gateway*.properties), chọn theo header Accept-Language:
+  # "en..." là tiếng Anh, không gửi hoặc ngôn ngữ khác là tiếng Việt. Header được chuyển nguyên cho các service.
+  messages:
+    basename: thong-diep/gateway
+    fallback-to-system-locale: false
+
   # Thời gian chờ khi gateway gọi tới service (quá hạn -> 504, service chưa chạy -> 503)
   http:
     clients:

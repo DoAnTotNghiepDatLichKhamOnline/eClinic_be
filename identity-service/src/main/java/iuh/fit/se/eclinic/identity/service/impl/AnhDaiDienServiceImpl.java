@@ -106,7 +106,7 @@ public class AnhDaiDienServiceImpl implements AnhDaiDienService {
         }
         if (ketQua > anhDaiDienProperties.soLanTaiLenToiDa()) {
             log.info("Tài khoản id={} tải ảnh đại diện quá {} lần", idTaiKhoan, anhDaiDienProperties.soLanTaiLenToiDa());
-            throw new LoiNghiepVu(MaLoi.GUI_LAI_QUA_NHANH, "Bạn đổi ảnh đại diện quá nhiều lần, vui lòng thử lại sau");
+            throw new LoiNghiepVu(MaLoi.GUI_LAI_QUA_NHANH, "loi.GUI_LAI_QUA_NHANH.doiAnh");
         }
     }
 

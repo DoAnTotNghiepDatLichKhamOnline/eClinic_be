@@ -66,7 +66,8 @@ File mẫu trong `catalog-service/src/main/java/iuh/fit/se/eclinic/catalog/`:
    và `@Transactional` ở các method ghi. Service trả về DTO, không trả entity.
    - Không tìm thấy: `throw new LoiKhongTimThay("ChuyenKhoa", id)`.
    - Vi phạm nghiệp vụ: `throw new LoiNghiepVu(MaLoi.TEN_CHUYEN_KHOA_DA_TON_TAI)`; mỗi lỗi mới thêm một mã vào
-     `common/src/main/java/iuh/fit/se/eclinic/common/exception/MaLoi.java` (mã HTTP + thông điệp tiếng Việt).
+     `common/src/main/java/iuh/fit/se/eclinic/common/exception/MaLoi.java` (mã HTTP) và 1 dòng `loi.<MA_LOI>=...` vào
+     mỗi file `thong-diep/chung.properties`, `chung_en.properties` (xem mục 4, "Thông điệp 2 ngôn ngữ").
    - **Kiểm tra trùng TRƯỚC khi sửa entity** (xem `capNhat` trong mẫu): entity đang được Hibernate quản lý, chạy
      query sau khi đã sửa nó sẽ làm Hibernate ghi xuống DB trước, và lỗi unique key bật ra trước khi kịp kiểm tra.
    - Xoá bản ghi còn đang được dùng: trả 409 kèm thông điệp nói rõ còn gì đang dùng (xem `xoa` trong mẫu).
@@ -81,7 +82,7 @@ File mẫu trong `catalog-service/src/main/java/iuh/fit/se/eclinic/catalog/`:
 
 ## 4. Phản hồi và lỗi
 
-- Thành công: `PhanHoiApi.ok(duLieu)` hoặc `PhanHoiApi.ok(duLieu, "Đã thêm ...")` →
+- Thành công: `PhanHoiApi.ok(duLieu)` hoặc `PhanHoiApi.ok(duLieu, "thanhCong.themChuyenKhoa")` (khoá thông điệp) →
   `{"thanhCong": true, "thongDiep": "...", "duLieu": ...}`.
 - Có phân trang: service trả `TrangDuLieu.tu(page)` →
   `{"noiDung": [...], "trang", "kichThuoc", "tongSoPhanTu", "tongSoTrang"}`.
@@ -91,6 +92,77 @@ File mẫu trong `catalog-service/src/main/java/iuh/fit/se/eclinic/catalog/`:
   `{"thanhCong": false, "maLoi": "...", "thongDiep": "...", "chiTiet": [{"truong", "thongDiep"}]}`
   với mã HTTP lấy từ `MaLoi`. Lỗi validation, 404, trùng khoá DB... đều đã được xử lý sẵn.
 - Không viết `try/catch` để tự trả lỗi trong controller.
+
+### Thông điệp 2 ngôn ngữ (tiếng Việt / tiếng Anh)
+
+Request chọn ngôn ngữ bằng header `Accept-Language`: `en...` là tiếng Anh; không gửi, hoặc ngôn ngữ khác, là tiếng Việt.
+`maLoi` không đổi theo ngôn ngữ, chỉ `thongDiep` đổi. **Không viết câu chữ cho người dùng thẳng trong mã Java**: viết
+khoá, câu nằm trong `common/src/main/resources/thong-diep/`:
+
+| File | Chứa |
+|---|---|
+| `chung.properties` / `chung_en.properties` | thông điệp của `MaLoi`, lỗi request sai dạng, câu dùng ở 2 service trở lên |
+| `identity`, `catalog`, `booking`, `medical`, `notification` (+ `_en`) | câu riêng của từng service |
+
+File không có đuôi là tiếng Việt, `_en` là tiếng Anh; mọi khoá phải có ở cả 2 file. api-gateway có file riêng
+(`api-gateway/src/main/resources/thong-diep/gateway*.properties`) vì không dùng module `common`.
+
+| Loại | Viết trong mã | Khoá |
+|---|---|---|
+| Lỗi theo mã | `throw new LoiNghiepVu(MaLoi.X)` | `loi.X` |
+| Lỗi có câu riêng / có số liệu | `throw new LoiNghiepVu(MaLoi.X, "loi.X.bienThe", String.valueOf(soLuong))` | `loi.X.bienThe=... {0} ...` |
+| Kiểm tra dữ liệu vào | `@NotBlank(message = "{kiemTra.hoTen.batBuoc}")` | `kiemTra.<truong>.<luat>` |
+| Thành công | `PhanHoiApi.ok(duLieu, "thanhCong.datLich")` | `thanhCong.<viec>` |
+
+- Ràng buộc không ghi `message` (`@Min`, `@NotNull`...) dùng câu chung ở `chung*.properties`
+  (`jakarta.validation.constraints.Min.message`...), không cần thêm gì.
+- Câu có `{0}`, `{1}`: **viết dấu nháy đơn thành 2 dấu** (`''`), và đổi số / ngày giờ sang chuỗi trước khi truyền
+  (`String.valueOf`), để 2 ngôn ngữ hiện cùng 1 dạng số. Câu `kiemTra.*` chỉ dùng tham số có tên của Bean Validation
+  (`{min}`, `{max}`, `{value}`) và viết dấu nháy bình thường.
+- Thông điệp thành công có số liệu: controller tự soạn bằng `MessageSource` (xem `PhienDangNhapController`), vì
+  `DichThongDiepAdvice` chỉ đổi khoá không có tham số.
+- Khoá không có trong file thì chính chuỗi đó được trả về (nhờ vậy thông điệp chuyển nguyên từ service khác qua
+  `GoiNoiBo` vẫn hiện đúng). Vì thế viết sai tên khoá sẽ không báo lỗi khi chạy: **chạy
+  `node scripts/kiem-tra-thong-diep.js` sau khi thêm / sửa thông điệp**.
+- Cần biết ngôn ngữ trong mã: `NgonNgu.hienTai()` (trong request), `NgonNgu.cuaYeuCau(request)` (ở filter). Ngoài request
+  (job, `@Async`) không có ngôn ngữ của request: dùng `tai_khoan.ngon_ngu` (ngôn ngữ ưa dùng đã lưu, đổi bằng
+  `PUT /api/users/me/language`).
+- Client nội bộ gọi trong request của người dùng phải gửi kèm `Accept-Language` (xem `GoiNoiBo.taoRestClient`).
+- **Thông báo (chuông)** không lưu câu soạn sẵn: lưu **khoá mẫu + tham số**, notification-service soạn câu lúc đọc theo
+  ngôn ngữ của request đang đọc chuông.
+  - Mẫu nằm trong `thong-diep/notification*.properties`, khoá `thongBao.<mau>[.<bienThe>]`, tham số `{0}`, `{1}`...
+    Phần có / không (lý do, tầng) là 1 khoá biến thể riêng, không ghép chuỗi trong Java.
+  - Tham số dựng bằng `ThamSoThongBao` theo đúng thứ tự của mẫu: `chu(...)` chép nguyên văn (họ tên, mã tra cứu, lý do
+    người dùng gõ); `gioNgay / ngay / gio` viết theo ngôn ngữ; `haiNgonNgu(vi, en)` cho tên phòng, tầng;
+    `khoa("heThong....")` cho câu do hệ thống viết. Chữ "Bác sĩ" / "Dr." nằm trong mẫu, tham số chỉ là họ tên.
+  - Service nguồn ghi `su_kien_thong_bao.khoa_mau` + `tham_so` (không ghi `noi_dung`). `thong_bao.noi_dung` do
+    notification-service ghi bản tiếng Việt (dự phòng, và là chữ của thông báo tạo trước V18).
+  - Soạn câu ở nơi khác (email nhắc lịch...): `SoanThongBao.soan(khoaMau, thamSoJson, ngonNgu)`.
+- Câu do hệ thống viết vào 1 cột chữ tự do (vd `yeu_cau_doi_lich.ghi_chu_xu_ly` khi ca bị hủy làm đóng yêu cầu): lưu bằng
+  `VanBanHeThong.ghi("heThong.<khoa>", phanNguoiDungGo)`, lúc trả ra gọi `VanBanHeThong.doc(...)`.
+- **Email**: câu chữ nằm trong `thong-diep/identity*.properties` (email tài khoản) và `notification*.properties` (email lịch
+  hẹn, mục 7), khoá `email.<ten>.<phan>`; khung HTML dùng chung là `common/thongbao/KhungEmail`. Giá trị chèn vào câu được escape trước, câu trong file được phép có `<b>`. Email gửi sau khi request kết
+  thúc nên event phải mang `NgonNgu ngonNgu` (lấy `taiKhoan.getNgonNgu()` lúc phát event). Tài khoản bác sĩ do quản
+  trị viên tạo mặc định tiếng Việt.
+
+### Nội dung danh mục 2 ngôn ngữ (chuyên khoa, phòng khám, hồ sơ bác sĩ, thuốc)
+
+Khác với thông điệp (nằm trong file `thong-diep/`), nội dung danh mục do quản trị viên nhập nên nằm trong DB: mỗi cột chữ
+dịch được có thêm 1 cột `<ten>_en` cho phép NULL ngay sau nó (`ten_chuyen_khoa` + `ten_chuyen_khoa_en`). Cột tiếng Việt
+vẫn là cột bắt buộc; bản tiếng Anh trống thì người xem tiếng Anh thấy bản tiếng Việt. **Không dịch**: họ tên, học vị (chữ
+viết tắt), tên thuốc. Chữ người dùng tự gõ (lý do khám, chẩn đoán, đánh giá...) giữ nguyên như đã gõ, không có cột `_en`.
+
+- Entity có 1 hàm cho mỗi trường dịch được, nhận ngôn ngữ làm tham số: `chuyenKhoa.ten(ngonNgu)`,
+  `phongKham.tang(ngonNgu)`, `bacSi.tieuSu(ngonNgu)`... (bên trong gọi `NgonNgu.chon(tiengViet, tiengAnh)`). Trong
+  request truyền `NgonNgu.hienTai()`; ngoài request (job, email) truyền ngôn ngữ của người nhận.
+- **API không nằm dưới `/quan-tri/`**: giữ nguyên dạng response, trường sẵn có mang chữ của ngôn ngữ được yêu cầu. Viết
+  `chuyenKhoa.ten(NgonNgu.hienTai())`, không viết `getTenChuyenKhoa()`.
+- **API quản lý danh mục dưới `/quan-tri/`** (và request thêm / sửa): chữ của chính dòng đó trả đúng như đã lưu, trường
+  sẵn có là bản tiếng Việt, trường `...En` là bản tiếng Anh (null khi chưa nhập), để form sửa đọc ra và ghi lại được cả 2
+  bản. Tên chỉ để tham chiếu sang dòng khác (`tenChuyenKhoa` của phòng khám, của bác sĩ) vẫn theo ngôn ngữ của request.
+- Tên tiếng Anh của chuyên khoa, phòng khám không trùng nhau (UNIQUE trên cột `_en`, cho phép nhiều dòng NULL); trùng thì
+  ném đúng mã lỗi của tên tiếng Việt kèm khoá `.tiengAnh`. Từ khoá tìm kiếm so với tên của cả 2 ngôn ngữ.
+- Chuỗi rỗng ở trường `...En` phải lưu thành NULL (để UNIQUE và việc lấy bản tiếng Việt thay thế chạy đúng).
 
 ## 5. Bảo mật
 
@@ -130,7 +202,7 @@ File mẫu trong `catalog-service/src/main/java/iuh/fit/se/eclinic/catalog/`:
 ## 6. Database và migration
 
 - Schema do **Flyway** quản lý, file nằm trong `common/src/main/resources/db/migration`.
-- Muốn đổi schema: tạo file **mới** `V<số tiếp theo>__mo_ta_ngan.sql` (hiện đã có V1–V9, file tiếp theo là `V10__...sql`).
+- Muốn đổi schema: tạo file **mới** `V<số tiếp theo>__mo_ta_ngan.sql` (hiện đã có V1–V24, file tiếp theo là `V25__...sql`).
   **Không bao giờ sửa file đã chạy** (kể cả `V1__init_schema.sql`): Flyway so checksum và service sẽ không khởi động.
 - Sửa entity trong `common` cho khớp: Hibernate chạy `ddl-auto: validate`, entity lệch schema thì service báo lỗi.
 - DB dùng collation `utf8mb4_unicode_ci`: so sánh `=` và `LIKE` không phân biệt hoa thường và dấu
@@ -162,14 +234,38 @@ File mẫu trong `catalog-service/src/main/java/iuh/fit/se/eclinic/catalog/`:
   đường dẫn này không ra được bên ngoài. Bên nhận khai đường dẫn trong `app.bao-mat.duong-dan-cong-khai` (không có JWT của
   người dùng) và gọi `KhoaNoiBo.kiemTra(...)` ở đầu controller; bên gọi gửi `KhoaNoiBo.giaTri()` trong header
   `X-Khoa-Noi-Bo` (khoá chung `INTERNAL_API_KEY`). Mẫu: `booking/client/ThongBaoClient` gọi
-  `notification/controller/NoiBoThongBaoController`. Các đường dẫn nội bộ đang có: `POST /noi-bo/thong-bao`
-  (notification), `/noi-bo/tai-khoan/**` (identity: tạo / xoá tài khoản bác sĩ, sửa họ tên và số điện thoại, vô hiệu hoá,
+  `notification/controller/NoiBoThongBaoController`. Các đường dẫn nội bộ đang có: `POST /noi-bo/thong-bao`,
+  `POST /noi-bo/email` (notification), `/noi-bo/tai-khoan/**` (identity: tạo / xoá tài khoản bác sĩ, sửa họ tên và số điện thoại, vô hiệu hoá,
   kích hoạt lại), `POST /noi-bo/bac-si/{id}/huy-ca-sap-toi` (booking).
 - Sự kiện của miền này phải tới miền khác và **không được mất** (thông báo cho lịch hẹn): không gọi REST trong transaction,
   cũng không gọi 1 lần sau khi commit. Ghi sự kiện vào bảng chờ gửi của chính service trong cùng transaction
   (`su_kien_thong_bao`), một job `@Scheduled` gửi các dòng chưa gửi và chỉ đánh dấu đã gửi khi bên nhận trả 2xx; bên nhận
   nhận ra sự kiện gửi lại bằng 1 mã duy nhất (`thong_bao.ma_nguon`). Mẫu: `ThongBaoLichHenServiceImpl`,
   `GuiThongBaoServiceImpl`, `GuiThongBaoJob`.
+- **Việc theo giờ** (nhắc lịch khám): job `@Scheduled` chạy lặp và **hỏi DB "cái gì đến hạn"**, không hẹn giờ riêng cho
+  từng dòng lúc tạo (hủy / đổi lịch khỏi phải hẹn lại). Mỗi việc đã làm ghi 1 dòng có UNIQUE (`nhac_lich_hen`: lịch hẹn +
+  mốc) **trong cùng transaction** với các dòng chờ gửi, nên không làm 2 lần. Mỗi lịch hẹn 1 transaction riêng
+  (`TransactionTemplate`), khoá dòng rồi kiểm tra lại trạng thái; chỉ khoá, không sửa `lich_hen`. Câu chữ ghi ngày giờ
+  thật, không ghi "còn N ngày", để gửi trễ (ban đêm, service ngừng) vẫn đúng. Mẫu: `NhacLichServiceImpl`, `NhacLichJob`.
+- **Theo dõi 1 giá trị service khác ghi** (nhắc tái khám): service ghi giá trị **không phát sự kiện**. medical-service chỉ
+  ghi `ho_so_benh_an.ngay_tai_kham_de_xuat`; job của booking-service so giá trị hiện tại với **giá trị đã báo** (bảng
+  `nhac_tai_kham`, mỗi hồ sơ bệnh án 1 dòng UNIQUE, ghi cùng transaction với các dòng chờ gửi). Hẹn mới, đổi ngày, xoá
+  ngày và nhắc trước đều ra từ phép so đó, không phải hẹn lại gì khi bác sĩ sửa. Dùng dòng trạng thái (không phải mỗi
+  lần gửi 1 dòng) vì giá trị có thể đổi rồi quay về như cũ. Migration thêm bảng trạng thái phải ghi sẵn dữ liệu đang có
+  là "đã báo", nếu không lần chạy đầu sẽ gửi lại mọi thứ cũ. Mẫu: `NhacTaiKhamServiceImpl`, `NhacTaiKhamJob`, `V21`.
+- **Email lịch hẹn** đi cùng bảng chờ gửi đó, kênh `EMAIL` (`su_kien_thong_bao.kenh`): dòng email ghi **địa chỉ nhận +
+  ngôn ngữ** thay cho tài khoản nhận, vì người đặt có thể là khách. Email đi 2 chặng, mỗi chặng tự nhận ra dòng đã có:
+  booking-service → notification-service (`POST /noi-bo/email`, trùng `maNguon` thì bỏ qua), rồi notification-service →
+  máy chủ mail (bảng `email_gui`: gửi lỗi thì thử lại theo `app.email.cac-lan-cho`, hết lần thì `THAT_BAI`, đã `DA_GUI`
+  thì không gửi lại). Mẫu: `ThongBaoLichHenServiceImpl.ghiEmail`, `notification/.../EmailServiceImpl`, `GuiEmailJob`.
+  - 1 email = **mẫu + tham số** như thông báo chuông; notification-service soạn lúc gửi (`MauEmail`). Thêm 1 mẫu: thêm khoá
+    vào `MauEmail.CAC_MAU`, thêm `email.<mau>` (tiêu đề, `{0}` = mã tra cứu) và `email.<mau>.moDau` vào
+    `notification*.properties`; tham số theo đúng thứ tự ghi ở `MauEmail`.
+  - Gửi tới: email liên hệ của lịch hẹn, để trống thì email của tài khoản đã đặt; khách không nhập email thì không gửi.
+    Ngôn ngữ: của tài khoản đã đặt (`tai_khoan.ngon_ngu`); khách thì của request đã tạo lịch hẹn (`lich_hen.ngon_ngu`).
+  - Email chỉ chứa những gì phiếu khám đã hiện cho người có link (họ tên bệnh nhân, giờ, bác sĩ, phòng, mã tra cứu, link
+    phiếu khám). **Không** đưa lý do khám, chuyên khoa, số điện thoại, CCCD, chẩn đoán vào email.
+  - Log của việc gửi email chỉ ghi id dòng `email_gui` và tên loại lỗi, không ghi địa chỉ nhận hay nội dung.
 - Kho ảnh (Cloudinary) dùng chung nằm ở `common/luutru` (`LuuTruAnh`); service nào cần tải ảnh lên thì đặt
   `app.cloudinary.bat: true` trong `application.yml` của mình (identity-service, catalog-service).
   `application-common.yml` được **import** nên giá trị ở đó **đè** lên `application.yml` của service: khoá nào mỗi service
@@ -184,6 +280,33 @@ File mẫu trong `catalog-service/src/main/java/iuh/fit/se/eclinic/catalog/`:
   (xem `AnhDaiDienServiceImpl`, class này không có `@Transactional`). Việc phải làm **sau khi commit** (gửi email, xoá ảnh
   của tài khoản vừa xoá): phát event rồi xử lý bằng `@Async @TransactionalEventListener(phase = AFTER_COMMIT)`
   (xem `EmailServiceImpl`).
+- Chatbot (`chatbot-service`): mô hình ngôn ngữ chỉ là **một bước** trong chuỗi xử lý cố định của `ChatbotServiceImpl`:
+  chủ phiên → giới hạn của người gửi → dấu hiệu cấp cứu (trúng thì trả câu cố định, không gọi mô hình) → giới hạn toàn hệ
+  thống → mô hình → dấu hiệu ngoài phạm vi (server thay bằng câu từ chối của mình) → lưu. Thêm bước mới thì đặt đúng chỗ
+  trong chuỗi này, không nhờ mô hình làm thay.
+  - **Chỉ dẫn hệ thống (prompt) không phải ranh giới bảo mật.** Ai được đọc gì do code quyết định trước khi gọi mô hình;
+    mô hình chỉ nhận dữ liệu mà chính người hỏi được phép xem, và không bao giờ nhận quyền truy vấn tự do (không SQL do
+    mô hình viết, chỉ các hàm tra cứu cố định, tham số "của ai" lấy từ JWT chứ không lấy từ lời mô hình).
+  - Bước "mô hình" là 1 vòng có chặn (`hoiMoHinh`): mô hình xin tra cứu, code chạy hàm tra cứu rồi gọi lại. Chặn bằng số
+    lần gọi và tổng thời gian (nhỏ hơn read-timeout của gateway); mỗi lần gọi đều tính vào giới hạn toàn hệ thống.
+  - Hàm tra cứu cho mô hình nằm ở `TraCuuPhongKham`. Thêm 1 hàm: khai báo tên + tham số trong `CONG_CU`, thêm nhánh trong
+    `thucHien`. Luật của mọi hàm: chỉ đọc; tham số do mô hình viết là dữ liệu chưa đáng tin (kiểm tra kiểu, kiểm tra id có
+    thật); lỗi nào cũng thành kết quả báo lỗi cho mô hình chứ không ném exception; dữ liệu của service khác đọc qua API
+    của service đó (không chép luật "còn chỗ" sang đây).
+  - Hàm đọc dữ liệu CÁ NHÂN (`lich_hen_cua_toi`, `lan_kham_cua_toi`) theo thêm 6 luật: (1) không có tham số nào, tham số
+    mô hình viết không được đọc; (2) "của ai" là `NguoiHoi`, dựng 1 lần trong `guiTinNhan` từ JWT của request, và dữ liệu
+    đọc qua API "của tôi" của service chủ dữ liệu kèm chính JWT đó (`NguoiDungHienTai.layGiaTriToken()`), không đọc thẳng
+    DB, không tạo API nội bộ nhận id tài khoản; (3) chỉ đưa cho mô hình khi người chat là bệnh nhân trong phiên của chính
+    tài khoản đó, phiên của khách không bao giờ được; (4) chưa có đồng ý của phiên (`phien_chat.dong_y_du_lieu_luc`) thì
+    không đọc gì, trả câu `CAN_DONG_Y`; (5) record của client chỉ khai báo trường cần dùng, mô hình chỉ nhận phần tối
+    thiểu (không họ tên, không mã, không chữ do người dùng gõ), họ tên và mã chỉ vào thẻ `goiY`; (6) dòng ghi chú lịch
+    sử không chứa dữ liệu cá nhân, và câu trả lời cũ có thẻ cá nhân chỉ gửi lại khi request hiện tại còn được đọc.
+  - Thứ người dùng bấm vào được (bác sĩ, khung giờ, id để đặt lịch) trả ở `goiY`, do server dựng từ kết quả tra cứu.
+    Không bao giờ tách id hay giờ khám ra từ câu chữ của mô hình.
+  - Lời gọi mô hình nằm ngoài transaction DB. Mô hình lỗi, hết thời gian hay xin tra cứu mãi: 503, không lưu gì.
+  - Không ghi nội dung tin nhắn, body lỗi của nhà cung cấp, khoá API hay JWT của người dùng vào log.
+  - Câu do server viết (chào, từ chối, cấp cứu) nằm ở `thong-diep/chatbot*.properties`; chỉ dẫn hệ thống và danh sách dấu
+    hiệu cấp cứu nằm ở `chatbot-service/src/main/resources/chatbot/`, không viết trong Java.
 
 ## 8. Test
 
@@ -217,5 +340,11 @@ File mẫu trong `catalog-service/src/main/java/iuh/fit/se/eclinic/catalog/`:
   - Gateway từ chối mọi request quá 5 MB (`GATEWAY_MAX_REQUEST_SIZE`, 413 `YEU_CAU_QUA_LON`); tệp lớn hơn thì phải nâng cả hai.
   - Loại tệp nhận ra bằng **các byte đầu của nội dung** (`DinhDangAnh`), không tin tên tệp hay `Content-Type` client gửi;
     tên lưu trữ do server đặt, không lấy từ tên tệp.
+- **Trang demo** (`scripts/demo/`): chữ người dùng nhìn thấy viết thành cặp `t('Tiếng Việt', 'English')` ngay tại chỗ dùng,
+  kể cả trong chuỗi HTML của `khuon()` (`${t(...)}`), `confirm` / `alert` và câu báo lỗi phía trình duyệt. Chữ khai báo 1
+  lần lúc tải file (hằng số, `tieuDe` của `dangKy`) dùng `cap(vi, en)` hoặc bảng `nhan({...})`, hoặc viết thành hàm, vì
+  lúc đó chưa biết ngôn ngữ. Dữ liệu từ API không đưa qua `t()`. Không đặt biến cục bộ tên `t`. Sửa màn hình xong chạy
+  `node scripts/kiem-tra-demo-ngon-ngu.js` (in file:dòng của chuỗi tiếng Việt chưa có bản tiếng Anh; không nhận ra từ
+  không dấu, phải tự đọc lại).
 - Git trên Windows để `core.autocrlf=true`; file trong repo lưu xuống dòng LF, máy Windows thấy CRLF — bình thường.
 - Không commit file `.env` (chứa mật khẩu, khoá) — đã có trong `.gitignore`.

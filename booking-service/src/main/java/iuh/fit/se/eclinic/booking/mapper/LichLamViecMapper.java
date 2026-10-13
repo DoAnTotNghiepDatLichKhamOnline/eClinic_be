@@ -5,6 +5,7 @@ import org.springframework.stereotype.Component;
 import iuh.fit.se.eclinic.booking.dto.response.CaLamViecResponse;
 import iuh.fit.se.eclinic.booking.repository.LichLamViecRepository.SoLuotCuaCa;
 import iuh.fit.se.eclinic.common.entity.scheduling.LichLamViec;
+import iuh.fit.se.eclinic.common.enums.NgonNgu;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -21,7 +22,7 @@ public class LichLamViecMapper {
     public CaLamViecResponse toResponse(LichLamViec ca, SoLuotCuaCa soLuot) {
         return new CaLamViecResponse(ca.getId(), ca.getNgayLamViec(), ca.getGioBatDau(), ca.getGioKetThuc(),
                 ca.getSoLuotToiDaMoiGio(), ca.getThoiLuongLuotPhut(), ca.getTrangThai(),
-                caKhamMapper.toBacSiTomTat(ca.getBacSi()), ca.getBacSi().getChuyenKhoa().getTenChuyenKhoa(),
+                caKhamMapper.toBacSiTomTat(ca.getBacSi()), ca.getBacSi().getChuyenKhoa().ten(NgonNgu.hienTai()),
                 caKhamMapper.toPhongKhamTomTat(ca.getPhongKham()),
                 soLuot == null ? 0 : soLuot.getTongSoLuot(),
                 soLuot == null ? 0 : soLuot.getSoLuotDaDat(),

@@ -66,28 +66,28 @@ public class XacThucController {
     @ResponseStatus(HttpStatus.CREATED)
     public PhanHoiApi<TaiKhoanResponse> dangKy(@Valid @RequestBody DangKyRequest request) {
         return PhanHoiApi.ok(xacThucService.dangKy(request),
-                "Đăng ký thành công, vui lòng kiểm tra email để kích hoạt tài khoản");
+                "thanhCong.dangKy");
     }
 
     @Operation(summary = "Kích hoạt tài khoản bằng token trong liên kết email")
     @PostMapping("/verify-email")
     public PhanHoiApi<Void> xacThucEmail(@Valid @RequestBody XacThucEmailRequest request) {
         xacThucService.xacThucEmail(request.token());
-        return PhanHoiApi.ok(null, "Xác thực email thành công");
+        return PhanHoiApi.ok(null, "thanhCong.xacThucEmail");
     }
 
     @Operation(summary = "Gửi lại liên kết kích hoạt (luôn trả cùng 1 thông báo)")
     @PostMapping("/resend-verification")
     public PhanHoiApi<Void> guiLaiXacThuc(@Valid @RequestBody GuiLaiXacThucRequest request) {
         xacThucService.guiLaiXacThuc(request.email());
-        return PhanHoiApi.ok(null, "Nếu email đã đăng ký và chưa kích hoạt, liên kết mới đã được gửi");
+        return PhanHoiApi.ok(null, "thanhCong.guiLaiXacThuc");
     }
 
     @Operation(summary = "Đăng nhập bằng email và mật khẩu: access token trong body, refresh token trong cookie")
     @PostMapping("/login")
     public ResponseEntity<PhanHoiApi<DangNhapResponse>> dangNhap(@Valid @RequestBody DangNhapRequest request,
             @RequestHeader(value = "User-Agent", required = false) String thongTinThietBi) {
-        return capCookie(dangNhapService.dangNhap(request, thongTinThietBi), "Đăng nhập thành công");
+        return capCookie(dangNhapService.dangNhap(request, thongTinThietBi), "thanhCong.dangNhap");
     }
 
     @Operation(summary = "Lần đăng nhập đầu của tài khoản bác sĩ mới (đăng nhập trả 403 PHAI_DOI_MAT_KHAU): đặt mật khẩu của"
@@ -95,7 +95,7 @@ public class XacThucController {
     @PostMapping("/first-password")
     public PhanHoiApi<Void> datMatKhauLanDau(@Valid @RequestBody DatMatKhauLanDauRequest request) {
         dangNhapService.datMatKhauLanDau(request);
-        return PhanHoiApi.ok(null, "Đã đặt mật khẩu, vui lòng đăng nhập bằng mật khẩu mới");
+        return PhanHoiApi.ok(null, "thanhCong.datMatKhauLanDau");
     }
 
     @Operation(summary = "Đổi refresh token (cookie, hoặc body khi thử API) lấy cặp token mới; token cũ hết hiệu lực")
@@ -107,7 +107,7 @@ public class XacThucController {
         if (refreshToken == null) {
             throw new LoiNghiepVu(MaLoi.PHIEN_DANG_NHAP_KHONG_HOP_LE);
         }
-        return capCookie(dangNhapService.lamMoi(refreshToken), "Làm mới phiên đăng nhập thành công");
+        return capCookie(dangNhapService.lamMoi(refreshToken), "thanhCong.lamMoiPhien");
     }
 
     @Operation(summary = "Đăng xuất phiên của refresh token (cookie hoặc body) và xoá cookie; luôn trả thành công")
@@ -121,21 +121,21 @@ public class XacThucController {
         }
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, cookiePhien.xoa())
-                .body(PhanHoiApi.ok(null, "Đã đăng xuất"));
+                .body(PhanHoiApi.ok(null, "thanhCong.dangXuat"));
     }
 
     @Operation(summary = "Gửi liên kết đặt lại mật khẩu qua email (luôn trả cùng 1 thông báo)")
     @PostMapping("/forgot-password")
     public PhanHoiApi<Void> quenMatKhau(@Valid @RequestBody QuenMatKhauRequest request) {
         matKhauService.quenMatKhau(request.email());
-        return PhanHoiApi.ok(null, "Nếu email đã đăng ký, liên kết đặt lại mật khẩu đã được gửi");
+        return PhanHoiApi.ok(null, "thanhCong.quenMatKhau");
     }
 
     @Operation(summary = "Đặt mật khẩu mới bằng token trong liên kết email; mọi thiết bị bị đăng xuất")
     @PostMapping("/reset-password")
     public PhanHoiApi<Void> datLaiMatKhau(@Valid @RequestBody DatLaiMatKhauRequest request) {
         matKhauService.datLaiMatKhau(request.token(), request.matKhauMoi());
-        return PhanHoiApi.ok(null, "Đặt lại mật khẩu thành công, vui lòng đăng nhập lại");
+        return PhanHoiApi.ok(null, "thanhCong.datLaiMatKhau");
     }
 
     // Không xoá cookie refresh token: trình duyệt mở liên kết có thể đang đăng nhập 1 tài khoản khác
@@ -143,7 +143,7 @@ public class XacThucController {
     @PostMapping("/confirm-email-change")
     public PhanHoiApi<Void> xacNhanDoiEmail(@Valid @RequestBody XacThucEmailRequest request) {
         doiEmailService.xacNhan(request.token());
-        return PhanHoiApi.ok(null, "Đã đổi email đăng nhập, vui lòng đăng nhập lại bằng email mới");
+        return PhanHoiApi.ok(null, "thanhCong.doiEmail");
     }
 
     @Operation(summary = "Đăng nhập bằng ID token Google (bệnh nhân): access token trong body, refresh token trong cookie")
@@ -151,7 +151,7 @@ public class XacThucController {
     public ResponseEntity<PhanHoiApi<DangNhapResponse>> dangNhapGoogle(@Valid @RequestBody DangNhapGoogleRequest request,
             @RequestHeader(value = "User-Agent", required = false) String thongTinThietBi) {
         return capCookie(dangNhapGoogleService.dangNhap(request.idToken(), thongTinThietBi),
-                "Đăng nhập Google thành công");
+                "thanhCong.dangNhapGoogle");
     }
 
     /** refreshToken không được đưa ra JSON (@JsonIgnore), chỉ đi trong cookie. */

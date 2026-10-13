@@ -5,6 +5,7 @@ import org.springframework.stereotype.Component;
 import iuh.fit.se.eclinic.common.entity.booking.HoSoBenhNhan;
 import iuh.fit.se.eclinic.common.entity.catalog.BacSi;
 import iuh.fit.se.eclinic.common.entity.identity.TaiKhoan;
+import iuh.fit.se.eclinic.common.enums.NgonNgu;
 import iuh.fit.se.eclinic.common.enums.TrangThaiLienKet;
 import iuh.fit.se.eclinic.identity.dto.response.HoSoBacSiResponse;
 import iuh.fit.se.eclinic.identity.dto.response.HoSoBenhNhanResponse;
@@ -21,6 +22,7 @@ public class HoSoCaNhanMapper {
     public HoSoCaNhanResponse toResponse(TaiKhoan taiKhoan, BacSi bacSi, HoSoBenhNhan hoSoBenhNhan) {
         return new HoSoCaNhanResponse(taiKhoan.getId(), taiKhoan.getHoTen(), taiKhoan.getEmail(),
                 taiKhoan.getSoDienThoai(), taiKhoan.getAnhDaiDien(), taiKhoan.getVaiTro(), taiKhoan.getTrangThai(),
+                taiKhoan.getNgonNgu(),
                 taiKhoan.getMatKhauHash() != null, taiKhoan.getGoogleId() != null, taiKhoan.getNgayTao(),
                 bacSi == null ? null : toResponse(bacSi),
                 hoSoBenhNhan == null ? null : toResponse(hoSoBenhNhan));
@@ -28,9 +30,10 @@ public class HoSoCaNhanMapper {
 
     /** Dùng chung với TaiKhoanQuanTriMapper. {@code bacSi.chuyenKhoa} phải đọc được (đã nạp hoặc còn trong transaction). */
     public HoSoBacSiResponse toResponse(BacSi bacSi) {
+        NgonNgu ngonNgu = NgonNgu.hienTai();
         return new HoSoBacSiResponse(bacSi.getId(), bacSi.getChuyenKhoa().getId(),
-                bacSi.getChuyenKhoa().getTenChuyenKhoa(), bacSi.getHocVi(), bacSi.getSoGiayPhep(),
-                bacSi.getSoNamKinhNghiem(), bacSi.getTieuSu(), bacSi.getTrangThai());
+                bacSi.getChuyenKhoa().ten(ngonNgu), bacSi.getHocVi(), bacSi.getSoGiayPhep(),
+                bacSi.getSoNamKinhNghiem(), bacSi.tieuSu(ngonNgu), bacSi.getTrangThai());
     }
 
     private HoSoBenhNhanResponse toResponse(HoSoBenhNhan hoSo) {

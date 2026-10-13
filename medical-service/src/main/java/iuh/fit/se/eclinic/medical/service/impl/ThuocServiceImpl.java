@@ -27,7 +27,7 @@ public class ThuocServiceImpl implements ThuocService {
     @Transactional
     public Thuoc layHoacTao(String tenThuoc, String donVi, Long idBacSiTao, Set<Long> idThuocDaCoTrongDon) {
         if (!StringUtils.hasText(tenThuoc)) {
-            throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE, "Tên thuốc không được để trống");
+            throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE, "loi.DU_LIEU_KHONG_HOP_LE.tenThuoc");
         }
         String tenHienThi = collapseWhitespace(tenThuoc);
         String tenChuanHoa = normalize(tenThuoc);
@@ -40,8 +40,7 @@ public class ThuocServiceImpl implements ThuocService {
                     .orElseThrow(() -> new IllegalStateException("Thuoc not found after insert: " + tenChuanHoa));
         });
         if (thuoc.getTrangThai() == TrangThaiThuoc.NGUNG_DUNG && !idThuocDaCoTrongDon.contains(thuoc.getId())) {
-            throw new LoiNghiepVu(MaLoi.THUOC_NGUNG_DUNG, "Thuốc \"" + thuoc.getTenThuoc()
-                    + "\" đã ngừng dùng trong danh mục, không kê mới được");
+            throw new LoiNghiepVu(MaLoi.THUOC_NGUNG_DUNG, "loi.THUOC_NGUNG_DUNG.ten", thuoc.getTenThuoc());
         }
         return thuoc;
     }

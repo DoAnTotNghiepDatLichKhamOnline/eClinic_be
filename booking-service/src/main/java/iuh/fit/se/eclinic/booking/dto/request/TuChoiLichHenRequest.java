@@ -9,7 +9,7 @@ import jakarta.validation.constraints.Size;
  * @param lyDo lý do từ chối, bệnh nhân đọc được trên phiếu khám và trong "lịch hẹn của tôi"
  */
 public record TuChoiLichHenRequest(
-        @NotBlank(message = "Lý do từ chối không được để trống")
-        @Size(max = 500, message = "Lý do từ chối tối đa 500 ký tự")
+        @NotBlank(message = "{kiemTra.lyDoTuChoi.batBuoc}")
+        @Size(max = 500, message = "{kiemTra.lyDoTuChoi.toiDa}")
         String lyDo) {
 }

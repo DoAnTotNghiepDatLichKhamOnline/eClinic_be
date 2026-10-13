@@ -2,6 +2,7 @@ package iuh.fit.se.eclinic.identity.controller;
 
 import java.util.List;
 
+import org.springframework.context.MessageSource;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import iuh.fit.se.eclinic.common.dto.PhanHoiApi;
+import iuh.fit.se.eclinic.common.enums.NgonNgu;
 import iuh.fit.se.eclinic.common.security.NguoiDungHienTai;
 import iuh.fit.se.eclinic.identity.dto.response.PhienDangNhapResponse;
 import iuh.fit.se.eclinic.identity.service.PhienDangNhapService;
@@ -31,6 +33,7 @@ import lombok.RequiredArgsConstructor;
 public class PhienDangNhapController {
 
     private final PhienDangNhapService phienDangNhapService;
+    private final MessageSource messageSource;
 
     @Operation(summary = "Danh sách thiết bị đang đăng nhập; thiết bị đang dùng đứng đầu (hienTai = true)")
     @GetMapping
@@ -43,7 +46,7 @@ public class PhienDangNhapController {
     @DeleteMapping("/{id}")
     public PhanHoiApi<Void> dangXuat(@PathVariable String id) {
         phienDangNhapService.dangXuat(NguoiDungHienTai.layIdTaiKhoan(), NguoiDungHienTai.layMaPhien(), id);
-        return PhanHoiApi.ok(null, "Đã đăng xuất thiết bị");
+        return PhanHoiApi.ok(null, "thanhCong.dangXuatThietBi");
     }
 
     @Operation(summary = "Đăng xuất mọi thiết bị khác, giữ thiết bị đang dùng; trả về số thiết bị đã đăng xuất")
@@ -51,7 +54,9 @@ public class PhienDangNhapController {
     public PhanHoiApi<Integer> dangXuatCacPhienKhac() {
         int soPhien = phienDangNhapService.dangXuatCacPhienKhac(NguoiDungHienTai.layIdTaiKhoan(),
                 NguoiDungHienTai.layMaPhien());
-        return PhanHoiApi.ok(soPhien, "Đã đăng xuất " + soPhien + " thiết bị khác");
+        // Thông điệp có tham số: soạn tại đây (DichThongDiepAdvice chỉ đổi khoá không có tham số)
+        return PhanHoiApi.ok(soPhien, messageSource.getMessage("thanhCong.dangXuatThietBiKhac",
+                new Object[] { String.valueOf(soPhien) }, NgonNgu.hienTai().locale()));
     }
 
 }

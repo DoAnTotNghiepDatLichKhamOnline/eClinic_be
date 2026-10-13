@@ -82,7 +82,7 @@ public class QuanTriHoSoBenhNhanController {
     @PostMapping("/{id}/duyet")
     public PhanHoiApi<Void> duyet(@PathVariable Long id) {
         lienKetHoSoService.duyet(id);
-        return PhanHoiApi.ok(null, "Đã liên kết hồ sơ bệnh nhân với tài khoản");
+        return PhanHoiApi.ok(null, "thanhCong.lienKetHoSo");
     }
 
     @Operation(summary = "Từ chối: hồ sơ trở lại chưa liên kết, tài khoản này không được tự liên kết lại hồ sơ đó")
@@ -90,7 +90,7 @@ public class QuanTriHoSoBenhNhanController {
     public PhanHoiApi<Void> tuChoi(@PathVariable Long id,
             @Valid @RequestBody(required = false) TuChoiLienKetRequest request) {
         lienKetHoSoService.tuChoi(id, request == null ? null : request.lyDo());
-        return PhanHoiApi.ok(null, "Đã từ chối liên kết hồ sơ bệnh nhân");
+        return PhanHoiApi.ok(null, "thanhCong.tuChoiLienKetHoSo");
     }
 
     @Operation(summary = "Xem 1 hồ sơ bệnh nhân (số CCCD không che), id lấy từ idHoSoBenhNhan của lịch hẹn")
@@ -105,7 +105,7 @@ public class QuanTriHoSoBenhNhanController {
     public PhanHoiApi<HoSoBenhNhanQuanTriResponse> sua(@PathVariable Long id,
             @Valid @RequestBody SuaHoSoBenhNhanRequest request) {
         return PhanHoiApi.ok(suaHoSoBenhNhanService.sua(id, request, NguoiDungHienTai.layIdTaiKhoan()),
-                "Đã cập nhật hồ sơ bệnh nhân");
+                "thanhCong.capNhatHoSoBenhNhan");
     }
 
 }

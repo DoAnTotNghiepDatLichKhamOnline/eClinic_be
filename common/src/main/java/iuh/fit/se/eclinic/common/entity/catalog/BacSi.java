@@ -5,6 +5,7 @@ import org.hibernate.type.SqlTypes;
 
 import iuh.fit.se.eclinic.common.entity.BaseEntity;
 import iuh.fit.se.eclinic.common.entity.identity.TaiKhoan;
+import iuh.fit.se.eclinic.common.enums.NgonNgu;
 import iuh.fit.se.eclinic.common.enums.TrangThaiBacSi;
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.Column;
@@ -53,24 +54,42 @@ public class BacSi extends BaseEntity {
     @Column(name = "chuc_vu", length = 150)
     private String chucVu;
 
+    @Column(name = "chuc_vu_en", length = 150)
+    private String chucVuEn;
+
     /** 1-2 câu hiện trên thẻ bác sĩ. */
     @Column(name = "gioi_thieu_ngan", length = 300)
     private String gioiThieuNgan;
+
+    @Column(name = "gioi_thieu_ngan_en", length = 300)
+    private String gioiThieuNganEn;
 
     /** Đoạn giới thiệu tự do. */
     @Column(name = "tieu_su", columnDefinition = "TEXT")
     private String tieuSu;
 
+    @Column(name = "tieu_su_en", columnDefinition = "TEXT")
+    private String tieuSuEn;
+
     /** 3 mục dưới đây lưu văn bản thuần, mỗi dòng 1 ý; API trả về / nhận vào dạng mảng chuỗi. */
     @Column(name = "qua_trinh_dao_tao", columnDefinition = "TEXT")
     private String quaTrinhDaoTao;
 
+    @Column(name = "qua_trinh_dao_tao_en", columnDefinition = "TEXT")
+    private String quaTrinhDaoTaoEn;
+
     @Column(name = "qua_trinh_cong_tac", columnDefinition = "TEXT")
     private String quaTrinhCongTac;
+
+    @Column(name = "qua_trinh_cong_tac_en", columnDefinition = "TEXT")
+    private String quaTrinhCongTacEn;
 
     /** Khám và điều trị. */
     @Column(name = "linh_vuc_kham_chua", columnDefinition = "TEXT")
     private String linhVucKhamChua;
+
+    @Column(name = "linh_vuc_kham_chua_en", columnDefinition = "TEXT")
+    private String linhVucKhamChuaEn;
 
     @Column(name = "so_nam_kinh_nghiem")
     private Integer soNamKinhNghiem;
@@ -80,4 +99,28 @@ public class BacSi extends BaseEntity {
     @Column(name = "trang_thai", nullable = false, length = 20)
     private TrangThaiBacSi trangThai = TrangThaiBacSi.DANG_CONG_TAC;
 
+    // Chữ theo ngôn ngữ: bản tiếng Anh nếu được yêu cầu và đã nhập, không thì bản tiếng Việt (NgonNgu.chon).
+    public String chucVu(NgonNgu ngonNgu) {
+        return ngonNgu.chon(chucVu, chucVuEn);
+    }
+
+    public String gioiThieuNgan(NgonNgu ngonNgu) {
+        return ngonNgu.chon(gioiThieuNgan, gioiThieuNganEn);
+    }
+
+    public String tieuSu(NgonNgu ngonNgu) {
+        return ngonNgu.chon(tieuSu, tieuSuEn);
+    }
+
+    public String quaTrinhDaoTao(NgonNgu ngonNgu) {
+        return ngonNgu.chon(quaTrinhDaoTao, quaTrinhDaoTaoEn);
+    }
+
+    public String quaTrinhCongTac(NgonNgu ngonNgu) {
+        return ngonNgu.chon(quaTrinhCongTac, quaTrinhCongTacEn);
+    }
+
+    public String linhVucKhamChua(NgonNgu ngonNgu) {
+        return ngonNgu.chon(linhVucKhamChua, linhVucKhamChuaEn);
+    }
 }

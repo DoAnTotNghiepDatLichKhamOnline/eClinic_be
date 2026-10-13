@@ -27,7 +27,7 @@ import iuh.fit.se.eclinic.catalog.dto.request.NgungCongTacRequest;
 import iuh.fit.se.eclinic.catalog.dto.request.SapXepAnhBacSiRequest;
 import iuh.fit.se.eclinic.catalog.dto.request.SuaBacSiRequest;
 import iuh.fit.se.eclinic.catalog.dto.request.ThemBacSiRequest;
-import iuh.fit.se.eclinic.catalog.dto.response.AnhBacSiResponse;
+import iuh.fit.se.eclinic.catalog.dto.response.AnhBacSiQuanTriResponse;
 import iuh.fit.se.eclinic.catalog.dto.response.AnhHuongNgungCongTacResponse;
 import iuh.fit.se.eclinic.catalog.dto.response.BacSiQuanTriResponse;
 import iuh.fit.se.eclinic.catalog.dto.response.HoSoBacSiQuanTriResponse;
@@ -81,14 +81,14 @@ public class QuanTriBacSiController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public PhanHoiApi<HoSoBacSiQuanTriResponse> them(@Valid @RequestBody ThemBacSiRequest request) {
-        return PhanHoiApi.ok(quanLyBacSiService.them(request), "Đã thêm bác sĩ");
+        return PhanHoiApi.ok(quanLyBacSiService.them(request), "thanhCong.themBacSi");
     }
 
     @Operation(summary = "Sửa thông tin cơ bản: họ tên, số điện thoại, chuyên khoa, số giấy phép (đổi chuyên khoa khi còn ca"
             + " sắp tới: 409 BAC_SI_CON_CA_LAM_VIEC)")
     @PutMapping("/{id}")
     public PhanHoiApi<HoSoBacSiQuanTriResponse> sua(@PathVariable Long id, @Valid @RequestBody SuaBacSiRequest request) {
-        return PhanHoiApi.ok(quanLyBacSiService.sua(id, request), "Đã cập nhật thông tin bác sĩ");
+        return PhanHoiApi.ok(quanLyBacSiService.sua(id, request), "thanhCong.capNhatBacSi");
     }
 
     @Operation(summary = "Xem trước khi cho ngừng công tác: số ca sắp tới sẽ bị hủy và số lịch hẹn sẽ phải đổi lịch")
@@ -103,14 +103,14 @@ public class QuanTriBacSiController {
     public PhanHoiApi<KetQuaNgungCongTacResponse> ngungCongTac(@PathVariable Long id,
             @Valid @RequestBody NgungCongTacRequest request) {
         return PhanHoiApi.ok(quanLyBacSiService.ngungCongTac(NguoiDungHienTai.layIdTaiKhoan(), id, request.lyDo()),
-                "Bác sĩ đã ngừng công tác");
+                "thanhCong.bacSiNgungCongTac");
     }
 
     @Operation(summary = "Cho bác sĩ công tác lại: kích hoạt lại tài khoản, hiện lại trong danh sách công khai. Các ca đã hủy"
             + " không được khôi phục")
     @PostMapping("/{id}/cong-tac-lai")
     public PhanHoiApi<HoSoBacSiQuanTriResponse> congTacLai(@PathVariable Long id) {
-        return PhanHoiApi.ok(quanLyBacSiService.congTacLai(id), "Bác sĩ đã công tác lại");
+        return PhanHoiApi.ok(quanLyBacSiService.congTacLai(id), "thanhCong.bacSiCongTacLai");
     }
 
     @Operation(summary = "Xem hồ sơ giới thiệu của bác sĩ (kể cả bác sĩ không hiển thị công khai)")
@@ -123,39 +123,42 @@ public class QuanTriBacSiController {
     @PutMapping("/{id}/ho-so")
     public PhanHoiApi<HoSoBacSiQuanTriResponse> capNhatHoSo(@PathVariable Long id,
             @Valid @RequestBody CapNhatHoSoBacSiRequest request) {
-        return PhanHoiApi.ok(hoSoBacSiService.capNhatHoSo(id, request), "Đã cập nhật hồ sơ bác sĩ");
+        return PhanHoiApi.ok(hoSoBacSiService.capNhatHoSo(id, request), "thanhCong.capNhatHoSoBacSi");
     }
 
-    @Operation(summary = "Thêm ảnh giới thiệu (multipart: phần tệp 'anh' JPEG / PNG / WebP tối đa 4MB, 'loai', 'chuThich')")
+    @Operation(summary = "Thêm ảnh giới thiệu (multipart: phần tệp 'anh' JPEG / PNG / WebP tối đa 4MB, 'loai', 'chuThich',"
+            + " 'chuThichEn')")
     @PostMapping(path = "/{id}/anh", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
-    public PhanHoiApi<AnhBacSiResponse> themAnh(@PathVariable Long id,
+    public PhanHoiApi<AnhBacSiQuanTriResponse> themAnh(@PathVariable Long id,
             @RequestPart("anh") MultipartFile anh,
             @RequestParam LoaiAnhBacSi loai,
-            @RequestParam(required = false) @Size(max = 200, message = "Chú thích tối đa 200 ký tự") String chuThich)
+            @RequestParam(required = false) @Size(max = 200, message = "{kiemTra.chuThich.toiDa}") String chuThich,
+            @RequestParam(required = false) @Size(max = 200, message = "{kiemTra.chuThichEn.toiDa}") String chuThichEn)
             throws IOException {
-        return PhanHoiApi.ok(anhBacSiService.them(id, loai, chuThich, anh.getBytes()), "Đã thêm ảnh giới thiệu");
+        return PhanHoiApi.ok(anhBacSiService.them(id, loai, chuThich, chuThichEn, anh.getBytes()),
+                "thanhCong.themAnhBacSi");
     }
 
     @Operation(summary = "Sửa loại và chú thích của ảnh giới thiệu")
     @PutMapping("/{id}/anh/{idAnh}")
-    public PhanHoiApi<AnhBacSiResponse> capNhatAnh(@PathVariable Long id, @PathVariable Long idAnh,
+    public PhanHoiApi<AnhBacSiQuanTriResponse> capNhatAnh(@PathVariable Long id, @PathVariable Long idAnh,
             @Valid @RequestBody CapNhatAnhBacSiRequest request) {
-        return PhanHoiApi.ok(anhBacSiService.capNhat(id, idAnh, request), "Đã cập nhật ảnh giới thiệu");
+        return PhanHoiApi.ok(anhBacSiService.capNhat(id, idAnh, request), "thanhCong.capNhatAnhBacSi");
     }
 
     @Operation(summary = "Sắp xếp lại ảnh giới thiệu (gửi id của mọi ảnh theo thứ tự mới)")
     @PutMapping("/{id}/anh/thu-tu")
-    public PhanHoiApi<List<AnhBacSiResponse>> sapXepAnh(@PathVariable Long id,
+    public PhanHoiApi<List<AnhBacSiQuanTriResponse>> sapXepAnh(@PathVariable Long id,
             @Valid @RequestBody SapXepAnhBacSiRequest request) {
-        return PhanHoiApi.ok(anhBacSiService.sapXep(id, request.idAnh()), "Đã sắp xếp ảnh giới thiệu");
+        return PhanHoiApi.ok(anhBacSiService.sapXep(id, request.idAnh()), "thanhCong.sapXepAnhBacSi");
     }
 
     @Operation(summary = "Xoá ảnh giới thiệu")
     @DeleteMapping("/{id}/anh/{idAnh}")
     public PhanHoiApi<Void> xoaAnh(@PathVariable Long id, @PathVariable Long idAnh) {
         anhBacSiService.xoa(id, idAnh);
-        return PhanHoiApi.ok(null, "Đã xoá ảnh giới thiệu");
+        return PhanHoiApi.ok(null, "thanhCong.xoaAnhBacSi");
     }
 
 }

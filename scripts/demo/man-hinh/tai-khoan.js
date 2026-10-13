@@ -21,16 +21,20 @@
 
     function hienHoSo(hs) {
         const anhDaiDien = $('anh-dai-dien');
+        const coKhong = (co) => (co ? t('có', 'yes') : t('không', 'no'));
         const cacDong = [
             `${hs.hoTen} <${hs.email}> (${hs.vaiTro}, id=${hs.id})`,
-            `Số điện thoại: ${hs.soDienThoai || '(chưa có)'}`,
-            `Có mật khẩu: ${hs.coMatKhau ? 'có' : 'không'} · Liên kết Google: ${hs.lienKetGoogle ? 'có' : 'không'}`,
+            t('Số điện thoại: ', 'Phone number: ') + (hs.soDienThoai || t('(chưa có)', '(none)')),
+            t(`Có mật khẩu: ${coKhong(hs.coMatKhau)} · Liên kết Google: ${coKhong(hs.lienKetGoogle)}`,
+                `Has a password: ${coKhong(hs.coMatKhau)} · Linked to Google: ${coKhong(hs.lienKetGoogle)}`),
         ];
         if (hs.bacSi) {
-            cacDong.push(`Bác sĩ: ${hs.bacSi.hocVi || ''} · ${hs.bacSi.tenChuyenKhoa} · ${hs.bacSi.soNamKinhNghiem ?? '?'} năm kinh nghiệm`);
+            cacDong.push(t(`Bác sĩ: ${hs.bacSi.hocVi || ''} · ${hs.bacSi.tenChuyenKhoa} · ${hs.bacSi.soNamKinhNghiem ?? '?'} năm kinh nghiệm`,
+                `Doctor: ${hs.bacSi.hocVi || ''} · ${hs.bacSi.tenChuyenKhoa} · ${hs.bacSi.soNamKinhNghiem ?? '?'} years of experience`));
         }
         if (hs.hoSoBenhNhan) {
-            cacDong.push(`Hồ sơ bệnh nhân (chỉ xem): ${hs.hoSoBenhNhan.hoTen}, sinh ${hs.hoSoBenhNhan.ngaySinh}, CCCD ${hs.hoSoBenhNhan.cccd}`);
+            cacDong.push(t(`Hồ sơ bệnh nhân (chỉ xem): ${hs.hoSoBenhNhan.hoTen}, sinh ${hs.hoSoBenhNhan.ngaySinh}, CCCD ${hs.hoSoBenhNhan.cccd}`,
+                `Patient profile (read-only): ${hs.hoSoBenhNhan.hoTen}, born ${hs.hoSoBenhNhan.ngaySinh}, national ID ${hs.hoSoBenhNhan.cccd}`));
         }
         $('ho-so').replaceChildren(...cacDong.map((noiDung) => the('li', noiDung)));
         const form = $('form-ho-so');
@@ -43,7 +47,7 @@
             anhDaiDien.removeAttribute('src');
             anhDaiDien.classList.add('an');
         }
-        $('anh-trang-thai').textContent = hs.anhDaiDien || 'Chưa có ảnh.';
+        $('anh-trang-thai').textContent = hs.anhDaiDien || t('Chưa có ảnh.', 'No photo yet.');
     }
 
     async function taiHoSo(imLang = false) {
@@ -58,10 +62,12 @@
         danhSach.replaceChildren();
         if (status !== 200) return;
         for (const phien of json.duLieu) {
-            const li = the('li', `${phien.thietBi || '(không rõ thiết bị)'} · đăng nhập ${phien.dangNhapLuc} · hoạt động ${phien.hoatDongLuc}`
-                + (phien.hienTai ? ' · THIẾT BỊ NÀY ' : ' '));
+            const thietBi = phien.thietBi || t('(không rõ thiết bị)', '(unknown device)');
+            const li = the('li', t(`${thietBi} · đăng nhập ${phien.dangNhapLuc} · hoạt động ${phien.hoatDongLuc}`,
+                `${thietBi} · signed in ${phien.dangNhapLuc} · active ${phien.hoatDongLuc}`)
+                + (phien.hienTai ? t(' · THIẾT BỊ NÀY ', ' · THIS DEVICE ') : ' '));
             if (!phien.hienTai) {
-                li.append(nut('Đăng xuất', async () => {
+                li.append(nut(t('Đăng xuất', 'Sign out'), async () => {
                     const ketQua = await goi(`${PHIEN}/${encodeURIComponent(phien.id)}`, undefined, 'DELETE');
                     if (ketQua.status === 200) await taiPhien(true);
                 }, 'phu nho'));
@@ -73,55 +79,55 @@
     dangKy({
         duongDan: '/account',
         vaiTro: 'DANG_NHAP',
-        tieuDe: 'Tài khoản của tôi',
+        tieuDe: cap('Tài khoản của tôi', 'My account'),
         async ve(khung) {
             khuon(khung, `
                 <div class="luoi">
                 <section>
-                    <h2>Hồ sơ cá nhân</h2>
-                    <ul id="ho-so" class="danh-sach-tron"><li>Đang tải…</li></ul>
+                    <h2>${t('Hồ sơ cá nhân', 'Personal profile')}</h2>
+                    <ul id="ho-so" class="danh-sach-tron"><li>${t('Đang tải…', 'Loading…')}</li></ul>
                     <form id="form-ho-so">
-                        <input name="hoTen" placeholder="Họ tên (bác sĩ không đổi được)" required maxlength="150">
-                        <input name="soDienThoai" placeholder="Số điện thoại (bỏ trống = giữ số cũ)" pattern="0[0-9]{9}">
-                        <button>Cập nhật hồ sơ</button>
+                        <input name="hoTen" placeholder="${t('Họ tên (bác sĩ không đổi được)', 'Full name (doctors cannot change it)')}" required maxlength="150">
+                        <input name="soDienThoai" placeholder="${t('Số điện thoại (bỏ trống = giữ số cũ)', 'Phone number (leave empty to keep the current one)')}" pattern="0[0-9]{9}">
+                        <button>${t('Cập nhật hồ sơ', 'Update profile')}</button>
                     </form>
                     <p id="ho-so-trang-thai" class="ghi-chu"></p>
                 </section>
                 <section>
-                    <h2>Ảnh đại diện</h2>
-                    <img id="anh-dai-dien" class="anh-dai-dien lon an" alt="Ảnh đại diện">
-                    <p id="anh-trang-thai" class="ghi-chu">Chưa có ảnh.</p>
+                    <h2>${t('Ảnh đại diện', 'Profile photo')}</h2>
+                    <img id="anh-dai-dien" class="anh-dai-dien lon an" alt="${t('Ảnh đại diện', 'Profile photo')}">
+                    <p id="anh-trang-thai" class="ghi-chu">${t('Chưa có ảnh.', 'No photo yet.')}</p>
                     <form id="form-anh">
                         <input name="anh" type="file" accept="image/jpeg,image/png,image/webp" required>
-                        <button>Tải ảnh lên (JPEG / PNG / WebP, tối đa 2 MB)</button>
+                        <button>${t('Tải ảnh lên (JPEG / PNG / WebP, tối đa 2 MB)', 'Upload photo (JPEG / PNG / WebP, up to 2 MB)')}</button>
                     </form>
-                    <button id="nut-bo-anh" class="phu">Bỏ ảnh đại diện</button>
+                    <button id="nut-bo-anh" class="phu">${t('Bỏ ảnh đại diện', 'Remove profile photo')}</button>
                 </section>
                 <section>
-                    <h2>Change password — Đổi mật khẩu</h2>
+                    <h2>${t('Đổi mật khẩu', 'Change password')}</h2>
                     <form id="form-doi-mat-khau">
-                        <input name="matKhauCu" type="password" placeholder="Mật khẩu hiện tại" required autocomplete="current-password">
-                        <input name="matKhauMoi" type="password" placeholder="Mật khẩu mới (tối thiểu 6 ký tự)" required minlength="6" autocomplete="new-password">
-                        <input name="nhapLai" type="password" placeholder="Nhập lại mật khẩu mới" required autocomplete="new-password">
-                        <button>Đổi mật khẩu</button>
+                        <input name="matKhauCu" type="password" placeholder="${t('Mật khẩu hiện tại', 'Current password')}" required autocomplete="current-password">
+                        <input name="matKhauMoi" type="password" placeholder="${t('Mật khẩu mới (tối thiểu 6 ký tự)', 'New password (at least 6 characters)')}" required minlength="6" autocomplete="new-password">
+                        <input name="nhapLai" type="password" placeholder="${t('Nhập lại mật khẩu mới', 'Re-enter the new password')}" required autocomplete="new-password">
+                        <button>${t('Đổi mật khẩu', 'Change password')}</button>
                     </form>
-                    <p id="mat-khau-trang-thai" class="ghi-chu">Các thiết bị khác bị đăng xuất, thiết bị này giữ nguyên.</p>
+                    <p id="mat-khau-trang-thai" class="ghi-chu">${t('Các thiết bị khác bị đăng xuất, thiết bị này giữ nguyên.', 'Other devices are signed out, this device stays signed in.')}</p>
                 </section>
                 <section>
-                    <h2>Đổi email đăng nhập</h2>
+                    <h2>${t('Đổi email đăng nhập', 'Change sign-in email')}</h2>
                     <form id="form-doi-email">
-                        <input name="emailMoi" type="email" placeholder="Email mới" required>
-                        <input name="matKhauHienTai" type="password" placeholder="Mật khẩu hiện tại" required autocomplete="current-password">
-                        <button>Gửi liên kết xác nhận tới email mới</button>
+                        <input name="emailMoi" type="email" placeholder="${t('Email mới', 'New email')}" required>
+                        <input name="matKhauHienTai" type="password" placeholder="${t('Mật khẩu hiện tại', 'Current password')}" required autocomplete="current-password">
+                        <button>${t('Gửi liên kết xác nhận tới email mới', 'Send a confirmation link to the new email')}</button>
                     </form>
-                    <button id="nut-xem-doi-email" class="phu">Xem yêu cầu đang chờ</button>
-                    <button id="nut-huy-doi-email" class="phu">Huỷ yêu cầu đang chờ</button>
+                    <button id="nut-xem-doi-email" class="phu">${t('Xem yêu cầu đang chờ', 'View pending request')}</button>
+                    <button id="nut-huy-doi-email" class="phu">${t('Huỷ yêu cầu đang chờ', 'Cancel pending request')}</button>
                     <p id="doi-email-trang-thai" class="ghi-chu"></p>
                 </section>
                 <section>
-                    <h2>Thiết bị đăng nhập</h2>
+                    <h2>${t('Thiết bị đăng nhập', 'Signed-in devices')}</h2>
                     <ul id="ds-phien" class="danh-sach-tron"></ul>
-                    <button id="nut-dang-xuat-khac" class="phu">Đăng xuất mọi thiết bị khác</button>
+                    <button id="nut-dang-xuat-khac" class="phu">${t('Đăng xuất mọi thiết bị khác', 'Sign out all other devices')}</button>
                 </section>
                 </div>`);
 
@@ -130,9 +136,9 @@
                 const { status, json } = await goi(HO_SO, { hoTen: v.hoTen, soDienThoai: v.soDienThoai || null }, 'PUT');
                 if (status === 200) {
                     hienHoSo(json.duLieu);
-                    bao('ho-so-trang-thai', 'Đã cập nhật hồ sơ.', 'tot');
+                    bao('ho-so-trang-thai', t('Đã cập nhật hồ sơ.', 'Profile updated.'), 'tot');
                 } else {
-                    bao('ho-so-trang-thai', thongDiepLoi(json, 'Không cập nhật được.'), 'loi');
+                    bao('ho-so-trang-thai', thongDiepLoi(json, t('Không cập nhật được.', 'Could not update.')), 'loi');
                 }
             });
             khiGui('form-anh', async (v, form) => {
@@ -143,7 +149,7 @@
                     hienHoSo(json.duLieu);
                     form.reset();
                 } else {
-                    bao('anh-trang-thai', thongDiepLoi(json, 'Không tải ảnh lên được.'), 'loi');
+                    bao('anh-trang-thai', thongDiepLoi(json, t('Không tải ảnh lên được.', 'Could not upload the photo.')), 'loi');
                 }
             });
             $('nut-bo-anh').addEventListener('click', async () => {
@@ -152,21 +158,22 @@
             });
             khiGui('form-doi-mat-khau', async (v, form) => {
                 if (v.matKhauMoi !== v.nhapLai) {
-                    bao('mat-khau-trang-thai', 'Hai lần nhập mật khẩu mới không khớp.', 'loi');
+                    bao('mat-khau-trang-thai', t('Hai lần nhập mật khẩu mới không khớp.', 'The two new passwords do not match.'), 'loi');
                     return;
                 }
                 const { status, json } = await goi('/api/users/me/change-password', { matKhauCu: v.matKhauCu, matKhauMoi: v.matKhauMoi }, 'PUT');
                 if (status === 200) {
                     form.reset();
-                    bao('mat-khau-trang-thai', 'Đã đổi mật khẩu. Các thiết bị khác đã bị đăng xuất.', 'tot');
+                    bao('mat-khau-trang-thai', t('Đã đổi mật khẩu. Các thiết bị khác đã bị đăng xuất.', 'Password changed. Other devices have been signed out.'), 'tot');
                 } else {
-                    bao('mat-khau-trang-thai', thongDiepLoi(json, 'Không đổi được mật khẩu.'), 'loi');
+                    bao('mat-khau-trang-thai', thongDiepLoi(json, t('Không đổi được mật khẩu.', 'Could not change the password.')), 'loi');
                 }
             });
             khiGui('form-doi-email', async (v, form) => {
                 const { status, json } = await goi(DOI_EMAIL, v);
                 if (status === 200) form.reset();
-                bao('doi-email-trang-thai', status === 200 ? ((json && json.thongDiep) || 'Đã gửi liên kết xác nhận.') : thongDiepLoi(json, 'Không gửi được.'),
+                bao('doi-email-trang-thai', status === 200 ? ((json && json.thongDiep) || t('Đã gửi liên kết xác nhận.', 'Confirmation link sent.'))
+                    : thongDiepLoi(json, t('Không gửi được.', 'Could not send.')),
                     status === 200 ? 'tot' : 'loi');
             });
             // Kết quả của 2 nút này xem ở ô "Kết quả gọi API gần nhất"
