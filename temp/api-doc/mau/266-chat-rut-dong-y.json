@@ -1,0 +1,14 @@
+{
+  "method": "DELETE",
+  "path": "/api/chatbot/phien/3/dong-y",
+  "acceptLanguage": null,
+  "requestBody": null,
+  "status": 200,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "thanhCong": true,
+    "thongDiep": "Đã rút lại đồng ý"
+  }
+}

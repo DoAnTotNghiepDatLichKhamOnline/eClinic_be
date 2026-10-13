@@ -14,21 +14,21 @@ import jakarta.validation.constraints.Size;
  * không có ô này); có gửi thì người giám hộ phải từ đủ 18 tuổi tính theo ngày khám.
  */
 public record NguoiGiamHoRequest(
-        @NotBlank(message = "Họ tên người giám hộ không được để trống")
-        @Size(max = 150, message = "Họ tên người giám hộ tối đa 150 ký tự")
+        @NotBlank(message = "{kiemTra.hoTenGiamHo.batBuoc}")
+        @Size(max = 150, message = "{kiemTra.hoTenGiamHo.toiDa}")
         String hoTen,
 
-        @NotNull(message = "Chưa chọn quan hệ với bệnh nhân")
+        @NotNull(message = "{kiemTra.quanHe.batBuoc}")
         QuanHeGiamHo quanHe,
 
-        @NotBlank(message = "Số điện thoại người giám hộ không được để trống")
-        @Pattern(regexp = "^0\\d{9}$", message = "Số điện thoại gồm 10 chữ số, bắt đầu bằng 0")
+        @NotBlank(message = "{kiemTra.soDienThoaiGiamHo.batBuoc}")
+        @Pattern(regexp = "^0\\d{9}$", message = "{kiemTra.soDienThoai.dinhDang}")
         String soDienThoai,
 
-        @NotBlank(message = "Số CCCD người giám hộ không được để trống")
-        @Pattern(regexp = "^\\d{12}$", message = "Số CCCD gồm đúng 12 chữ số")
+        @NotBlank(message = "{kiemTra.cccdGiamHo.batBuoc}")
+        @Pattern(regexp = "^\\d{12}$", message = "{kiemTra.cccd.dinhDang}")
         String cccd,
 
-        @Past(message = "Ngày sinh người giám hộ phải ở quá khứ")
+        @Past(message = "{kiemTra.ngaySinhGiamHo.quaKhu}")
         LocalDate ngaySinh) {
 }

@@ -17,7 +17,7 @@ public record DoiLichRequest(
 
         Long idChuyenKhoa,
 
-        @NotNull(message = "Chưa chọn khung giờ khám")
+        @NotNull(message = "{kiemTra.khungGio.batBuoc}")
         LocalDateTime gioBatDauKhung,
 
         String soDienThoai) {

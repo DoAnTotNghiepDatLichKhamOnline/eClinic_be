@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -342,5 +343,31 @@ public interface LichHenRepository extends JpaRepository<LichHen, Long> {
               and l.khungGio.gioBatDau >= :tu
             """)
     long demLichTheoSoDienThoaiTu(String soDienThoai, Collection<TrangThaiLichHen> trangThai, LocalDateTime tu);
+
+    /**
+     * Id các lịch hẹn đến hạn nhắc ở 1 mốc: còn hiệu lực, không chờ đổi vì ca bị hủy, lượt khám bắt đầu trong
+     * ({@code tu}, {@code den}] và mốc đó chưa được ghi nhận (nhac_lich_hen). Giờ khám sớm nhất trước.
+     */
+    @Query("""
+            select l.id from LichHen l join l.khungGio k
+            where l.trangThai in :trangThai and l.canDoiLich = false
+              and k.gioBatDau > :tu and k.gioBatDau <= :den
+              and not exists (select 1 from NhacLichHen n where n.idLichHen = l.id and n.soPhutTruoc = :soPhutTruoc)
+            order by k.gioBatDau asc, l.id asc
+            """)
+    List<Long> timIdCanNhac(Collection<TrangThaiLichHen> trangThai, LocalDateTime tu, LocalDateTime den,
+            int soPhutTruoc, Limit gioiHan);
+
+    /**
+     * Hồ sơ bệnh nhân có lịch hẹn còn hiệu lực, lượt khám từ {@code tu} trở đi, với bác sĩ thuộc chuyên khoa này không
+     * (đã tự đặt lịch tái khám thì không nhắc đặt nữa).
+     */
+    @Query("""
+            select count(l) > 0 from LichHen l join l.khungGio k
+            where l.hoSoBenhNhan.id = :idHoSoBenhNhan and l.trangThai in :trangThai
+              and k.gioBatDau >= :tu and l.bacSi.chuyenKhoa.id = :idChuyenKhoa
+            """)
+    boolean coLichSapToi(Long idHoSoBenhNhan, Collection<TrangThaiLichHen> trangThai, LocalDateTime tu,
+            Long idChuyenKhoa);
 
 }

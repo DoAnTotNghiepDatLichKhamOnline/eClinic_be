@@ -1,0 +1,29 @@
+{
+  "method": "GET",
+  "path": "/api/booking/trang-ca-nhan/cua-toi",
+  "acceptLanguage": null,
+  "requestBody": null,
+  "status": 200,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "thanhCong": true,
+    "duLieu": {
+      "hoSo": null,
+      "emailTaiKhoan": "x.1791894122@example.com",
+      "nguoiThan": [],
+      "lichSapToi": {
+        "cuaToi": [],
+        "cuaNguoiKhac": []
+      },
+      "lanKhamGanDay": [],
+      "soLich": {
+        "sapToiCuaToi": 0,
+        "sapToiCuaNguoiKhac": 0,
+        "lichSu": 0,
+        "daKham": 0
+      }
+    }
+  }
+}

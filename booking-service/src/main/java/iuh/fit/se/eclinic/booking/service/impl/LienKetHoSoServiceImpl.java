@@ -146,7 +146,7 @@ public class LienKetHoSoServiceImpl implements LienKetHoSoService {
         HoSoBenhNhan hoSo = hoSoBenhNhanRepository.findByIdForUpdate(idHoSoBenhNhan)
                 .orElseThrow(() -> new LoiKhongTimThay("HoSoBenhNhan", idHoSoBenhNhan));
         if (hoSo.getTrangThaiLienKet() != TrangThaiLienKet.CHO_XAC_MINH) {
-            throw new LoiNghiepVu(MaLoi.XUNG_DOT_DU_LIEU, "Hồ sơ bệnh nhân không ở trạng thái chờ xác minh");
+            throw new LoiNghiepVu(MaLoi.XUNG_DOT_DU_LIEU, "loi.XUNG_DOT_DU_LIEU.hoSoKhongChoXacMinh");
         }
         return hoSo;
     }

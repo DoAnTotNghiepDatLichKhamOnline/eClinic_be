@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import iuh.fit.se.eclinic.catalog.dto.request.CapNhatAnhBacSiRequest;
-import iuh.fit.se.eclinic.catalog.dto.response.AnhBacSiResponse;
+import iuh.fit.se.eclinic.catalog.dto.response.AnhBacSiQuanTriResponse;
 import iuh.fit.se.eclinic.catalog.mapper.BacSiMapper;
 import iuh.fit.se.eclinic.catalog.repository.AnhBacSiRepository;
 import iuh.fit.se.eclinic.catalog.repository.BacSiRepository;
@@ -48,7 +48,8 @@ public class AnhBacSiServiceImpl implements AnhBacSiService {
     private final TransactionTemplate transactionTemplate;
 
     @Override
-    public AnhBacSiResponse them(Long idBacSi, LoaiAnhBacSi loai, String chuThich, byte[] noiDung) {
+    public AnhBacSiQuanTriResponse them(Long idBacSi, LoaiAnhBacSi loai, String chuThich, String chuThichEn,
+            byte[] noiDung) {
         kiemTraCoBacSi(idBacSi);
         if (DinhDangAnh.nhanDien(noiDung).isEmpty()) {
             throw new LoiNghiepVu(MaLoi.ANH_KHONG_HOP_LE);
@@ -70,11 +71,12 @@ public class AnhBacSiServiceImpl implements AnhBacSiService {
                 moi.setUrl(url);
                 moi.setMaLuuTru(ma);
                 moi.setChuThich(bacSiMapper.chuanHoa(chuThich));
+                moi.setChuThichEn(bacSiMapper.chuanHoa(chuThichEn));
                 moi.setThuTu(anhBacSiRepository.timThuTuLonNhat(idBacSi) + 1);
                 return anhBacSiRepository.save(moi);
             });
             log.info("Thêm ảnh giới thiệu id={} cho bác sĩ id={} ({} byte)", anh.getId(), idBacSi, noiDung.length);
-            return bacSiMapper.toAnhResponse(anh);
+            return bacSiMapper.toAnhQuanTriResponse(anh);
         } catch (RuntimeException ex) {
             // Ảnh đã nằm trong kho nhưng không ghi được vào DB: dọn để không còn ảnh thừa trong kho
             xoaTrongKho(ma);
@@ -83,30 +85,31 @@ public class AnhBacSiServiceImpl implements AnhBacSiService {
     }
 
     @Override
-    public AnhBacSiResponse capNhat(Long idBacSi, Long idAnh, CapNhatAnhBacSiRequest request) {
+    public AnhBacSiQuanTriResponse capNhat(Long idBacSi, Long idAnh, CapNhatAnhBacSiRequest request) {
         return transactionTemplate.execute(trangThai -> {
             AnhBacSi anh = timAnh(idBacSi, idAnh);
             anh.setLoai(request.loai());
             anh.setChuThich(bacSiMapper.chuanHoa(request.chuThich()));
-            return bacSiMapper.toAnhResponse(anh);
+            anh.setChuThichEn(bacSiMapper.chuanHoa(request.chuThichEn()));
+            return bacSiMapper.toAnhQuanTriResponse(anh);
         });
     }
 
     @Override
-    public List<AnhBacSiResponse> sapXep(Long idBacSi, List<Long> idAnh) {
+    public List<AnhBacSiQuanTriResponse> sapXep(Long idBacSi, List<Long> idAnh) {
         kiemTraCoBacSi(idBacSi);
         return transactionTemplate.execute(trangThai -> {
             Map<Long, AnhBacSi> anhTheoId = anhBacSiRepository.findByBacSiIdOrderByThuTuAscIdAsc(idBacSi).stream()
                     .collect(Collectors.toMap(AnhBacSi::getId, Function.identity()));
             if (idAnh.size() != anhTheoId.size() || !new HashSet<>(idAnh).equals(anhTheoId.keySet())) {
                 throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE,
-                        "Danh sách phải gồm đúng id của mọi ảnh giới thiệu của bác sĩ, mỗi ảnh 1 lần");
+                        "loi.DU_LIEU_KHONG_HOP_LE.sapXepAnh");
             }
             int thuTu = 1;
             for (Long id : idAnh) {
                 anhTheoId.get(id).setThuTu(thuTu++);
             }
-            return idAnh.stream().map(anhTheoId::get).map(bacSiMapper::toAnhResponse).toList();
+            return idAnh.stream().map(anhTheoId::get).map(bacSiMapper::toAnhQuanTriResponse).toList();
         });
     }
 
@@ -133,7 +136,7 @@ public class AnhBacSiServiceImpl implements AnhBacSiService {
     private void kiemTraConChoTrong(Long idBacSi) {
         if (anhBacSiRepository.countByBacSiId(idBacSi) >= SO_ANH_TOI_DA) {
             throw new LoiNghiepVu(MaLoi.VUOT_SO_ANH_BAC_SI,
-                    "Mỗi bác sĩ có tối đa " + SO_ANH_TOI_DA + " ảnh giới thiệu, hãy xoá bớt ảnh trước khi thêm");
+                    "loi.VUOT_SO_ANH_BAC_SI.toiDa", String.valueOf(SO_ANH_TOI_DA));
         }
     }
 

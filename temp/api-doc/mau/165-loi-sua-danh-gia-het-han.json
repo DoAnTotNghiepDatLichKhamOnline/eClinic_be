@@ -1,0 +1,18 @@
+{
+  "method": "PUT",
+  "path": "/api/booking/lich-hen/cua-toi/2XPvL-G2Su7oURW1TOzrCPNpYoTGHljUAjrHhfJhHUs/danh-gia",
+  "acceptLanguage": null,
+  "requestBody": {
+    "soSao": 5,
+    "nhanXet": "Bác sĩ tư vấn kỹ, dễ hiểu."
+  },
+  "status": 409,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "thanhCong": false,
+    "maLoi": "HET_HAN_SUA_DANH_GIA",
+    "thongDiep": "Đã quá thời hạn sửa đánh giá"
+  }
+}

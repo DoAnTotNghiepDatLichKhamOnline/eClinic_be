@@ -14,9 +14,11 @@ import java.time.Duration;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.mail.MailSendException;
 import org.springframework.mail.javamail.JavaMailSender;
 
+import iuh.fit.se.eclinic.common.enums.NgonNgu;
 import iuh.fit.se.eclinic.identity.config.EmailProperties;
 import iuh.fit.se.eclinic.identity.config.EmailProperties.CheDoEmail;
 import iuh.fit.se.eclinic.identity.config.LienKetProperties;
@@ -41,7 +43,10 @@ class EmailServiceTest {
     private static final LienKetProperties LIEN_KET = new LienKetProperties(Duration.ofHours(24), Duration.ofSeconds(60),
             Duration.ofMinutes(15), Duration.ofHours(1));
     private static final EmailXacThucEvent EVENT =
-            new EmailXacThucEvent("bn@example.com", "<b>An</b>", "token-abc_123");
+            new EmailXacThucEvent("bn@example.com", "<b>An</b>", "token-abc_123", NgonNgu.VI);
+
+    /** Đọc đúng file câu chữ của email như khi chạy thật (application-common.yml). */
+    private static final ResourceBundleMessageSource THONG_DIEP = thongDiep();
 
     private final JavaMailSender mailSender = mock(JavaMailSender.class);
 
@@ -69,7 +74,7 @@ class EmailServiceTest {
         when(mailSender.createMimeMessage()).thenReturn(new MimeMessage((Session) null));
 
         emailService(CheDoEmail.SMTP).guiEmailDatLaiMatKhau(
-                new EmailDatLaiMatKhauEvent("bn@example.com", "<b>An</b>", "token-dat-lai"));
+                new EmailDatLaiMatKhauEvent("bn@example.com", "<b>An</b>", "token-dat-lai", NgonNgu.VI));
 
         String noiDung = noiDungDaGui();
         assertThat(noiDung).contains("http://localhost:5173/reset-password?token=token-dat-lai")
@@ -82,7 +87,7 @@ class EmailServiceTest {
     void thongBaoDoiMatKhauKhongCoLienKet() throws Exception {
         when(mailSender.createMimeMessage()).thenReturn(new MimeMessage((Session) null));
 
-        emailService(CheDoEmail.SMTP).guiThongBaoDoiMatKhau(new EmailDoiMatKhauEvent("bn@example.com", "<b>An</b>"));
+        emailService(CheDoEmail.SMTP).guiThongBaoDoiMatKhau(new EmailDoiMatKhauEvent("bn@example.com", "<b>An</b>", NgonNgu.VI));
 
         String noiDung = noiDungDaGui();
         assertThat(noiDung).contains("Quên mật khẩu")
@@ -96,7 +101,7 @@ class EmailServiceTest {
         when(mailSender.createMimeMessage()).thenReturn(new MimeMessage((Session) null));
 
         emailService(CheDoEmail.SMTP).guiEmailXacNhanDoiEmail(
-                new EmailXacNhanDoiEmailEvent("moi@example.com", "token-doi-email"));
+                new EmailXacNhanDoiEmailEvent("moi@example.com", "token-doi-email", NgonNgu.VI));
 
         MimeMessage message = thuDaGui();
         assertThat(message.getRecipients(Message.RecipientType.TO)[0].toString()).isEqualTo("moi@example.com");
@@ -112,7 +117,7 @@ class EmailServiceTest {
         when(mailSender.createMimeMessage()).thenReturn(new MimeMessage((Session) null));
 
         emailService(CheDoEmail.SMTP).guiThongBaoYeuCauDoiEmail(
-                new EmailYeuCauDoiEmailEvent("bn@example.com", "<b>An</b>", "moi<x>@example.com"));
+                new EmailYeuCauDoiEmailEvent("bn@example.com", "<b>An</b>", "moi<x>@example.com", NgonNgu.VI));
 
         MimeMessage message = thuDaGui();
         assertThat(message.getRecipients(Message.RecipientType.TO)[0].toString()).isEqualTo("bn@example.com");
@@ -131,7 +136,7 @@ class EmailServiceTest {
         when(mailSender.createMimeMessage()).thenReturn(new MimeMessage((Session) null));
 
         emailService(CheDoEmail.SMTP).guiThongBaoDaDoiEmail(
-                new EmailDaDoiEmailEvent("bn@example.com", "<b>An</b>", "moi<x>@example.com"));
+                new EmailDaDoiEmailEvent("bn@example.com", "<b>An</b>", "moi<x>@example.com", NgonNgu.VI));
 
         MimeMessage message = thuDaGui();
         assertThat(message.getRecipients(Message.RecipientType.TO)[0].toString()).isEqualTo("bn@example.com");
@@ -149,7 +154,7 @@ class EmailServiceTest {
         when(mailSender.createMimeMessage()).thenReturn(new MimeMessage((Session) null));
 
         emailService(CheDoEmail.SMTP).guiThongBaoVoHieuHoa(
-                new EmailVoHieuHoaTaiKhoanEvent("bn@example.com", "<b>An</b>", "Vi phạm <b>quy định</b> & \"nội quy\""));
+                new EmailVoHieuHoaTaiKhoanEvent("bn@example.com", "<b>An</b>", "Vi phạm <b>quy định</b> & \"nội quy\"", NgonNgu.VI));
 
         MimeMessage message = thuDaGui();
         assertThat(message.getRecipients(Message.RecipientType.TO)[0].toString()).isEqualTo("bn@example.com");
@@ -168,7 +173,7 @@ class EmailServiceTest {
         when(mailSender.createMimeMessage()).thenReturn(new MimeMessage((Session) null));
 
         emailService(CheDoEmail.SMTP).guiThongBaoKichHoatLai(
-                new EmailKichHoatLaiTaiKhoanEvent("bn@example.com", "<b>An</b>"));
+                new EmailKichHoatLaiTaiKhoanEvent("bn@example.com", "<b>An</b>", NgonNgu.VI));
 
         MimeMessage message = thuDaGui();
         assertThat(message.getRecipients(Message.RecipientType.TO)[0].toString()).isEqualTo("bn@example.com");
@@ -185,13 +190,13 @@ class EmailServiceTest {
     void cheDoConsoleKhongGoiMailSender() {
         EmailServiceImpl console = emailService(CheDoEmail.CONSOLE);
         console.guiEmailXacThuc(EVENT);
-        console.guiEmailDatLaiMatKhau(new EmailDatLaiMatKhauEvent("bn@example.com", "An", "token"));
-        console.guiThongBaoDoiMatKhau(new EmailDoiMatKhauEvent("bn@example.com", "An"));
-        console.guiEmailXacNhanDoiEmail(new EmailXacNhanDoiEmailEvent("moi@example.com", "token"));
-        console.guiThongBaoYeuCauDoiEmail(new EmailYeuCauDoiEmailEvent("bn@example.com", "An", "moi@example.com"));
-        console.guiThongBaoDaDoiEmail(new EmailDaDoiEmailEvent("bn@example.com", "An", "moi@example.com"));
-        console.guiThongBaoVoHieuHoa(new EmailVoHieuHoaTaiKhoanEvent("bn@example.com", "An", "Vi phạm"));
-        console.guiThongBaoKichHoatLai(new EmailKichHoatLaiTaiKhoanEvent("bn@example.com", "An"));
+        console.guiEmailDatLaiMatKhau(new EmailDatLaiMatKhauEvent("bn@example.com", "An", "token", NgonNgu.VI));
+        console.guiThongBaoDoiMatKhau(new EmailDoiMatKhauEvent("bn@example.com", "An", NgonNgu.VI));
+        console.guiEmailXacNhanDoiEmail(new EmailXacNhanDoiEmailEvent("moi@example.com", "token", NgonNgu.VI));
+        console.guiThongBaoYeuCauDoiEmail(new EmailYeuCauDoiEmailEvent("bn@example.com", "An", "moi@example.com", NgonNgu.VI));
+        console.guiThongBaoDaDoiEmail(new EmailDaDoiEmailEvent("bn@example.com", "An", "moi@example.com", NgonNgu.VI));
+        console.guiThongBaoVoHieuHoa(new EmailVoHieuHoaTaiKhoanEvent("bn@example.com", "An", "Vi phạm", NgonNgu.VI));
+        console.guiThongBaoKichHoatLai(new EmailKichHoatLaiTaiKhoanEvent("bn@example.com", "An", NgonNgu.VI));
 
         verifyNoInteractions(mailSender);
     }
@@ -209,10 +214,10 @@ class EmailServiceTest {
         EmailProperties smtp = new EmailProperties(CheDoEmail.SMTP, "http://localhost:5173", "/verify-email",
                 "/reset-password", "/confirm-email-change");
 
-        assertThatThrownBy(() -> new EmailServiceImpl(mailSender, smtp, LIEN_KET, "", ""))
+        assertThatThrownBy(() -> new EmailServiceImpl(mailSender, smtp, LIEN_KET, THONG_DIEP, "", ""))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("MAIL_APP_PASSWORD");
-        assertThatThrownBy(() -> new EmailServiceImpl(mailSender, smtp, LIEN_KET, "eclinic.test@gmail.com", " "))
+        assertThatThrownBy(() -> new EmailServiceImpl(mailSender, smtp, LIEN_KET, THONG_DIEP, "eclinic.test@gmail.com", " "))
                 .isInstanceOf(IllegalStateException.class);
     }
 
@@ -228,10 +233,18 @@ class EmailServiceTest {
         return message;
     }
 
+    private static ResourceBundleMessageSource thongDiep() {
+        ResourceBundleMessageSource nguon = new ResourceBundleMessageSource();
+        nguon.setBasenames("thong-diep/chung", "thong-diep/identity");
+        nguon.setDefaultEncoding("UTF-8");
+        nguon.setFallbackToSystemLocale(false);
+        return nguon;
+    }
+
     private EmailServiceImpl emailService(CheDoEmail cheDo) {
         EmailProperties properties = new EmailProperties(cheDo, "http://localhost:5173", "/verify-email",
                 "/reset-password", "/confirm-email-change");
-        return new EmailServiceImpl(mailSender, properties, LIEN_KET, "eclinic.test@gmail.com", "app-password");
+        return new EmailServiceImpl(mailSender, properties, LIEN_KET, THONG_DIEP, "eclinic.test@gmail.com", "app-password");
     }
 
 }

@@ -60,8 +60,9 @@ public class DoiEmailServiceImpl implements DoiEmailService {
         // Sau khi giữ được khoá chờ (quy ước của TokenLienKetService); liên kết của yêu cầu trước hết hiệu lực
         String token = tokenLienKetService.tao(idTaiKhoan, MucDichLienKet.DOI_EMAIL, lienKetProperties.thoiHanDoiEmail(),
                 emailMoi);
-        eventPublisher.publishEvent(new EmailXacNhanDoiEmailEvent(emailMoi, token));
-        eventPublisher.publishEvent(new EmailYeuCauDoiEmailEvent(taiKhoan.getEmail(), taiKhoan.getHoTen(), emailMoi));
+        eventPublisher.publishEvent(new EmailXacNhanDoiEmailEvent(emailMoi, token, taiKhoan.getNgonNgu()));
+        eventPublisher.publishEvent(new EmailYeuCauDoiEmailEvent(taiKhoan.getEmail(), taiKhoan.getHoTen(), emailMoi,
+                taiKhoan.getNgonNgu()));
         log.info("Gửi liên kết xác nhận đổi email id={}", idTaiKhoan);
         return new YeuCauDoiEmailResponse(emailMoi);
     }
@@ -122,7 +123,7 @@ public class DoiEmailServiceImpl implements DoiEmailService {
         tokenLienKetService.huy(idTaiKhoan, MucDichLienKet.DAT_LAI_MAT_KHAU);
         // Ai đó từng thử đăng nhập sai bằng email mới (khi nó chưa thuộc tài khoản nào) không được khoá chủ tài khoản
         gioiHanDangNhapService.xoa(emailMoi);
-        eventPublisher.publishEvent(new EmailDaDoiEmailEvent(emailCu, hoTen, emailMoi));
+        eventPublisher.publishEvent(new EmailDaDoiEmailEvent(emailCu, hoTen, emailMoi, taiKhoan.getNgonNgu()));
         log.info("Đổi email đăng nhập id={}, thu hồi {} phiên", idTaiKhoan, soPhien);
     }
 

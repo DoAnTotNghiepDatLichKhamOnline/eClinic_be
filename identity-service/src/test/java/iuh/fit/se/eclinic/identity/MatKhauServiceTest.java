@@ -16,6 +16,7 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.context.event.ApplicationEvents;
 import org.springframework.test.context.event.RecordApplicationEvents;
 
+import iuh.fit.se.eclinic.common.enums.NgonNgu;
 import iuh.fit.se.eclinic.common.entity.identity.TaiKhoan;
 import iuh.fit.se.eclinic.common.enums.TrangThaiTaiKhoan;
 import iuh.fit.se.eclinic.common.enums.VaiTro;
@@ -98,7 +99,7 @@ class MatKhauServiceTest {
         assertThat(dangNhap(taiKhoan.getEmail(), MAT_KHAU_MOI).accessToken()).isNotBlank();
         assertMaLoi(() -> dangNhapService.lamMoi(refreshToken), MaLoi.PHIEN_DANG_NHAP_KHONG_HOP_LE);
         assertThat(applicationEvents.stream(EmailDoiMatKhauEvent.class).toList())
-                .containsExactly(new EmailDoiMatKhauEvent(taiKhoan.getEmail(), taiKhoan.getHoTen()));
+                .containsExactly(new EmailDoiMatKhauEvent(taiKhoan.getEmail(), taiKhoan.getHoTen(), NgonNgu.VI));
     }
 
     @Test
@@ -181,7 +182,7 @@ class MatKhauServiceTest {
         assertMaLoi(() -> dangNhap(taiKhoan.getEmail(), MAT_KHAU_CU), MaLoi.SAI_THONG_TIN_DANG_NHAP);
         assertThat(dangNhap(taiKhoan.getEmail(), MAT_KHAU_MOI).accessToken()).isNotBlank();
         assertThat(applicationEvents.stream(EmailDoiMatKhauEvent.class).toList())
-                .containsExactly(new EmailDoiMatKhauEvent(taiKhoan.getEmail(), taiKhoan.getHoTen()));
+                .containsExactly(new EmailDoiMatKhauEvent(taiKhoan.getEmail(), taiKhoan.getHoTen(), NgonNgu.VI));
     }
 
     @Test

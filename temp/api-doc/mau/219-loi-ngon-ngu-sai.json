@@ -1,0 +1,17 @@
+{
+  "method": "PUT",
+  "path": "/api/users/me/language",
+  "acceptLanguage": null,
+  "requestBody": {
+    "ngonNgu": "FR"
+  },
+  "status": 400,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "thanhCong": false,
+    "maLoi": "DU_LIEU_KHONG_HOP_LE",
+    "thongDiep": "Nội dung request không đọc được (JSON sai định dạng)"
+  }
+}

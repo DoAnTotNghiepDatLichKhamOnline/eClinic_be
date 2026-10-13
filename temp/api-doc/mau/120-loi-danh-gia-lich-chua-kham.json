@@ -1,0 +1,18 @@
+{
+  "method": "POST",
+  "path": "/api/booking/lich-hen/cua-toi/mk8Do7MJb6iEY9DBDPsLpRaLVgHCFgmKuvpoqZNe174/danh-gia",
+  "acceptLanguage": null,
+  "requestBody": {
+    "soSao": 5,
+    "nhanXet": "Bác sĩ tư vấn kỹ, dễ hiểu."
+  },
+  "status": 409,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "thanhCong": false,
+    "maLoi": "LICH_HEN_CHUA_KHAM_XONG",
+    "thongDiep": "Chỉ đánh giá được lượt khám đã hoàn thành"
+  }
+}

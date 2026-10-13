@@ -1,0 +1,27 @@
+{
+  "method": "POST",
+  "path": "/api/chatbot/phien",
+  "acceptLanguage": null,
+  "requestBody": null,
+  "status": 201,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "thanhCong": true,
+    "duLieu": {
+      "idPhien": 4,
+      "thoiGianBatDau": "2026-10-13T19:22:06.810234531",
+      "tinNhan": [
+        {
+          "id": 24,
+          "nguoiGui": "CHATBOT",
+          "loai": "LOI_CHAO",
+          "noiDung": "Xin chào! Tôi là trợ lý ảo (AI) của phòng khám eClinic. Tôi có thể hướng dẫn bạn đặt lịch khám, tra cứu phiếu khám, đổi hoặc hủy lịch hẹn và trả lời các câu hỏi sức khỏe thông thường. Thông tin tôi đưa ra chỉ để tham khảo, không thay thế việc thăm khám và tư vấn của bác sĩ. Trường hợp khẩn cấp, hãy gọi 115.",
+          "ngayTao": "2026-10-13T19:22:06.812494228",
+          "goiY": null
+        }
+      ]
+    }
+  }
+}

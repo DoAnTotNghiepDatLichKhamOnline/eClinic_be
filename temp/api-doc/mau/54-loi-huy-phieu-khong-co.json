@@ -1,0 +1,17 @@
+{
+  "method": "POST",
+  "path": "/api/booking/phieu-kham/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/huy",
+  "acceptLanguage": null,
+  "requestBody": {
+    "soDienThoai": "0912345601"
+  },
+  "status": 404,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "thanhCong": false,
+    "maLoi": "KHONG_TIM_THAY",
+    "thongDiep": "Không tìm thấy lịch hẹn"
+  }
+}

@@ -46,7 +46,7 @@ public class HoSoBenhNhanController {
     @PutMapping("/cua-toi")
     public PhanHoiApi<HoSoCuaToiResponse> luuCuaToi(@Valid @RequestBody HoSoCuaToiRequest request) {
         return PhanHoiApi.ok(hoSoBenhNhanService.luuCuaToi(NguoiDungHienTai.layIdTaiKhoan(), request),
-                "Đã lưu hồ sơ bệnh nhân");
+                "thanhCong.luuHoSoBenhNhan");
     }
 
 }

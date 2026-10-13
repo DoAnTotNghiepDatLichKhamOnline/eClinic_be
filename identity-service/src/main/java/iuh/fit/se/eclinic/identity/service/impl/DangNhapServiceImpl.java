@@ -84,7 +84,7 @@ public class DangNhapServiceImpl implements DangNhapService {
         TaiKhoan taiKhoan = xacMinhMatKhau(request.email(), request.matKhauHienTai());
         if (!taiKhoan.isPhaiDoiMatKhau()) {
             throw new LoiNghiepVu(MaLoi.TRANG_THAI_TAI_KHOAN_KHONG_HOP_LE,
-                    "Tài khoản đã có mật khẩu riêng, hãy đăng nhập như bình thường");
+                    "loi.TRANG_THAI_TAI_KHOAN_KHONG_HOP_LE.daCoMatKhau");
         }
         // Mật khẩu hiện tại đã đúng nên so sánh chuỗi là đủ
         if (request.matKhauMoi().equals(request.matKhauHienTai())) {

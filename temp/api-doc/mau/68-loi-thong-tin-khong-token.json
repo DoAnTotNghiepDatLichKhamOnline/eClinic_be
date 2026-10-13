@@ -1,0 +1,15 @@
+{
+  "method": "GET",
+  "path": "/api/booking/thong-tin-dat-lich/cua-toi",
+  "acceptLanguage": null,
+  "requestBody": null,
+  "status": 401,
+  "headers": {
+    "Content-Type": "application/json;charset=UTF-8"
+  },
+  "body": {
+    "thanhCong": false,
+    "maLoi": "CHUA_DANG_NHAP",
+    "thongDiep": "Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn"
+  }
+}

@@ -7,33 +7,33 @@
 (() => {
     dangKy({
         duongDan: '/reset-password',
-        tieuDe: 'Reset Password',
+        tieuDe: cap('Đặt lại mật khẩu', 'Reset Password'),
         ve(khung, { thamSo, duongDan }) {
             const token = thamSo.get('token') || '';
             history.replaceState(null, '', duongDan);
             khuon(khung, `
                 <section>
-                    <h2>Đặt lại mật khẩu</h2>
+                    <h2>${t('Đặt lại mật khẩu', 'Reset password')}</h2>
                     <form id="form-dat-lai">
-                        <input type="password" name="matKhauMoi" placeholder="Mật khẩu mới (tối thiểu 6 ký tự)" required minlength="6" autocomplete="new-password">
-                        <input type="password" name="nhapLai" placeholder="Nhập lại mật khẩu mới" required autocomplete="new-password">
-                        <button>Đặt lại mật khẩu</button>
+                        <input type="password" name="matKhauMoi" placeholder="${t('Mật khẩu mới (tối thiểu 6 ký tự)', 'New password (at least 6 characters)')}" required minlength="6" autocomplete="new-password">
+                        <input type="password" name="nhapLai" placeholder="${t('Nhập lại mật khẩu mới', 'Repeat the new password')}" required autocomplete="new-password">
+                        <button>${t('Đặt lại mật khẩu', 'Reset password')}</button>
                     </form>
                     <p id="dat-lai-trang-thai" class="ghi-chu"></p>
                     <p><a href="/login">Back to login</a></p>
                 </section>`);
-            if (!token) bao('dat-lai-trang-thai', 'Thiếu token: mở màn hình này từ liên kết trong email.', 'loi');
+            if (!token) bao('dat-lai-trang-thai', t('Thiếu token: mở màn hình này từ liên kết trong email.', 'Missing token: open this screen from the link in the email.'), 'loi');
             khiGui('form-dat-lai', async (v, form) => {
                 if (v.matKhauMoi !== v.nhapLai) {
-                    bao('dat-lai-trang-thai', 'Hai lần nhập mật khẩu không khớp.', 'loi');
+                    bao('dat-lai-trang-thai', t('Hai lần nhập mật khẩu không khớp.', 'The two passwords do not match.'), 'loi');
                     return;
                 }
                 const { status, json } = await goi('/api/auth/reset-password', { token, matKhauMoi: v.matKhauMoi });
                 if (status === 200) {
                     form.reset();
-                    bao('dat-lai-trang-thai', 'Đã đặt lại mật khẩu, bạn có thể đăng nhập.', 'tot');
+                    bao('dat-lai-trang-thai', t('Đã đặt lại mật khẩu, bạn có thể đăng nhập.', 'Password reset, you can sign in now.'), 'tot');
                 } else {
-                    bao('dat-lai-trang-thai', thongDiepLoi(json, 'Đặt lại mật khẩu thất bại.'), 'loi');
+                    bao('dat-lai-trang-thai', thongDiepLoi(json, t('Đặt lại mật khẩu thất bại.', 'Password reset failed.')), 'loi');
                 }
             });
         },

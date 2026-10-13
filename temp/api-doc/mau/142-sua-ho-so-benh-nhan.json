@@ -1,0 +1,33 @@
+{
+  "method": "PUT",
+  "path": "/api/booking/ho-so-benh-nhan/cua-toi",
+  "acceptLanguage": null,
+  "requestBody": {
+    "hoTen": "Nguyễn Thị Mai",
+    "ngaySinh": "1995-03-12",
+    "gioiTinh": "NU",
+    "soDienThoai": "0902000001",
+    "diaChi": "12 Nguyễn Văn Bảo, Phường 4, Gò Vấp, TP. Hồ Chí Minh",
+    "soBaoHiemYTe": "DN4797900000001",
+    "tienSuBenhLy": "Dị ứng penicillin"
+  },
+  "status": 200,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "thanhCong": true,
+    "thongDiep": "Đã lưu hồ sơ bệnh nhân",
+    "duLieu": {
+      "trangThaiLienKet": "DA_LIEN_KET",
+      "cccd": "079000000001",
+      "hoTen": "Nguyễn Thị Mai",
+      "ngaySinh": "1995-03-12",
+      "gioiTinh": "NU",
+      "soDienThoai": "0902000001",
+      "diaChi": "12 Nguyễn Văn Bảo, Phường 4, Gò Vấp, TP. Hồ Chí Minh",
+      "soBaoHiemYTe": "DN4797900000001",
+      "tienSuBenhLy": "Dị ứng penicillin"
+    }
+  }
+}

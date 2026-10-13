@@ -31,13 +31,13 @@ import iuh.fit.se.eclinic.booking.service.GioiHanDatLichService;
 import iuh.fit.se.eclinic.booking.service.HuyDoiLichService;
 import iuh.fit.se.eclinic.booking.service.LichHenService;
 import iuh.fit.se.eclinic.booking.service.LienKetHoSoService;
-import iuh.fit.se.eclinic.booking.util.DiaChiIp;
 import iuh.fit.se.eclinic.common.dto.PhanHoiApi;
 import iuh.fit.se.eclinic.common.dto.TrangDuLieu;
 import iuh.fit.se.eclinic.common.enums.VaiTro;
 import iuh.fit.se.eclinic.common.exception.LoiNghiepVu;
 import iuh.fit.se.eclinic.common.exception.MaLoi;
 import iuh.fit.se.eclinic.common.security.NguoiDungHienTai;
+import iuh.fit.se.eclinic.common.util.DiaChiIp;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
@@ -71,12 +71,12 @@ public class LichHenController {
         if (NguoiDungHienTai.daDangNhap()) {
             if (NguoiDungHienTai.layVaiTro() != VaiTro.BENH_NHAN) {
                 throw new LoiNghiepVu(MaLoi.KHONG_CO_QUYEN,
-                        "Tài khoản bác sĩ, quản trị viên không đặt được lịch khám; hãy đăng xuất để đặt như khách");
+                        "loi.KHONG_CO_QUYEN.datLich");
             }
             idTaiKhoan = NguoiDungHienTai.layIdTaiKhoan();
         }
         gioiHanDatLichService.ghiNhan(DiaChiIp.cua(httpRequest));
-        return PhanHoiApi.ok(datLichService.datLich(request, idTaiKhoan), "Đặt lịch thành công");
+        return PhanHoiApi.ok(datLichService.datLich(request, idTaiKhoan), "thanhCong.datLich");
     }
 
     @Operation(summary = "Lịch hẹn của tài khoản đang đăng nhập: lịch tài khoản đặt (cho bản thân hoặc người thân) và"
@@ -122,7 +122,7 @@ public class LichHenController {
     public PhanHoiApi<PhieuKhamResponse> huyCuaToi(@PathVariable String maPhieuKham,
             @Valid @RequestBody(required = false) HuyLichRequest request) {
         return PhanHoiApi.ok(huyDoiLichService.huyCuaToi(NguoiDungHienTai.layIdTaiKhoan(), maPhieuKham,
-                request == null ? null : request.lyDo()), "Đã hủy lịch hẹn");
+                request == null ? null : request.lyDo()), "thanhCong.huyLichHen");
     }
 
     @Operation(summary = "Đổi 1 lịch hẹn của tôi sang khung giờ khác: lịch cũ thành DA_HUY_DO_DOI_LICH, trả lịch mới (chờ"
@@ -134,7 +134,7 @@ public class LichHenController {
             @Valid @RequestBody DoiLichRequest request, HttpServletRequest httpRequest) {
         gioiHanDatLichService.ghiNhan(DiaChiIp.cua(httpRequest));
         return PhanHoiApi.ok(huyDoiLichService.doiCuaToi(NguoiDungHienTai.layIdTaiKhoan(), maPhieuKham, request),
-                "Đổi lịch thành công");
+                "thanhCong.doiLich");
     }
 
 }

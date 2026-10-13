@@ -15,6 +15,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.event.ApplicationEvents;
 import org.springframework.test.context.event.RecordApplicationEvents;
 
+import iuh.fit.se.eclinic.common.enums.NgonNgu;
 import iuh.fit.se.eclinic.common.entity.identity.TaiKhoan;
 import iuh.fit.se.eclinic.common.enums.TrangThaiTaiKhoan;
 import iuh.fit.se.eclinic.common.enums.VaiTro;
@@ -68,7 +69,7 @@ class DoiEmailServiceTest {
         assertThat(xacNhan.get(0).emailMoi()).isEqualTo(emailMoi);
         assertThat(xacNhan.get(0).toString()).doesNotContain(xacNhan.get(0).token());
         assertThat(applicationEvents.stream(EmailYeuCauDoiEmailEvent.class).toList())
-                .containsExactly(new EmailYeuCauDoiEmailEvent(taiKhoan.getEmail(), taiKhoan.getHoTen(), emailMoi));
+                .containsExactly(new EmailYeuCauDoiEmailEvent(taiKhoan.getEmail(), taiKhoan.getHoTen(), emailMoi, NgonNgu.VI));
         // Chưa xác nhận: email trong DB và việc đăng nhập không đổi
         assertThat(emailTrongDb(taiKhoan)).isEqualTo(taiKhoan.getEmail());
         assertThat(dangNhap(taiKhoan.getEmail(), MAT_KHAU).accessToken()).isNotBlank();
@@ -232,7 +233,7 @@ class DoiEmailServiceTest {
         // Liên kết đặt lại mật khẩu đã gửi tới email cũ không còn dùng được
         assertMaLoi(() -> matKhauService.datLaiMatKhau(tokenDatLai, "matkhau-moi"), MaLoi.LIEN_KET_KHONG_HOP_LE);
         assertThat(applicationEvents.stream(EmailDaDoiEmailEvent.class).toList())
-                .containsExactly(new EmailDaDoiEmailEvent(emailCu, taiKhoan.getHoTen(), emailMoi));
+                .containsExactly(new EmailDaDoiEmailEvent(emailCu, taiKhoan.getHoTen(), emailMoi, NgonNgu.VI));
         assertThat(doiEmailService.layYeuCauDangCho(taiKhoan.getId())).isNull();
     }
 

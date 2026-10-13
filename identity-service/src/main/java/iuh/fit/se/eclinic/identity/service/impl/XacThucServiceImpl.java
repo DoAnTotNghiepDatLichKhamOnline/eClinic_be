@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import iuh.fit.se.eclinic.common.entity.identity.TaiKhoan;
+import iuh.fit.se.eclinic.common.enums.NgonNgu;
 import iuh.fit.se.eclinic.common.enums.TrangThaiTaiKhoan;
 import iuh.fit.se.eclinic.common.enums.VaiTro;
 import iuh.fit.se.eclinic.common.exception.LoiNghiepVu;
@@ -51,6 +52,7 @@ public class XacThucServiceImpl implements XacThucService {
             taiKhoan.setEmail(email);
             taiKhoan.setVaiTro(VaiTro.BENH_NHAN);
             taiKhoan.setTrangThai(TrangThaiTaiKhoan.CHO_XAC_NHAN);
+            taiKhoan.setNgonNgu(NgonNgu.hienTai());
             ganThongTin(taiKhoan, request, soDienThoai);
             taiKhoan = taiKhoanRepository.save(taiKhoan);
             // id mới (MySQL không dùng lại id) nên chắc chắn giữ được khoá chờ; vẫn phải gọi để chặn gửi lại ngay
@@ -113,7 +115,8 @@ public class XacThucServiceImpl implements XacThucService {
     private void guiLienKetXacThuc(TaiKhoan taiKhoan) {
         String token = tokenLienKetService.tao(taiKhoan.getId(), MucDichLienKet.XAC_THUC_EMAIL,
                 lienKetProperties.thoiHanXacThucEmail());
-        eventPublisher.publishEvent(new EmailXacThucEvent(taiKhoan.getEmail(), taiKhoan.getHoTen(), token));
+        eventPublisher.publishEvent(new EmailXacThucEvent(taiKhoan.getEmail(), taiKhoan.getHoTen(), token,
+                taiKhoan.getNgonNgu()));
     }
 
     private void ganThongTin(TaiKhoan taiKhoan, DangKyRequest request, String soDienThoai) {

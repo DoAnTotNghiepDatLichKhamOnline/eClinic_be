@@ -1,0 +1,13 @@
+{
+  "method": "GET",
+  "path": "/api/users/me/change-email",
+  "acceptLanguage": null,
+  "requestBody": null,
+  "status": 200,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "thanhCong": true
+  }
+}

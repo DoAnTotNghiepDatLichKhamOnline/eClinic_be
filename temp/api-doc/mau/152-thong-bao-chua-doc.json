@@ -1,0 +1,31 @@
+{
+  "method": "GET",
+  "path": "/api/notification/thong-bao?chuaDoc=true&kichThuoc=1",
+  "acceptLanguage": null,
+  "requestBody": null,
+  "status": 200,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "thanhCong": true,
+    "duLieu": {
+      "noiDung": [
+        {
+          "id": 12,
+          "loai": "LICH_HEN_BI_TU_CHOI",
+          "noiDung": "Bác sĩ Hoàng Minh Đức đã từ chối lịch khám của Nguyễn Thị Mai lúc 10:10 ngày 14/10/2026 (mã ECL-20261014-3585). Lý do: Bác sĩ có lịch hội chẩn đột xuất, mời bạn đặt khung giờ khác",
+          "daDoc": false,
+          "ngayTao": "2026-10-13T19:22:00.180094",
+          "idLichHen": 9,
+          "maPhieuKham": "QJwx_U8GOyixSKJpkO1Q8DbLQADtL1f67SdONql1U1Y",
+          "idYeuCau": null
+        }
+      ],
+      "trang": 0,
+      "kichThuoc": 1,
+      "tongSoPhanTu": 2,
+      "tongSoTrang": 2
+    }
+  }
+}

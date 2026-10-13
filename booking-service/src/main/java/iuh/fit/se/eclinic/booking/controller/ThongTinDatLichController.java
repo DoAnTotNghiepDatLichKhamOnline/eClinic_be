@@ -51,14 +51,14 @@ public class ThongTinDatLichController {
     public PhanHoiApi<NguoiThanDaLuuResponse> suaNguoiThan(@PathVariable Long id,
             @Valid @RequestBody NguoiThanDaLuuRequest request) {
         return PhanHoiApi.ok(nguoiThanDaLuuService.sua(NguoiDungHienTai.layIdTaiKhoan(), id, request),
-                "Đã cập nhật thông tin người thân");
+                "thanhCong.capNhatNguoiThan");
     }
 
     @Operation(summary = "Bỏ 1 người thân khỏi danh sách đã lưu (lịch hẹn đã đặt không bị ảnh hưởng)")
     @DeleteMapping("/nguoi-than/{id}")
     public PhanHoiApi<Void> xoaNguoiThan(@PathVariable Long id) {
         nguoiThanDaLuuService.xoa(NguoiDungHienTai.layIdTaiKhoan(), id);
-        return PhanHoiApi.ok(null, "Đã bỏ người thân khỏi danh sách đã lưu");
+        return PhanHoiApi.ok(null, "thanhCong.boNguoiThan");
     }
 
 }

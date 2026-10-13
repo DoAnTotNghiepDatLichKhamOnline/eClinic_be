@@ -42,6 +42,7 @@ import iuh.fit.se.eclinic.common.entity.identity.TaiKhoan;
 import iuh.fit.se.eclinic.common.entity.scheduling.KhungGioKham;
 import iuh.fit.se.eclinic.common.entity.scheduling.LichLamViec;
 import iuh.fit.se.eclinic.common.enums.TrangThaiBacSi;
+import iuh.fit.se.eclinic.common.enums.NgonNgu;
 import iuh.fit.se.eclinic.common.enums.TrangThaiKhungGio;
 import iuh.fit.se.eclinic.common.enums.TrangThaiLichHen;
 import iuh.fit.se.eclinic.common.enums.TrangThaiLichLamViec;
@@ -110,7 +111,7 @@ public class DatLichServiceImpl implements DatLichService {
         boolean bacSiBatKy = request.idLichLamViec() == null;
         if (bacSiBatKy == (request.idChuyenKhoa() == null)) {
             throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE,
-                    "Gửi idLichLamViec (chọn bác sĩ) hoặc idChuyenKhoa (bác sĩ bất kỳ), không gửi cả hai");
+                    "loi.DU_LIEU_KHONG_HOP_LE.caHoacChuyenKhoa");
         }
         // Đọc không khoá: ca đích danh, hoặc các ca của chuyên khoa có khung bắt đầu đúng giờ này
         List<LichLamViec> caUngVien = bacSiBatKy
@@ -124,7 +125,7 @@ public class DatLichServiceImpl implements DatLichService {
         String soDienThoaiLienHe = giamHo != null ? giamHo.soDienThoai() : benhNhan.soDienThoai();
         boolean datChoBanThan = taiKhoanDat != null && Boolean.TRUE.equals(request.datChoBanThan());
         if (datChoBanThan && cccd == null) {
-            throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE, "Đặt cho bản thân cần số CCCD của chủ tài khoản");
+            throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE, "loi.DU_LIEU_KHONG_HOP_LE.cccdChuTaiKhoan");
         }
         // Đọc không khoá, trước khi khoá khung giờ: các từ chối về hồ sơ của tài khoản không giữ khoá nào
         TaiKhoan chuHoSoMoi = datChoBanThan && canTaoHoSoCuaTaiKhoan(taiKhoanDat, cccd) ? taiKhoanDat : null;
@@ -154,6 +155,7 @@ public class DatLichServiceImpl implements DatLichService {
         lichHen.setLyDoKham(rongThanhNull(request.lyDoKham()));
         lichHen.setSoDienThoaiLienHe(soDienThoaiLienHe);
         lichHen.setEmailLienHe(rongThanhNull(benhNhan.email()));
+        lichHen.setNgonNgu(NgonNgu.hienTai());
         // Bản sao những gì người đặt nhập: hồ sơ đã có không bị sửa, nơi hiển thị cho người đặt dùng bản sao này
         lichHen.setHoTenDaNhap(ChuanHoaTen.gon(benhNhan.hoTen()));
         lichHen.setNgaySinhDaNhap(benhNhan.ngaySinh());
@@ -165,6 +167,7 @@ public class DatLichServiceImpl implements DatLichService {
         luu(lichHen, luot);
         // Chỉ ở đặt lịch mới: đổi lịch (datLaiTuLichCu) do HuyDoiLichServiceImpl báo cho bác sĩ bằng 1 thông báo "đã đổi"
         thongBaoLichHenService.lichHenMoi(lichHen);
+        thongBaoLichHenService.emailDaNhanLich(lichHen);
         // Đặt cho người thân khi đã đăng nhập: sau khi commit, lưu những gì vừa nhập để điền sẵn lần sau
         boolean laHoSoCuaTaiKhoan = taiKhoanDat != null && hoSo.getTaiKhoan() != null
                 && hoSo.getTaiKhoan().getId().equals(taiKhoanDat.getId());
@@ -198,7 +201,7 @@ public class DatLichServiceImpl implements DatLichService {
         boolean bacSiBatKy = idLichLamViec == null;
         if (bacSiBatKy == (idChuyenKhoa == null)) {
             throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE,
-                    "Gửi idLichLamViec (chọn bác sĩ) hoặc idChuyenKhoa (bác sĩ bất kỳ), không gửi cả hai");
+                    "loi.DU_LIEU_KHONG_HOP_LE.caHoacChuyenKhoa");
         }
         List<LichLamViec> caUngVien = bacSiBatKy
                 ? timCaUngVien(idChuyenKhoa, gioBatDauKhung, bayGio.toLocalDate())
@@ -211,7 +214,7 @@ public class DatLichServiceImpl implements DatLichService {
         KhungGioKham luotCu = cu.getKhungGio();
         if (luotCu.getLichLamViec().getId().equals(ca.getId()) && !luotCu.getGioBatDau().isBefore(gioBatDauKhung)
                 && luotCu.getGioBatDau().isBefore(gioKetThucKhung)) {
-            throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE, "Hãy chọn khung giờ khác với khung giờ đang giữ");
+            throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE, "loi.DU_LIEU_KHONG_HOP_LE.khungGioKhac");
         }
         KhungGioKham luot = chonLuot(daChon.cacLuot(), moc);
 
@@ -235,6 +238,8 @@ public class DatLichServiceImpl implements DatLichService {
         lichHen.setGhiChu(cu.getGhiChu());
         lichHen.setSoDienThoaiLienHe(cu.getSoDienThoaiLienHe());
         lichHen.setEmailLienHe(cu.getEmailLienHe());
+        // Ngôn ngữ của request đổi lịch, không chép của lịch cũ: người đổi đang dùng ngôn ngữ này
+        lichHen.setNgonNgu(NgonNgu.hienTai());
         lichHen.setHoTenDaNhap(cu.getHoTenDaNhap());
         lichHen.setNgaySinhDaNhap(cu.getNgaySinhDaNhap());
         lichHen.setGioiTinhDaNhap(cu.getGioiTinhDaNhap());
@@ -243,6 +248,7 @@ public class DatLichServiceImpl implements DatLichService {
         lichHen.setMaTraCuu(taoMaTraCuu(gioBatDauKhung.toLocalDate()));
         lichHen.setMaTokenPhieuKham(TokenNgauNhien.tao());
         luu(lichHen, luot);
+        thongBaoLichHenService.emailDaDoiLich(lichHen);
         return lichHenMapper.toDatLichResponse(lichHen, gioBatDauKhung, gioKetThucKhung, bacSiBatKy);
     }
 
@@ -342,7 +348,7 @@ public class DatLichServiceImpl implements DatLichService {
      */
     private static LocalDateTime gioKetThucKhung(LichLamViec ca, LocalDateTime gioBatDauKhung) {
         if (!laGioBatDauKhung(ca, gioBatDauKhung)) {
-            throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE, "gioBatDauKhung không phải khung giờ của ca khám này");
+            throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE, "loi.DU_LIEU_KHONG_HOP_LE.khungGioNgoaiCa");
         }
         return ca.getNgayLamViec()
                 .atTime(ChiaCaLamViec.gioKetThucKhung(gioBatDauKhung.toLocalTime(), ca.getGioKetThuc()));
@@ -375,7 +381,7 @@ public class DatLichServiceImpl implements DatLichService {
         if (tuoi(benhNhan.ngaySinh(), ngayKham) >= TUOI_THANH_NIEN) {
             if (cccd == null) {
                 throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE,
-                        "Người khám từ đủ 18 tuổi phải có số CCCD (benhNhan.cccd)");
+                        "loi.DU_LIEU_KHONG_HOP_LE.cccdNguoiLon");
             }
             return null;
         }
@@ -384,10 +390,10 @@ public class DatLichServiceImpl implements DatLichService {
         }
         if (giamHo.cccd().equals(cccd)) {
             throw new LoiNghiepVu(MaLoi.NGUOI_GIAM_HO_KHONG_HOP_LE,
-                    "Số CCCD người giám hộ phải khác số CCCD của bệnh nhân");
+                    "loi.NGUOI_GIAM_HO_KHONG_HOP_LE.trungCccd");
         }
         if (giamHo.ngaySinh() != null && tuoi(giamHo.ngaySinh(), ngayKham) < TUOI_THANH_NIEN) {
-            throw new LoiNghiepVu(MaLoi.NGUOI_GIAM_HO_KHONG_HOP_LE, "Người giám hộ phải từ đủ 18 tuổi");
+            throw new LoiNghiepVu(MaLoi.NGUOI_GIAM_HO_KHONG_HOP_LE, "loi.NGUOI_GIAM_HO_KHONG_HOP_LE.chuaDuTuoi");
         }
         return giamHo;
     }
@@ -425,7 +431,7 @@ public class DatLichServiceImpl implements DatLichService {
         int toiDa = datLichProperties.soLichHieuLucToiDaMoiHoSo();
         if (lichHenRepository.demLichCuaHoSoTu(hoSo.getId(), TRANG_THAI_CON_HIEU_LUC, bayGio) >= toiDa) {
             throw new LoiNghiepVu(MaLoi.VUOT_GIOI_HAN_DAT_LICH,
-                    "Bệnh nhân đang giữ tối đa " + toiDa + " lịch hẹn sắp tới, không thể đặt thêm");
+                    "loi.VUOT_GIOI_HAN_DAT_LICH.theoBenhNhan", String.valueOf(toiDa));
         }
     }
 
@@ -433,7 +439,7 @@ public class DatLichServiceImpl implements DatLichService {
         int toiDa = datLichProperties.soLichHieuLucToiDaMoiSoDienThoai();
         if (lichHenRepository.demLichTheoSoDienThoaiTu(soDienThoai, TRANG_THAI_CON_HIEU_LUC, bayGio) >= toiDa) {
             throw new LoiNghiepVu(MaLoi.VUOT_GIOI_HAN_DAT_LICH,
-                    "Số điện thoại này đang giữ tối đa " + toiDa + " lịch hẹn sắp tới, không thể đặt thêm");
+                    "loi.VUOT_GIOI_HAN_DAT_LICH.theoSoDienThoai", String.valueOf(toiDa));
         }
     }
 
@@ -448,8 +454,7 @@ public class DatLichServiceImpl implements DatLichService {
         if (cuaTaiKhoan.isEmpty()) {
             if (hoSoBenhNhanRepository.existsByCccd(cccd)) {
                 // Gắn hồ sơ đã có vào tài khoản phải qua xác minh (quy tắc #3), việc đặt lịch không tự gắn
-                throw new LoiNghiepVu(MaLoi.CCCD_DA_CO_HO_SO, "Số CCCD này đã có hồ sơ bệnh nhân nên chưa thể gắn vào"
-                        + " tài khoản của bạn; hãy đặt lịch không chọn \"đặt cho bản thân\" hoặc liên hệ phòng khám");
+                throw new LoiNghiepVu(MaLoi.CCCD_DA_CO_HO_SO, "loi.CCCD_DA_CO_HO_SO.datLich");
             }
             return true;
         }
@@ -459,8 +464,7 @@ public class DatLichServiceImpl implements DatLichService {
         }
         if (!hoSo.getCccd().equals(cccd)) {
             throw new LoiNghiepVu(MaLoi.THONG_TIN_BENH_NHAN_KHONG_KHOP,
-                    "Số CCCD không trùng với hồ sơ bệnh nhân của tài khoản; nếu đặt cho người thân, hãy bỏ chọn"
-                            + " \"đặt cho bản thân\"");
+                    "loi.THONG_TIN_BENH_NHAN_KHONG_KHOP.datLich");
         }
         return false;
     }

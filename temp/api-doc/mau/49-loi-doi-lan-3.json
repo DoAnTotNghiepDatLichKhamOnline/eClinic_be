@@ -1,0 +1,19 @@
+{
+  "method": "POST",
+  "path": "/api/booking/phieu-kham/UDTjM0r-8RmR-GRfBd8wQMtHZhQmRXkheBQCwy43hnI/doi-lich",
+  "acceptLanguage": null,
+  "requestBody": {
+    "idLichLamViec": 17,
+    "gioBatDauKhung": "2026-10-14T09:00:00",
+    "soDienThoai": "0912345601"
+  },
+  "status": 409,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "thanhCong": false,
+    "maLoi": "VUOT_SO_LAN_DOI_LICH",
+    "thongDiep": "Lịch hẹn này đã được đổi 2 lần, không đổi thêm được; bạn vẫn có thể hủy lịch"
+  }
+}

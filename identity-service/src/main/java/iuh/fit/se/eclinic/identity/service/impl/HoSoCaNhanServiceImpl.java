@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 import iuh.fit.se.eclinic.common.entity.booking.HoSoBenhNhan;
 import iuh.fit.se.eclinic.common.entity.catalog.BacSi;
 import iuh.fit.se.eclinic.common.entity.identity.TaiKhoan;
+import iuh.fit.se.eclinic.common.enums.NgonNgu;
 import iuh.fit.se.eclinic.common.enums.VaiTro;
 import iuh.fit.se.eclinic.common.exception.LoiNghiepVu;
 import iuh.fit.se.eclinic.common.exception.MaLoi;
@@ -47,7 +48,7 @@ public class HoSoCaNhanServiceImpl implements HoSoCaNhanService {
         // Tên bác sĩ hiển thị cho bệnh nhân khi đặt lịch và trên hồ sơ bệnh án: chỉ quản trị viên được đổi (DOC-01)
         if (taiKhoan.getVaiTro() == VaiTro.BAC_SI && !hoTen.equals(taiKhoan.getHoTen())) {
             throw new LoiNghiepVu(MaLoi.KHONG_CO_QUYEN,
-                    "Họ tên bác sĩ do quản trị viên quản lý, bạn chỉ có thể đổi số điện thoại");
+                    "loi.KHONG_CO_QUYEN.hoTenBacSi");
         }
         // Kiểm tra trùng TRƯỚC khi sửa entity (xem ChuyenKhoaServiceImpl.capNhat)
         if (soDienThoai != null && taiKhoanRepository.existsBySoDienThoaiAndIdNot(soDienThoai, idTaiKhoan)) {
@@ -59,6 +60,14 @@ public class HoSoCaNhanServiceImpl implements HoSoCaNhanService {
             taiKhoan.setSoDienThoai(soDienThoai);
         }
         log.info("Cập nhật hồ sơ cá nhân tài khoản id={}", idTaiKhoan);
+        return taoResponse(taiKhoan);
+    }
+
+    @Override
+    @Transactional
+    public HoSoCaNhanResponse doiNgonNgu(Long idTaiKhoan, NgonNgu ngonNgu) {
+        TaiKhoan taiKhoan = taiKhoanService.layDangHoatDong(idTaiKhoan);
+        taiKhoan.setNgonNgu(ngonNgu);
         return taoResponse(taiKhoan);
     }
 

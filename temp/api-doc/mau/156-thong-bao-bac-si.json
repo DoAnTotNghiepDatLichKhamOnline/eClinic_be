@@ -1,0 +1,51 @@
+{
+  "method": "GET",
+  "path": "/api/notification/thong-bao?kichThuoc=3",
+  "acceptLanguage": null,
+  "requestBody": null,
+  "status": 200,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "thanhCong": true,
+    "duLieu": {
+      "noiDung": [
+        {
+          "id": 15,
+          "loai": "LICH_HEN_DA_DOI",
+          "noiDung": "Bệnh nhân Nguyễn Thị Mai đã đổi lịch khám từ 08:00 ngày 14/10/2026 sang 11:00 ngày 14/10/2026 (mã mới ECL-20261014-8812), chờ bạn xác nhận.",
+          "daDoc": false,
+          "ngayTao": "2026-10-13T19:22:00.194336",
+          "idLichHen": 10,
+          "maPhieuKham": null,
+          "idYeuCau": null
+        },
+        {
+          "id": 14,
+          "loai": "LICH_HEN_DA_HUY",
+          "noiDung": "Bệnh nhân Nguyễn Gia Huy đã hủy lịch khám lúc 10:00 ngày 14/10/2026 (mã ECL-20261014-0248).",
+          "daDoc": false,
+          "ngayTao": "2026-10-13T19:22:00.188924",
+          "idLichHen": 7,
+          "maPhieuKham": null,
+          "idYeuCau": null
+        },
+        {
+          "id": 13,
+          "loai": "LICH_HEN_DA_HUY",
+          "noiDung": "Bệnh nhân Lê Thị Hoa đã hủy lịch khám lúc 09:00 ngày 14/10/2026 (mã ECL-20261014-7051). Lý do: Mẹ tôi đã khám ở nơi khác",
+          "daDoc": false,
+          "ngayTao": "2026-10-13T19:22:00.184669",
+          "idLichHen": 6,
+          "maPhieuKham": null,
+          "idYeuCau": null
+        }
+      ],
+      "trang": 0,
+      "kichThuoc": 3,
+      "tongSoPhanTu": 13,
+      "tongSoTrang": 5
+    }
+  }
+}

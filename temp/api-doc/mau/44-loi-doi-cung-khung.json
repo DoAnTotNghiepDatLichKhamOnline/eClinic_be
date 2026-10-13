@@ -1,0 +1,19 @@
+{
+  "method": "POST",
+  "path": "/api/booking/phieu-kham/K3lZ6TwiGmLI_ke97oUUCBZ9txQ_p3JPxFuHTbqv-NI/doi-lich",
+  "acceptLanguage": null,
+  "requestBody": {
+    "idLichLamViec": 17,
+    "gioBatDauKhung": "2026-10-14T08:00:00",
+    "soDienThoai": "0912345601"
+  },
+  "status": 400,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "thanhCong": false,
+    "maLoi": "DU_LIEU_KHONG_HOP_LE",
+    "thongDiep": "Hãy chọn khung giờ khác với khung giờ đang giữ"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "method": "POST",
+  "path": "/api/chatbot/phien/4/dong-y",
+  "acceptLanguage": null,
+  "requestBody": null,
+  "status": 403,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "thanhCong": false,
+    "maLoi": "KHONG_CO_QUYEN",
+    "thongDiep": "Bạn không có quyền thực hiện thao tác này"
+  }
+}

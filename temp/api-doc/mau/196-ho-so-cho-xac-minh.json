@@ -1,0 +1,24 @@
+{
+  "method": "GET",
+  "path": "/api/booking/ho-so-benh-nhan/cua-toi",
+  "acceptLanguage": null,
+  "requestBody": null,
+  "status": 200,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "thanhCong": true,
+    "duLieu": {
+      "trangThaiLienKet": "CHO_XAC_MINH",
+      "cccd": null,
+      "hoTen": null,
+      "ngaySinh": null,
+      "gioiTinh": null,
+      "soDienThoai": null,
+      "diaChi": null,
+      "soBaoHiemYTe": null,
+      "tienSuBenhLy": null
+    }
+  }
+}

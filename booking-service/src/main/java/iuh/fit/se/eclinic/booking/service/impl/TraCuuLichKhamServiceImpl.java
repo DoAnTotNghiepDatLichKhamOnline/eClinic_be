@@ -83,11 +83,11 @@ public class TraCuuLichKhamServiceImpl implements TraCuuLichKhamService {
         LocalDate tu = tuNgay == null ? homNay : tuNgay;
         LocalDate den = denNgay == null ? tu.plusDays(SO_NGAY_TOI_DA_MOI_LAN - 1L) : denNgay;
         if (den.isBefore(tu)) {
-            throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE, "denNgay phải từ tuNgay trở đi");
+            throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE, "loi.DU_LIEU_KHONG_HOP_LE.khoangNgay");
         }
         if (ChronoUnit.DAYS.between(tu, den) >= SO_NGAY_TOI_DA_MOI_LAN) {
             throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE,
-                    "Mỗi lần chỉ xem được tối đa " + SO_NGAY_TOI_DA_MOI_LAN + " ngày");
+                    "loi.DU_LIEU_KHONG_HOP_LE.khoangNgayToiDa", String.valueOf(SO_NGAY_TOI_DA_MOI_LAN));
         }
         // Cắt về khoảng còn đặt được, như timNgayConCho
         LocalDate ngayXaNhat = ngayXaNhat(homNay);
@@ -150,7 +150,7 @@ public class TraCuuLichKhamServiceImpl implements TraCuuLichKhamService {
             Long idChuyenKhoa) {
         kiemTraBoLoc(idBacSi, idChuyenKhoa);
         if (tuNgay != null && denNgay != null && denNgay.isBefore(tuNgay)) {
-            throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE, "denNgay phải từ tuNgay trở đi");
+            throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE, "loi.DU_LIEU_KHONG_HOP_LE.khoangNgay");
         }
         LocalDateTime bayGio = LocalDateTime.now();
         LocalDate homNay = bayGio.toLocalDate();
@@ -215,7 +215,7 @@ public class TraCuuLichKhamServiceImpl implements TraCuuLichKhamService {
 
     private static void kiemTraBoLoc(Long idBacSi, Long idChuyenKhoa) {
         if (idBacSi == null && idChuyenKhoa == null) {
-            throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE, "Cần truyền idBacSi hoặc idChuyenKhoa");
+            throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE, "loi.DU_LIEU_KHONG_HOP_LE.bacSiHoacChuyenKhoa");
         }
     }
 

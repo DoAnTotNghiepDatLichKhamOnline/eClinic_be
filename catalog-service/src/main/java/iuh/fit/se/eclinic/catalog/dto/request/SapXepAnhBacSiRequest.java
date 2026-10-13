@@ -9,6 +9,6 @@ import jakarta.validation.constraints.NotNull;
  */
 public record SapXepAnhBacSiRequest(
 
-        @NotNull(message = "Danh sách ảnh không được để trống")
-        List<@NotNull(message = "Id ảnh không được để trống") Long> idAnh) {
+        @NotNull(message = "{kiemTra.danhSachAnh.batBuoc}")
+        List<@NotNull(message = "{kiemTra.idAnh.batBuoc}") Long> idAnh) {
 }

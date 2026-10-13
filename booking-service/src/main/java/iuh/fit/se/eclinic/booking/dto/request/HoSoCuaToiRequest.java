@@ -16,29 +16,29 @@ import jakarta.validation.constraints.Size;
  *             CCCD không đổi được
  */
 public record HoSoCuaToiRequest(
-        @NotBlank(message = "Họ tên không được để trống")
-        @Size(max = 150, message = "Họ tên tối đa 150 ký tự")
+        @NotBlank(message = "{kiemTra.hoTen.batBuoc}")
+        @Size(max = 150, message = "{kiemTra.hoTen.toiDa}")
         String hoTen,
 
-        @NotNull(message = "Ngày sinh không được để trống")
-        @PastOrPresent(message = "Ngày sinh không được ở tương lai")
+        @NotNull(message = "{kiemTra.ngaySinh.batBuoc}")
+        @PastOrPresent(message = "{kiemTra.ngaySinh.tuongLai}")
         LocalDate ngaySinh,
 
         GioiTinh gioiTinh,
 
-        @NotBlank(message = "Số điện thoại không được để trống")
-        @Pattern(regexp = "^0\\d{9}$", message = "Số điện thoại gồm 10 chữ số, bắt đầu bằng 0")
+        @NotBlank(message = "{kiemTra.soDienThoai.batBuoc}")
+        @Pattern(regexp = "^0\\d{9}$", message = "{kiemTra.soDienThoai.dinhDang}")
         String soDienThoai,
 
-        @Pattern(regexp = "^\\d{12}$", message = "Số CCCD gồm đúng 12 chữ số")
+        @Pattern(regexp = "^\\d{12}$", message = "{kiemTra.cccd.dinhDang}")
         String cccd,
 
-        @Size(max = 500, message = "Địa chỉ tối đa 500 ký tự")
+        @Size(max = 500, message = "{kiemTra.diaChi.toiDa}")
         String diaChi,
 
-        @Size(max = 50, message = "Số bảo hiểm y tế tối đa 50 ký tự")
+        @Size(max = 50, message = "{kiemTra.soBaoHiemYTe.toiDa}")
         String soBaoHiemYTe,
 
-        @Size(max = 5000, message = "Tiền sử bệnh lý tối đa 5000 ký tự")
+        @Size(max = 5000, message = "{kiemTra.tienSuBenhLy.toiDa}")
         String tienSuBenhLy) {
 }

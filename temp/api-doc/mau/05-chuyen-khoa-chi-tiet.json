@@ -1,0 +1,18 @@
+{
+  "method": "GET",
+  "path": "/api/catalog/chuyen-khoa/3",
+  "acceptLanguage": null,
+  "requestBody": null,
+  "status": 200,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "thanhCong": true,
+    "duLieu": {
+      "id": 3,
+      "tenChuyenKhoa": "Da liễu",
+      "moTa": "Khám và điều trị các bệnh về da, tóc, móng: mụn trứng cá, viêm da, dị ứng, nấm da."
+    }
+  }
+}

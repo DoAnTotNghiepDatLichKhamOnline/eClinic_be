@@ -1,7 +1,7 @@
 package iuh.fit.se.eclinic.booking.service;
 
 /**
- * Gửi các thông báo đang chờ trong bảng su_kien_thong_bao sang notification-service (xem {@code GuiThongBaoJob}).
+ * Gửi các thông báo và email đang chờ trong bảng su_kien_thong_bao sang notification-service (xem {@code GuiThongBaoJob}).
  */
 public interface GuiThongBaoService {
 

@@ -43,7 +43,7 @@ public class YeuCauDoiLichCuaBacSiController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public PhanHoiApi<YeuCauDoiLichResponse> gui(@Valid @RequestBody GuiYeuCauDoiLichRequest request) {
-        return PhanHoiApi.ok(yeuCauDoiLichService.gui(NguoiDungHienTai.layIdTaiKhoan(), request), "Đã gửi yêu cầu");
+        return PhanHoiApi.ok(yeuCauDoiLichService.gui(NguoiDungHienTai.layIdTaiKhoan(), request), "thanhCong.guiYeuCau");
     }
 
     @Operation(summary = "Các yêu cầu tôi đã gửi, mới nhất trước; lọc theo trạng thái")
@@ -59,7 +59,7 @@ public class YeuCauDoiLichCuaBacSiController {
     @Operation(summary = "Rút 1 yêu cầu còn chờ duyệt của tôi (thành DA_RUT); sau đó ca nhận được yêu cầu mới")
     @PostMapping("/{id}/rut")
     public PhanHoiApi<YeuCauDoiLichResponse> rut(@PathVariable Long id) {
-        return PhanHoiApi.ok(yeuCauDoiLichService.rut(NguoiDungHienTai.layIdTaiKhoan(), id), "Đã rút yêu cầu");
+        return PhanHoiApi.ok(yeuCauDoiLichService.rut(NguoiDungHienTai.layIdTaiKhoan(), id), "thanhCong.rutYeuCau");
     }
 
 }

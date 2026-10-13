@@ -1,0 +1,55 @@
+{
+  "method": "POST",
+  "path": "/api/booking/phieu-kham/UDTjM0r-8RmR-GRfBd8wQMtHZhQmRXkheBQCwy43hnI/huy",
+  "acceptLanguage": null,
+  "requestBody": {
+    "soDienThoai": "0912345601",
+    "lyDo": "Bận việc đột xuất"
+  },
+  "status": 200,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "thanhCong": true,
+    "thongDiep": "Đã hủy lịch hẹn",
+    "duLieu": {
+      "maPhieuKham": "UDTjM0r-8RmR-GRfBd8wQMtHZhQmRXkheBQCwy43hnI",
+      "maTraCuu": "ECL-20261014-4935",
+      "linkPhieuKham": "http://localhost:5173/phieu-kham/UDTjM0r-8RmR-GRfBd8wQMtHZhQmRXkheBQCwy43hnI",
+      "trangThai": "DA_HUY",
+      "soThuTu": 13,
+      "ngay": "2026-10-14",
+      "gioKhamDuKien": "2026-10-14T10:00:00",
+      "gioBatDauKhung": "2026-10-14T10:00:00",
+      "gioKetThucKhung": "2026-10-14T11:00:00",
+      "bacSi": {
+        "id": 5,
+        "hoTen": "Hoàng Minh Đức",
+        "hocVi": "ThS.BS",
+        "anhDaiDien": "https://placehold.co/400x400/0f766e/ffffff/png?text=BS+5"
+      },
+      "tenChuyenKhoa": "Da liễu",
+      "phongKham": {
+        "id": 3,
+        "tenPhong": "Phòng 103",
+        "tang": "Tầng 1"
+      },
+      "lyDoKham": "Đau đầu, chóng mặt 3 ngày nay",
+      "ngayDat": "2026-10-13T19:21:55.191742",
+      "benhNhan": {
+        "hoTen": "Trần Văn Khách",
+        "namSinh": 1990,
+        "gioiTinh": "NAM",
+        "cccd": "*********101",
+        "soDienThoai": "091****601"
+      },
+      "nguoiGiamHo": null,
+      "canNguoiGiamHoDiCung": false,
+      "lyDoHuy": "Bận việc đột xuất",
+      "duocHuyDoi": false,
+      "hanHuyDoi": "2026-10-14T08:00:00",
+      "canDoiLich": false
+    }
+  }
+}

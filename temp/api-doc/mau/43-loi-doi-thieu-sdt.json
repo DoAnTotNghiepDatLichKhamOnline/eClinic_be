@@ -1,0 +1,18 @@
+{
+  "method": "POST",
+  "path": "/api/booking/phieu-kham/K3lZ6TwiGmLI_ke97oUUCBZ9txQ_p3JPxFuHTbqv-NI/doi-lich",
+  "acceptLanguage": null,
+  "requestBody": {
+    "idLichLamViec": 17,
+    "gioBatDauKhung": "2026-10-14T09:00:00"
+  },
+  "status": 400,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "thanhCong": false,
+    "maLoi": "DU_LIEU_KHONG_HOP_LE",
+    "thongDiep": "Nhập số điện thoại đã dùng khi đặt lịch (10 chữ số, bắt đầu bằng 0)"
+  }
+}

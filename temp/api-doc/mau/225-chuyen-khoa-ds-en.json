@@ -1,0 +1,36 @@
+{
+  "method": "GET",
+  "path": "/api/catalog/chuyen-khoa?trang=0&kichThuoc=3",
+  "acceptLanguage": "en",
+  "requestBody": null,
+  "status": 200,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "thanhCong": true,
+    "duLieu": {
+      "noiDung": [
+        {
+          "id": 5,
+          "tenChuyenKhoa": "Cardiology",
+          "moTa": "Examination and follow-up of high blood pressure, arrhythmia, coronary artery disease and heart failure."
+        },
+        {
+          "id": 8,
+          "tenChuyenKhoa": "Dentistry",
+          "moTa": "Dental check-ups, fillings, extractions, scaling and orthodontic advice."
+        },
+        {
+          "id": 3,
+          "tenChuyenKhoa": "Dermatology",
+          "moTa": "Examination and treatment of skin, hair and nail conditions: acne, dermatitis, allergies, fungal skin infections."
+        }
+      ],
+      "trang": 0,
+      "kichThuoc": 3,
+      "tongSoPhanTu": 8,
+      "tongSoTrang": 3
+    }
+  }
+}

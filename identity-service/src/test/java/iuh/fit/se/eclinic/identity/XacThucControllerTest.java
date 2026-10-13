@@ -30,6 +30,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.ResultMatcher;
 
+import iuh.fit.se.eclinic.common.enums.NgonNgu;
 import iuh.fit.se.eclinic.common.enums.TrangThaiTaiKhoan;
 import iuh.fit.se.eclinic.common.enums.VaiTro;
 import iuh.fit.se.eclinic.common.exception.LoiNghiepVu;
@@ -78,7 +79,7 @@ class XacThucControllerTest {
     @Test
     void dangKyKhongCanDangNhapTraVe201() throws Exception {
         when(xacThucService.dangKy(any(DangKyRequest.class))).thenReturn(new TaiKhoanResponse(7L, "Nguyễn Văn A",
-                "a@example.com", "0912345678", VaiTro.BENH_NHAN, TrangThaiTaiKhoan.CHO_XAC_NHAN));
+                "a@example.com", "0912345678", VaiTro.BENH_NHAN, TrangThaiTaiKhoan.CHO_XAC_NHAN, NgonNgu.VI));
 
         guiDangKy("a@example.com", "123456", "0912345678")
                 .andExpect(status().isCreated())
@@ -140,7 +141,7 @@ class XacThucControllerTest {
     @Test
     void dangNhapKhongCanTokenVaTruyenUserAgent() throws Exception {
         TaiKhoanResponse taiKhoan = new TaiKhoanResponse(1L, "Quản trị viên", "admin@eclinic.local", null,
-                VaiTro.QUAN_TRI_VIEN, TrangThaiTaiKhoan.DA_KICH_HOAT);
+                VaiTro.QUAN_TRI_VIEN, TrangThaiTaiKhoan.DA_KICH_HOAT, NgonNgu.VI);
         when(dangNhapService.dangNhap(any(DangNhapRequest.class), eq("UA-test")))
                 .thenReturn(new DangNhapResponse("access", "refresh", "Bearer", 1800, taiKhoan));
 
@@ -317,7 +318,7 @@ class XacThucControllerTest {
     @Test
     void dangNhapGoogleKhongCanTokenVaTruyenUserAgent() throws Exception {
         TaiKhoanResponse taiKhoan = new TaiKhoanResponse(9L, "Người Google", "g@gmail.com", null,
-                VaiTro.BENH_NHAN, TrangThaiTaiKhoan.DA_KICH_HOAT);
+                VaiTro.BENH_NHAN, TrangThaiTaiKhoan.DA_KICH_HOAT, NgonNgu.VI);
         when(dangNhapGoogleService.dangNhap("id-token", "UA-test"))
                 .thenReturn(new DangNhapResponse("access", "refresh", "Bearer", 1800, taiKhoan));
 
@@ -371,7 +372,7 @@ class XacThucControllerTest {
 
     private static DangNhapResponse phienMoi(String refreshToken) {
         return new DangNhapResponse("access", refreshToken, "Bearer", 1800, new TaiKhoanResponse(1L, "A",
-                "a@example.com", null, VaiTro.BENH_NHAN, TrangThaiTaiKhoan.DA_KICH_HOAT));
+                "a@example.com", null, VaiTro.BENH_NHAN, TrangThaiTaiKhoan.DA_KICH_HOAT, NgonNgu.VI));
     }
 
     private ResultActions guiXacNhanDoiEmail(String token) throws Exception {

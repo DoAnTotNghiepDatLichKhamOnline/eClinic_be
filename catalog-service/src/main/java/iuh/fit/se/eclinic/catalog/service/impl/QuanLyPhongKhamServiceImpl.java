@@ -20,6 +20,7 @@ import iuh.fit.se.eclinic.catalog.service.QuanLyPhongKhamService;
 import iuh.fit.se.eclinic.common.dto.TrangDuLieu;
 import iuh.fit.se.eclinic.common.entity.catalog.ChuyenKhoa;
 import iuh.fit.se.eclinic.common.entity.catalog.PhongKham;
+import iuh.fit.se.eclinic.common.enums.NgonNgu;
 import iuh.fit.se.eclinic.common.enums.TrangThaiPhongKham;
 import iuh.fit.se.eclinic.common.exception.LoiKhongTimThay;
 import iuh.fit.se.eclinic.common.exception.LoiNghiepVu;
@@ -57,12 +58,18 @@ public class QuanLyPhongKhamServiceImpl implements QuanLyPhongKhamService {
     public PhongKhamQuanTriResponse them(PhongKhamRequest request) {
         String tenPhong = request.tenPhong().trim();
         ChuyenKhoa chuyenKhoa = timChuyenKhoa(request.idChuyenKhoa());
+        String tenPhongEn = rongThanhNull(request.tenPhongEn());
         if (phongKhamRepository.existsByTenPhong(tenPhong)) {
             throw new LoiNghiepVu(MaLoi.TEN_PHONG_DA_TON_TAI);
         }
+        if (tenPhongEn != null && phongKhamRepository.existsByTenPhongEn(tenPhongEn)) {
+            throw new LoiNghiepVu(MaLoi.TEN_PHONG_DA_TON_TAI, "loi.TEN_PHONG_DA_TON_TAI.tiengAnh");
+        }
         PhongKham phong = new PhongKham();
         phong.setTenPhong(tenPhong);
+        phong.setTenPhongEn(tenPhongEn);
         phong.setTang(rongThanhNull(request.tang()));
+        phong.setTangEn(rongThanhNull(request.tangEn()));
         phong.setChuyenKhoa(chuyenKhoa);
         phong.setTrangThai(TrangThaiPhongKham.HOAT_DONG);
         phongKhamRepository.saveAndFlush(phong);
@@ -78,19 +85,24 @@ public class QuanLyPhongKhamServiceImpl implements QuanLyPhongKhamService {
         long soCaSapToi = demCaSapToi(id);
         String tenPhong = request.tenPhong().trim();
         // Kiểm tra trước khi sửa entity đang được quản lý (xem ChuyenKhoaServiceImpl.capNhat)
+        String tenPhongEn = rongThanhNull(request.tenPhongEn());
         if (phongKhamRepository.existsByTenPhongAndIdNot(tenPhong, id)) {
             throw new LoiNghiepVu(MaLoi.TEN_PHONG_DA_TON_TAI);
+        }
+        if (tenPhongEn != null && phongKhamRepository.existsByTenPhongEnAndIdNot(tenPhongEn, id)) {
+            throw new LoiNghiepVu(MaLoi.TEN_PHONG_DA_TON_TAI, "loi.TEN_PHONG_DA_TON_TAI.tiengAnh");
         }
         if (!phong.getChuyenKhoa().getId().equals(request.idChuyenKhoa())) {
             ChuyenKhoa chuyenKhoaMoi = timChuyenKhoa(request.idChuyenKhoa());
             if (soCaSapToi > 0) {
-                throw new LoiNghiepVu(MaLoi.PHONG_CON_CA_LAM_VIEC, "Phòng khám còn " + soCaSapToi
-                        + " ca làm việc sắp tới nên không đổi chuyên khoa được; hãy chuyển các ca đó sang phòng khác trước");
+                throw new LoiNghiepVu(MaLoi.PHONG_CON_CA_LAM_VIEC, "loi.PHONG_CON_CA_LAM_VIEC.doiChuyenKhoa", String.valueOf(soCaSapToi));
             }
             phong.setChuyenKhoa(chuyenKhoaMoi);
         }
         phong.setTenPhong(tenPhong);
+        phong.setTenPhongEn(tenPhongEn);
         phong.setTang(rongThanhNull(request.tang()));
+        phong.setTangEn(rongThanhNull(request.tangEn()));
         phongKhamRepository.saveAndFlush(phong);
         log.info("Sửa phòng khám id={}", id);
         return toResponse(phong, soCaSapToi);
@@ -105,8 +117,7 @@ public class QuanLyPhongKhamServiceImpl implements QuanLyPhongKhamService {
             return toResponse(phong, soCaSapToi);
         }
         if (soCaSapToi > 0) {
-            throw new LoiNghiepVu(MaLoi.PHONG_CON_CA_LAM_VIEC, "Phòng khám còn " + soCaSapToi
-                    + " ca làm việc sắp tới; hãy chuyển các ca đó sang phòng khác trước khi cho phòng ngừng hoạt động");
+            throw new LoiNghiepVu(MaLoi.PHONG_CON_CA_LAM_VIEC, "loi.PHONG_CON_CA_LAM_VIEC.ngungHoatDong", String.valueOf(soCaSapToi));
         }
         phong.setTrangThai(TrangThaiPhongKham.NGUNG_HOAT_DONG);
         log.info("Phòng khám id={} ngừng hoạt động", id);
@@ -145,9 +156,9 @@ public class QuanLyPhongKhamServiceImpl implements QuanLyPhongKhamService {
     }
 
     private static PhongKhamQuanTriResponse toResponse(PhongKham phong, long soCaSapToi) {
-        return new PhongKhamQuanTriResponse(phong.getId(), phong.getTenPhong(), phong.getTang(),
-                phong.getChuyenKhoa().getId(), phong.getChuyenKhoa().getTenChuyenKhoa(), phong.getTrangThai(),
-                soCaSapToi);
+        return new PhongKhamQuanTriResponse(phong.getId(), phong.getTenPhong(), phong.getTenPhongEn(), phong.getTang(),
+                phong.getTangEn(), phong.getChuyenKhoa().getId(), phong.getChuyenKhoa().ten(NgonNgu.hienTai()),
+                phong.getTrangThai(), soCaSapToi);
     }
 
     private static String rongThanhNull(String chuoi) {

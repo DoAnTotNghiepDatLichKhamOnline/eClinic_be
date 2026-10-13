@@ -1,0 +1,15 @@
+{
+  "method": "GET",
+  "path": "/api/booking/khung-gio?ngay=2026-10-14",
+  "acceptLanguage": null,
+  "requestBody": null,
+  "status": 400,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "thanhCong": false,
+    "maLoi": "DU_LIEU_KHONG_HOP_LE",
+    "thongDiep": "Cần truyền idBacSi hoặc idChuyenKhoa"
+  }
+}

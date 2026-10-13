@@ -54,6 +54,15 @@ public class ThongBao extends CreatableEntity {
     @Column(name = "ma_nguon", length = 64)
     private String maNguon;
 
+    /** Khoá mẫu câu trong thong-diep/; có thì câu chữ được soạn theo ngôn ngữ người đọc lúc đọc (V18). Null = thông báo cũ. */
+    @Column(name = "khoa_mau", length = 80)
+    private String khoaMau;
+
+    /** Tham số của mẫu, mảng JSON (xem {@code ThamSoThongBao}). */
+    @Column(name = "tham_so", columnDefinition = "TEXT")
+    private String thamSo;
+
+    /** Câu tiếng Việt: chữ của thông báo cũ, và bản dự phòng của thông báo có {@code khoaMau}. */
     @Column(name = "noi_dung", nullable = false, columnDefinition = "TEXT")
     private String noiDung;
 

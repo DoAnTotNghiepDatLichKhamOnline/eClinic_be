@@ -67,7 +67,7 @@ public class QuanTriLichLamViecController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public PhanHoiApi<KetQuaTaoCaResponse> tao(@Valid @RequestBody TaoCaRequest request) {
-        return PhanHoiApi.ok(quanLyCaService.tao(NguoiDungHienTai.layIdTaiKhoan(), request), "Đã xếp ca làm việc");
+        return PhanHoiApi.ok(quanLyCaService.tao(NguoiDungHienTai.layIdTaiKhoan(), request), "thanhCong.xepCa");
     }
 
     @Operation(summary = "Sửa phòng khám, giờ, sức chứa của 1 ca chưa bắt đầu. Phòng đổi được bất cứ lúc nào; giờ / sức chứa"
@@ -75,7 +75,7 @@ public class QuanTriLichLamViecController {
     @PutMapping("/{id}")
     public PhanHoiApi<CaLamViecResponse> sua(@PathVariable Long id, @Valid @RequestBody SuaCaRequest request) {
         return PhanHoiApi.ok(quanLyCaService.sua(NguoiDungHienTai.layIdTaiKhoan(), id, request),
-                "Đã sửa ca làm việc");
+                "thanhCong.suaCa");
     }
 
     @Operation(summary = "Hủy 1 ca chưa bắt đầu (bắt buộc có lý do). Lịch hẹn còn hiệu lực của ca được giữ và đánh dấu cần"
@@ -83,7 +83,7 @@ public class QuanTriLichLamViecController {
     @PostMapping("/{id}/huy")
     public PhanHoiApi<KetQuaHuyCaResponse> huy(@PathVariable Long id, @Valid @RequestBody HuyCaRequest request) {
         return PhanHoiApi.ok(quanLyCaService.huy(NguoiDungHienTai.layIdTaiKhoan(), id, request.lyDo()),
-                "Đã hủy ca làm việc");
+                "thanhCong.huyCa");
     }
 
     @Operation(summary = "Lịch hẹn còn hiệu lực đang chờ bệnh nhân đổi lịch vì ca khám bị hủy, giờ khám cũ sớm nhất trước")

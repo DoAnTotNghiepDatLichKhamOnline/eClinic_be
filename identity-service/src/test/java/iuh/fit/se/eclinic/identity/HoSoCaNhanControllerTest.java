@@ -26,6 +26,7 @@ import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 import iuh.fit.se.eclinic.common.enums.GioiTinh;
 import iuh.fit.se.eclinic.common.enums.TrangThaiLienKet;
+import iuh.fit.se.eclinic.common.enums.NgonNgu;
 import iuh.fit.se.eclinic.common.enums.TrangThaiTaiKhoan;
 import iuh.fit.se.eclinic.common.enums.VaiTro;
 import iuh.fit.se.eclinic.common.security.BaoMatConfig;
@@ -55,7 +56,7 @@ class HoSoCaNhanControllerTest {
     @MockitoBean MatKhauService matKhauService;
 
     private final HoSoCaNhanResponse hoSo = new HoSoCaNhanResponse(12L, "Nguyễn Thị Mai", "mai@example.com",
-            "0912345678", null, VaiTro.BENH_NHAN, TrangThaiTaiKhoan.DA_KICH_HOAT, true, false,
+            "0912345678", null, VaiTro.BENH_NHAN, TrangThaiTaiKhoan.DA_KICH_HOAT, NgonNgu.VI, true, false,
             LocalDateTime.of(2026, 10, 1, 8, 0), null,
             new HoSoBenhNhanResponse(3L, TrangThaiLienKet.DA_LIEN_KET, "079000000001", "Nguyễn Thị Mai",
                     LocalDate.of(1995, 3, 12), GioiTinh.NU, "0912345678", "12 Nguyễn Văn Bảo", null, null));

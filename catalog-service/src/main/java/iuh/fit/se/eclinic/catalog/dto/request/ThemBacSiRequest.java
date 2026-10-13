@@ -14,31 +14,31 @@ import jakarta.validation.constraints.Size;
  */
 public record ThemBacSiRequest(
 
-        @NotBlank(message = "Họ tên không được để trống")
-        @Size(max = 150, message = "Họ tên tối đa 150 ký tự")
+        @NotBlank(message = "{kiemTra.hoTen.batBuoc}")
+        @Size(max = 150, message = "{kiemTra.hoTen.toiDa}")
         String hoTen,
 
-        @NotBlank(message = "Email không được để trống")
-        @Email(message = "Email không đúng định dạng")
-        @Size(max = 255, message = "Email tối đa 255 ký tự")
+        @NotBlank(message = "{kiemTra.email.batBuoc}")
+        @Email(message = "{kiemTra.email.dinhDang}")
+        @Size(max = 255, message = "{kiemTra.email.toiDa}")
         String email,
 
-        @Pattern(regexp = "^(0\\d{9})?$", message = "Số điện thoại gồm 10 chữ số, bắt đầu bằng 0")
+        @Pattern(regexp = "^(0\\d{9})?$", message = "{kiemTra.soDienThoai.dinhDang}")
         String soDienThoai,
 
-        @NotNull(message = "Phải chọn chuyên khoa")
+        @NotNull(message = "{kiemTra.chuyenKhoa.batBuoc}")
         Long idChuyenKhoa,
 
-        @Size(max = 50, message = "Số giấy phép tối đa 50 ký tự")
+        @Size(max = 50, message = "{kiemTra.soGiayPhep.toiDa}")
         String soGiayPhep,
 
-        @Size(max = 100, message = "Học vị tối đa 100 ký tự")
+        @Size(max = 100, message = "{kiemTra.hocVi.toiDa}")
         String hocVi,
 
-        @Size(max = 150, message = "Chức vụ tối đa 150 ký tự")
+        @Size(max = 150, message = "{kiemTra.chucVu.toiDa}")
         String chucVu,
 
-        @Min(value = 0, message = "Số năm kinh nghiệm không được âm")
-        @Max(value = 80, message = "Số năm kinh nghiệm tối đa 80")
+        @Min(value = 0, message = "{kiemTra.soNamKinhNghiem.khongAm}")
+        @Max(value = 80, message = "{kiemTra.soNamKinhNghiem.toiDa}")
         Integer soNamKinhNghiem) {
 }

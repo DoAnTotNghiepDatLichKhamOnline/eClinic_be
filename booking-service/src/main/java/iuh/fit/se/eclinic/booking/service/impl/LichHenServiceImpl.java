@@ -125,7 +125,7 @@ public class LichHenServiceImpl implements LichHenService {
                         hoSoCuaToi == null ? null : hoSoCuaToi.getCccd(), maPhieuKham)
                 // Cột mã không phân biệt hoa thường: so lại chính xác
                 .filter(l -> l.getMaTokenPhieuKham().equals(maPhieuKham))
-                .orElseThrow(() -> new LoiNghiepVu(MaLoi.KHONG_TIM_THAY, "Không tìm thấy lịch hẹn"));
+                .orElseThrow(() -> new LoiNghiepVu(MaLoi.KHONG_TIM_THAY, "loi.KHONG_TIM_THAY.lichHen"));
         LichHenCuaToiResponse dong = lichHenMapper.toLichHenCuaToi(lichHen, idHoSoCuaToi, idTaiKhoan);
         // Kết quả khám chỉ cho người khám là chủ tài khoản, hoặc lịch do chính tài khoản này đặt
         boolean duocXemKetQua = lichHen.getTrangThai() == TrangThaiLichHen.DA_HOAN_THANH

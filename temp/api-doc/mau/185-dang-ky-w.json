@@ -1,0 +1,29 @@
+{
+  "method": "POST",
+  "path": "/api/auth/register",
+  "acceptLanguage": null,
+  "requestBody": {
+    "hoTen": "Võ Minh Quân",
+    "email": "w.1791894123@example.com",
+    "matKhau": "MatKhau@123",
+    "soDienThoai": "0933000003",
+    "cccd": "079188000003"
+  },
+  "status": 201,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "thanhCong": true,
+    "thongDiep": "Đăng ký thành công, vui lòng kiểm tra email để kích hoạt tài khoản",
+    "duLieu": {
+      "id": 22,
+      "hoTen": "Võ Minh Quân",
+      "email": "w.1791894123@example.com",
+      "soDienThoai": "0933000003",
+      "vaiTro": "BENH_NHAN",
+      "trangThai": "CHO_XAC_NHAN",
+      "ngonNgu": "VI"
+    }
+  }
+}

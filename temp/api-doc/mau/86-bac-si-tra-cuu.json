@@ -1,0 +1,49 @@
+{
+  "method": "GET",
+  "path": "/api/booking/bac-si/toi/lich-hen/tra-cuu?ma=ECL-20261014-1624",
+  "acceptLanguage": null,
+  "requestBody": null,
+  "status": 200,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "thanhCong": true,
+    "duLieu": {
+      "id": 5,
+      "maTraCuu": "ECL-20261014-1624",
+      "idLichLamViec": 17,
+      "trangThai": "CHO_XAC_NHAN",
+      "soThuTu": 1,
+      "gioKhamDuKien": "2026-10-14T08:00:00",
+      "gioBatDauKhung": "2026-10-14T08:00:00",
+      "gioKetThucKhung": "2026-10-14T09:00:00",
+      "bacSi": null,
+      "phongKham": {
+        "id": 3,
+        "tenPhong": "Phòng 103",
+        "tang": "Tầng 1"
+      },
+      "lyDoKham": "Khám định kỳ",
+      "ngayDat": "2026-10-13T19:21:56.036072",
+      "idHoSoBenhNhan": 1,
+      "benhNhan": {
+        "hoTen": "Nguyễn Thị Mai",
+        "ngaySinh": "1995-03-12",
+        "tuoi": 31,
+        "gioiTinh": "NU",
+        "soDienThoai": "0902000001"
+      },
+      "nguoiGiamHo": null,
+      "doiChieu": {
+        "canDoiChieu": false,
+        "hoTenDaNhap": "Nguyễn Thị Mai",
+        "ngaySinhDaNhap": "1995-03-12",
+        "gioiTinhDaNhap": "NAM",
+        "hoTenGiamHoDaNhap": null
+      },
+      "lyDoHuy": null,
+      "canDoiLich": false
+    }
+  }
+}

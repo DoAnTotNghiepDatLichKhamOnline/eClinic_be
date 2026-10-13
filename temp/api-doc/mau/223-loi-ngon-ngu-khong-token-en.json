@@ -1,0 +1,17 @@
+{
+  "method": "PUT",
+  "path": "/api/users/me/language",
+  "acceptLanguage": "en",
+  "requestBody": {
+    "ngonNgu": "EN"
+  },
+  "status": 401,
+  "headers": {
+    "Content-Type": "application/json;charset=UTF-8"
+  },
+  "body": {
+    "thanhCong": false,
+    "maLoi": "CHUA_DANG_NHAP",
+    "thongDiep": "You are not signed in or your session has expired"
+  }
+}

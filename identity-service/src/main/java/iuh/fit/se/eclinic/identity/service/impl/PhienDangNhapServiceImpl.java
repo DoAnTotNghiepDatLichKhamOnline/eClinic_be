@@ -42,11 +42,11 @@ public class PhienDangNhapServiceImpl implements PhienDangNhapService {
         taiKhoanService.layDangHoatDong(idTaiKhoan);
         if (maPhien.equals(maPhienHienTai)) {
             throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE,
-                    "Đây là thiết bị bạn đang dùng, hãy dùng chức năng Đăng xuất");
+                    "loi.DU_LIEU_KHONG_HOP_LE.thietBiHienTai");
         }
         // Lọc theo tài khoản: mã phiên của người khác cũng chỉ là "không tìm thấy"
         if (!refreshTokenService.thuHoiPhien(idTaiKhoan, maPhien)) {
-            throw new LoiNghiepVu(MaLoi.KHONG_TIM_THAY, "Phiên đăng nhập không tồn tại hoặc đã đăng xuất");
+            throw new LoiNghiepVu(MaLoi.KHONG_TIM_THAY, "loi.KHONG_TIM_THAY.phienDangNhap");
         }
         log.info("Đăng xuất từ xa phiên {} của tài khoản id={}", maPhien, idTaiKhoan);
     }

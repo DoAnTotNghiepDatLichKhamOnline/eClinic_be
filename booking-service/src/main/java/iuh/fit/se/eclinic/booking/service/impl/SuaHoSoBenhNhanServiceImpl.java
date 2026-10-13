@@ -41,7 +41,7 @@ public class SuaHoSoBenhNhanServiceImpl implements SuaHoSoBenhNhanService {
         String cccd = rongThanhNull(request.cccd());
         if (cccd != null && !cccd.equals(hoSo.getCccd())) {
             if (hoSo.getCccd() != null) {
-                throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE, "Không thể đổi số CCCD của hồ sơ bệnh nhân");
+                throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE, "loi.DU_LIEU_KHONG_HOP_LE.doiCccd");
             }
             hoSo.setCccd(cccd);
         }

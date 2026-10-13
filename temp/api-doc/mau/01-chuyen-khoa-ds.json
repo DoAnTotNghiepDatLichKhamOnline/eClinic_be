@@ -1,0 +1,36 @@
+{
+  "method": "GET",
+  "path": "/api/catalog/chuyen-khoa?trang=0&kichThuoc=3",
+  "acceptLanguage": null,
+  "requestBody": null,
+  "status": 200,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "thanhCong": true,
+    "duLieu": {
+      "noiDung": [
+        {
+          "id": 3,
+          "tenChuyenKhoa": "Da liễu",
+          "moTa": "Khám và điều trị các bệnh về da, tóc, móng: mụn trứng cá, viêm da, dị ứng, nấm da."
+        },
+        {
+          "id": 7,
+          "tenChuyenKhoa": "Mắt",
+          "moTa": "Khám và điều trị tật khúc xạ, viêm kết mạc, đục thuỷ tinh thể, đo thị lực."
+        },
+        {
+          "id": 2,
+          "tenChuyenKhoa": "Nhi khoa",
+          "moTa": "Khám, tư vấn dinh dưỡng và điều trị bệnh cho trẻ em từ sơ sinh đến 15 tuổi."
+        }
+      ],
+      "trang": 0,
+      "kichThuoc": 3,
+      "tongSoPhanTu": 8,
+      "tongSoTrang": 3
+    }
+  }
+}

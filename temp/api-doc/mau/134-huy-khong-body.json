@@ -1,0 +1,56 @@
+{
+  "method": "POST",
+  "path": "/api/booking/lich-hen/cua-toi/_xmRCfByzJIzEPnG1qz_pc8JGCg7zgbyJ4x0Jt5an-c/huy",
+  "acceptLanguage": null,
+  "requestBody": null,
+  "status": 200,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "thanhCong": true,
+    "thongDiep": "Đã hủy lịch hẹn",
+    "duLieu": {
+      "maPhieuKham": "_xmRCfByzJIzEPnG1qz_pc8JGCg7zgbyJ4x0Jt5an-c",
+      "maTraCuu": "ECL-20261014-0248",
+      "linkPhieuKham": "http://localhost:5173/phieu-kham/_xmRCfByzJIzEPnG1qz_pc8JGCg7zgbyJ4x0Jt5an-c",
+      "trangThai": "DA_HUY",
+      "soThuTu": 13,
+      "ngay": "2026-10-14",
+      "gioKhamDuKien": "2026-10-14T10:00:00",
+      "gioBatDauKhung": "2026-10-14T10:00:00",
+      "gioKetThucKhung": "2026-10-14T11:00:00",
+      "bacSi": {
+        "id": 5,
+        "hoTen": "Hoàng Minh Đức",
+        "hocVi": "ThS.BS",
+        "anhDaiDien": "https://placehold.co/400x400/0f766e/ffffff/png?text=BS+5"
+      },
+      "tenChuyenKhoa": "Da liễu",
+      "phongKham": {
+        "id": 3,
+        "tenPhong": "Phòng 103",
+        "tang": "Tầng 1"
+      },
+      "lyDoKham": "Đau bụng",
+      "ngayDat": "2026-10-13T19:21:56.17704",
+      "benhNhan": {
+        "hoTen": "Nguyễn Gia Huy",
+        "namSinh": 2015,
+        "gioiTinh": "NAM",
+        "cccd": null,
+        "soDienThoai": null
+      },
+      "nguoiGiamHo": {
+        "hoTen": "Nguyễn Thị Mai",
+        "quanHe": "CHA",
+        "soDienThoai": "090****001"
+      },
+      "canNguoiGiamHoDiCung": true,
+      "lyDoHuy": null,
+      "duocHuyDoi": false,
+      "hanHuyDoi": "2026-10-14T08:00:00",
+      "canDoiLich": false
+    }
+  }
+}

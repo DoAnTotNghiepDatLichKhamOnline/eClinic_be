@@ -1,0 +1,26 @@
+{
+  "method": "GET",
+  "path": "/api/catalog/chuyen-khoa?tuKhoa=derma",
+  "acceptLanguage": null,
+  "requestBody": null,
+  "status": 200,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "thanhCong": true,
+    "duLieu": {
+      "noiDung": [
+        {
+          "id": 3,
+          "tenChuyenKhoa": "Da liễu",
+          "moTa": "Khám và điều trị các bệnh về da, tóc, móng: mụn trứng cá, viêm da, dị ứng, nấm da."
+        }
+      ],
+      "trang": 0,
+      "kichThuoc": 20,
+      "tongSoPhanTu": 1,
+      "tongSoTrang": 1
+    }
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "method": "GET",
+  "path": "/api/catalog/chuyen-khoa?tuKhoa=tim",
+  "acceptLanguage": null,
+  "requestBody": null,
+  "status": 200,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "thanhCong": true,
+    "duLieu": {
+      "noiDung": [
+        {
+          "id": 5,
+          "tenChuyenKhoa": "Tim mạch",
+          "moTa": "Khám và theo dõi tăng huyết áp, rối loạn nhịp tim, bệnh mạch vành, suy tim."
+        }
+      ],
+      "trang": 0,
+      "kichThuoc": 20,
+      "tongSoPhanTu": 1,
+      "tongSoTrang": 1
+    }
+  }
+}

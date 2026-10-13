@@ -1,0 +1,20 @@
+{
+  "method": "GET",
+  "path": "/api/chatbot/phien",
+  "acceptLanguage": null,
+  "requestBody": null,
+  "status": 200,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "thanhCong": true,
+    "duLieu": [
+      {
+        "idPhien": 3,
+        "thoiGianBatDau": "2026-10-13T19:22:06.512005",
+        "daDongYDuLieu": true
+      }
+    ]
+  }
+}

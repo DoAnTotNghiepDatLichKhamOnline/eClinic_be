@@ -1,0 +1,16 @@
+{
+  "method": "GET",
+  "path": "/api/notification/thong-bao/so-chua-doc",
+  "acceptLanguage": null,
+  "requestBody": null,
+  "status": 200,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "thanhCong": true,
+    "duLieu": {
+      "soChuaDoc": 1
+    }
+  }
+}

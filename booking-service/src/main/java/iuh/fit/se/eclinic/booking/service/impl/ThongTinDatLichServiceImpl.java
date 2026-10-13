@@ -16,6 +16,7 @@ import iuh.fit.se.eclinic.booking.service.ThongTinDatLichService;
 import iuh.fit.se.eclinic.common.entity.booking.HoSoBenhNhan;
 import iuh.fit.se.eclinic.common.entity.catalog.BacSi;
 import iuh.fit.se.eclinic.common.entity.identity.TaiKhoan;
+import iuh.fit.se.eclinic.common.enums.NgonNgu;
 import iuh.fit.se.eclinic.common.enums.TrangThaiLienKet;
 import lombok.RequiredArgsConstructor;
 
@@ -44,8 +45,8 @@ public class ThongTinDatLichServiceImpl implements ThongTinDatLichService {
                 .findFirst()
                 .map(lichHen -> {
                     BacSi bacSi = lichHen.getBacSi();
-                    return new LanDatGanNhat(bacSi.getChuyenKhoa().getId(), bacSi.getChuyenKhoa().getTenChuyenKhoa(),
-                            bacSi.getId(), bacSi.getTaiKhoan().getHoTen());
+                    return new LanDatGanNhat(bacSi.getChuyenKhoa().getId(),
+                            bacSi.getChuyenKhoa().ten(NgonNgu.hienTai()), bacSi.getId(), bacSi.getTaiKhoan().getHoTen());
                 })
                 .orElse(null);
         return new ThongTinDatLichResponse(banThan, taiKhoan.getEmail(),

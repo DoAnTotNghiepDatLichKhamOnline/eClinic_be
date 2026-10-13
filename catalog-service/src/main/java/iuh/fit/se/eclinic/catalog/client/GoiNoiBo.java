@@ -1,5 +1,6 @@
 package iuh.fit.se.eclinic.catalog.client;
 
+import java.util.List;
 import java.util.function.Supplier;
 
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
@@ -8,6 +9,7 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClientResponseException;
 
 import iuh.fit.se.eclinic.catalog.config.DichVuNoiBoProperties;
+import iuh.fit.se.eclinic.common.enums.NgonNgu;
 import iuh.fit.se.eclinic.common.exception.LoiNghiepVu;
 import iuh.fit.se.eclinic.common.exception.MaLoi;
 import iuh.fit.se.eclinic.common.security.KhoaNoiBo;
@@ -40,6 +42,11 @@ final class GoiNoiBo {
                 .requestFactory(factory)
                 .baseUrl(url)
                 .defaultHeader(KhoaNoiBo.TEN_HEADER, khoaNoiBo.giaTri())
+                // Thông điệp lỗi của service kia được chuyển nguyên cho người dùng: phải cùng ngôn ngữ với request
+                .requestInterceptor((request, body, execution) -> {
+                    request.getHeaders().setAcceptLanguageAsLocales(List.of(NgonNgu.hienTai().locale()));
+                    return execution.execute(request, body);
+                })
                 .build();
     }
 

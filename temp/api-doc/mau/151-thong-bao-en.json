@@ -1,0 +1,41 @@
+{
+  "method": "GET",
+  "path": "/api/notification/thong-bao",
+  "acceptLanguage": "en",
+  "requestBody": null,
+  "status": 200,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "thanhCong": true,
+    "duLieu": {
+      "noiDung": [
+        {
+          "id": 12,
+          "loai": "LICH_HEN_BI_TU_CHOI",
+          "noiDung": "Dr. Hoàng Minh Đức declined the appointment of Nguyễn Thị Mai at 10:10 on 14/10/2026 (code ECL-20261014-3585). Reason: Bác sĩ có lịch hội chẩn đột xuất, mời bạn đặt khung giờ khác",
+          "daDoc": false,
+          "ngayTao": "2026-10-13T19:22:00.180094",
+          "idLichHen": 9,
+          "maPhieuKham": "QJwx_U8GOyixSKJpkO1Q8DbLQADtL1f67SdONql1U1Y",
+          "idYeuCau": null
+        },
+        {
+          "id": 11,
+          "loai": "LICH_HEN_DA_XAC_NHAN",
+          "noiDung": "Dr. Hoàng Minh Đức confirmed the appointment of Nguyễn Thị Mai at 08:00 on 14/10/2026 (code ECL-20261014-1624).",
+          "daDoc": false,
+          "ngayTao": "2026-10-13T19:22:00.175472",
+          "idLichHen": 5,
+          "maPhieuKham": "mk8Do7MJb6iEY9DBDPsLpRaLVgHCFgmKuvpoqZNe174",
+          "idYeuCau": null
+        }
+      ],
+      "trang": 0,
+      "kichThuoc": 20,
+      "tongSoPhanTu": 2,
+      "tongSoTrang": 1
+    }
+  }
+}

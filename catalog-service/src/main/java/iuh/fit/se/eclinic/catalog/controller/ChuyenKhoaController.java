@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import iuh.fit.se.eclinic.catalog.dto.request.ChuyenKhoaRequest;
+import iuh.fit.se.eclinic.catalog.dto.response.ChuyenKhoaQuanTriResponse;
 import iuh.fit.se.eclinic.catalog.dto.response.ChuyenKhoaResponse;
 import iuh.fit.se.eclinic.catalog.service.ChuyenKhoaService;
 import iuh.fit.se.eclinic.common.dto.PhanHoiApi;
@@ -38,7 +39,7 @@ public class ChuyenKhoaController {
 
     private final ChuyenKhoaService chuyenKhoaService;
 
-    @Operation(summary = "Tìm kiếm chuyên khoa theo tên (phân trang, sắp xếp theo tên)")
+    @Operation(summary = "Tìm kiếm chuyên khoa theo tên, tiếng Việt hoặc tiếng Anh (phân trang, sắp xếp theo tên); tên và mô tả theo ngôn ngữ của request")
     @GetMapping
     public PhanHoiApi<TrangDuLieu<ChuyenKhoaResponse>> timKiem(
             @RequestParam(required = false) String tuKhoa,
@@ -57,15 +58,15 @@ public class ChuyenKhoaController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasRole('QUAN_TRI_VIEN')")
-    public PhanHoiApi<ChuyenKhoaResponse> tao(@Valid @RequestBody ChuyenKhoaRequest request) {
-        return PhanHoiApi.ok(chuyenKhoaService.tao(request), "Đã thêm chuyên khoa");
+    public PhanHoiApi<ChuyenKhoaQuanTriResponse> tao(@Valid @RequestBody ChuyenKhoaRequest request) {
+        return PhanHoiApi.ok(chuyenKhoaService.tao(request), "thanhCong.themChuyenKhoa");
     }
 
     @Operation(summary = "Sửa chuyên khoa (quản trị viên)")
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('QUAN_TRI_VIEN')")
-    public PhanHoiApi<ChuyenKhoaResponse> capNhat(@PathVariable Long id, @Valid @RequestBody ChuyenKhoaRequest request) {
-        return PhanHoiApi.ok(chuyenKhoaService.capNhat(id, request), "Đã cập nhật chuyên khoa");
+    public PhanHoiApi<ChuyenKhoaQuanTriResponse> capNhat(@PathVariable Long id, @Valid @RequestBody ChuyenKhoaRequest request) {
+        return PhanHoiApi.ok(chuyenKhoaService.capNhat(id, request), "thanhCong.capNhatChuyenKhoa");
     }
 
     @Operation(summary = "Xoá chuyên khoa (quản trị viên) — chỉ khi không còn phòng khám / bác sĩ")
@@ -73,7 +74,7 @@ public class ChuyenKhoaController {
     @PreAuthorize("hasRole('QUAN_TRI_VIEN')")
     public PhanHoiApi<Void> xoa(@PathVariable Long id) {
         chuyenKhoaService.xoa(id);
-        return PhanHoiApi.ok(null, "Đã xoá chuyên khoa");
+        return PhanHoiApi.ok(null, "thanhCong.xoaChuyenKhoa");
     }
 
 }

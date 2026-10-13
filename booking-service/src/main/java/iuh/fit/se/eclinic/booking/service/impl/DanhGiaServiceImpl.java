@@ -80,7 +80,7 @@ public class DanhGiaServiceImpl implements DanhGiaService {
         taiKhoanService.layBenhNhanDangHoatDong(idTaiKhoan);
         LichHen lichHen = lichHenDuocDanhGia(idTaiKhoan, maPhieuKham);
         DanhGia danhGia = danhGiaRepository.findByLichHenId(lichHen.getId())
-                .orElseThrow(() -> new LoiNghiepVu(MaLoi.KHONG_TIM_THAY, "Lịch hẹn này chưa có đánh giá"));
+                .orElseThrow(() -> new LoiNghiepVu(MaLoi.KHONG_TIM_THAY, "loi.KHONG_TIM_THAY.danhGia"));
         if (LocalDateTime.now().isAfter(danhGia.getNgayTao().plusDays(danhGiaProperties.soNgayDuocSua()))) {
             throw new LoiNghiepVu(MaLoi.HET_HAN_SUA_DANH_GIA);
         }
@@ -136,11 +136,11 @@ public class DanhGiaServiceImpl implements DanhGiaService {
                         hoSoCuaToi == null ? null : hoSoCuaToi.getCccd(), maPhieuKham)
                 // Cột mã không phân biệt hoa thường: so lại chính xác
                 .filter(l -> l.getMaTokenPhieuKham().equals(maPhieuKham))
-                .orElseThrow(() -> new LoiNghiepVu(MaLoi.KHONG_TIM_THAY, "Không tìm thấy lịch hẹn"));
+                .orElseThrow(() -> new LoiNghiepVu(MaLoi.KHONG_TIM_THAY, "loi.KHONG_TIM_THAY.lichHen"));
         boolean laNguoiKham = lichHen.getHoSoBenhNhan().getId().equals(idHoSoCuaToi);
         boolean laNguoiDat = lichHen.getTaiKhoanDat() != null && lichHen.getTaiKhoanDat().getId().equals(idTaiKhoan);
         if (!laNguoiKham && !laNguoiDat) {
-            throw new LoiNghiepVu(MaLoi.KHONG_CO_QUYEN, "Chỉ người khám hoặc người đã đặt lịch mới đánh giá được");
+            throw new LoiNghiepVu(MaLoi.KHONG_CO_QUYEN, "loi.KHONG_CO_QUYEN.danhGia");
         }
         return lichHen;
     }

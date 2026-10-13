@@ -1,0 +1,33 @@
+{
+  "method": "POST",
+  "path": "/api/chatbot/phien/1/tin-nhan",
+  "acceptLanguage": null,
+  "requestBody": {
+    "noiDung": "Tôi bị nổi mẩn đỏ ở tay, nên khám khoa nào?"
+  },
+  "status": 200,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "thanhCong": true,
+    "duLieu": {
+      "tinNhan": {
+        "id": 3,
+        "nguoiGui": "NGUOI_DUNG",
+        "loai": "CAU_HOI",
+        "noiDung": "Tôi bị nổi mẩn đỏ ở tay, nên khám khoa nào?",
+        "ngayTao": "2026-10-13T19:22:05.890633575",
+        "goiY": null
+      },
+      "traLoi": {
+        "id": 4,
+        "nguoiGui": "CHATBOT",
+        "loai": "TRA_LOI",
+        "noiDung": "TRA LOI GIA: Tôi bị nổi mẩn đỏ ở tay, nên khám khoa nào?",
+        "ngayTao": "2026-10-13T19:22:05.893338782",
+        "goiY": null
+      }
+    }
+  }
+}

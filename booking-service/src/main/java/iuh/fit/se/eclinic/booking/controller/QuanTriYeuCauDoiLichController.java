@@ -53,7 +53,7 @@ public class QuanTriYeuCauDoiLichController {
     public PhanHoiApi<YeuCauDoiLichResponse> duyet(@PathVariable Long id,
             @Valid @RequestBody(required = false) XuLyYeuCauRequest request) {
         return PhanHoiApi.ok(yeuCauDoiLichService.duyet(NguoiDungHienTai.layIdTaiKhoan(), id,
-                request == null ? null : request.ghiChu()), "Đã duyệt yêu cầu");
+                request == null ? null : request.ghiChu()), "thanhCong.duyetYeuCau");
     }
 
     @Operation(summary = "Từ chối, bắt buộc có ghi chú")
@@ -61,7 +61,7 @@ public class QuanTriYeuCauDoiLichController {
     public PhanHoiApi<YeuCauDoiLichResponse> tuChoi(@PathVariable Long id,
             @Valid @RequestBody(required = false) XuLyYeuCauRequest request) {
         return PhanHoiApi.ok(yeuCauDoiLichService.tuChoi(NguoiDungHienTai.layIdTaiKhoan(), id,
-                request == null ? null : request.ghiChu()), "Đã từ chối yêu cầu");
+                request == null ? null : request.ghiChu()), "thanhCong.tuChoiYeuCau");
     }
 
 }

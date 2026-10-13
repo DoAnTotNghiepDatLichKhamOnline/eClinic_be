@@ -12,6 +12,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import iuh.fit.se.eclinic.catalog.dto.request.ChuyenKhoaRequest;
+import iuh.fit.se.eclinic.catalog.dto.response.ChuyenKhoaQuanTriResponse;
 import iuh.fit.se.eclinic.catalog.dto.response.ChuyenKhoaResponse;
 import iuh.fit.se.eclinic.catalog.service.ChuyenKhoaService;
 import iuh.fit.se.eclinic.common.dto.TrangDuLieu;
@@ -47,9 +48,9 @@ class ChuyenKhoaServiceTest {
     @Test
     void trungTenKhongPhanBietHoaThuongVaDau() {
         String hauTo = hauTo();
-        chuyenKhoaService.tao(new ChuyenKhoaRequest("Nội tiết " + hauTo, null));
+        chuyenKhoaService.tao(new ChuyenKhoaRequest("Nội tiết " + hauTo, null, null, null, null, null));
 
-        assertThatThrownBy(() -> chuyenKhoaService.tao(new ChuyenKhoaRequest("  noi TIET " + hauTo + " ", null)))
+        assertThatThrownBy(() -> chuyenKhoaService.tao(new ChuyenKhoaRequest("  noi TIET " + hauTo + " ", null, null, null, null, null)))
                 .isInstanceOf(LoiNghiepVu.class)
                 .extracting(e -> ((LoiNghiepVu) e).getMaLoi())
                 .isEqualTo(MaLoi.TEN_CHUYEN_KHOA_DA_TON_TAI);
@@ -58,15 +59,15 @@ class ChuyenKhoaServiceTest {
     @Test
     void capNhatGiuTenCuDuocNhungTrungTenKhacThiLoi() {
         String hauTo = hauTo();
-        ChuyenKhoaResponse timMach = chuyenKhoaService.tao(new ChuyenKhoaRequest("Tim mạch " + hauTo, null));
-        chuyenKhoaService.tao(new ChuyenKhoaRequest("Thần kinh " + hauTo, null));
+        ChuyenKhoaQuanTriResponse timMach = chuyenKhoaService.tao(new ChuyenKhoaRequest("Tim mạch " + hauTo, null, null, null, null, null));
+        chuyenKhoaService.tao(new ChuyenKhoaRequest("Thần kinh " + hauTo, null, null, null, null, null));
 
-        ChuyenKhoaResponse daSua = chuyenKhoaService.capNhat(timMach.id(),
-                new ChuyenKhoaRequest("Tim mạch " + hauTo, "Bệnh tim, huyết áp"));
+        ChuyenKhoaQuanTriResponse daSua = chuyenKhoaService.capNhat(timMach.id(),
+                new ChuyenKhoaRequest("Tim mạch " + hauTo, null, "Bệnh tim, huyết áp", null, null, null));
         assertThat(daSua.moTa()).isEqualTo("Bệnh tim, huyết áp");
 
         assertThatThrownBy(() -> chuyenKhoaService.capNhat(timMach.id(),
-                new ChuyenKhoaRequest("THAN KINH " + hauTo, null)))
+                new ChuyenKhoaRequest("THAN KINH " + hauTo, null, null, null, null, null)))
                 .isInstanceOf(LoiNghiepVu.class)
                 .extracting(e -> ((LoiNghiepVu) e).getMaLoi())
                 .isEqualTo(MaLoi.TEN_CHUYEN_KHOA_DA_TON_TAI);
@@ -75,7 +76,7 @@ class ChuyenKhoaServiceTest {
     @Test
     void timKiemKhongDauVanThay() {
         String hauTo = hauTo();
-        chuyenKhoaService.tao(new ChuyenKhoaRequest("Nội tiết " + hauTo, null));
+        chuyenKhoaService.tao(new ChuyenKhoaRequest("Nội tiết " + hauTo, null, null, null, null, null));
 
         TrangDuLieu<ChuyenKhoaResponse> ketQua = chuyenKhoaService.timKiem("noi tiet " + hauTo, 0, 20);
 
@@ -85,7 +86,7 @@ class ChuyenKhoaServiceTest {
 
     @Test
     void xoaChuyenKhoaChuaDungThiXoaDuoc() {
-        ChuyenKhoaResponse daTao = chuyenKhoaService.tao(new ChuyenKhoaRequest("Da liễu " + hauTo(), null));
+        ChuyenKhoaQuanTriResponse daTao = chuyenKhoaService.tao(new ChuyenKhoaRequest("Da liễu " + hauTo(), null, null, null, null, null));
 
         chuyenKhoaService.xoa(daTao.id());
 
@@ -99,7 +100,9 @@ class ChuyenKhoaServiceTest {
 
         assertThatThrownBy(() -> chuyenKhoaService.xoa(idChuyenKhoa))
                 .isInstanceOf(LoiNghiepVu.class)
-                .hasMessageContaining("1 phòng khám và 1 bác sĩ")
+                // Lỗi mang khoá thông điệp + tham số (số phòng khám, số bác sĩ); câu chữ do XuLyLoiHandler soạn
+                .hasMessage("loi.CHUYEN_KHOA_DANG_DUOC_SU_DUNG.soLuong")
+                .satisfies(e -> assertThat(((LoiNghiepVu) e).getThamSo()).containsExactly("1", "1"))
                 .extracting(e -> ((LoiNghiepVu) e).getMaLoi())
                 .isEqualTo(MaLoi.CHUYEN_KHOA_DANG_DUOC_SU_DUNG);
     }

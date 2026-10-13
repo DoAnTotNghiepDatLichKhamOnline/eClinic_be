@@ -97,7 +97,7 @@ public class LichCuaBacSiController {
     @PostMapping("/lich-hen/{id}/xac-nhan")
     public PhanHoiApi<LichHenTrongCaResponse> xacNhan(@PathVariable Long id) {
         return PhanHoiApi.ok(yeuCauLichHenService.xacNhan(NguoiDungHienTai.layIdTaiKhoan(), id),
-                "Đã xác nhận lịch hẹn");
+                "thanhCong.xacNhanLichHen");
     }
 
     @Operation(summary = "Từ chối 1 lịch hẹn đang chờ xác nhận của tôi (trước giờ khám), bắt buộc có lý do; lượt khám"
@@ -106,7 +106,7 @@ public class LichCuaBacSiController {
     public PhanHoiApi<LichHenTrongCaResponse> tuChoi(@PathVariable Long id,
             @Valid @RequestBody TuChoiLichHenRequest request) {
         return PhanHoiApi.ok(yeuCauLichHenService.tuChoi(NguoiDungHienTai.layIdTaiKhoan(), id, request.lyDo()),
-                "Đã từ chối lịch hẹn");
+                "thanhCong.tuChoiLichHen");
     }
 
     @Operation(summary = "Hồ sơ khám của bệnh nhân theo mã tra cứu ngắn, mã phiếu khám hoặc link phiếu khám (quét QR)")
@@ -127,14 +127,14 @@ public class LichCuaBacSiController {
     public PhanHoiApi<HoSoKhamResponse> suaBenhNhan(@PathVariable Long id,
             @Valid @RequestBody SuaHoSoBenhNhanRequest request) {
         return PhanHoiApi.ok(hoSoKhamService.suaBenhNhan(NguoiDungHienTai.layIdTaiKhoan(), id, request),
-                "Đã cập nhật hồ sơ bệnh nhân");
+                "thanhCong.capNhatHoSoBenhNhan");
     }
 
     @Operation(summary = "Đã đối chiếu giấy tờ: bỏ đánh dấu cần đối chiếu của 1 lịch hẹn của tôi (gọi lại vẫn 200)")
     @PostMapping("/lich-hen/{id}/da-doi-chieu")
     public PhanHoiApi<Void> daDoiChieu(@PathVariable Long id) {
         hoSoKhamService.daDoiChieu(NguoiDungHienTai.layIdTaiKhoan(), id);
-        return PhanHoiApi.ok(null, "Đã ghi nhận đối chiếu thông tin bệnh nhân");
+        return PhanHoiApi.ok(null, "thanhCong.doiChieuBenhNhan");
     }
 
 }

@@ -1,0 +1,31 @@
+{
+  "method": "POST",
+  "path": "/api/auth/login",
+  "acceptLanguage": null,
+  "requestBody": {
+    "email": "benhnhan01@eclinic.local",
+    "matKhau": "Demo@123"
+  },
+  "status": 200,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "thanhCong": true,
+    "thongDiep": "Đăng nhập thành công",
+    "duLieu": {
+      "accessToken": "eyJhbGciOiJIUzI1NiJ9.eyJ2YWlUcm8iOiJCRU5IX05IQU4iLCJzdWIiOiIxNCIsInBoaWVuIjoiZDY5YzYxNWEtZmFlZi00OTRlLTg0NjgtNThlMWU2ZTM4Njg2IiwiaXNzIjoiZWNsaW5pYyIsImV4cCI6MTc5MTg5NTkxNSwiaWF0IjoxNzkxODk0MTE1LCJlbWFpbCI6ImJlbmhuaGFuMDFAZWNsaW5pYy5sb2NhbCJ9.PYZ9dSUW2cZY4W8RFnefNo2NDC8WU_W7oLxPDJ-SYho",
+      "loaiToken": "Bearer",
+      "thoiHanAccessToken": 1800,
+      "taiKhoan": {
+        "id": 14,
+        "hoTen": "Nguyễn Thị Mai",
+        "email": "benhnhan01@eclinic.local",
+        "soDienThoai": "0902000001",
+        "vaiTro": "BENH_NHAN",
+        "trangThai": "DA_KICH_HOAT",
+        "ngonNgu": "VI"
+      }
+    }
+  }
+}

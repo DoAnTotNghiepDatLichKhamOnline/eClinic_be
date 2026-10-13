@@ -1,0 +1,32 @@
+{
+  "method": "POST",
+  "path": "/api/booking/lich-hen",
+  "acceptLanguage": null,
+  "requestBody": {
+    "idChuyenKhoa": 3,
+    "gioBatDauKhung": "2026-10-14T08:00:00",
+    "benhNhan": {
+      "hoTen": "Trần Gia Bảo",
+      "ngaySinh": "2018-06-01",
+      "gioiTinh": "NAM",
+      "soDienThoai": "0912345601",
+      "cccd": "079190000101"
+    },
+    "nguoiGiamHo": {
+      "hoTen": "Trần Văn Khách",
+      "quanHe": "CHA",
+      "soDienThoai": "0912345601",
+      "cccd": "079190000101"
+    },
+    "lyDoKham": "Sốt, ho"
+  },
+  "status": 400,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "thanhCong": false,
+    "maLoi": "NGUOI_GIAM_HO_KHONG_HOP_LE",
+    "thongDiep": "Số CCCD người giám hộ phải khác số CCCD của bệnh nhân"
+  }
+}

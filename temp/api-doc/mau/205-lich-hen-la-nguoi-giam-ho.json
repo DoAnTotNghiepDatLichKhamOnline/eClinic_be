@@ -1,0 +1,123 @@
+{
+  "method": "GET",
+  "path": "/api/booking/lich-hen/cua-toi?cuaAi=NGUOI_KHAC",
+  "acceptLanguage": null,
+  "requestBody": null,
+  "status": 200,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "thanhCong": true,
+    "duLieu": {
+      "noiDung": [
+        {
+          "maPhieuKham": "_xmRCfByzJIzEPnG1qz_pc8JGCg7zgbyJ4x0Jt5an-c",
+          "maTraCuu": "ECL-20261014-0248",
+          "linkPhieuKham": "http://localhost:5173/phieu-kham/_xmRCfByzJIzEPnG1qz_pc8JGCg7zgbyJ4x0Jt5an-c",
+          "trangThai": "DA_HUY",
+          "soThuTu": 13,
+          "ngay": "2026-10-14",
+          "gioKhamDuKien": "2026-10-14T10:00:00",
+          "gioBatDauKhung": "2026-10-14T10:00:00",
+          "gioKetThucKhung": "2026-10-14T11:00:00",
+          "bacSi": {
+            "id": 5,
+            "hoTen": "Hoàng Minh Đức",
+            "hocVi": "ThS.BS",
+            "anhDaiDien": "https://placehold.co/400x400/0f766e/ffffff/png?text=BS+5"
+          },
+          "tenChuyenKhoa": "Da liễu",
+          "phongKham": {
+            "id": 3,
+            "tenPhong": "Phòng 103",
+            "tang": "Tầng 1"
+          },
+          "hoTenBenhNhan": "Nguyễn Gia Huy",
+          "laBanThan": false,
+          "hoTenNguoiGiamHo": "Nguyễn Thị Mai",
+          "lyDoKham": "Đau bụng",
+          "ngayDat": "2026-10-13T19:21:56.17704",
+          "nguoiDat": "TOI",
+          "thongTinKhacHoSo": false,
+          "lyDoHuy": null,
+          "duocHuyDoi": false,
+          "hanHuyDoi": "2026-10-14T08:00:00",
+          "canDoiLich": false
+        },
+        {
+          "maPhieuKham": "rcRH-20kBjkBZeiv1DZf6qBeLstv8ke8IYqFFqz5VD8",
+          "maTraCuu": "ECL-20261014-7051",
+          "linkPhieuKham": "http://localhost:5173/phieu-kham/rcRH-20kBjkBZeiv1DZf6qBeLstv8ke8IYqFFqz5VD8",
+          "trangThai": "DA_HUY",
+          "soThuTu": 7,
+          "ngay": "2026-10-14",
+          "gioKhamDuKien": "2026-10-14T09:00:00",
+          "gioBatDauKhung": "2026-10-14T09:00:00",
+          "gioKetThucKhung": "2026-10-14T10:00:00",
+          "bacSi": {
+            "id": 5,
+            "hoTen": "Hoàng Minh Đức",
+            "hocVi": "ThS.BS",
+            "anhDaiDien": "https://placehold.co/400x400/0f766e/ffffff/png?text=BS+5"
+          },
+          "tenChuyenKhoa": "Da liễu",
+          "phongKham": {
+            "id": 3,
+            "tenPhong": "Phòng 103",
+            "tang": "Tầng 1"
+          },
+          "hoTenBenhNhan": "Lê Thị Hoa",
+          "laBanThan": false,
+          "hoTenNguoiGiamHo": null,
+          "lyDoKham": "Đau khớp gối",
+          "ngayDat": "2026-10-13T19:21:56.12157",
+          "nguoiDat": "TOI",
+          "thongTinKhacHoSo": false,
+          "lyDoHuy": "Mẹ tôi đã khám ở nơi khác",
+          "duocHuyDoi": false,
+          "hanHuyDoi": "2026-10-14T07:00:00",
+          "canDoiLich": false
+        },
+        {
+          "maPhieuKham": "mg_7qtCjg1ENrltrPIiDPUFj5PphkXKS8wr5ILWAQkA",
+          "maTraCuu": "ECL-20261014-8439",
+          "linkPhieuKham": "http://localhost:5173/phieu-kham/mg_7qtCjg1ENrltrPIiDPUFj5PphkXKS8wr5ILWAQkA",
+          "trangThai": "CHO_XAC_NHAN",
+          "soThuTu": 4,
+          "ngay": "2026-10-14",
+          "gioKhamDuKien": "2026-10-14T08:20:00",
+          "gioBatDauKhung": "2026-10-14T08:00:00",
+          "gioKetThucKhung": "2026-10-14T09:00:00",
+          "bacSi": {
+            "id": 5,
+            "hoTen": "Hoàng Minh Đức",
+            "hocVi": "ThS.BS",
+            "anhDaiDien": "https://placehold.co/400x400/0f766e/ffffff/png?text=BS+5"
+          },
+          "tenChuyenKhoa": "Da liễu",
+          "phongKham": {
+            "id": 3,
+            "tenPhong": "Phòng 103",
+            "tang": "Tầng 1"
+          },
+          "hoTenBenhNhan": "Nguyễn Minh Khôi",
+          "laBanThan": false,
+          "hoTenNguoiGiamHo": "Nguyễn Thị Mai",
+          "lyDoKham": "Nổi mẩn đỏ ở tay",
+          "ngayDat": "2026-10-13T19:22:04.368148",
+          "nguoiDat": "KHACH",
+          "thongTinKhacHoSo": false,
+          "lyDoHuy": null,
+          "duocHuyDoi": false,
+          "hanHuyDoi": "2026-10-14T06:20:00",
+          "canDoiLich": false
+        }
+      ],
+      "trang": 0,
+      "kichThuoc": 20,
+      "tongSoPhanTu": 3,
+      "tongSoTrang": 1
+    }
+  }
+}

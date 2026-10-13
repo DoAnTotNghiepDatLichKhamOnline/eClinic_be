@@ -1,0 +1,2568 @@
+                                                              eClinic -- Tài liu API: Xác thc và Tài khon
+
+eClinic Backend
+
+Tài liu API
+
+Tài khon và t lch khám phía bnh nhân
+
+Phiên bn     1.1 -- 09/10/2026
+Phm vi
+             Tài khon (identity-service, 26 route, mi vai trò): xác thc, h s cá nhân, i mt khu,
+Cn c         nh i din, i email, thit b ng nhp, qun tr tài khon. t lch khám phía bnh
+a ch gi API  nhân (catalog-service, booking-service, notification-service): xem chuyên khoa, bác s,
+             khung gi; t, xem, hy, i lch; phiu khám; h s bnh nhân; lch s khám; ánh giá;
+             thông báo
+
+             Mã ngun trong eClinic_be.zip (controller, DTO, service, MaLoi, application.yml)
+
+             http://localhost:8080 (api-gateway). Gi thng tng service: identity 8081, catalog 8082,
+             booking 8084, notification 8086 (xem 3.8)
+
+1. Gii thiu và phm vi
+
+Tài liu mô t route, request, response và mã li ca hai nhóm chc nng trong eClinic backend mà
+frontend cn  làm phn tài khon và phn t lch khám ca bnh nhân:
+
+    · Tài khon (mc 5-10): xác thc và qun lý tài khon cho mi vai trò (bnh nhân, bác s, qun tr
+        viên), do identity-service cung cp.
+
+    · t lch khám phía bnh nhân: xem chuyên khoa, bác s và khung gi; t lch (khách không cn
+        ng nhp, hoc bnh nhân ã ng nhp); xem, hy, i lch hn; phiu khám và mã QR; h s
+        bnh nhân và ngi thân ã lu; lch s khám; ánh giá; thông báo. Do catalog-service, booking-
+        service và notification-service cung cp.
+
+Không có trong tài liu này: các route t lch ca bác s (danh sách lch hn, xác nhn / t chi, ca làm
+vic) và ca qun tr viên (qun lý lch hn, lch làm vic, h s bnh nhân, danh mc); API ca medical-
+service, chatbot-service, report-service.
+
+Frontend gi mi API qua api-gateway (cng 8080); gateway chuyn tip theo tin t ng dn và gi
+nguyên ng dn. Bng tin t, cng và Swagger UI ca tng service  mc 3.8. Quy c riêng ca
+phn t lch  mc 3.8-3.11.
+
+2. Danh sách route
+
+Bm vào ng dn  nhy ti phn mô t chi tit.
+
+Mc   Method  ng dn                                 Quyn       Chc nng
+5.1    POST  /api/auth/register                    Công khai  ng ký tài khon bnh nhân
+5.2    POST  /api/auth/verify-email                Công khai  Kích hot tài khon bng token
+5.3    POST  /api/auth/resend-verification         Công khai  Gi li liên kt kích hot
+5.4    POST  /api/auth/login                       Công khai  ng nhp bng email và mt
+                                                              khu
+5.5  POST /api/auth/refresh-token                  Công khai  Làm mi phiên ng nhp
+                                                   Công khai  ng xut thit b hin ti
+5.6  POST /api/auth/logout                         Công khai  Quên mt khu: gi liên kt t li
+                                                   Công khai  t mt khu mi bng token
+5.7  POST /api/auth/forgot-password
+
+5.8  POST /api/auth/reset-password
+
+                                     Trang 1 / 42
+                                                          eClinic -- Tài liu API: Xác thc và Tài khon
+
+Mc    Method   ng dn                                      Quyn         Chc nng
+5.9     POST   /api/auth/confirm-email-change             Công khai    Xác nhn i email bng token
+5.10    POST   /api/auth/google                           Công khai    ng nhp bng Google
+5.11    POST   /api/auth/first-password                   Công khai    t mt khu ln u (bác s mi)
+6.1      GET   /api/users/me                              ã ng nhp     Xem h s cá nhân
+6.2      PUT   /api/users/me                              ã ng nhp     Cp nht h tên, s in thoi
+6.3      PUT   /api/users/me/change-password              ã ng nhp     i mt khu
+7.1     POST   /api/users/me/avatar                       ã ng nhp     i nh i din
+7.2            /api/users/me/avatar                       ã ng nhp     B nh i din
+8.1    DELETE  /api/users/me/change-email                 ã ng nhp     Yêu cu i email
+8.2     POST   /api/users/me/change-email                 ã ng nhp     Xem yêu cu i email ang ch
+8.3      GET   /api/users/me/change-email                 ã ng nhp     Hu yêu cu i email
+9.1            /api/users/me/sessions                     ã ng nhp     Danh sách thit b ang ng
+       DELETE                                                          nhp
+         GET                                              ã ng nhp     ng xut mt thit b khác
+                                                          ã ng nhp     ng xut mi thit b khác
+9.2   DELETE   /api/users/me/sessions/{id}                Qun tr viên  Danh sách tài khon (phân trang,
+9.3   DELETE   /api/users/me/sessions                                  lc)
+10.1           /api/users                                 Qun tr viên  Chi tit mt tài khon
+        GET                                               Qun tr viên  Vô hiu hoá / kích hot li tài
+                                                                       khon
+10.2  GET /api/users/{id}                                 Qun tr viên  Xoá tài khon
+10.3  PUT /api/users/{id}/status
+
+10.4 DELETE /api/users/{id}
+
+3. Quy c chung
+
+3.1 Khung phn hi
+
+Mi API (tr li do gateway t tr, xem 3.4) tr JSON theo mt khung. Các trng ca khung (maLoi,
+thongDiep, duLieu, chiTiet) không xut hin khi không có giá tr. Bên trong duLieu thì ngc li: trng
+không có giá tr vn có mt vi giá tr null (vd "anhDaiDien": null), mng không có phn t là []. JSON
+mu trong tài liu có th lc bt vài trng ang null cho gn.
+
+THÀNH CÔNG
+  {
+     "thanhCong": true,
+     "thongDiep": "ng nhp thành công",
+     "duLieu": { ... }
+  }
+
+LI
+  {
+     "thanhCong": false,
+     "maLoi": "DU_LIEU_KHONG_HOP_LE",
+     "thongDiep": "D liu không hp l",
+     "chiTiet": [
+         { "truong": "email", "thongDiep": "Email không úng nh dng" }
+     ]
+  }
+
+                                            Trang 2 / 42
+                                                               eClinic -- Tài liu API: Xác thc và Tài khon
+
+Trng       Kiu                   Mô t
+thanhCong  boolean               true khi thành công, false khi li.
+maLoi      string                Mã li  frontend x lý (ch có khi li). HTTP status quy nh theo mã (Ph lc
+                                 A).
+thongDiep  string                Thông ip ting Vit, hin th c cho ngi dùng.
+duLieu     object | array        D liu tr v (ch có khi thành công và có d liu).
+           | number
+chiTiet    array                 Ch có  li 400: mi phn t { truong, thongDiep } cho mt trng sai.
+
+3.2 Xác thc và phiên ng nhp
+
+    · Access token: JWT ký HS256, sng 30 phút (thoiHanAccessToken = 1800 giây). Gi kèm mi route
+        cn ng nhp: Authorization: Bearer <accessToken>. Claim: sub (id tài khon), email, vaiTro, phien
+        (mã phiên).
+
+    · Refresh token: chui ngu nhiên 43 ký t, sng 7 ngày, dùng mt ln (mi ln làm mi cp token
+        mi). Nm trong cookie eclinic_rt, không có trong JSON.
+
+    · Cookie eclinic_rt: HttpOnly; Secure; SameSite=Strict; Path=/api/auth; Max-Age=604800. Trình
+        duyt ch gi kèm các route /api/auth/*. http://localhost c coi là an toàn nên cookie Secure
+        vn hot ng; ch t COOKIE_SECURE=false khi m frontend qua IP LAN bng http.
+
+    · Frontend: gi access token trong b nh (không lu localStorage), gi API vi credentials:
+        "include"  cookie i kèm (gateway ã bt Access-Control-Allow-Credentials cho các origin c
+        phép).
+
+    · Ht hn: access token ht hn  401 CHUA_DANG_NHAP  gi POST /api/auth/refresh-token. Nu
+        refresh tr 401 PHIEN_DANG_NHAP_KHONG_HOP_LE thì chuyn v trang ng nhp.
+
+    · Vai trò: BENH_NHAN, BAC_SI, QUAN_TRI_VIEN (ly t claim vaiTro).
+
+    · Route t lch: mt s route công khai, không cn token; các route có /cua-toi ch dành cho vai trò
+        BENH_NHAN. Xem 3.9.
+
+3.3 Phân trang
+
+Route danh sách nhn trang (ánh s t 0) và kichThuoc; duLieu có dng:
+
+  {
+     "noiDung": [ ... ],
+     "trang": 0,
+     "kichThuoc": 20,
+     "tongSoPhanTu": 23,
+     "tongSoTrang": 2
+
+  }
+
+3.4 Li chung
+
+Các li sau có th xy ra  mi route và không lp li trong tng mc.
+
+HTTP       maLoi                 Khi nào
+  400      DU_LIEU_KHONG_HOP_LE
+                                 Body sai quy tc (kèm chiTiet), JSON sai nh dng, sai kiu tham
+401 CHUA_DANG_NHAP               s, thiu tham s, sai Content-Type.
+
+403 KHONG_CO_QUYEN               Thiu token, token sai hoc ht hn, hoc tài khon ã b xoá.
+                                 (Route cn ng nhp)
+
+                                 Vai trò không  quyn (vd. không phi qun tr viên gi route qun
+                                 tr).
+
+                                 Trang 3 / 42
+HTTP     maLoi                                                                  eClinic -- Tài liu API: Xác thc và Tài khon
+  403    TAI_KHOAN_BI_VO_HIEU_HOA
+                                   Khi nào
+403 TAI_KHOAN_CHUA_XAC_THUC        Tài khon b vô hiu hoá sau khi token c cp. (Route cn ng
+404 KHONG_TIM_THAY                 nhp)
+405 PHUONG_THUC_KHONG_HO_TRO       Tài khon còn CHO_XAC_NHAN. (Route cn ng nhp)
+409 XUNG_DOT_DU_LIEU               Không có d liu / ng dn.
+                                   Sai phng thc HTTP.
+413 TEP_QUA_LON                    Vi phm ràng buc duy nht trong CSDL (thng do hai request
+500 LOI_HE_THONG                   chy ng thi).
+                                   Tp ti lên vt gii hn (2 MB).
+                                   Li không mong i.
+
+Li do api-gateway t tr (body ch có thanhCong, maLoi, thongDiep):
+
+HTTP     maLoi                     Khi nào
+  503    DICH_VU_KHONG_KHA_DUNG    Service ích cha chy hoc không kt ni c.
+  504    DICH_VU_PHAN_HOI_QUA_LAU  Service không tr li trong 30 giây.
+  502    LOI_KET_NOI_DICH_VU       Li kt ni khác ti service.
+  413    YEU_CAU_QUA_LON           Body request vt 5 MB (cha chuyn tip).
+  404    KHONG_TIM_THAY            ng dn không thuc route nào ca gateway.
+
+Lu ý phân bit hai li 503: DICH_VU_KHONG_KHA_DUNG là gateway không gi c service, còn
+DANG_NHAP_GOOGLE_KHONG_KHA_DUNG và LUU_TRU_ANH_KHONG_KHA_DUNG do chính identity-service tr khi thiu
+cu hình (Ph lc C).
+
+3.5 Quy tc d liu u vào
+
+D liu             Quy tc
+
+Email             Ti a 255 ký t. c chun hoá (trim, ch thng) trc khi lu và so sánh. Khi ng ký /
+                  i email phi úng nh dng.
+
+Mt khu mi         Ti thiu 6 ký t (quy tc tm khi th nghim, s sit li trc khi trin khai tht) và ti a 72
+                  byte UTF-8 (gii hn ca BCrypt; ch có du chim 2-3 byte mi ký t).
+
+Mt khu hin ti /   Ch cn không rng, ti a 1000 ký t. Sai quy tc cng ch là "mt khu không úng", không
+ng nhp            phi li 400 v nh dng.
+
+S in thoi         10 ch s, bt u bng 0 (^0\d{9}$). Duy nht trong h thng.
+
+H tên             Không rng, ti a 150 ký t.
+
+Token liên kt     Ti a 100 ký t (token tht dài 43 ký t).
+
+Ngày gi           ISO-8601, múi gi Asia/Ho_Chi_Minh, không kèm offset: 2026-10-03T08:40:00. Ngày: 2001-
+                  05-20.
+
+S CCCD            úng 12 ch s. Bt buc vi ngi khám t  18 tui (tính theo ngày khám); ngi di
+                  18 tui cha có CCCD thì b trng. ã lu vào h s bnh nhân thì không i c.
+
+Ngày sinh         Dng 2001-05-20, không  tng lai.
+
+Ngi giám h        Bt buc khi ngi khám di 18 tui tính theo ngày khám (thiu  400
+                  THIEU_NGUOI_GIAM_HO). Gm h tên, quan h (QuanHeGiamHo), s in thoi, CCCD 12 ch s
+                  khác CCCD ngi khám; ngày sinh không bt buc, có gi thì phi t  18 tui (sai  400
+                  NGUOI_GIAM_HO_KHONG_HOP_LE). Ngi khám t  18 tui thì phn ngi giám h gi kèm b
+                  b qua.
+
+                                   Trang 4 / 42
+D liu                                                                                                eClinic -- Tài liu API: Xác thc và Tài khon
+Chui t do
+                    Quy tc
+Trng không bt       Lý do khám: bt buc, ti a 500 ký t. Lý do hy: không bt buc, ti a 500. a ch: ti a
+buc                 500. S th bo him y t: ti a 50. Tin s bnh lý: ti a 5000. Nhn xét ánh giá: ti a
+Gi                  1000.
+                     form t lch: không gi, gi null hoc gi chui rng u c.  các route sa (PUT)
+                    ca h s bnh nhân và ngi thân ã lu: gi trng ngha là xoá trng trng ó.
+                    Dng 08:00:00 (kiu time, gi ca ca làm vic).
+
+3.6 Gii hn và thi hn
+
+Mc                                          Giá tr
+
+ng nhp sai mt khu                           5 ln  khoá email 15 phút (429 DANG_NHAP_SAI_QUA_NHIEU)
+
+Sai mt khu hin ti khi t mt khu ln u         m chung vi ng nhp sai: 5 ln  khoá email 15 phút (429
+(5.11)                                      DANG_NHAP_SAI_QUA_NHIEU)
+
+Nhp sai mt khu hin ti (i mt khu, i email 5 ln  khoá 15 phút (429 SAI_MAT_KHAU_QUA_NHIEU)
+-- dùng chung b m)
+
+Ch gia hai ln gi liên kt cho cùng tài khon  60 giây (429 GUI_LAI_QUA_NHANH; riêng resend-verification,
+                                            forgot-password im lng b qua)
+
+Hn liên kt kích hot / t li mt khu / i email 24 gi / 15 phút / 1 gi; mi liên kt dùng mt ln
+
+Access token / refresh token                30 phút / 7 ngày
+
+Ân hn dùng li refresh token ã xoay vòng     10 giây (quá hn ân hn b coi là token b l)
+
+i nh i din                                  10 ln / gi / tài khon; ti a 2 MB mi tp
+
+Kích thc body ti gateway                    Ti a 5 MB
+
+t lch trc gi khám                           Ít nht 30 phút trc gi bt u lt khám và trong 30 ngày ti
+                                            (tính c hôm nay); ngoài khong này khung gi không hin, t
+                                            thng  409 KHUNG_GIO_KHONG_KHA_DUNG
+
+S lch sp ti còn hiu lc                      Ti a 3 cho 1 h s bnh nhân, 5 cho 1 s in thoi liên h
+                                            (409 VUOT_GIOI_HAN_DAT_LICH)
+
+S ln gi t lch, i lch, hy bng link phiu      20 ln / 10 phút (429 GUI_LAI_QUA_NHANH)
+khám t 1 a ch IP (m chung)
+
+Hy / i lch                                  Ti 2 gi trc gi khám d kin (409 QUA_HAN_HUY_DOI_LICH)
+
+S ln i lch ca 1 ln t                        2 ln (409 VUOT_SO_LAN_DOI_LICH)
+
+Xem khung gi nhiu ngày ca 1 bác s           Ti a 7 ngày lin mi ln gi
+
+Lch hn ca tôi theo khong ngày (màn hình lch) Ti a 42 ngày mi ln gi
+
+Ngi thân ã lu                               Ti a 10 ngi mi tài khon (gi 10 ngi t gn nht)
+
+Sa ánh giá ã gi                             Trong 7 ngày k t lúc gi (409 HET_HAN_SUA_DANH_GIA)
+
+nh mã QR phiu khám                          Cnh 100-1000 pixel, mc nh 300
+
+Kích thc trang ca các route danh sách       kichThuoc t 1 n 100, mc nh 20
+
+Hi s thông báo cha c                        Không có y realtime: frontend gi li khong 30 giây mt ln,
+                                            tm dng khi tab b n
+
+3.7 Giá tr enum               Giá tr
+                              BENH_NHAN, BAC_SI, QUAN_TRI_VIEN
+ Enum
+ VaiTro                                                   Trang 5 / 42
+Enum                                                                                                   eClinic -- Tài liu API: Xác thc và Tài khon
+TrangThaiTaiKhoan
+TrangThaiLienKet              Giá tr
+GioiTinh
+TrangThaiBacSi                CHO_XAC_NHAN (ã ng ký, cha kích hot), DA_KICH_HOAT, VO_HIEU_HOA
+TrangThaiLichHen
+                              CHUA_LIEN_KET, CHO_XAC_MINH (ch qun tr viên xác minh), DA_LIEN_KET
+LocLichHen
+                              NAM, NU, KHAC
+PhamViLichHen
+                              DANG_CONG_TAC, NGUNG_CONG_TAC
+NguoiDatLich
+QuanHeGiamHo                  CHO_XAC_NHAN, DA_XAC_NHAN, BI_TU_CHOI, DA_HOAN_THANH, DA_HUY, DA_HUY_DO_DOI_LICH. Ý
+LoaiAnhBacSi                  ngha tng giá tr  3.11.
+LoaiThongBao
+                              B lc "lch hn ca tôi": TAT_CA, SAP_TOI (lch CHO_XAC_NHAN / DA_XAC_NHAN mà khung gi
+                              cha kt thúc), LICH_SU (mi lch còn li: ã khám, ã hy, b t chi, ã qua gi)
+
+                              Tham s cuaAi: TAT_CA, BAN_THAN (ngi khám là ch tài khon, bt k ai t),
+                              NGUOI_KHAC (lch t cho ngi thân, hoc ch tài khon là ngi giám h)
+
+                              TOI (chính tài khon ang xem), KHACH (t khi không ng nhp), TAI_KHOAN_KHAC
+
+                              CHA, ME, NGUOI_GIAM_HO_HOP_PHAP, KHAC
+
+                              ANH_CONG_VIEC, CHUNG_CHI
+
+                              Gi cho bnh nhân: LICH_HEN_DA_XAC_NHAN, LICH_HEN_BI_TU_CHOI, LICH_HEN_CAN_DOI (ca
+                              khám b hy, cn i lch), LICH_HEN_DOI_PHONG (gi nguyên gi, i phòng khám),
+                              NHAC_LICH_KHAM, HE_THONG. Ch gi cho bác s / qun tr viên: LICH_HEN_MOI,
+                              LICH_HEN_DA_DOI, LICH_HEN_DA_HUY, KET_QUA_DUYET_DOI_LICH, CA_LAM_VIEC_THAY_DOI,
+                              YEU_CAU_DOI_LICH_MOI
+
+3.8 Service và tin t ng dn
+
+Frontend ch gi api-gateway (http://localhost:8080). Gateway chn service theo tin t ng dn và
+gi nguyên ng dn khi chuyn tip.
+
+Tin t                         Service               Cng     Swagger UI
+/api/auth/**, /api/users/**,  identity-service        8081
+/api/identity/**              catalog-service         8082  http://localhost:8081/swagger-
+/api/catalog/**               booking-service         8084  ui.html
+                              notification-service    8086
+/api/booking/**                                             http://localhost:8082/swagger-
+                                                            ui.html
+/api/notification/**
+                                                            http://localhost:8084/swagger-
+                                                            ui.html
+
+                                                            http://localhost:8086/swagger-
+                                                            ui.html
+
+Swagger UI ca catalog-service và booking-service lit kê c route ca bác s và qun tr viên; tài liu này
+ch mô t các route phía bnh nhân.
+
+3.9 Khách và bnh nhân ã ng nhp
+
+t lch khám không bt buc ng nhp. Các route sau là công khai (không cn access token):
+
+    · GET /api/catalog/chuyen-khoa/**, GET /api/catalog/bac-si/**: xem chuyên khoa và bác s.
+    · GET /api/booking/khung-gio/**: xem khung gi còn ch.
+    · POST /api/booking/lich-hen: t lch.
+    · GET /api/booking/phieu-kham/** và POST /api/booking/phieu-kham/**: xem phiu khám, mã QR,
+
+        hy và i lch bng link phiu khám kèm s in thoi liên h.
+Mi route còn li ca booking-service trong tài liu này (ng dn có /cua-toi) cn access token ca vai
+trò BENH_NHAN; bác s và qun tr viên gi s nhn 403 KHONG_CO_QUYEN. Các route thông báo
+(/api/notification/**) dùng cho mi vai trò ã ng nhp.
+
+                              Trang 6 / 42
+                                                    eClinic -- Tài liu API: Xác thc và Tài khon
+
+T LCH KHI CÓ VÀ KHÔNG CÓ TOKEN
+
+Request                        Kt qu
+
+Không có header Authorization  t nh khách. luuVaoTaiKhoan = false; lch ch xem li c bng link phiu
+                               khám. Hy / i bng maPhieuKham kèm s in thoi liên h.
+
+Token ca BENH_NHAN             Lch lu vào tài khon (luuVaoTaiKhoan = true), có trong "lch hn ca tôi".
+                               datChoBanThan và luuNguoiThan ca request ch có ngha  trng hp này.
+
+Token ca BAC_SI /              403 KHONG_CO_QUYEN: các vai trò này không t lch khám; ng xut  t nh
+QUAN_TRI_VIEN                  khách.
+
+Token ht hn hoc sai            401 CHUA_DANG_NHAP, k c  route công khai: service kim tra mi token c
+                               gi lên trc khi xét route có công khai hay không. Làm mi token trc, hoc
+                               không gi header Authorization khi gi route công khai.
+
+LCH Ã T NH KHÁCH T VÀO TÀI KHON
+
+Frontend không phi gi API riêng. Mi ln bnh nhân ã ng nhp gi mt trong các route c di ây,
+nu tài khon cha có h s bnh nhân thì service tìm h s có s CCCD ã khai lúc ng ký (cccd  5.1):
+GET /api/booking/lich-hen/cua-toi, GET /api/booking/lich-hen/cua-toi/lich, GET /api/booking/thong-
+tin-dat-lich/cua-toi, GET /api/booking/ho-so-benh-nhan/cua-toi, GET /api/booking/trang-ca-nhan/cua-
+toi, GET /api/booking/lich-su-kham/cua-toi.
+
+Tình hung                             Kt qu
+Tìm thy h s; h tên và s in thoi
+ca tài khon khp h s                   H s gn vào tài khon, trangThaiLienKet = DA_LIEN_KET. Các lch ã
+Tìm thy h s nhng không khp            t nh khách bng s CCCD ó hin trong "lch hn ca tôi".
+
+Không tìm thy, hoc tài khon không     trangThaiLienKet = CHO_XAC_MINH: tài khon cha thy gì ca h s cho
+khai CCCD (vd ng nhp Google)          ti khi qun tr viên duyt. Hin "h s ang ch phòng khám xác minh";
+                                      cha t "cho bn thân" c (409 HO_SO_CHO_XAC_MINH), vn t cho
+                                      ngi thân c.
+
+                                      Không có gì thay i. Bnh nhân nhp CCCD  form h s bnh nhân
+                                      (PUT /api/booking/ho-so-benh-nhan/cua-toi), hoc h s c to khi
+                                      t lch "cho bn thân" ln u.
+
+3.10 Phiu khám: mã, liên kt, che thông tin
+
+Giá tr               Ý ngha
+
+maPhieuKham          Chui ngu nhiên 43 ký t (ch, s, -, _). Là khóa duy nht ca lch hn phía bnh nhân:
+                     nm trên ng dn ca mi route xem, hy, i, QR, ánh giá. Ai có mã này u xem c
+                     phiu khám, nên không a mã vào log hay công c thng kê ca frontend.
+
+maTraCuu             Mã ngn dng ECL-<yyyyMMdd>-<4 ch s> (vd ECL-20261005-4198), in trên phiu  c ti
+                     quy. Ch  hin th; không dùng gi API c.
+
+linkPhieuKham        <FRONTEND_URL>/phieu-kham/<maPhieuKham> (mc nh http://localhost:5173/phieu-
+                     kham/...). Frontend phi có trang  ng dn /phieu-kham/:maPhieuKham, c mã t URL
+                     ri gi GET /api/booking/phieu-kham/{maPhieuKham}. Mã QR ch cha link này, không cha
+                     thông tin bnh nhân.
+
+Id lch hn            Không API phía bnh nhân nào tr hay nhn id s ca lch hn.
+
+Che thông tin        Trên phiu khám công khai: CCCD ch còn 3 s cui (*********123), s in thoi còn 3 s
+                     u và 3 s cui (090****567), ngày sinh ch còn nm. Các route /cua-toi tr s ca chính
+                     ch tài khon thì không che.
+
+                                      Trang 7 / 42
+                                                               eClinic -- Tài liu API: Xác thc và Tài khon
+
+3.11 Vòng i lch hn, hy và i lch
+
+trangThai           Khi nào                                    Bnh nhân còn làm c
+                                                               Hy, i lch (trc hn).
+CHO_XAC_NHAN        Va t hoc va i lch; ch bác s xác
+                    nhn.                                       Hy, i lch (trc hn).
+                                                               Không; t lch mi.
+DA_XAC_NHAN         Bác s ã xác nhn.                           Xem kt qu, gi / sa ánh giá.
+                                                               Không.
+BI_TU_CHOI          Bác s t chi; lý do  lyDoHuy.               Không.
+
+DA_HOAN_THANH       Bác s ã ghi kt qu khám.
+
+DA_HUY              Lch ã hy; lý do (nu có)  lyDoHuy.
+
+DA_HUY_DO_DOI_LICH  Lch c sau khi i lch; lch mi là 1 lch khác
+                    vi phiu khám mi.
+
+· Chn khung gi (t lch và i lch): gi úng mt trong hai: idLichLamViec + gioBatDauKhung (bác s
+    c th; ly t CaKhamResponse) hoc idChuyenKhoa + gioBatDauKhung (bác s bt k; ly t
+    KhungGioGopResponse, h thng xp bác s còn nhiu ch nht). Gi c hai hoc không gi  400.
+
+· Hn hy / i: ti hanHuyDoi = gi khám d kin tr 2 gi. Quá hn  409 QUA_HAN_HUY_DOI_LICH.
+    Dùng duocHuyDoi  n / hin nút, không t tính li  frontend.
+
+· i lch = hy lch c + to lch mi: lch c thành DA_HUY_DO_DOI_LICH, response là
+    DatLichResponse ca lch mi (CHO_XAC_NHAN) vi maPhieuKham mi. Sau khi i, chuyn sang phiu
+    khám mi; link c vn m c và hin trng thái ã i.
+
+· S ln i: ti a 2 ln cho 1 ln t (m qua c chui lch c). Ln th 3  409
+    VUOT_SO_LAN_DOI_LICH.
+
+· `canDoiLich` = `true`: phòng khám ã hy ca khám, lch hn còn hiu lc và ch bnh nhân i sang
+    khung gi khác (hoc hy). Khi ó hy / i c ti gi khám c và ln i này không tính vào s ln
+    i. Bnh nhân có tài khon nhn thông báo LICH_HEN_CAN_DOI.
+
+· Lch ã qua gi: lch CHO_XAC_NHAN / DA_XAC_NHAN mà khung gi ã kt thúc vn gi nguyên trangThai
+    nhng thuc b lc LICH_SU, không còn là SAP_TOI.
+
+· Ai hy / i c: trên các route /cua-toi, tài khon là ngi t hoc là ngi khám (laBanThan).
+    Trên các route /phieu-kham, bt k ai gi úng s in thoi liên h ã nhp lúc t (sai  403
+    SO_DIEN_THOAI_KHONG_KHOP).
+
+4. Mô hình d liu (response)
+
+Các i tng di ây nm trong duLieu. Kiu datetime là LocalDateTime (ISO-8601, vd 2026-10-
+07T08:00:00), date là ngày không gi (2026-10-07), time là gi không ngày (08:00:00); kiu X[] là mng.
+Trng không có giá tr mang null (xem 3.1); mô t "ch có khi..." ngha là  các trng hp khác trng ó
+là null. Mc 4.1-4.9 thuc phn tài khon, t 4.10 thuc phn t lch.
+
+4.1 TaiKhoanResponse
+
+Trng                Kiu                      Mô t
+                                             Id tài khon.
+id                  number                   H tên.
+                                             Email ng nhp (ch thng).
+hoTen               string                   S in thoi (null vi tài khon Google cha khai s).
+
+email               string
+
+soDienThoai         string
+
+vaiTro              enum VaiTro
+
+trangThai           enum TrangThaiTaiKhoan
+
+                                      Trang 8 / 42
+                                                                   eClinic -- Tài liu API: Xác thc và Tài khon
+
+4.2 DangNhapResponse
+
+Refresh token không có trong JSON; nó nm trong cookie eclinic_rt.
+
+Trng                Kiu                   Mô t
+accessToken         string                JWT, gi trong header Authorization: Bearer.
+loaiToken           string                Luôn là Bearer.
+thoiHanAccessToken  number                S giây access token còn hiu lc (1800).
+taiKhoan            TaiKhoanResponse      Tài khon ang ng nhp.
+
+4.3 HoSoCaNhanResponse
+
+Trng                Kiu                   Mô t
+                                          Nh TaiKhoanResponse.
+id, hoTen, email,
+soDienThoai                               URL nh (Cloudinary hoc Google); null nu cha có.
+
+anhDaiDien          string                false: tài khon ch ng nhp Google, cha t mt khu.
+                                          true: ã liên kt vi Google.
+vaiTro, trangThai   enum                  Thi im to tài khon.
+                                          Ch có vi bác s ã có h s bác s.
+coMatKhau           boolean               Ch có vi bnh nhân ã gn h s.
+
+lienKetGoogle       boolean
+
+ngayTao             datetime
+
+bacSi               HoSoBacSiResponse
+
+hoSoBenhNhan        HoSoBenhNhanResponse
+
+4.4 HoSoBacSiResponse
+
+Bác s ch xem; ch qun tr viên c sa.
+
+Trng                Kiu                   Mô t
+id                  number                Id h s bác s.
+idChuyenKhoa        number
+
+tenChuyenKhoa       string
+
+hocVi               string
+
+soGiayPhep          string
+
+soNamKinhNghiem     number
+
+tieuSu              string
+
+trangThai           enum TrangThaiBacSi
+
+4.5 HoSoBenhNhanResponse
+
+Khi trangThaiLienKet = CHO_XAC_MINH thì mi trng khác u là null: h s cha c xác minh thì
+cha c xem thông tin. Bnh nhân xem, to và sa h s này bng các route h s bnh nhân ca
+booking-service (HoSoCuaToiResponse).
+
+Trng                Kiu                   Mô t
+id                  number                Id h s bnh nhân.
+
+                                         Trang 9 / 42
+                                                             eClinic -- Tài liu API: Xác thc và Tài khon
+
+Trng                     Kiu                    Mô t
+trangThaiLienKet         enum TrangThaiLienKet  S CCCD.
+cccd                     string
+hoTen                    string
+ngaySinh                 date
+gioiTinh                 enum GioiTinh
+soDienThoai              string
+diaChi                   string
+soBaoHiemYTe             string
+tienSuBenhLy             string
+
+4.6 PhienDangNhapResponse
+
+Trng                     Kiu                    Mô t
+                                                Mã phiên, không i qua các ln làm mi token.
+id                       string (UUID)          User-Agent lúc ng nhp (có th null).
+                                                Thi im ng nhp.
+thietBi                  string                 Ln làm mi token gn nht.
+                                                Không làm mi trc thi im này thì phiên t ht hn.
+dangNhapLuc              datetime               true nu là phiên ca access token ang gi API.
+
+hoatDongLuc              datetime
+
+hetHanLuc                datetime
+
+hienTai                  boolean
+
+4.7 YeuCauDoiEmailResponse
+
+Trng                     Kiu                    Mô t
+                                                a ch ã c gi liên kt xác nhn.
+emailMoi                 string
+
+4.8 TaiKhoanQuanTriResponse
+
+Mt dòng trong danh sách ca qun tr viên; không có d liu y t.
+
+Trng                     Kiu                    Mô t
+                         enum                   Nh h s cá nhân.
+id, hoTen, email,
+soDienThoai, anhDaiDien
+
+vaiTro, trangThai
+
+lyDoVoHieuHoa            string                 Ch có khi tài khon ang b vô hiu hoá.
+ngaySinh                 date
+                                                T h s bnh nhân ã liên kt (DA_LIEN_KET); null nu
+ngayTao                  datetime               không có.
+
+4.9 ChiTietTaiKhoanResponse
+
+Trng                     Kiu                    Mô t
+                                                Nh h s cá nhân.
+id, hoTen, email,
+soDienThoai, anhDaiDien                 Trang 10 / 42
+                                                   eClinic -- Tài liu API: Xác thc và Tài khon
+
+Trng                  Kiu                    Mô t
+vaiTro, trangThai     enum
+lyDoVoHieuHoa         string                 Ch có khi ang b vô hiu hoá.
+ngaySinh              date                   T h s bnh nhân ã liên kt.
+ngayTao, ngayCapNhat  datetime
+coMatKhau,            boolean                Nh h s cá nhân.
+lienKetGoogle
+trangThaiLienKetHoSo  enum TrangThaiLienKet  Trng thái h s bnh nhân gn vi tài khon; null nu
+                                             cha gn.
+bacSi                 HoSoBacSiResponse      Ch có vi bác s.
+
+4.10 ChuyenKhoaResponse
+
+Chuyên khoa (catalog-service).
+
+Trng                  Kiu                    Mô t
+id                    number                 Id chuyên khoa; dùng cho tham s idChuyenKhoa.
+tenChuyenKhoa         string
+                                             Mô t ngn; null nu cha nhp.
+moTa                  string
+
+4.11 BacSiResponse
+
+Bác s trong danh sách công khai,   v th bác s. Ch có bác s ang công tác và tài khon ã kích
+hot. Không có email, s in thoi, s giy phép.
+
+Trng                  Kiu                    Mô t
+id                    number                 Id bác s; dùng cho tham s idBacSi.
+hoTen                 string
+
+anhDaiDien            string                 URL nh; null thì dùng nh mc nh.
+hocVi                 string                 Vd TS.BS, BSCKII.
+chucVu                string                 null nu cha nhp.
+soNamKinhNghiem       number                 null nu cha nhp.
+gioiThieuNgan         string                 1-2 câu hin trên th; null nu cha nhp.
+idChuyenKhoa          number
+
+tenChuyenKhoa         string
+
+diemDanhGia           number                 im trung bình ca bnh nhân, 1 ch s thp phân
+soDanhGia             number                 (vd 4.5); null khi cha có ánh giá nào.
+
+                                             S lt ánh giá (0 khi cha có). Luôn hin th kèm
+                                             im, vd  4.5 (12).
+
+4.12 BacSiChiTietResponse
+
+Chi tit công khai ca 1 bác s: mi trng ca BacSiResponse và các trng di ây. Nhn xét ca bnh
+nhân không công khai.
+
+                                Trang 11 / 42
+Trng             Kiu                                        eClinic -- Tài liu API: Xác thc và Tài khon
+id               number
+hoTen            string              Mô t
+anhDaiDien       string              Nh BacSiResponse.
+hocVi            string              Nh BacSiResponse.
+chucVu           string              Nh BacSiResponse.
+soNamKinhNghiem  number              Nh BacSiResponse.
+gioiThieuNgan    string              Nh BacSiResponse.
+idChuyenKhoa     number              Nh BacSiResponse.
+tenChuyenKhoa    string              Nh BacSiResponse.
+tieuSu           string              Nh BacSiResponse.
+quaTrinhDaoTao   string[]            Nh BacSiResponse.
+quaTrinhCongTac  string[]            on gii thiu dài; null nu cha nhp.
+linhVucKhamChua  string[]            Mi phn t 1 dòng; mng rng khi cha có.
+anh              AnhBacSiResponse[]  Mi phn t 1 dòng; mng rng khi cha có.
+                                     Mi phn t 1 dòng; mng rng khi cha có.
+diemDanhGia      number              nh gii thiu, ã xp úng th t hin th; mng rng
+soDanhGia        number              khi cha có.
+                                     Nh BacSiResponse.
+                                     Nh BacSiResponse.
+
+4.13 AnhBacSiResponse
+
+1 nh gii thiu ca bác s.
+
+Trng             Kiu                 Mô t
+id               number
+                                     URL nh.
+loai             enum LoaiAnhBacSi   null nu không có chú thích.
+
+url              string
+chuThich         string
+
+4.14 BacSiTomTatResponse
+
+Bác s hin th cnh khung gi, lch hn, phiu khám (booking-service). Chi tit ly  catalog-service theo id.
+
+Trng             Kiu                 Mô t
+id               number              Id bác s.
+hoTen            string
+
+hocVi            string
+
+anhDaiDien       string              null nu cha có.
+
+4.15 PhongKhamTomTatResponse
+
+Trng             Kiu                 Mô t
+
+id               number
+
+                                     Trang 12 / 42
+Trng               Kiu                                             eClinic -- Tài liu API: Xác thc và Tài khon
+tenPhong           string
+tang               string                   Mô t
+                                            Vd Phòng 101.
+                                            Tng ca phòng; null nu cha nhp.
+
+4.16 CaKhamResponse
+
+1 ca làm vic còn t lch c trong ngày, kèm các khung 1 gi còn kp t. Khi t lch vi bác s c th,
+khung gi c xác nh bng idLichLamViec + khungGio[].gioBatDau.
+
+Trng               Kiu                      Mô t
+idLichLamViec      number                   Id ca làm vic; gi li khi t lch / i lch.
+ngay               date
+
+gioBatDau          time                     Gi bt u ca.
+gioKetThuc         time                     Gi kt thúc ca.
+soLuotToiDaMoiGio  number                   S lt khám ti a ca 1 khung 1 gi.
+thoiLuongLuotPhut  number                   S phút ca 1 lt khám.
+bacSi              BacSiTomTatResponse
+
+phongKham          PhongKhamTomTatResponse
+
+khungGio           KhungGioResponse[]       Các khung 1 gi ca ca, theo gi tng dn.
+
+4.17 KhungGioResponse
+
+1 khung 1 gi ca ca làm vic. Khung cui ca ca có th ngn hn 1 gi.
+
+Trng               Kiu                      Mô t
+gioBatDau          datetime                 Gi li làm gioBatDauKhung khi t lch.
+gioKetThuc         datetime
+
+tongSoCho          number                   S lt khám ca khung.
+soChoConLai        number
+hetCho             boolean                  S lt còn trng và còn kp t.
+
+                                            true khi soChoConLai = 0: hin "Ht ch", không cho
+                                            chn.
+
+4.18 KhungGioGopResponse
+
+1 khung gi ca chuyên khoa trong ngày, gp các khung cùng gi bt u ca mi bác s thuc chuyên
+khoa; dùng khi ngi t chn "bác s bt k". Khung ca 2 ca bt u lch gi nhau (08:00 và 08:30) là 2
+dòng riêng.
+
+Trng               Kiu                      Mô t
+gioBatDau          datetime                 Gi li làm gioBatDauKhung cùng idChuyenKhoa khi t
+                                            lch.
+gioKetThuc         datetime                 Gi kt thúc mun nht trong các khung c gp.
+tongSoCho          number                   Tng s lt ca các khung c gp.
+soChoConLai        number                   Tng s lt còn trng và còn kp t.
+hetCho             boolean                  true khi soChoConLai = 0.
+soBacSi            number                   S bác s có khung bt u vào gi này.
+
+                                        Trang 13 / 42
+                                                           eClinic -- Tài liu API: Xác thc và Tài khon
+
+4.19 NgayConChoResponse
+
+1 ngày có ca làm vic t lch c.
+
+Trng                 Kiu                      Mô t
+ngay                 date                     0: ngày có ca nhng ã ht ch.
+
+soChoConLai          number
+
+4.20 NgaySomNhatResponse
+
+Ngày còn ch sm nht ca 1 bác s, hin trên th bác s; ghép vi BacSiResponse theo idBacSi.
+
+Trng                 Kiu                      Mô t
+idBacSi              number
+
+ngay                 date
+
+soChoConLai          number                   S ch còn li ca ngày ó.
+
+4.21 DatLichResponse
+
+Kt qu t lch và i lch. Không có id lch hn: mi thao tác sau ó dùng maPhieuKham (3.10).
+
+Trng                 Kiu                      Mô t
+maPhieuKham          string
+                                              Mã phiu khám, 43 ký t; dùng trên ng dn API và
+maTraCuu             string                   trong link phiu khám.
+
+linkPhieuKham        string                   Mã ngn  c / in, vd ECL-20261005-4198; không m
+                                              c phiu khám.
+soThuTu              number
+ngay                 date                     Link trang phiu khám trên frontend; cng là ni dung
+gioKhamDuKien        datetime                 mã QR.
+gioBatDauKhung       datetime
+gioKetThucKhung      datetime                 S th t khám theo phòng khám và ngày.
+
+                                              Ngày khám.
+
+                                              Gi bt u lt khám c xp.
+
+                                              Khung 1 gi ã chn.
+
+trangThai            enum TrangThaiLichHen    Luôn là CHO_XAC_NHAN  lch va t / va i.
+bacSi                BacSiTomTatResponse
+
+phongKham            PhongKhamTomTatResponse
+
+hoTenBenhNhan        string                   úng h tên ngi t va nhp.
+hoTenNguoiGiamHo     string
+luuVaoTaiKhoan       boolean                  null nu lt khám không có ngi giám h.
+
+bacSiDoPhongKhamXep  boolean                  true: t khi ã ng nhp, lch có trong "lch hn ca
+                                              tôi". false: khách t, ch xem li c bng link phiu
+                                              khám.
+
+                                              true: ngi t chn "bác s bt k", h thng ã xp
+                                              bác s  bacSi.
+
+                                            Trang 14 / 42
+                                                            eClinic -- Tài liu API: Xác thc và Tài khon
+
+4.22 PhieuKhamResponse
+
+Phiu khám xem bng maPhieuKham, không cn ng nhp. Ai có link cng xem c nên CCCD và s in
+thoi ã che, không có id lch hn hay id h s.
+
+Trng                  Kiu                         Mô t
+maPhieuKham           string
+
+maTraCuu              string                      Mã ngn  c / in.
+linkPhieuKham         string                      Link trang phiu khám; cng là ni dung mã QR.
+trangThai             enum TrangThaiLichHen
+
+soThuTu               number
+
+ngay                  date
+
+gioKhamDuKien         datetime                    Gi bt u lt khám c xp.
+gioBatDauKhung        datetime
+
+gioKetThucKhung       datetime
+
+bacSi                 BacSiTomTatResponse
+
+tenChuyenKhoa         string
+
+phongKham             PhongKhamTomTatResponse
+
+lyDoKham              string
+
+ngayDat               datetime                    Thi im t lch.
+benhNhan              BenhNhanPhieuKhamResponse
+
+nguoiGiamHo           NguoiGiamHoPhieuKhamRespon  null nu lt khám không có ngi giám h.
+                      se
+canNguoiGiamHoDiCung  boolean                     true: hin ghi chú "ngi giám h phi i cùng".
+lyDoHuy               string                      Lý do bác s t chi (BI_TU_CHOI) hoc lý do hy; null
+                                                   các trng thái khác.
+duocHuyDoi            boolean                     true: lch còn hy / i c (3.11).
+hanHuyDoi             datetime                    Hn chót hy / i lch trên h thng.
+canDoiLich            boolean                     true: ca khám ã b hy, lch ang ch i sang khung
+                                                  gi khác (3.11).
+
+4.23 BenhNhanPhieuKhamResponse
+
+Ngi khám trên phiu khám công khai.
+
+Trng                  Kiu                         Mô t
+hoTen                 string
+                                                  Ch nm sinh.
+namSinh               number
+gioiTinh              enum GioiTinh               ã che, ch còn 3 s cui; null vi tr cha có CCCD.
+                                                  S in thoi liên h, ã che. null khi lt khám có
+cccd                  string                      ngi giám h (s liên h là ca ngi giám h).
+soDienThoai           string
+
+                                             Trang 15 / 42
+                                                        eClinic -- Tài liu API: Xác thc và Tài khon
+
+4.24 NguoiGiamHoPhieuKhamResponse
+
+Ngi giám h trên phiu khám công khai; không có CCCD.
+
+Trng              Kiu                      Mô t
+hoTen             string
+
+quanHe            enum QuanHeGiamHo
+
+soDienThoai       string                   ã che.
+
+4.25 LichHenCuaToiResponse
+
+1 dòng trong "lch hn ca tôi". Không có id lch hn: chi tit, hy, i, QR u dùng maPhieuKham.
+
+Trng              Kiu                      Mô t
+maPhieuKham       string
+
+maTraCuu          string                   Mã ngn  c / in.
+linkPhieuKham     string
+
+trangThai         enum TrangThaiLichHen
+
+soThuTu           number
+
+ngay              date
+
+gioKhamDuKien     datetime
+
+gioBatDauKhung    datetime
+
+gioKetThucKhung   datetime
+
+bacSi             BacSiTomTatResponse
+
+tenChuyenKhoa     string
+
+phongKham         PhongKhamTomTatResponse
+
+hoTenBenhNhan     string                   laBanThan = true: h tên trong h s ca ch tài
+laBanThan         boolean                  khon. Còn li: h tên ngi t ã nhp.
+
+hoTenNguoiGiamHo  string                   true: ngi khám là ch tài khon, bt k ai t.
+lyDoKham          string                   false: lch ca ngi khác (t cho ngi thân, hoc
+                                           ch tài khon là ngi giám h).
+
+                                           null nu không có ngi giám h.
+
+ngayDat           datetime                 Thi im t lch.
+nguoiDat          enum NguoiDatLich
+thongTinKhacHoSo  boolean                  Ai ã t lch này, nhìn t tài khon ang xem.
+
+lyDoHuy           string                   Ch có ngha khi laBanThan: ngi t ã nhp h tên /
+duocHuyDoi        boolean                  ngày sinh khác h s ca ch tài khon. true thì hin
+hanHuyDoi         datetime                 cnh báo "lch c t vi thông tin khác h s ca
+canDoiLich        boolean                  bn". Luôn false vi lch ca ngi khác.
+
+                                           Lý do bác s t chi hoc lý do hy; null  các trng
+                                           thái khác.
+
+                                           true: tài khon ang xem còn hy / i c lch này
+                                           (3.11).
+
+                                           Hn chót hy / i lch trên h thng.
+
+                                           true: ca khám ã b hy, lch ang ch i sang khung
+                                           gi khác (3.11).
+
+                                         Trang 16 / 42
+                                                      eClinic -- Tài liu API: Xác thc và Tài khon
+
+4.26 LichHenChiTietCuaToiResponse
+
+Chi tit 1 lch hn ca tôi, m bng maPhieuKham.
+
+Trng               Kiu                       Mô t
+lichHen            LichHenCuaToiResponse     úng nh dòng trong danh sách.
+ngaySinhBenhNhan   date                      lichHen.laBanThan: ngày sinh trong h s ca ch tài
+                                             khon. Còn li: ngày sinh ngi t ã nhp.
+gioiTinhBenhNhan   enum GioiTinh
+soDienThoaiLienHe  string                    S liên h ca lt khám, không che; null nu lch
+                                             không do tài khon ang xem t.
+emailLienHe        string                    null nu không nhp, hoc lch không do tài khon
+                                             ang xem t.
+ketQua             KetQuaKhamResponse        null nu cha khám xong, hoc tài khon không c
+                                             xem kt qu. Ch c xem khi lichHen.laBanThan
+duocDanhGia        boolean                   hoc lichHen.nguoiDat = TOI.
+danhGia            DanhGiaCuaToiResponse     true: lt khám ã hoàn thành, tài khon c xem
+                                             kt qu và cha gi ánh giá  hin form ánh giá.
+4.27 KetQuaKhamResponse                      ánh giá ã gi; null nu cha có hoc không c
+                                             xem kt qu.
+Kt qu 1 lt khám do bác s ghi.
+                                             Mô t
+Trng               Kiu
+chanDoan           string                    Li dn ca bác s; null nu không có.
+                                             Gi ý ngày tái khám, không phi lch hn; null nu
+ghiChu             string                    không có.
+ngayTaiKhamDeXuat  date                      Mng rng nu không kê n.
+
+donThuoc           DonThuoc[]                Mô t
+
+DonThuoc -- phn t ca donThuoc.               n v ca thuc trong danh mc, vd viên.
+
+Trng               Kiu                       null nu bác s không ghi.
+tenThuoc           string                    null nu bác s không ghi.
+                                             null nu không có.
+donVi              string
+lieuDung           string
+
+soLanMoiNgay       number
+soNgayDung         number
+ghiChuSuDung       string
+
+4.28 DanhGiaCuaToiResponse
+
+ánh giá bnh nhân ã gi cho 1 lt khám.
+
+                                       Trang 17 / 42
+Trng              Kiu                                              eClinic -- Tài liu API: Xác thc và Tài khon
+soSao             number
+nhanXet           string                    Mô t
+ngayTao           datetime                  1 n 5.
+duocSuaDen        datetime                  null nu không vit.
+                                            Lúc gi ln u.
+                                            Sa c ti thi im này.
+
+4.29 LanKhamCuaToiResponse
+
+1 lt ã khám trong lch s khám.
+
+Trng              Kiu                       Mô t
+lichHen           LichHenCuaToiResponse     Nh 1 dòng "lch hn ca tôi".
+ketQua            KetQuaKhamResponse        Chn oán, li dn, ngày tái khám, n thuc.
+
+4.30 HoSoCuaToiResponse
+
+H s bnh nhân ca tài khon ang ng nhp; CCCD và s in thoi không che. Khi trangThaiLienKet =
+CHO_XAC_MINH thì mi trng khác u là null.
+
+Trng              Kiu                       Mô t
+trangThaiLienKet  enum TrangThaiLienKet
+
+cccd              string                    Không i c sau khi ã lu.
+hoTen             string
+
+ngaySinh          date
+
+gioiTinh          enum GioiTinh
+
+soDienThoai       string
+
+diaChi            string
+
+soBaoHiemYTe      string
+
+tienSuBenhLy      string
+
+4.31 ThongTinDatLichResponse
+
+Mi th  in sn form t lch cho bnh nhân ã ng nhp, trong 1 ln gi.
+
+Trng              Kiu                       Mô t
+banThan           HoSoCuaToiResponse
+                                            H s ca tài khon, cho "t cho bn thân"; null nu
+emailTaiKhoan     string                    tài khon cha có h s; h s ang ch xác minh thì
+nguoiThan         NguoiThanDaLuuResponse[]  ch có trangThaiLienKet.
+lanDatGanNhat     LanDatGanNhat
+                                            Email ng nhp, gi ý cho ô email ca form.
+
+                                            Ngi thân ã lu, ngi va t lch gn nht ng
+                                            trc; ti a 10.
+
+                                            null nu tài khon cha t ln nào.
+
+LanDatGanNhat -- chuyên khoa và bác s ca lch hn gn nht tài khon ã t.
+
+                                         Trang 18 / 42
+                                                        eClinic -- Tài liu API: Xác thc và Tài khon
+
+Trng           Kiu                       Mô t
+idChuyenKhoa   number
+tenChuyenKhoa  string
+idBacSi        number
+hoTenBacSi     string
+
+4.32 NguoiThanDaLuuResponse
+
+1 ngi thân ã lu ca tài khon: úng nhng gì tài khon nhp  ln t lch gn nht cho ngi này,
+không che. Tên trng trùng vi benhNhan / nguoiGiamHo ca request t lch  chép thng vào form.
+
+Trng           Kiu                       Mô t
+id             number                    Dùng  sa / b ngi này khi danh sách ã lu.
+hoTen          string
+
+ngaySinh       date
+
+gioiTinh       enum GioiTinh
+
+cccd           string                    null nu ngi di 18 tui c t khi cha có
+soDienThoai    string                    CCCD.
+
+email          string                    null nu không nhp.
+diaChi         string                    null nu không nhp.
+soBaoHiemYTe   string                    null nu không nhp.
+nguoiGiamHo    NguoiGiamHo               null nu ln t gn nht không có ngi giám h.
+lanDungCuoi    datetime                  Ln t lch gn nht cho ngi này.
+
+NguoiGiamHo -- ngi giám h ã lu kèm.
+
+Trng           Kiu                       Mô t
+hoTen          string                    null nu không nhp.
+
+quanHe         enum QuanHeGiamHo
+
+soDienThoai    string
+
+cccd           string
+
+ngaySinh       date
+
+4.33 TrangCaNhanResponse
+
+Mi th trang cá nhân ca bnh nhân hin th, trong 1 ln gi.
+
+Trng           Kiu                       Mô t
+hoSo           HoSoCuaToiResponse
+                                         null nu tài khon cha có h s; h s ang ch xác
+emailTaiKhoan  string                    minh thì ch có trangThaiLienKet.
+nguoiThan      NguoiThanDaLuuResponse[]
+                                         Email ng nhp.
+lichSapToi     LichSapToi
+                                         Ngi thân ã lu, ngi va t lch gn nht ng
+                                         trc.
+
+                                         5 lch sp ti gn nht ca mi bên.
+
+                                     Trang 19 / 42
+Trng                Kiu                                              eClinic -- Tài liu API: Xác thc và Tài khon
+lanKhamGanDay       LanKhamCuaToiResponse[]   Mô t
+                                              5 lt ã khám gn nht mà tài khon c xem kt
+soLich              SoLich                    qu.
+                                              S m,  bit còn lch ngoài các dòng tr kèm.
+LichSapToi -- lch sp ti, chia theo ngi khám.
+                                              Mô t
+Trng                Kiu                       Ngi khám là ch tài khon, bt k ai t.
+cuaToi              LichHenCuaToiResponse[]   Lch t cho ngi thân, hoc ch tài khon là ngi
+cuaNguoiKhac        LichHenCuaToiResponse[]   giám h.
+
+SoLich -- tng s lch theo loi.                 Mô t
+
+Trng                Kiu                       Lch ã khám, ã hy, b t chi hoc ã qua gi, ca
+sapToiCuaToi        number                    c hai bên.
+                                              S lt ã khám mà tài khon c xem kt qu.
+sapToiCuaNguoiKhac  number
+
+lichSu              number
+
+daKham              number
+
+4.34 ThongBaoResponse
+
+1 thông báo ca tài khon ang ng nhp (notification-service).
+
+Trng                Kiu                       Mô t
+id                  number
+
+loai                enum LoaiThongBao
+
+noiDung             string                    Câu thông báo ting Vit ã son sn; hin th nguyên
+daDoc               boolean                   vn.
+
+ngayTao             datetime
+
+idLichHen           number                    Lch hn liên quan; null nu thông báo không gn vi
+maPhieuKham         string                    lch hn. Bnh nhân không dùng trng này.
+idYeuCau            number
+                                              Ch có khi ngi c là bnh nhân: mã phiu khám
+                                              ca lch hn liên quan,  m chi tit lch hn; null vi
+                                              vai trò khác.
+
+                                              Dành cho bác s / qun tr viên; null vi bnh nhân.
+
+4.35 SoChuaDocResponse
+
+Trng                Kiu                       Mô t
+                                              S thông báo cha c; s trên biu tng chuông.
+soChuaDoc           number
+
+                                       Trang 20 / 42
+4.36 DanhDauDaDocResponse                                     eClinic -- Tài liu API: Xác thc và Tài khon
+
+Trng                 Kiu               Mô t
+                                       S thông báo va chuyn t cha c sang ã c.
+soDaDanhDau          number
+
+5. Xác thc (AUTH)
+
+Nhóm route /api/auth/** u công khai: không cn access token. ng nhp và làm mi phiên tr access
+token trong body, còn refresh token i trong cookie HttpOnly eclinic_rt (xem mc 3.2).
+
+5.1 ng ký tài khon bnh nhân
+
+POST         /api/auth/register
+
+Quyn truy cp: Công khai (không cn access token)
+
+Bnh nhân t ng ký. H thng to tài khon trng thái CHO_XAC_NHAN và gi email cha liên kt kích hot.
+Tài khon cha ng nhp c cho ti khi kích hot (xem 5.2).
+
+REQUEST BODY (JSON)
+
+Trng         Kiu               Bt buc  Ràng buc / mô t
+
+hoTen        string            Có      Không rng, ti a 150 ký t (c trim).
+
+email        string            Có      úng nh dng email, ti a 255 ký t. c chun hoá: trim
+                                       và ch thng.
+
+matKhau      string            Có      Ti thiu 6 ký t, ti a 72 byte UTF-8.
+
+soDienThoai  string            Có      10 ch s, bt u bng 0 (^0\d{9}$).
+
+cccd         string            Không   S CCCD gm úng 12 ch s; b trng hoc không gi nu
+
+                                       không khai. Xem lu ý.
+
+{
+   "hoTen": "Nguyn Vn An",
+   "email": "an.nguyen@example.com",
+   "matKhau": "MatKhau@123",
+   "soDienThoai": "0901234567",
+   "cccd": "079201000001"
+
+}
+
+RESPONSE THÀNH CÔNG -- 201 CREATED
+
+  {
+     "thanhCong": true,
+     "thongDiep": "ng ký thành công, vui lòng kim tra email  kích hot tài khon",
+     "duLieu": {
+         "id": 21,
+         "hoTen": "Nguyn Vn An",
+         "email": "an.nguyen@example.com",
+         "soDienThoai": "0901234567",
+         "vaiTro": "BENH_NHAN",
+         "trangThai": "CHO_XAC_NHAN"
+     }
+
+  }
+
+MÃ LI    maLoi                         iu kin
+ HTTP    DU_LIEU_KHONG_HOP_LE          Body sai quy tc; danh sách li tng trng nm trong chiTiet.
+    400
+
+                                       Trang 21 / 42
+                                                               eClinic -- Tài liu API: Xác thc và Tài khon
+
+HTTP     maLoi                                iu kin
+  409    EMAIL_DA_TON_TAI                     Email ã thuc tài khon ã kích hot hoc ã b vô hiu hoá.
+  409    SO_DIEN_THOAI_DA_TON_TAI             S in thoi ã c tài khon khác dùng.
+  429    GUI_LAI_QUA_NHANH                    Email ang ch kích hot và va c gi liên kt trong vòng 60
+                                              giây.
+
+LU Ý
+
+    · Liên kt trong email có dng <FRONTEND_URL>/verify-email?token=<token>, hiu lc 24 gi, dùng 1
+        ln.
+
+    · ng ký li bng mt email ang CHO_XAC_NHAN s ghi è h tên, s in thoi, mt khu và vô hiu
+        liên kt c (ngi ng ký trc có th không phi ch email).
+
+    · Khi chy vi MAIL_MODE=console (mc nh), email không c gi mà liên kt ch ghi ra log ca
+        identity-service (xem Ph lc C).
+
+    · cccd ch là li khai lúc ng ký. Nu có, sau khi ng nhp h thng t tìm h s bnh nhân ã to khi
+        t lch nh khách bng s CCCD này  liên kt vào tài khon. Không API nào tr li s này, và s
+        ã có ngi dùng cng không làm ng ký b t chi.
+
+5.2 Kích hot tài khon
+
+POST     /api/auth/verify-email
+
+Quyn truy cp: Công khai (không cn access token)
+Frontend c token trên URL ca liên kt trong email ri gi lên route này.
+
+REQUEST BODY (JSON)
+
+Trng     Kiu                    Bt buc        Ràng buc / mô t
+
+token    string                 Có            Token trong liên kt email, ti a 100 ký t.
+
+{
+   "token": "Zk3v0n1sQ2m7...43-ky-tu"
+
+}
+
+RESPONSE THÀNH CÔNG -- 200 OK
+
+  {
+     "thanhCong": true,
+     "thongDiep": "Xác thc email thành công"
+
+  }
+
+MÃ LI    maLoi                                iu kin
+ HTTP    DU_LIEU_KHONG_HOP_LE                 Body sai quy tc; danh sách li tng trng nm trong chiTiet.
+    400  LIEN_KET_KHONG_HOP_LE                Token sai, ã dùng, ã ht hn hoc ã b thay bng liên kt mi
+    410                                       hn.
+                                              Tài khon ã b qun tr viên vô hiu hoá.
+403 TAI_KHOAN_BI_VO_HIEU_HOA
+
+LU Ý
+
+    · Tài khon ã kích hot t trc mà dùng li mt token còn hiu lc vn tr 200.
+
+                                              Trang 22 / 42
+                                                         eClinic -- Tài liu API: Xác thc và Tài khon
+
+5.3 Gi li liên kt kích hot
+
+POST     /api/auth/resend-verification
+
+Quyn truy cp: Công khai (không cn access token)
+Luôn tr cùng mt thông báo dù email có tn ti hay không,  không l email nào ã ng ký.
+
+REQUEST BODY (JSON)
+
+Trng     Kiu                   Bt buc   Ràng buc / mô t
+
+email    string                Có       úng nh dng email, ti a 255 ký t.
+
+{
+   "email": "an.nguyen@example.com"
+
+}
+
+RESPONSE THÀNH CÔNG -- 200 OK
+
+  {
+     "thanhCong": true,
+     "thongDiep": "Nu email ã ng ký và cha kích hot, liên kt mi ã c gi"
+
+  }
+
+MÃ LI    maLoi                          iu kin
+ HTTP    DU_LIEU_KHONG_HOP_LE           Body sai quy tc; danh sách li tng trng nm trong chiTiet.
+    400
+
+LU Ý
+
+    · Ch gi khi tài khon ang CHO_XAC_NHAN và ã qua 60 giây k t ln gi trc; ngc li im lng b
+        qua (vn tr 200, không tr 429).
+
+    · Liên kt mi làm liên kt c ht hiu lc.
+
+5.4 ng nhp bng email và mt khu
+
+POST     /api/auth/login
+
+Quyn truy cp: Công khai (không cn access token)
+
+Tr access token trong body; refresh token c t vào cookie HttpOnly eclinic_rt (không có trong
+JSON). Header User-Agent ca request c lu làm tên thit b trong danh sách phiên (xem 9.1).
+
+REQUEST BODY (JSON)
+
+Trng     Kiu                   Bt buc   Ràng buc / mô t
+
+email    string                Có       Không rng, ti a 255 ký t (không kim tra nh dng).
+
+matKhau  string                Có       Không rng, ti a 1000 ký t.
+
+{
+   "email": "an.nguyen@example.com",
+   "matKhau": "MatKhau@123"
+
+}
+
+VÍ D CURL
+
+  curl -i -c cookies.txt -X POST http://localhost:8080/api/auth/login \
+     -H "Content-Type: application/json" \
+     -d '{"email":"admin@eclinic.local","matKhau":"Admin@123"}'
+
+                                        Trang 23 / 42
+                                                                                                                         eClinic -- Tài liu API: Xác thc và Tài khon
+
+RESPONSE THÀNH CÔNG -- 200 OK
+  Set-Cookie: eclinic_rt=<refreshToken>; Path=/api/auth; Max-Age=604800; HttpOnly; Secure;
+  SameSite=Strict
+
+{
+   "thanhCong": true,
+   "thongDiep": "ng nhp thành công",
+   "duLieu": {
+      "accessToken": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIyMSIs...",
+      "loaiToken": "Bearer",
+      "thoiHanAccessToken": 1800,
+      "taiKhoan": {
+         "id": 21,
+         "hoTen": "Nguyn Vn An",
+         "email": "an.nguyen@example.com",
+         "soDienThoai": "0901234567",
+         "vaiTro": "BENH_NHAN",
+         "trangThai": "DA_KICH_HOAT"
+      }
+   }
+
+}
+
+MÃ LI    maLoi                            iu kin
+ HTTP    DU_LIEU_KHONG_HOP_LE
+    400  SAI_THONG_TIN_DANG_NHAP          Body sai quy tc; danh sách li tng trng nm trong chiTiet.
+    401
+                                          Email không tn ti, sai mt khu, hoc tài khon cha có mt
+403 TAI_KHOAN_CHUA_XAC_THUC               khu (ch ng nhp Google).
+403 TAI_KHOAN_BI_VO_HIEU_HOA
+403 PHAI_DOI_MAT_KHAU                     Mt khu úng nhng tài khon còn CHO_XAC_NHAN.
+
+429 DANG_NHAP_SAI_QUA_NHIEU               Mt khu úng nhng tài khon b vô hiu hoá.
+
+                                          Mt khu úng nhng tài khon còn dùng mt khu mc nh (tài
+                                          khon bác s do qun tr viên to). Không cp phiên; t mt khu
+                                          mi  5.11 ri ng nhp li.
+
+                                          Sai mt khu 5 ln: email b khoá 15 phút (tính t ln sai th 5).
+
+LU Ý
+
+    · Trng thái tài khon (403) ch c báo khi mt khu úng; mt khu sai luôn là 401  không l
+        thông tin tài khon.
+
+    · ng nhp úng xoá b m sai mt khu.
+
+    · Nhn 403 PHAI_DOI_MAT_KHAU: gi li email và mt khu va nhp, hin form t mt khu mi ri gi
+        POST /api/auth/first-password (5.11).
+
+5.5 Làm mi phiên ng nhp
+
+POST          /api/auth/refresh-token
+
+Quyn truy cp: Công khai (không cn access token)
+
+i refresh token ly cp token mi; refresh token c ht hiu lc ngay (dùng mt ln). Server c cookie
+eclinic_rt trc; ch khi không có cookie mi c refreshToken trong body ( th bng Swagger, curl).
+
+REQUEST BODY (JSON)
+
+Trng          Kiu                 Bt buc  Ràng buc / mô t
+
+refreshToken  string              Không   Ch dùng khi không có cookie. Ti a 100 ký t. Có th b
+                                          trng c body.
+
+{}
+
+                                                               Trang 24 / 42
+                                                         eClinic -- Tài liu API: Xác thc và Tài khon
+
+VÍ D CURL
+  curl -i -b cookies.txt -c cookies.txt -X POST http://localhost:8080/api/auth/refresh-token
+
+RESPONSE THÀNH CÔNG -- 200 OK
+
+  Set-Cookie: eclinic_rt=<refreshToken mi>; Path=/api/auth; Max-Age=604800; HttpOnly; Secure;
+  SameSite=Strict
+
+Body ging POST /api/auth/login (thongDiep: "Làm mi phiên ng nhp thành công"). Phiên gi nguyên mã và thi
+im ng nhp, ch i token.
+
+MÃ LI     maLoi                         iu kin
+ HTTP
+
+401 PHIEN_DANG_NHAP_KHONG_HOP_LE        Không có refresh token, token không tn ti, ã ht hn, ã b thu
+                                        hi, hoc b dùng li.
+
+403 TAI_KHOAN_BI_VO_HIEU_HOA            Tài khon b vô hiu hoá sau khi ng nhp.
+
+LU Ý
+
+    · Token ã xoay vòng mà b dùng li sau hn 10 giây c coi là có th b l: phiên ca token ó b
+        ng xut (các thit b khác gi nguyên). Trong 10 giây ch t chi, vì thng là hai tab làm mi cùng
+        lúc.
+
+    · Mi ln làm mi, refresh token mi sng thêm 7 ngày.
+
+5.6 ng xut
+
+    POST      /api/auth/logout
+
+Quyn truy cp: Công khai (không cn access token)
+
+Thu hi phiên ca refresh token (cookie, hoc refreshToken trong body) và xoá cookie. Luôn tr thành công,
+k c khi không có token hoc token sai.
+
+REQUEST BODY (JSON)
+
+Trng             Kiu            Bt buc  Ràng buc / mô t
+
+refreshToken     string         Không   Ch dùng khi không có cookie. Ti a 100 ký t.
+
+{}
+
+RESPONSE THÀNH CÔNG -- 200 OK
+  Set-Cookie: eclinic_rt=; Path=/api/auth; Max-Age=0; HttpOnly; Secure; SameSite=Strict
+
+  {
+     "thanhCong": true,
+     "thongDiep": "ã ng xut"
+
+  }
+
+Không có li nghip v riêng, ngoài các li chung  mc 3.4.
+
+LU Ý
+
+    · Access token ang gi vn dùng c ti khi ht hn (ti a 30 phút); frontend nên b nó khi b
+        nh.
+
+                                        Trang 25 / 42
+                                                         eClinic -- Tài liu API: Xác thc và Tài khon
+
+5.7 Quên mt khu
+
+POST        /api/auth/forgot-password
+
+Quyn truy cp: Công khai (không cn access token)
+Gi liên kt t li mt khu qua email. Luôn tr cùng mt thông báo  không l email nào ã ng ký.
+
+REQUEST BODY (JSON)
+
+Trng        Kiu                Bt buc   Ràng buc / mô t
+
+email       string             Có       úng nh dng email, ti a 255 ký t.
+
+{
+   "email": "an.nguyen@example.com"
+
+}
+
+RESPONSE THÀNH CÔNG -- 200 OK
+
+  {
+     "thanhCong": true,
+     "thongDiep": "Nu email ã ng ký, liên kt t li mt khu ã c gi"
+
+  }
+
+MÃ LI    maLoi                          iu kin
+ HTTP    DU_LIEU_KHONG_HOP_LE           Body sai quy tc; danh sách li tng trng nm trong chiTiet.
+    400
+
+LU Ý
+
+    · Ch gi cho tài khon DA_KICH_HOAT, và ch khi ã qua 60 giây k t ln gi trc (ngc li im lng
+        b qua).
+
+    · Liên kt <FRONTEND_URL>/reset-password?token=... hiu lc 15 phút, dùng 1 ln; liên kt gi trc
+        ó ht hiu lc.
+
+    · Tài khon ch ng nhp Google (cha có mt khu) dùng route này  t mt khu ln u.
+
+    · Tài khon bác s còn dùng mt khu mc nh cng dùng c route này: t li mt khu xong (5.8)
+        thì ng nhp nh bình thng, không cn gi 5.11.
+
+5.8 t li mt khu
+
+POST        /api/auth/reset-password
+
+Quyn truy cp: Công khai (không cn access token)
+Mt khu mi c kim tra trc khi dùng token, nên mt khu sai quy tc (400) không làm mt liên kt.
+
+REQUEST BODY (JSON)
+
+Trng        Kiu                Bt buc   Ràng buc / mô t
+
+token       string             Có       Token trong liên kt email, ti a 100 ký t.
+
+matKhauMoi  string             Có       Ti thiu 6 ký t, ti a 72 byte UTF-8.
+
+{
+   "token": "Zk3v0n1sQ2m7...43-ky-tu",
+   "matKhauMoi": "MatKhauMoi@456"
+
+}
+
+                                        Trang 26 / 42
+                                                                                                                         eClinic -- Tài liu API: Xác thc và Tài khon
+
+RESPONSE THÀNH CÔNG -- 200 OK
+  {
+     "thanhCong": true,
+     "thongDiep": "t li mt khu thành công, vui lòng ng nhp li"
+  }
+
+MÃ LI    maLoi                         iu kin
+ HTTP    DU_LIEU_KHONG_HOP_LE          Body sai quy tc; danh sách li tng trng nm trong chiTiet.
+    400  LIEN_KET_KHONG_HOP_LE         Token sai, ã dùng hoc ht hn.
+    410  TAI_KHOAN_BI_VO_HIEU_HOA      Tài khon b vô hiu hoá.
+    403
+
+LU Ý
+
+    · Sau khi thành công: mi thit b b ng xut, b m khoá ng nhp c xoá, yêu cu i email
+        ang ch (nu có) b hu, và gi email thông báo ã i mt khu.
+
+5.9 Xác nhn i email
+
+POST     /api/auth/confirm-email-change
+
+Quyn truy cp: Công khai (không cn access token)
+
+Token nm trong liên kt gi ti email mi (xem 8.1). Route công khai vì liên kt có th m  trình duyt
+cha ng nhp.
+
+REQUEST BODY (JSON)
+
+Trng     Kiu         Bt buc              Ràng buc / mô t
+
+token    string      Có                  Token trong liên kt email, ti a 100 ký t.
+
+{
+   "token": "Zk3v0n1sQ2m7...43-ky-tu"
+
+}
+
+RESPONSE THÀNH CÔNG -- 200 OK
+
+  {
+     "thanhCong": true,
+     "thongDiep": "ã i email ng nhp, vui lòng ng nhp li bng email mi"
+
+  }
+
+MÃ LI    maLoi                         iu kin
+ HTTP    DU_LIEU_KHONG_HOP_LE          Body sai quy tc; danh sách li tng trng nm trong chiTiet.
+    400  LIEN_KET_KHONG_HOP_LE         Token sai, ã dùng, ht hn hoc ã b hu.
+    410  TAI_KHOAN_BI_VO_HIEU_HOA      Tài khon b vô hiu hoá.
+    403  EMAIL_DA_TON_TAI              T lúc yêu cu ti gi ã có tài khon khác ng ký email này.
+    409
+
+LU Ý
+
+    · Thành công thì mi thit b ca tài khon b ng xut; email c nhn thông báo. Cookie ca trình
+        duyt ang m liên kt không b xoá (có th ang ng nhp tài khon khác).
+
+                                         Trang 27 / 42
+                                                             eClinic -- Tài liu API: Xác thc và Tài khon
+
+5.10 ng nhp bng Google
+
+POST     /api/auth/google
+
+Quyn truy cp: Công khai (không cn access token)
+
+Frontend dùng Google Identity Services, ly credential (ID token) ri gi lên route này. Ch bnh nhân
+dùng c. Kt qu ging POST /api/auth/login (access token trong body, refresh token trong cookie).
+
+Server kim tra ch ký (khoá công khai ca Google), iss, aud (phi bng GOOGLE_CLIENT_ID), hn dùng và
+email_verified.
+
+REQUEST BODY (JSON)
+
+Trng            Kiu        Bt buc    Ràng buc / mô t
+
+idToken         string     Có        ID token (credential) do Google cp, ti a 4096 ký t.
+
+{
+   "idToken": "eyJhbGciOiJSUzI1NiIsImtpZCI6Ij..."
+
+}
+
+RESPONSE THÀNH CÔNG -- 200 OK
+Body và cookie ging POST /api/auth/login (thongDiep: "ng nhp Google thành công").
+
+MÃ LI    maLoi                       iu kin
+ HTTP
+
+400 DU_LIEU_KHONG_HOP_LE             Body sai quy tc; danh sách li tng trng nm trong chiTiet.
+
+401 GOOGLE_TOKEN_KHONG_HOP_LE        Ch ký sai, ht hn, sai aud/iss, hoc email cha c Google
+                                     xác minh.
+
+403 DANG_NHAP_GOOGLE_KHONG_HO_TRO    Email thuc tài khon bác s hoc qun tr viên.
+
+403 TAI_KHOAN_BI_VO_HIEU_HOA         Tài khon b vô hiu hoá.
+
+409 EMAIL_DA_DANG_KY_MAT_KHAU        Email ã có tài khon ã liên kt mt tài khon Google khác, hoc
+                                     Google không m bo ngi ng nhp là ch email.
+
+409 XUNG_DOT_DU_LIEU                 Hai request ng nhp ln u chy cùng lúc; th li s thành
+                                     công.
+
+503 DANG_NHAP_GOOGLE_KHONG_KHA_DUNG  Cha t GOOGLE_CLIENT_ID cho identity-service, hoc không ly
+                                     c khoá công khai ca Google (li mng).
+
+LU Ý
+
+    · Email cha có tài khon: to tài khon BENH_NHAN ã kích hot, không có mt khu (coMatKhau =
+        false).
+
+    · Email ã có tài khon mt khu: liên kt Google vào tài khon ó, gi nguyên h tên và mt khu.
+        Nu tài khon ang CHO_XAC_NHAN, nó c kích hot, mt khu và s in thoi cha xác minh b b.
+
+    · nh i din ly t Google ch c dùng khi tài khon cha có nh, và ch  ln liên kt u.
+
+5.11 t mt khu ln u
+
+POST     /api/auth/first-password
+
+Quyn truy cp: Công khai (không cn access token)
+Dành cho tài khon ang mang mt khu mc nh: tài khon bác s do qun tr viên to. Vi tài khon này
+POST /api/auth/login tr 403 PHAI_DOI_MAT_KHAU và không cp phiên; frontend hin form t mt khu mi
+ri gi route này.
+Route này không cp phiên: sau khi thành công, gi li POST /api/auth/login bng mt khu mi.
+
+                                                                 Trang 28 / 42
+REQUEST BODY (JSON)                                                            eClinic -- Tài liu API: Xác thc và Tài khon
+
+Trng            Kiu          Bt buc         Ràng buc / mô t
+                             Có             úng nh dng email, ti a 255 ký t.
+email           string       Có             Mt khu mc nh (mt khu va dùng  ng nhp). Không
+                                            rng, ti a 200 ký t.
+matKhauHienTai  string       Có             Ti thiu 6 ký t, ti a 72 byte UTF-8. Phi khác mt khu
+                                            hin ti.
+matKhauMoi      string
+
+{
+   "email": "bs.moi@eclinic.local",
+   "matKhauHienTai": "Doctor@123",
+   "matKhauMoi": "MatKhauMoi@456"
+
+}
+
+RESPONSE THÀNH CÔNG -- 200 OK
+
+  {
+     "thanhCong": true,
+     "thongDiep": "ã t mt khu, vui lòng ng nhp bng mt khu mi"
+
+  }
+
+MÃ LI    maLoi                              iu kin
+ HTTP    DU_LIEU_KHONG_HOP_LE               Body sai quy tc; danh sách li tng trng nm trong chiTiet.
+    400  MAT_KHAU_MOI_TRUNG_MAT_KHAU_CU     Mt khu mi ging mt khu hin ti.
+    400  SAI_THONG_TIN_DANG_NHAP            Email không tn ti hoc mt khu hin ti không úng.
+    401  TAI_KHOAN_CHUA_XAC_THUC            Mt khu úng nhng tài khon còn CHO_XAC_NHAN.
+    403  TAI_KHOAN_BI_VO_HIEU_HOA           Mt khu úng nhng tài khon b vô hiu hoá.
+    403  TRANG_THAI_TAI_KHOAN_KHONG_HOP_LE  Tài khon không mang mt khu mc nh (ã có mt khu riêng):
+    409                                     ng nhp nh bình thng.
+                                            Sai mt khu 5 ln (m chung vi ng nhp sai): email b khoá
+429 DANG_NHAP_SAI_QUA_NHIEU                 15 phút.
+
+LU Ý
+
+    · Mt khu mc nh do phòng khám t (DOCTOR_DEFAULT_PASSWORD, mc nh Doctor@123, xem Ph lc
+        C). Email báo tài khon gi cho bác s không cha mt khu.
+
+    · Ging ng nhp: trng thái tài khon (403, 409) ch c báo khi mt khu hin ti úng.
+    · Quên mt khu (5.7, 5.8) cng g c trng thái mt khu mc nh.
+
+6. H s cá nhân và mt khu
+
+Các route /api/users/me luôn thao tác trên tài khon ca chính ngi gi (id ly t JWT, không nhn id
+trên URL). Mi vai trò u gi c. Li chung ca c nhóm cn ng nhp: xem mc 3.4.
+
+6.1 Xem h s cá nhân
+
+GET         /api/users/me
+
+Quyn truy cp: Mi vai trò (cn access token)
+
+Tr thông tin tài khon kèm h s theo vai trò: bác s có thêm bacSi, bnh nhân có thêm hoSoBenhNhan (ch
+xem), qun tr viên không có h s riêng.
+
+                                            Trang 29 / 42
+                                                                                                                         eClinic -- Tài liu API: Xác thc và Tài khon
+
+RESPONSE THÀNH CÔNG -- 200 OK
+
+  {
+     "thanhCong": true,
+     "duLieu": {
+         "id": 21,
+         "hoTen": "Nguyn Vn An",
+         "email": "an.nguyen@example.com",
+         "soDienThoai": "0901234567",
+         "anhDaiDien": "https://res.cloudinary.com/demo/image/upload/v1759450000/eclinic/avatar/21.jpg",
+         "vaiTro": "BENH_NHAN",
+         "trangThai": "DA_KICH_HOAT",
+         "coMatKhau": true,
+         "lienKetGoogle": false,
+         "ngayTao": "2026-10-03T08:40:00",
+         "bacSi": null,
+         "hoSoBenhNhan": {
+            "id": 7,
+            "trangThaiLienKet": "DA_LIEN_KET",
+            "cccd": "079201000001",
+            "hoTen": "Nguyn Vn An",
+            "ngaySinh": "2001-05-20",
+            "gioiTinh": "NAM",
+            "soDienThoai": "0901234567",
+            "diaChi": "C Chi, TP. H Chí Minh",
+            "soBaoHiemYTe": null,
+            "tienSuBenhLy": null
+         }
+     }
+
+  }
+
+Không có li nghip v riêng, ngoài các li chung  mc 3.4.
+
+LU Ý
+
+    · Khi h s bnh nhân ang CHO_XAC_MINH, hoSoBenhNhan ch có trangThaiLienKet; mi trng khác là
+        null.
+
+    · coMatKhau = false: tài khon ch ng nhp Google, cha t mt khu.
+
+6.2 Cp nht h s cá nhân
+
+PUT          /api/users/me
+
+Quyn truy cp: Mi vai trò (cn access token)
+Ch sa c h tên và s in thoi ca tài khon.
+
+REQUEST BODY (JSON)
+
+Trng         Kiu                Bt buc  Ràng buc / mô t
+
+hoTen        string             Có      Không rng, ti a 150 ký t.
+
+soDienThoai  string             Không   10 ch s, bt u bng 0. B trng (hoc null) thì gi s hin
+                                        ti; không xoá c s ã có.
+
+{
+   "hoTen": "Nguyn Vn An",
+   "soDienThoai": "0907654321"
+
+}
+
+RESPONSE THÀNH CÔNG -- 200 OK
+duLieu là h s sau khi sa (cùng cu trúc GET /api/users/me), thongDiep: "ã cp nht h s cá nhân".
+
+                                        Trang 30 / 42
+MÃ LI      maLoi                                                                    eClinic -- Tài liu API: Xác thc và Tài khon
+ HTTP      DU_LIEU_KHONG_HOP_LE
+    400    KHONG_CO_QUYEN                  iu kin
+    403                                    Body sai quy tc; danh sách li tng trng nm trong chiTiet.
+                                           Tài khon bác s i h tên (h tên bác s do qun tr viên qun lý;
+409 SO_DIEN_THOAI_DA_TON_TAI               bác s ch i c s in thoi).
+                                           S in thoi ã c tài khon khác dùng.
+
+6.3 i mt khu
+
+PUT         /api/users/me/change-password
+
+Quyn truy cp: Mi vai trò (cn access token)
+
+Phi nhp úng mt khu hin ti. Mt khu hin ti sai tr 400 (không phi 401)  frontend không nhm
+vi ht phiên ri i làm mi token.
+
+REQUEST BODY (JSON)
+
+Trng          Kiu                Bt buc    Ràng buc / mô t
+
+matKhauCu     string             Có        Không rng, ti a 1000 ký t.
+
+matKhauMoi    string             Có        Ti thiu 6 ký t, ti a 72 byte UTF-8.
+
+{
+   "matKhauCu": "MatKhau@123",
+   "matKhauMoi": "MatKhauMoi@456"
+
+}
+
+RESPONSE THÀNH CÔNG -- 200 OK
+
+  {
+     "thanhCong": true,
+     "thongDiep": "i mt khu thành công, các thit b khác ã b ng xut"
+
+  }
+
+MÃ LI      maLoi                           iu kin
+ HTTP      DU_LIEU_KHONG_HOP_LE            Body sai quy tc; danh sách li tng trng nm trong chiTiet.
+    400    MAT_KHAU_CU_KHONG_DUNG          Mt khu hin ti không úng.
+    400    MAT_KHAU_MOI_TRUNG_MAT_KHAU_CU  Mt khu mi ging mt khu hin ti.
+    400    TAI_KHOAN_CHUA_CO_MAT_KHAU      Tài khon ch ng nhp Google; dùng forgot-password  t
+    409                                    mt khu.
+                                           Nhp sai mt khu hin ti 5 ln: khoá 15 phút (b m dùng
+429 SAI_MAT_KHAU_QUA_NHIEU                 chung vi i email).
+
+LU Ý
+
+    · Các thit b khác b ng xut, thit b ang dùng gi nguyên. Yêu cu i email ang ch b hu và
+        email thông báo c gi.
+
+7. nh i din
+
+nh lu  Cloudinary, mi tài khon mt nh. Mi vai trò u gi c, luôn thao tác trên tài khon ca
+chính ngi gi.
+
+                                                                 Trang 31 / 42
+                                                            eClinic -- Tài liu API: Xác thc và Tài khon
+
+7.1 i nh i din
+
+     POST  /api/users/me/avatar
+
+Quyn truy cp: Mi vai trò (cn access token)
+
+Gi multipart/form-data vi mt phn tp tên anh: JPEG, PNG hoc WebP, ti a 2 MB. nh dng c
+nhn din t ni dung tp, không da vào tên tp hay Content-Type.
+
+REQUEST (MULTIPART/FORM-DATA)
+
+Trng              Kiu     Bt buc  Ràng buc / mô t
+
+anh               file    Có      JPEG / PNG / WebP, ti a 2 MB (tng request ti a 3 MB).
+
+VÍ D CURL
+
+  curl -X POST http://localhost:8080/api/users/me/avatar \
+     -H "Authorization: Bearer <accessToken>" \
+     -F "anh=@avatar.jpg"
+
+RESPONSE THÀNH CÔNG -- 200 OK
+duLieu là h s cá nhân vi anhDaiDien mi (cùng cu trúc GET /api/users/me), thongDiep: "ã i nh i din".
+
+MÃ LI      maLoi                  iu kin
+ HTTP
+
+400 ANH_KHONG_HOP_LE              Ni dung không phi JPEG, PNG hoc WebP.
+
+400 DU_LIEU_KHONG_HOP_LE          Thiu phn tp anh, hoc body multipart hng.
+
+413 TEP_QUA_LON                   Tp vt 2 MB. Nu body vt 5 MB thì gateway chn trc vi
+                                  YEU_CAU_QUA_LON (413).
+
+429 GUI_LAI_QUA_NHANH             i nh quá 10 ln trong 1 gi.
+
+503 LUU_TRU_ANH_KHONG_KHA_DUNG    Cha cu hình CLOUDINARY_*, hoc Cloudinary li / quá thi gian
+                                  ch.
+
+LU Ý
+
+    · nh mi ghi è nh c trong kho. nh ly t Google (nu ang dùng) không nm trong kho
+        Cloudinary.
+
+7.2 B nh i din
+
+    DELETE /api/users/me/avatar
+
+Quyn truy cp: Mi vai trò (cn access token)
+B nh i din, k c nh ly t Google. Cha có nh thì không làm gì và vn tr thành công.
+RESPONSE THÀNH CÔNG -- 200 OK
+duLieu là h s cá nhân sau khi b nh (không còn anhDaiDien), thongDiep: "ã b nh i din".
+Không có li nghip v riêng, ngoài các li chung  mc 3.4.
+LU Ý
+
+    · Vic xoá nh trong kho Cloudinary không làm hng request nu kho li (ch ghi log; nh s b ghi è 
+        ln ti sau).
+
+                                  Trang 32 / 42
+                                                                                                                         eClinic -- Tài liu API: Xác thc và Tài khon
+
+8. i email ng nhp
+
+Quy trình hai bc: ngi dùng gi yêu cu (8.1), h thng gi liên kt ti email mi; email ch i khi
+token trong liên kt c gi ti POST /api/auth/confirm-email-change (5.9). Mi vai trò u gi c.
+
+8.1 Yêu cu i email
+
+POST      /api/users/me/change-email
+
+Quyn truy cp: Mi vai trò (cn access token)
+
+Phi nhp mt khu hin ti. Gi liên kt xác nhn ti email mi và gi thông báo ti email ang dùng.
+Email ng nhp cha i cho ti khi xác nhn.
+
+REQUEST BODY (JSON)
+
+Trng            Kiu     Bt buc              Ràng buc / mô t
+
+emailMoi        string  Có                  úng nh dng email, ti a 255 ký t. c chun hoá (trim,
+                                            ch thng).
+
+matKhauHienTai  string  Có                  Không rng, ti a 1000 ký t.
+
+{
+   "emailMoi": "an.moi@example.com",
+   "matKhauHienTai": "MatKhau@123"
+
+}
+
+RESPONSE THÀNH CÔNG -- 200 OK
+
+  {
+     "thanhCong": true,
+     "thongDiep": "ã gi liên kt xác nhn ti email mi, vui lòng kim tra hp th",
+     "duLieu": {
+         "emailMoi": "an.moi@example.com"
+     }
+
+  }
+
+MÃ LI     maLoi                             iu kin
+ HTTP     DU_LIEU_KHONG_HOP_LE              Body sai quy tc; danh sách li tng trng nm trong chiTiet.
+    400   MAT_KHAU_CU_KHONG_DUNG            Mt khu hin ti không úng.
+    400   EMAIL_MOI_TRUNG_EMAIL_CU          Email mi trùng email hin ti.
+    400   EMAIL_DA_TON_TAI                  Email mi ã thuc tài khon khác.
+    409   TAI_KHOAN_CHUA_CO_MAT_KHAU        Tài khon ch ng nhp Google, không có mt khu  xác nhn.
+    409   GUI_LAI_QUA_NHANH                 Va gi yêu cu trong vòng 60 giây.
+    429   SAI_MAT_KHAU_QUA_NHIEU            Nhp sai mt khu hin ti 5 ln: khoá 15 phút (dùng chung vi
+    429                                     i mt khu).
+
+LU Ý
+
+    · Liên kt hiu lc 1 gi, dùng 1 ln; yêu cu mi thay liên kt ca yêu cu trc.
+
+8.2 Xem yêu cu i email ang ch
+
+GET       /api/users/me/change-email
+
+Quyn truy cp: Mi vai trò (cn access token)
+
+                                            Trang 33 / 42
+                                                        eClinic -- Tài liu API: Xác thc và Tài khon
+
+Không có yêu cu nào ang ch thì duLieu vng mt.
+
+RESPONSE THÀNH CÔNG -- 200 OK
+  {
+     "thanhCong": true,
+     "duLieu": {
+         "emailMoi": "an.moi@example.com"
+     }
+  }
+
+Khi không có yêu cu ang ch: { "thanhCong": true }.
+
+Không có li nghip v riêng, ngoài các li chung  mc 3.4.
+
+8.3 Hu yêu cu i email
+
+    DELETE /api/users/me/change-email
+
+Quyn truy cp: Mi vai trò (cn access token)
+Hu yêu cu ang ch; liên kt ã gi ht hiu lc. Luôn tr thành công, k c khi không có yêu cu nào.
+RESPONSE THÀNH CÔNG -- 200 OK
+
+  {
+     "thanhCong": true,
+     "thongDiep": "ã hu yêu cu i email"
+
+  }
+
+Không có li nghip v riêng, ngoài các li chung  mc 3.4.
+
+9. Thit b ang ng nhp
+
+Mi ln ng nhp to mt phiên (mt thit b). Mã phiên không i qua các ln làm mi token và nm trong
+claim phien ca access token, nh ó server bit request n t thit b nào. Mi vai trò u gi c.
+Thit b b ng xut không làm mi phiên c na, nhng access token nó ang gi còn dùng c ti
+khi ht hn (ti a 30 phút).
+
+9.1 Danh sách thit b ang ng nhp
+
+GET  /api/users/me/sessions
+
+Quyn truy cp: Mi vai trò (cn access token)
+
+Tr các phiên còn hiu lc; thit b ang dùng (hienTai = true) ng u, các thit b khác xp theo ln
+hot ng gn nht.
+
+                                 Trang 34 / 42
+                                                                                                                         eClinic -- Tài liu API: Xác thc và Tài khon
+
+RESPONSE THÀNH CÔNG -- 200 OK
+  {
+     "thanhCong": true,
+     "duLieu": [
+         {
+            "id": "3f2b8c1e-7a4d-4e0b-9d57-1c2f6a9b0e11",
+            "thietBi": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/129.0",
+            "dangNhapLuc": "2026-10-03T08:40:00",
+            "hoatDongLuc": "2026-10-03T09:10:00",
+            "hetHanLuc": "2026-10-10T09:10:00",
+            "hienTai": true
+         },
+         {
+            "id": "9a61d0f4-2c3b-4f8e-8a10-5e7b3c2d4f66",
+            "thietBi": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0) Safari/604.1",
+            "dangNhapLuc": "2026-10-01T19:02:00",
+            "hoatDongLuc": "2026-10-02T21:30:00",
+            "hetHanLuc": "2026-10-09T21:30:00",
+            "hienTai": false
+         }
+     ]
+  }
+
+Không có li nghip v riêng, ngoài các li chung  mc 3.4.
+
+LU Ý
+
+    · thietBi là nguyên chui User-Agent lúc ng nhp (có th null); frontend t rút gn thành tên trình
+        duyt / thit b.
+
+9.2 ng xut mt thit b khác
+
+    DELETE /api/users/me/sessions/{id}
+
+Quyn truy cp: Mi vai trò (cn access token)
+ng xut thit b theo id trong danh sách. Thit b ang dùng thì gi POST /api/auth/logout.
+
+THAM S   V trí                 Kiu            Mô t
+ Tên
+
+id       path                  string (UUID)  Mã phiên ly t GET /api/users/me/sessions.
+
+RESPONSE THÀNH CÔNG -- 200 OK
+
+  {
+     "thanhCong": true,
+     "thongDiep": "ã ng xut thit b"
+
+  }
+
+MÃ LI    maLoi                                iu kin
+ HTTP    DU_LIEU_KHONG_HOP_LE                 id là phiên ca thit b ang dùng.
+    400  KHONG_TIM_THAY                       Phiên không tn ti, ã ng xut, hoc thuc tài khon khác.
+    404
+
+9.3 ng xut mi thit b khác
+
+    DELETE /api/users/me/sessions
+
+Quyn truy cp: Mi vai trò (cn access token)
+Gi li thit b ang dùng, ng xut tt c thit b còn li. duLieu là s thit b ã ng xut.
+
+                                                                 Trang 35 / 42
+                                                                       eClinic -- Tài liu API: Xác thc và Tài khon
+
+RESPONSE THÀNH CÔNG -- 200 OK
+  {
+     "thanhCong": true,
+     "thongDiep": "ã ng xut 2 thit b khác",
+     "duLieu": 2
+  }
+
+Không có li nghip v riêng, ngoài các li chung  mc 3.4.
+
+10. Qun tr tài khon
+
+Ch vai trò QUAN_TRI_VIEN gi c; ngi dùng khác nhn 403 KHONG_CO_QUYEN. Id ca qun tr viên ly t
+JWT và c service kim tra li  mi li gi. Các route này không tr d liu y t.
+Tài khon qun tr viên c bo v: không th vô hiu hoá hay xoá (403
+TAI_KHOAN_QUAN_TRI_DUOC_BAO_VE).
+
+10.1 Danh sách tài khon
+
+GET        /api/users
+
+Quyn truy cp: Ch QUAN_TRI_VIEN (cn access token)
+Phân trang, tài khon mi to ng trc. Trang ánh s t 0.
+
+THAM S     V trí       Kiu                        Mô t
+ Tên
+
+tuKhoa     query       string                     Tìm theo h tên, email, s in thoi (cha chui, không phân
+                                                  bit hoa thng). Ký t % và _ c hiu úng ngha en.
+
+vaiTro     query       enum                       BENH_NHAN, BAC_SI, QUAN_TRI_VIEN.
+
+trangThai  query       enum                       CHO_XAC_NHAN, DA_KICH_HOAT, VO_HIEU_HOA.
+
+trang      query       int                        Mc nh 0, ti thiu 0.
+
+kichThuoc  query       int                        Mc nh 20, t 1 n 100.
+
+RESPONSE THÀNH CÔNG -- 200 OK
+
+  {
+     "thanhCong": true,
+     "duLieu": {
+         "noiDung": [
+            {
+               "id": 21,
+               "hoTen": "Nguyn Vn An",
+               "email": "an.nguyen@example.com",
+               "soDienThoai": "0901234567",
+               "vaiTro": "BENH_NHAN",
+               "trangThai": "DA_KICH_HOAT",
+               "ngaySinh": "2001-05-20",
+               "ngayTao": "2026-10-03T08:40:00"
+            }
+         ],
+         "trang": 0,
+         "kichThuoc": 20,
+         "tongSoPhanTu": 23,
+         "tongSoTrang": 2
+     }
+
+  }
+
+                                                  Trang 36 / 42
+                                                                 eClinic -- Tài liu API: Xác thc và Tài khon
+
+MÃ LI      maLoi                                iu kin
+ HTTP      DU_LIEU_KHONG_HOP_LE                 Giá tr enum sai, trang < 0, hoc kichThuoc ngoài 1..100.
+    400    KHONG_CO_QUYEN                       Ngi gi không phi qun tr viên.
+    403
+
+LU Ý
+
+    · ngaySinh ch có vi bnh nhân ã có h s liên kt (DA_LIEN_KET). lyDoVoHieuHoa ch có khi tài khon
+        ang b vô hiu hoá.
+
+10.2 Chi tit mt tài khon
+
+    GET    /api/users/{id}
+
+Quyn truy cp: Ch QUAN_TRI_VIEN (cn access token)
+
+Kèm h s bác s nu là bác s. Vi bnh nhân ch ly ngày sinh và trng thái liên kt h s, không có d
+liu y t.
+
+THAM S            V trí          Kiu            Mô t
+ Tên
+
+id                path           number         Id tài khon.
+
+RESPONSE THÀNH CÔNG -- 200 OK
+duLieu có cu trúc ChiTietTaiKhoanResponse (mc 4.9); xem ví d  10.3. Vi bác s có thêm bacSi (mc 4.4).
+
+MÃ LI      maLoi                                iu kin
+ HTTP
+
+400 DU_LIEU_KHONG_HOP_LE                        id không phi s.
+
+403 KHONG_CO_QUYEN                              Ngi gi không phi qun tr viên.
+
+404 KHONG_TIM_THAY                              Không có tài khon vi id này.
+
+10.3 Vô hiu hoá hoc kích hot li tài khon
+
+    PUT    /api/users/{id}/status
+
+Quyn truy cp: Ch QUAN_TRI_VIEN (cn access token)
+Chuyn tài khon gia DA_KICH_HOAT và VO_HIEU_HOA. Ch tài khon c báo qua email.
+
+THAM S            V trí          Kiu            Mô t
+ Tên
+
+id                path           number         Id tài khon.
+
+REQUEST BODY (JSON)
+
+Trng              Kiu            Bt buc         Ràng buc / mô t
+
+trangThai         enum           Có             VO_HIEU_HOA hoc DA_KICH_HOAT. Không nhn CHO_XAC_NHAN.
+
+lyDo              string         Có khi vô hiu  Ti a 500 ký t; c gi cho ch tài khon qua email. B
+                                 hoá            qua khi kích hot li.
+
+{
+   "trangThai": "VO_HIEU_HOA",
+   "lyDo": "Vi phm quy nh s dng"
+
+}
+
+                                                Trang 37 / 42
+                                                      eClinic -- Tài liu API: Xác thc và Tài khon
+
+RESPONSE THÀNH CÔNG -- 200 OK
+
+  {
+     "thanhCong": true,
+     "thongDiep": "ã vô hiu hoá tài khon",
+     "duLieu": {
+         "id": 21,
+         "hoTen": "Nguyn Vn An",
+         "email": "an.nguyen@example.com",
+         "soDienThoai": "0901234567",
+         "vaiTro": "BENH_NHAN",
+         "trangThai": "VO_HIEU_HOA",
+         "lyDoVoHieuHoa": "Vi phm quy nh s dng",
+         "ngaySinh": "2001-05-20",
+         "ngayTao": "2026-10-03T08:40:00",
+         "coMatKhau": true,
+         "lienKetGoogle": false,
+         "ngayCapNhat": "2026-10-03T10:15:00",
+         "trangThaiLienKetHoSo": "DA_LIEN_KET"
+     }
+
+  }
+
+MÃ LI    maLoi                         iu kin
+ HTTP    DU_LIEU_KHONG_HOP_LE
+    400                                Thiu trangThai, trangThai = CHO_XAC_NHAN, hoc vô hiu hoá mà
+                                       không có lyDo.
+403 KHONG_CO_QUYEN
+403 TAI_KHOAN_QUAN_TRI_DUOC_BAO_VE     Ngi gi không phi qun tr viên.
+404 KHONG_TIM_THAY
+409 TRANG_THAI_TAI_KHOAN_KHONG_HOP_LE  Tài khon ích là qun tr viên.
+
+409 BAC_SI_CON_LICH_HEN                Không có tài khon vi id này.
+
+                                       Tài khon còn CHO_XAC_NHAN (hãy xoá thay vì chuyn trng thái),
+                                       hoc ã  úng trng thái yêu cu.
+
+                                       Vô hiu hoá bác s còn lch hn sp ti (CHO_XAC_NHAN /
+                                       DA_XAC_NHAN); phi chuyn hoc hu lch trc.
+
+LU Ý
+
+    · Vô hiu hoá: mi thit b b ng xut, mi liên kt email ang ch b hu, gi email báo kèm lý do.
+
+    · Kích hot li: xoá lý do vô hiu hoá, gi email báo; không khôi phc phiên nào, ngi dùng ng nhp
+        li.
+
+    · Route này không i trng thái công tác ca bác s. Màn hình qun lý bác s dùng API ngng công tác
+        / công tác li ca catalog-service (không thuc tài liu này); các API ó t vô hiu hoá và kích hot
+        li tài khon ca bác s.
+
+10.4 Xoá tài khon
+
+    DELETE /api/users/{id}
+
+Quyn truy cp: Ch QUAN_TRI_VIEN (cn access token)
+
+Ch xoá c khi cha có d liu nào tham chiu (h s bác s, h s bnh nhân, lch hn ã t, thông
+báo, phiên chat). Nu có, hãy vô hiu hoá thay cho xoá.
+
+THAM S   V trí                 Kiu     Mô t
+ Tên
+
+id       path                  number  Id tài khon.
+
+                                       Trang 38 / 42
+                                                         eClinic -- Tài liu API: Xác thc và Tài khon
+
+RESPONSE THÀNH CÔNG -- 200 OK
+
+  {
+     "thanhCong": true,
+     "thongDiep": "ã xoá tài khon"
+
+  }
+
+MÃ LI    maLoi                            iu kin
+ HTTP    KHONG_CO_QUYEN                   Ngi gi không phi qun tr viên.
+    403  TAI_KHOAN_QUAN_TRI_DUOC_BAO_VE   Tài khon ích là qun tr viên.
+    403  KHONG_TIM_THAY                   Không có tài khon vi id này.
+    404  TAI_KHOAN_DANG_DUOC_SU_DUNG      Tài khon ang có d liu liên quan; thông ip nêu rõ loi d liu
+    409                                   nào ang gi tài khon.
+
+LU Ý
+
+    · Phiên ng nhp b xoá theo, mi liên kt email ang ch b hu, nh i din trong Cloudinary c
+        dn  nn.
+
+Ph lc A. Bng mã li (maLoi)
+
+Các mã li thuc phn xác thc và tài khon. Thông ip di ây là mc nh; mt s route tr thông ip
+c th hn trong cùng mã li.
+
+maLoi                               HTTP  Thông ip mc nh
+KHONG_TIM_THAY                       404  Không tìm thy d liu
+DU_LIEU_KHONG_HOP_LE                 400  D liu không hp l
+CHUA_DANG_NHAP                       401  Bn cha ng nhp hoc phiên ng nhp ã ht hn
+KHONG_CO_QUYEN                       403  Bn không có quyn thc hin thao tác này
+PHUONG_THUC_KHONG_HO_TRO             405  Phng thc HTTP không c h tr
+XUNG_DOT_DU_LIEU                     409  D liu b trùng hoc vi phm ràng buc
+DU_LIEU_DA_THAY_DOI                  409  D liu ã b ngi khác thay i, vui lòng ti li
+TEP_QUA_LON                          413  Tp ti lên vt quá dung lng cho phép
+LOI_HE_THONG                         500  Li h thng, vui lòng th li sau
+EMAIL_DA_TON_TAI                     409  Email ã c ng ký
+SO_DIEN_THOAI_DA_TON_TAI             409  S in thoi ã c ng ký
+LIEN_KET_KHONG_HOP_LE                410  Liên kt ã ht hn hoc không hp l
+GUI_LAI_QUA_NHANH                    429  Bn thao tác quá nhanh, vui lòng th li sau ít phút
+TAI_KHOAN_BI_VO_HIEU_HOA             403  Tài khon ã b vô hiu hoá
+SAI_THONG_TIN_DANG_NHAP              401  Email hoc mt khu không úng
+TAI_KHOAN_CHUA_XAC_THUC              403  Tài khon cha c kích hot, vui lòng kim tra email
+DANG_NHAP_SAI_QUA_NHIEU              429  ng nhp sai quá nhiu ln, vui lòng th li sau 15 phút
+PHIEN_DANG_NHAP_KHONG_HOP_LE         401  Phiên ng nhp ã ht hn, vui lòng ng nhp li
+GOOGLE_TOKEN_KHONG_HOP_LE            401  ng nhp Google không hp l hoc ã ht hn, vui lòng th li
+DANG_NHAP_GOOGLE_KHONG_KHA_DUNG      503  ng nhp Google tm thi không kh dng, vui lòng th li sau
+DANG_NHAP_GOOGLE_KHONG_HO_TRO        403  Tài khon này không h tr ng nhp bng Google
+
+                                          Trang 39 / 42
+                                         eClinic -- Tài liu API: Xác thc và Tài khon
+
+maLoi                              HTTP  Thông ip mc nh
+EMAIL_DA_DANG_KY_MAT_KHAU           409
+MAT_KHAU_CU_KHONG_DUNG              400  Email ã c ng ký, vui lòng ng nhp bng mt khu
+MAT_KHAU_MOI_TRUNG_MAT_KHAU_CU      400
+TAI_KHOAN_CHUA_CO_MAT_KHAU          409  Mt khu hin ti không úng
+
+SAI_MAT_KHAU_QUA_NHIEU              429  Mt khu mi phi khác mt khu hin ti
+
+EMAIL_MOI_TRUNG_EMAIL_CU            400  Tài khon ng nhp bng Google cha có mt khu, vui lòng
+ANH_KHONG_HOP_LE                    400  dùng chc nng Quên mt khu  t mt khu
+LUU_TRU_ANH_KHONG_KHA_DUNG          503
+                                         Bn nhp sai mt khu hin ti quá nhiu ln, vui lòng th li sau
+TAI_KHOAN_QUAN_TRI_DUOC_BAO_VE      403  15 phút
+TRANG_THAI_TAI_KHOAN_KHONG_HOP_LE   409
+BAC_SI_CON_LICH_HEN                 409  Email mi phi khác email hin ti
+
+TAI_KHOAN_DANG_DUOC_SU_DUNG         409  nh phi là tp JPEG, PNG hoc WebP
+
+PHAI_DOI_MAT_KHAU                   403  Chc nng nh i din tm thi không kh dng, vui lòng th li
+                                         sau
+
+                                         Không th vô hiu hoá hoc xoá tài khon qun tr viên
+
+                                         Không th chuyn tài khon sang trng thái này
+
+                                         Bác s còn lch hn sp ti, hãy chuyn hoc hu các lch hn này
+                                         trc khi vô hiu hoá tài khon
+
+                                         Tài khon ang có d liu liên quan nên không th xoá, hãy vô
+                                         hiu hoá tài khon thay cho xoá
+
+                                         Tài khon ang dùng mt khu mc nh, hãy t mt khu mi
+                                         trc khi ng nhp
+
+Ph lc B. Lung gi mu
+
+B.1 ng ký, kích hot, ng nhp
+
+   1. POST /api/auth/register  201, tài khon CHO_XAC_NHAN, email cha liên kt kích hot.
+   2. Ngi dùng m liên kt <FRONTEND_URL>/verify-email?token=...; frontend gi POST
+
+        /api/auth/verify-email vi token ó  200.
+   3. POST /api/auth/login  200, nhn accessToken trong body và cookie eclinic_rt.
+   4. Nu cha nhn c email: POST /api/auth/resend-verification (cách nhau ti thiu 60 giây).
+
+B.2 Duy trì phiên
+
+   1. Gi API kèm Authorization: Bearer <accessToken>.
+   2. Nhn 401 CHUA_DANG_NHAP (access token ht hn sau 30 phút)  POST /api/auth/refresh-token
+
+        (cookie t gi)  lu accessToken mi.
+   3. Refresh tr 401 PHIEN_DANG_NHAP_KHONG_HOP_LE  chuyn v trang ng nhp.
+   4. ng xut: POST /api/auth/logout, ri b access token khi b nh.
+
+B.3 Quên mt khu
+
+   1. POST /api/auth/forgot-password vi email  luôn 200.
+   2. Ngi dùng m liên kt <FRONTEND_URL>/reset-password?token=... (hiu lc 15 phút).
+   3. POST /api/auth/reset-password vi token và matKhauMoi  200, mi thit b b ng xut; ng nhp
+
+        li bng mt khu mi.
+
+                                                                 Trang 40 / 42
+                                                                                                                         eClinic -- Tài liu API: Xác thc và Tài khon
+
+B.4 i email
+
+   1. ang ng nhp: POST /api/users/me/change-email vi emailMoi và matKhauHienTai  200.
+   2. Ngi dùng m liên kt gi ti email mi: <FRONTEND_URL>/confirm-email-change?token=....
+   3. Frontend gi POST /api/auth/confirm-email-change  200, mi thit b b ng xut; ng nhp li
+
+        bng email mi.
+   4. Mun b yêu cu: DELETE /api/users/me/change-email.
+
+B.5 Qun tr viên vô hiu hoá tài khon
+
+   1. GET /api/users?tuKhoa=...&trangThai=DA_KICH_HOAT  tìm tài khon; GET /api/users/{id}  xem
+        chi tit.
+
+   2. PUT /api/users/{id}/status vi { "trangThai": "VO_HIEU_HOA", "lyDo": "..." }  mi thit b ca
+        tài khon b ng xut, ch tài khon nhn email.
+
+   3. Mun m li: PUT /api/users/{id}/status vi { "trangThai": "DA_KICH_HOAT" }.
+
+B.6 Bác s ng nhp ln u
+
+   1. Qun tr viên to tài khon bác s; bác s nhn email báo email ng nhp, mt khu là mt khu mc
+        nh ca phòng khám.
+
+   2. POST /api/auth/login bng mt khu mc nh  403 PHAI_DOI_MAT_KHAU, không có phiên.
+   3. Frontend hin form t mt khu mi, gi POST /api/auth/first-password vi email, matKhauHienTai,
+
+        matKhauMoi  200.
+   4. POST /api/auth/login bng mt khu mi  200, nhn accessToken trong body và cookie
+
+        eclinic_rt.
+
+Ph lc C. Cu hình nh hng ti API và tài khon mu
+
+Mt s API ch hot ng y  khi identity-service nhn c bin môi trng tng ng. Khi chy bng
+IntelliJ, service không c file .env: phi t bin trong Run Configuration ca identity-service. Khi chy
+bng Docker Compose thì .env c np.
+
+Bin môi trng               nh hng                            Triu chng khi thiu
+GOOGLE_CLIENT_ID           POST /api/auth/google             503 DANG_NHAP_GOOGLE_KHONG_KHA_DUNG
+MAIL_MODE (mc nh console)  Mi email: kích hot, t li mt       Mc nh không gi email tht; liên kt ch
+                           khu, i email, thông báo           ghi ra log identity-service ([DEV - không gi
+MAIL_USERNAME,                                               email])
+MAIL_APP_PASSWORD          Bt buc khi MAIL_MODE=smtp (App    identity-service không khi ng
+CLOUDINARY_CLOUD_NAME,     Password Gmail 16 ký t, vit lin)
+CLOUDINARY_API_KEY,        POST /api/users/me/avatar         503 LUU_TRU_ANH_KHONG_KHA_DUNG
+CLOUDINARY_API_SECRET
+FRONTEND_URL               Gc ca các liên kt trong email     Liên kt tr sai a ch frontend
+                           (mc nh http://localhost:5173)
+COOKIE_SECURE                                                Cookie không c gi khi m frontend
+                           C Secure ca cookie refresh        qua IP LAN bng http
+JWT_SECRET, JWT_TTL        token (mc nh true)                Phi ging nhau  mi service
+
+                           Khoá ký và thi hn access token
+                           (mc nh 30 phút)
+
+                           Trang 41 / 42
+                                                                   eClinic -- Tài liu API: Xác thc và Tài khon
+
+Bin môi trng                       nh hng                          Triu chng khi thiu
+DOCTOR_DEFAULT_PASSWORD                                            Không t thì dùng Doctor@123
+                                   Mt khu mc nh ca tài khon
+CORS_ALLOWED_ORIGINS               bác s do qun tr viên to; dùng   Frontend chy  a ch khác b trình duyt
+                                   POST /api/auth/first-password   chn vì CORS
+
+                                   t cho api-gateway: các a ch
+                                   frontend c gi API (mc nh
+                                   http://localhost:5173,
+                                   http://localhost:3000)
+
+Tài khon có sn
+
+Tài khon                           Mt khu                          Ghi chú
+
+admin@eclinic.local                Admin@123                       Qun tr viên, to khi khi ng ln
+                                                                   u (i bng ADMIN_EMAIL,
+                                                                   ADMIN_PASSWORD).
+
+bacsi01 ... bacsi12@eclinic.local  Demo@123                        Bác s mu (cn SEED_DATA=true).
+
+benhnhan01 ...                     Demo@123                        Bnh nhân mu ã kích hot.
+benhnhan04@eclinic.local
+
+benhnhan05@eclinic.local           Demo@123                        Cha xác thc email  ng nhp
+                                                                   tr 403 TAI_KHOAN_CHUA_XAC_THUC.
+
+benhnhan06@eclinic.local           Demo@123                        B vô hiu hoá  ng nhp tr 403
+                                                                   TAI_KHOAN_BI_VO_HIEU_HOA.
+
+D liu mu ch c to khi CSDL cha có bác s nào và SEED_DATA=true; mt khu mu i bng SEED_PASSWORD. Trin
+khai tht phi t SEED_DATA=false.
+
+                                              Trang 42 / 42
+

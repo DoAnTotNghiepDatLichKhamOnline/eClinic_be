@@ -25,6 +25,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
+import iuh.fit.se.eclinic.common.enums.NgonNgu;
 import iuh.fit.se.eclinic.common.enums.TrangThaiTaiKhoan;
 import iuh.fit.se.eclinic.common.enums.VaiTro;
 import iuh.fit.se.eclinic.common.exception.LoiNghiepVu;
@@ -142,7 +143,7 @@ class AnhDaiDienControllerTest {
 
     private static HoSoCaNhanResponse hoSo(Long id, String anhDaiDien) {
         return new HoSoCaNhanResponse(id, "Nguyễn Thị Mai", "mai@example.com", "0912345678", anhDaiDien,
-                VaiTro.BENH_NHAN, TrangThaiTaiKhoan.DA_KICH_HOAT, true, false, LocalDateTime.of(2026, 10, 1, 8, 0),
+                VaiTro.BENH_NHAN, TrangThaiTaiKhoan.DA_KICH_HOAT, NgonNgu.VI, true, false, LocalDateTime.of(2026, 10, 1, 8, 0),
                 null, null);
     }
 

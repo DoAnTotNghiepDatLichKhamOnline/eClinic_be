@@ -49,14 +49,14 @@ public class KhamBenhController {
     public PhanHoiApi<BenhAnResponse> ghiNhan(@PathVariable Long idLichHen,
             @Valid @RequestBody BenhAnRequest request) {
         return PhanHoiApi.ok(khamBenhService.ghiNhan(NguoiDungHienTai.layIdTaiKhoan(), idLichHen, request),
-                "Đã ghi nhận kết quả khám");
+                "thanhCong.ghiNhanKetQuaKham");
     }
 
     @Operation(summary = "Sửa hồ sơ bệnh án đã ghi: thay chẩn đoán, ghi chú, ngày tái khám và toàn bộ đơn thuốc")
     @PutMapping("/lich-hen/{idLichHen}/benh-an")
     public PhanHoiApi<BenhAnResponse> sua(@PathVariable Long idLichHen, @Valid @RequestBody BenhAnRequest request) {
         return PhanHoiApi.ok(khamBenhService.sua(NguoiDungHienTai.layIdTaiKhoan(), idLichHen, request),
-                "Đã cập nhật hồ sơ bệnh án");
+                "thanhCong.capNhatBenhAn");
     }
 
     @Operation(summary = "Hồ sơ bệnh án của 1 lịch hẹn của tôi (404 nếu chưa ghi nhận kết quả khám)")

@@ -1,0 +1,31 @@
+{
+  "method": "POST",
+  "path": "/api/auth/login",
+  "acceptLanguage": null,
+  "requestBody": {
+    "email": "x.1791894122@example.com",
+    "matKhau": "MatKhau@123"
+  },
+  "status": 200,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "thanhCong": true,
+    "thongDiep": "Đăng nhập thành công",
+    "duLieu": {
+      "accessToken": "eyJhbGciOiJIUzI1NiJ9.eyJ2YWlUcm8iOiJCRU5IX05IQU4iLCJzdWIiOiIyMCIsInBoaWVuIjoiYmQ3NDkwYzUtYzQwOC00YmMyLTk1ZTAtZTFmYTk0MWViMDc3IiwiaXNzIjoiZWNsaW5pYyIsImV4cCI6MTc5MTg5NTkyMiwiaWF0IjoxNzkxODk0MTIyLCJlbWFpbCI6InguMTc5MTg5NDEyMkBleGFtcGxlLmNvbSJ9.Lwl2BcWv9GaO2z0qRKFFl_0t0NQo4GIw1Ztf3Woa_oQ",
+      "loaiToken": "Bearer",
+      "thoiHanAccessToken": 1800,
+      "taiKhoan": {
+        "id": 20,
+        "hoTen": "Đỗ Văn Xuân",
+        "email": "x.1791894122@example.com",
+        "soDienThoai": "0933000001",
+        "vaiTro": "BENH_NHAN",
+        "trangThai": "DA_KICH_HOAT",
+        "ngonNgu": "VI"
+      }
+    }
+  }
+}

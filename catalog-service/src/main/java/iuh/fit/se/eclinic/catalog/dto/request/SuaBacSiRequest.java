@@ -11,16 +11,16 @@ import jakarta.validation.constraints.Size;
  */
 public record SuaBacSiRequest(
 
-        @NotBlank(message = "Họ tên không được để trống")
-        @Size(max = 150, message = "Họ tên tối đa 150 ký tự")
+        @NotBlank(message = "{kiemTra.hoTen.batBuoc}")
+        @Size(max = 150, message = "{kiemTra.hoTen.toiDa}")
         String hoTen,
 
-        @Pattern(regexp = "^(0\\d{9})?$", message = "Số điện thoại gồm 10 chữ số, bắt đầu bằng 0")
+        @Pattern(regexp = "^(0\\d{9})?$", message = "{kiemTra.soDienThoai.dinhDang}")
         String soDienThoai,
 
-        @NotNull(message = "Phải chọn chuyên khoa")
+        @NotNull(message = "{kiemTra.chuyenKhoa.batBuoc}")
         Long idChuyenKhoa,
 
-        @Size(max = 50, message = "Số giấy phép tối đa 50 ký tự")
+        @Size(max = 50, message = "{kiemTra.soGiayPhep.toiDa}")
         String soGiayPhep) {
 }

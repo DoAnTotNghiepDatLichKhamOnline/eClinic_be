@@ -1,0 +1,52 @@
+{
+  "method": "POST",
+  "path": "/api/booking/bac-si/toi/lich-hen/9/tu-choi",
+  "acceptLanguage": null,
+  "requestBody": {
+    "lyDo": "Bác sĩ có lịch hội chẩn đột xuất, mời bạn đặt khung giờ khác"
+  },
+  "status": 200,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "thanhCong": true,
+    "thongDiep": "Đã từ chối lịch hẹn",
+    "duLieu": {
+      "id": 9,
+      "maTraCuu": "ECL-20261014-3585",
+      "idLichLamViec": 17,
+      "trangThai": "BI_TU_CHOI",
+      "soThuTu": 14,
+      "gioKhamDuKien": "2026-10-14T10:10:00",
+      "gioBatDauKhung": "2026-10-14T10:00:00",
+      "gioKetThucKhung": "2026-10-14T11:00:00",
+      "bacSi": null,
+      "phongKham": {
+        "id": 3,
+        "tenPhong": "Phòng 103",
+        "tang": "Tầng 1"
+      },
+      "lyDoKham": "Tái khám",
+      "ngayDat": "2026-10-13T19:21:56.664352",
+      "idHoSoBenhNhan": 1,
+      "benhNhan": {
+        "hoTen": "Nguyễn Thị Mai",
+        "ngaySinh": "1995-03-12",
+        "tuoi": 31,
+        "gioiTinh": "NU",
+        "soDienThoai": "0902000001"
+      },
+      "nguoiGiamHo": null,
+      "doiChieu": {
+        "canDoiChieu": false,
+        "hoTenDaNhap": "Nguyễn Thị Mai",
+        "ngaySinhDaNhap": "1995-03-12",
+        "gioiTinhDaNhap": "NAM",
+        "hoTenGiamHoDaNhap": null
+      },
+      "lyDoHuy": "Bác sĩ có lịch hội chẩn đột xuất, mời bạn đặt khung giờ khác",
+      "canDoiLich": false
+    }
+  }
+}

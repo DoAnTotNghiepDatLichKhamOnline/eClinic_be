@@ -1,0 +1,20 @@
+{
+  "method": "GET",
+  "path": "/api/booking/lich-hen/cua-toi",
+  "acceptLanguage": null,
+  "requestBody": null,
+  "status": 200,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "thanhCong": true,
+    "duLieu": {
+      "noiDung": [],
+      "trang": 0,
+      "kichThuoc": 20,
+      "tongSoPhanTu": 0,
+      "tongSoTrang": 0
+    }
+  }
+}

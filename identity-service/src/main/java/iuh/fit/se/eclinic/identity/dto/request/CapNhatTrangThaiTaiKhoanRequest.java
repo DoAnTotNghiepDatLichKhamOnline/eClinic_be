@@ -11,9 +11,9 @@ import jakarta.validation.constraints.Size;
  */
 public record CapNhatTrangThaiTaiKhoanRequest(
 
-        @NotNull(message = "Trạng thái không được để trống")
+        @NotNull(message = "{kiemTra.trangThai.batBuoc}")
         TrangThaiTaiKhoan trangThai,
 
-        @Size(max = 500, message = "Lý do tối đa 500 ký tự")
+        @Size(max = 500, message = "{kiemTra.lyDo.toiDa}")
         String lyDo) {
 }

@@ -17,6 +17,8 @@ public enum LoaiThongBao {
     /** Ca khám đổi phòng: lịch hẹn giữ nguyên giờ, chỉ đổi phòng khám. */
     LICH_HEN_DOI_PHONG,
     NHAC_LICH_KHAM,
+    /** Bác sĩ hẹn / đổi ngày tái khám, và lời nhắc trước ngày đó. Chỉ là lời nhắc, không có lịch hẹn mới. */
+    NHAC_TAI_KHAM,
     // Admin
     YEU_CAU_DOI_LICH_MOI,
     // Chung

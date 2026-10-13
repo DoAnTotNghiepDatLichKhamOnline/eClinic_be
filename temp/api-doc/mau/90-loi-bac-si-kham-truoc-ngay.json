@@ -1,0 +1,37 @@
+{
+  "method": "POST",
+  "path": "/api/medical/bac-si/toi/lich-hen/8/benh-an",
+  "acceptLanguage": null,
+  "requestBody": {
+    "chanDoan": "Viêm họng cấp",
+    "ghiChu": "Uống nhiều nước ấm, nghỉ ngơi; tái khám nếu sốt trên 38,5 độ.",
+    "ngayTaiKhamDeXuat": "2026-10-20",
+    "donThuoc": [
+      {
+        "tenThuoc": "Paracetamol 500mg",
+        "donVi": "viên",
+        "lieuDung": "1 viên / lần",
+        "soLanMoiNgay": 3,
+        "soNgayDung": 5,
+        "ghiChuSuDung": "Uống sau ăn, khi sốt hoặc đau"
+      },
+      {
+        "tenThuoc": "Nước muối sinh lý 0,9%",
+        "donVi": "chai",
+        "lieuDung": "Súc họng",
+        "soLanMoiNgay": 3,
+        "soNgayDung": 5,
+        "ghiChuSuDung": null
+      }
+    ]
+  },
+  "status": 409,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "thanhCong": false,
+    "maLoi": "CHUA_DEN_NGAY_KHAM",
+    "thongDiep": "Chưa đến ngày khám của lịch hẹn này"
+  }
+}

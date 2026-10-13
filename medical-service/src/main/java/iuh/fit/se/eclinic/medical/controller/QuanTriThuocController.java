@@ -55,30 +55,30 @@ public class QuanTriThuocController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public PhanHoiApi<ThuocQuanTriResponse> them(@Valid @RequestBody ThuocRequest request) {
-        return PhanHoiApi.ok(quanLyThuocService.them(request), "Đã thêm thuốc vào danh mục");
+        return PhanHoiApi.ok(quanLyThuocService.them(request), "thanhCong.themThuoc");
     }
 
     @Operation(summary = "Sửa tên, đơn vị, mô tả (thuốc đã có trong đơn thuốc mà đổi sang tên khác: 409 THUOC_DA_DUOC_KE)")
     @PutMapping("/{id}")
     public PhanHoiApi<ThuocQuanTriResponse> sua(@PathVariable Long id, @Valid @RequestBody ThuocRequest request) {
-        return PhanHoiApi.ok(quanLyThuocService.sua(id, request), "Đã cập nhật thuốc");
+        return PhanHoiApi.ok(quanLyThuocService.sua(id, request), "thanhCong.capNhatThuoc");
     }
 
     @Operation(summary = "Xác minh thuốc do bác sĩ thêm khi kê đơn")
     @PostMapping("/{id}/xac-minh")
     public PhanHoiApi<ThuocQuanTriResponse> xacMinh(@PathVariable Long id) {
-        return PhanHoiApi.ok(quanLyThuocService.xacMinh(id), "Đã xác minh thuốc");
+        return PhanHoiApi.ok(quanLyThuocService.xacMinh(id), "thanhCong.xacMinhThuoc");
     }
 
     @Operation(summary = "Ngừng dùng: thuốc không còn được gợi ý và không kê mới được; đơn thuốc cũ vẫn hiển thị")
     @PostMapping("/{id}/ngung-dung")
     public PhanHoiApi<ThuocQuanTriResponse> ngungDung(@PathVariable Long id) {
-        return PhanHoiApi.ok(quanLyThuocService.ngungDung(id), "Thuốc đã ngừng dùng");
+        return PhanHoiApi.ok(quanLyThuocService.ngungDung(id), "thanhCong.thuocNgungDung");
     }
 
     @Operation(summary = "Dùng lại thuốc đã ngừng dùng")
     @PostMapping("/{id}/dung-lai")
     public PhanHoiApi<ThuocQuanTriResponse> dungLai(@PathVariable Long id) {
-        return PhanHoiApi.ok(quanLyThuocService.dungLai(id), "Thuốc đã được dùng lại");
+        return PhanHoiApi.ok(quanLyThuocService.dungLai(id), "thanhCong.thuocDungLai");
     }
 }

@@ -13,63 +13,65 @@
     dangKy({
         duongDan: '/doctor/dashboard',
         vaiTro: 'BAC_SI',
-        tieuDe: 'Dashboard',
+        tieuDe: cap('Tổng quan', 'Dashboard'),
         async ve(khung) {
             const oSo = the('div', null, 'o-so');
             const danhSach = the('div', null, 'bang');
             const phanLich = the('section');
-            phanLich.append(the('h2', `Today's Appointments — lịch hẹn hôm nay (${ngayVn(congNgay(0))})`), danhSach);
+            phanLich.append(the('h2', t(`Lịch hẹn hôm nay (${ngayVn(congNgay(0))})`, `Today's appointments (${ngayVn(congNgay(0))})`)), danhSach);
             const dsDanhGia = the('div', null, 'bang');
             const phanDanhGia = the('section');
-            phanDanhGia.append(the('h2', 'Đánh giá của bệnh nhân (ẩn danh)'), dsDanhGia);
+            phanDanhGia.append(the('h2', t('Đánh giá của bệnh nhân (ẩn danh)', 'Patient reviews (anonymous)')), dsDanhGia);
             const tinhLuc = ghiChu('');
             khung.append(oSo, tinhLuc, phanLich, phanDanhGia);
 
             const soLieu = await lay('/api/booking/bac-si/toi/tong-quan', true);
             const sl = soLieu.status === 200 ? soLieu.json.duLieu : null;
-            for (const [nhan, giaTri] of [
+            for (const [tenO, giaTri] of [
                 ["Today's Appointments", sl ? sl.lichHenHomNay : '—'],
                 ['Waiting', sl ? sl.dangCho : '—'],
                 ['Completed', sl ? sl.daKham : '—'],
-                ['Average Rating', sl && sl.diemDanhGia != null ? `★ ${sl.diemDanhGia.toFixed(1)} (${sl.soDanhGia})` : '— (chưa có)'],
+                ['Average Rating', sl && sl.diemDanhGia != null ? `★ ${sl.diemDanhGia.toFixed(1)} (${sl.soDanhGia})` : t('— (chưa có)', '— (none yet)')],
             ]) {
                 const o = the('div');
-                o.append(the('b', String(giaTri)), the('span', nhan, 'ghi-chu'));
+                o.append(the('b', String(giaTri)), the('span', tenO, 'ghi-chu'));
                 oSo.append(o);
             }
             tinhLuc.textContent = sl
-                ? `Tính lúc ${ngayGioVn(sl.tinhLuc)} · ${sl.yeuCauChoXacNhan} yêu cầu đang chờ xác nhận (Appointment Requests)`
-                : thongDiepLoi(soLieu.json, 'Không tải được số liệu.');
+                ? t(`Tính lúc ${ngayGioVn(sl.tinhLuc)} · ${sl.yeuCauChoXacNhan} yêu cầu đang chờ xác nhận (Yêu cầu đặt lịch)`,
+                    `As of ${ngayGioVn(sl.tinhLuc)} · ${sl.yeuCauChoXacNhan} requests pending confirmation (Appointment Requests)`)
+                : thongDiepLoi(soLieu.json, t('Không tải được số liệu.', 'Could not load the figures.'));
 
             const [tongQuan, danhGia] = await Promise.all([
                 lay('/api/booking/bac-si/toi/danh-gia/tong-quan', true), lay('/api/booking/bac-si/toi/danh-gia?kichThuoc=10', true)]);
             const tq = tongQuan.status === 200 ? tongQuan.json.duLieu : null;
             if (danhGia.status !== 200) {
-                dsDanhGia.replaceChildren(the('p', thongDiepLoi(danhGia.json, 'Không tải được đánh giá.'), 'ghi-chu loi'));
+                dsDanhGia.replaceChildren(the('p', thongDiepLoi(danhGia.json, t('Không tải được đánh giá.', 'Could not load the reviews.')), 'ghi-chu loi'));
             } else if (!danhGia.json.duLieu.noiDung.length) {
-                dsDanhGia.replaceChildren(ghiChu('No data yet — chưa có đánh giá nào.'));
+                dsDanhGia.replaceChildren(ghiChu(t('Chưa có đánh giá nào.', 'No reviews yet.')));
             } else {
                 dsDanhGia.replaceChildren(
-                    ghiChu('Phân bố: ' + [5, 4, 3, 2, 1].map((sao) => `${sao}★ ${tq ? tq.phanBo[sao] : '?'}`).join(' · ')),
-                    bang(['Số sao', 'Nhận xét', 'Ngày khám', 'Gửi lúc'], danhGia.json.duLieu.noiDung.map((dg) => dong([
+                    ghiChu(t('Phân bố: ', 'Distribution: ') + [5, 4, 3, 2, 1].map((sao) => `${sao}★ ${tq ? tq.phanBo[sao] : '?'}`).join(' · ')),
+                    bang([t('Số sao', 'Stars'), t('Nhận xét', 'Comment'), t('Ngày khám', 'Visit date'), t('Gửi lúc', 'Submitted at')], danhGia.json.duLieu.noiDung.map((dg) => dong([
                         '★'.repeat(dg.soSao) + ` (${dg.soSao})`, dg.nhanXet, ngayVn(dg.ngayKham), ngayGioVn(dg.ngayTao),
                     ]))));
             }
 
             const { status, json } = await lay('/api/booking/bac-si/toi/lich-hen?ngay=' + congNgay(0));
             if (status !== 200) {
-                danhSach.replaceChildren(the('p', thongDiepLoi(json, 'Không tải được danh sách.'), 'ghi-chu loi'));
+                danhSach.replaceChildren(the('p', thongDiepLoi(json, t('Không tải được danh sách.', 'Could not load the list.')), 'ghi-chu loi'));
                 return;
             }
             const ds = json.duLieu;
             if (!ds.length) {
-                danhSach.replaceChildren(ghiChu('Hôm nay không có lịch hẹn nào.'));
+                danhSach.replaceChildren(ghiChu(t('Hôm nay không có lịch hẹn nào.', 'No appointments today.')));
                 return;
             }
-            danhSach.replaceChildren(bang(['Giờ', 'STT', 'Bệnh nhân', 'Tuổi', 'Lý do khám', 'Trạng thái', 'Thao tác'], ds.map((lich) => dong([
-                gio(lich.gioKhamDuKien), lich.soThuTu, lich.benhNhan.hoTen + (lich.doiChieu.canDoiChieu ? ' ⚠ cần đối chiếu' : ''),
+            danhSach.replaceChildren(bang([t('Giờ', 'Time'), t('STT', 'No.'), t('Bệnh nhân', 'Patient'), t('Tuổi', 'Age'), t('Lý do khám', 'Reason for visit'),
+                t('Trạng thái', 'Status'), t('Thao tác', 'Actions')], ds.map((lich) => dong([
+                gio(lich.gioKhamDuKien), lich.soThuTu, lich.benhNhan.hoTen + (lich.doiChieu.canDoiChieu ? t(' ⚠ cần đối chiếu', ' ⚠ identity check needed') : ''),
                 lich.benhNhan.tuoi, lich.lyDoKham, TRANG_THAI[lich.trangThai] || lich.trangThai,
-                lienKet('Mở hồ sơ khám', '/doctor/consultation?id=' + lich.id),
+                lienKet(t('Mở hồ sơ khám', 'Open medical record'), '/doctor/consultation?id=' + lich.id),
             ]))));
         },
     });

@@ -57,7 +57,7 @@ public class HoSoBenhNhanServiceImpl implements HoSoBenhNhanService {
     public HoSoCuaToiResponse xemCuaToi(Long idTaiKhoan) {
         taiKhoanService.layBenhNhanDangHoatDong(idTaiKhoan);
         HoSoBenhNhan hoSo = hoSoBenhNhanRepository.findByTaiKhoanId(idTaiKhoan)
-                .orElseThrow(() -> new LoiNghiepVu(MaLoi.KHONG_TIM_THAY, "Tài khoản chưa có hồ sơ bệnh nhân"));
+                .orElseThrow(() -> new LoiNghiepVu(MaLoi.KHONG_TIM_THAY, "loi.KHONG_TIM_THAY.hoSoBenhNhan"));
         return hoSoBenhNhanMapper.toHoSoCuaToi(hoSo);
     }
 
@@ -70,7 +70,7 @@ public class HoSoBenhNhanServiceImpl implements HoSoBenhNhanService {
         HoSoBenhNhan hoSo;
         if (daCo.isEmpty()) {
             if (cccd == null) {
-                throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE, "Số CCCD không được để trống khi tạo hồ sơ bệnh nhân");
+                throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE, "loi.DU_LIEU_KHONG_HOP_LE.cccdKhiTaoHoSo");
             }
             Optional<HoSoBenhNhan> theoCccd = hoSoBenhNhanRepository.findByCccdForUpdate(cccd);
             if (theoCccd.isPresent()) {
@@ -99,7 +99,7 @@ public class HoSoBenhNhanServiceImpl implements HoSoBenhNhanService {
                 throw new LoiNghiepVu(MaLoi.HO_SO_CHO_XAC_MINH);
             }
             if (cccd != null && !cccd.equals(hoSo.getCccd())) {
-                throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE, "Không thể đổi số CCCD của hồ sơ bệnh nhân");
+                throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE, "loi.DU_LIEU_KHONG_HOP_LE.doiCccd");
             }
         }
         hoSo.setHoTen(ChuanHoaTen.gon(request.hoTen()));

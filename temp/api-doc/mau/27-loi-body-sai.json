@@ -1,0 +1,46 @@
+{
+  "method": "POST",
+  "path": "/api/booking/lich-hen",
+  "acceptLanguage": null,
+  "requestBody": {
+    "idLichLamViec": 17,
+    "benhNhan": {
+      "hoTen": "",
+      "ngaySinh": "2090-01-01",
+      "gioiTinh": "NAM",
+      "soDienThoai": "123",
+      "cccd": null
+    }
+  },
+  "status": 400,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "thanhCong": false,
+    "maLoi": "DU_LIEU_KHONG_HOP_LE",
+    "thongDiep": "Dữ liệu không hợp lệ",
+    "chiTiet": [
+      {
+        "truong": "lyDoKham",
+        "thongDiep": "Lý do khám không được để trống"
+      },
+      {
+        "truong": "benhNhan.soDienThoai",
+        "thongDiep": "Số điện thoại gồm 10 chữ số, bắt đầu bằng 0"
+      },
+      {
+        "truong": "gioBatDauKhung",
+        "thongDiep": "Chưa chọn khung giờ khám"
+      },
+      {
+        "truong": "benhNhan.ngaySinh",
+        "thongDiep": "Ngày sinh không được ở tương lai"
+      },
+      {
+        "truong": "benhNhan.hoTen",
+        "thongDiep": "Họ tên không được để trống"
+      }
+    ]
+  }
+}

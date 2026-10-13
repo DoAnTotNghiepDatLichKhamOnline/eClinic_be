@@ -12,14 +12,15 @@
     dangKy({
         duongDan: '/admin/dashboard',
         vaiTro: 'QUAN_TRI_VIEN',
-        tieuDe: 'Dashboard',
+        tieuDe: cap('Tổng quan', 'Dashboard'),
         async ve(khung) {
             const oSo = the('div', null, 'o-so');
             const tinhLuc = ghiChu('');
             const loiTat = the('section');
-            loiTat.append(the('h2', 'Các màn hình quản trị'), ...[
-                ['Schedule Management', '/admin/schedule-management'], ['Medical Catalog', '/admin/medical-catalog'],
-                ['Doctor Management', '/admin/doctors'], ['Patient Management', '/admin/patients'], ['Accounts', '/admin/accounts'],
+            loiTat.append(the('h2', t('Các màn hình quản trị', 'Admin screens')), ...[
+                [t('Quản lý lịch làm việc', 'Schedule Management'), '/admin/schedule-management'], [t('Danh mục y tế', 'Medical Catalog'), '/admin/medical-catalog'],
+                [t('Quản lý bác sĩ', 'Doctor Management'), '/admin/doctors'], [t('Quản lý bệnh nhân', 'Patient Management'), '/admin/patients'],
+                [t('Tài khoản', 'Accounts'), '/admin/accounts'],
             ].map(([nhan, href]) => {
                 const p = the('p');
                 p.append(lienKet(nhan, href));
@@ -38,7 +39,8 @@
                 o.append(the('b', String(giaTri)), the('span', nhan, 'ghi-chu'));
                 oSo.append(o);
             }
-            tinhLuc.textContent = sl ? `Tính lúc ${ngayGioVn(sl.tinhLuc)}` : thongDiepLoi(json, 'Không tải được số liệu.');
+            tinhLuc.textContent = sl ? t(`Tính lúc ${ngayGioVn(sl.tinhLuc)}`, `Calculated at ${ngayGioVn(sl.tinhLuc)}`)
+                : thongDiepLoi(json, t('Không tải được số liệu.', 'Could not load the figures.'));
         },
     });
 })();

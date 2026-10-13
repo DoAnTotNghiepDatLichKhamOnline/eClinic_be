@@ -1,0 +1,15 @@
+{
+  "method": "POST",
+  "path": "/api/notification/thong-bao/999999/da-doc",
+  "acceptLanguage": null,
+  "requestBody": null,
+  "status": 404,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "thanhCong": false,
+    "maLoi": "KHONG_TIM_THAY_THONG_BAO",
+    "thongDiep": "Không tìm thấy thông báo"
+  }
+}

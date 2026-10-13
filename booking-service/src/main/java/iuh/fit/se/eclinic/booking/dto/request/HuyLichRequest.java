@@ -9,7 +9,7 @@ import jakarta.validation.constraints.Size;
  * @param soDienThoai chỉ dùng (và bắt buộc) khi hủy bằng link phiếu khám: đúng SĐT liên hệ đã nhập lúc đặt lịch
  */
 public record HuyLichRequest(
-        @Size(max = 500, message = "Lý do hủy tối đa 500 ký tự")
+        @Size(max = 500, message = "{kiemTra.lyDoHuy.toiDa}")
         String lyDo,
 
         String soDienThoai) {

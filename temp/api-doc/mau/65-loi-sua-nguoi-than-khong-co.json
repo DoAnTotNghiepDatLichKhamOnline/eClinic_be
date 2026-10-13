@@ -1,0 +1,23 @@
+{
+  "method": "PUT",
+  "path": "/api/booking/thong-tin-dat-lich/cua-toi/nguoi-than/999999",
+  "acceptLanguage": null,
+  "requestBody": {
+    "hoTen": "Lê Thị Hoa",
+    "ngaySinh": "1960-02-10",
+    "gioiTinh": "NU",
+    "soDienThoai": "0912345778",
+    "email": "hoa@example.com",
+    "soBaoHiemYTe": "HT3797900000301",
+    "diaChi": "5 Lê Lợi, Quận 1, TP.HCM"
+  },
+  "status": 404,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "thanhCong": false,
+    "maLoi": "KHONG_TIM_THAY",
+    "thongDiep": "NguoiThanDaLuu không tồn tại (id = 999999)"
+  }
+}

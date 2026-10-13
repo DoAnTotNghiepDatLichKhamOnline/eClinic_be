@@ -1,0 +1,16 @@
+{
+  "method": "POST",
+  "path": "/api/auth/verify-email",
+  "acceptLanguage": null,
+  "requestBody": {
+    "token": "pGLbuUwvrdOycxSxvJKr_1g5_NiZ7fjVHYBkJHjHnp4"
+  },
+  "status": 200,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "thanhCong": true,
+    "thongDiep": "Xác thực email thành công"
+  }
+}

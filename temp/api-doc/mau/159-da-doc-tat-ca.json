@@ -1,0 +1,16 @@
+{
+  "method": "POST",
+  "path": "/api/notification/thong-bao/da-doc-tat-ca",
+  "acceptLanguage": null,
+  "requestBody": null,
+  "status": 200,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "thanhCong": true,
+    "duLieu": {
+      "soDaDanhDau": 1
+    }
+  }
+}

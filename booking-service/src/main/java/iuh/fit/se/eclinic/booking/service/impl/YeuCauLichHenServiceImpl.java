@@ -74,7 +74,7 @@ public class YeuCauLichHenServiceImpl implements YeuCauLichHenService {
         Long idBacSi = taiKhoanService.layBacSiDangHoatDong(idTaiKhoanBacSi).getId();
         LichHen lichHen = lichHenRepository.findByIdForUpdate(idLichHen)
                 .filter(timThay -> timThay.getBacSi().getId().equals(idBacSi))
-                .orElseThrow(() -> new LoiNghiepVu(MaLoi.KHONG_TIM_THAY, "Không tìm thấy lịch hẹn"));
+                .orElseThrow(() -> new LoiNghiepVu(MaLoi.KHONG_TIM_THAY, "loi.KHONG_TIM_THAY.lichHen"));
         if (lichHen.getTrangThai() != TrangThaiLichHen.CHO_XAC_NHAN) {
             throw new LoiNghiepVu(MaLoi.LICH_HEN_KHONG_CHO_XAC_NHAN);
         }

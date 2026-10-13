@@ -1,0 +1,24 @@
+{
+  "method": "PUT",
+  "path": "/api/booking/ho-so-benh-nhan/cua-toi",
+  "acceptLanguage": null,
+  "requestBody": {
+    "hoTen": "Trịnh Văn Vũ",
+    "ngaySinh": "1988-11-02",
+    "gioiTinh": "NAM",
+    "soDienThoai": "0933000005",
+    "cccd": "079000000001",
+    "diaChi": "25 Quang Trung, Gò Vấp, TP.HCM",
+    "soBaoHiemYTe": null,
+    "tienSuBenhLy": null
+  },
+  "status": 409,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "thanhCong": false,
+    "maLoi": "CCCD_DA_CO_HO_SO",
+    "thongDiep": "Số CCCD này đã có hồ sơ bệnh nhân, chưa thể gắn vào tài khoản của bạn; vui lòng liên hệ phòng khám để xác minh"
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "method": "POST",
+  "path": "/api/chatbot/phien/4/tin-nhan",
+  "acceptLanguage": null,
+  "requestBody": {
+    "noiDung": "#lichtoi"
+  },
+  "status": 200,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "thanhCong": true,
+    "duLieu": {
+      "tinNhan": {
+        "id": 25,
+        "nguoiGui": "NGUOI_DUNG",
+        "loai": "CAU_HOI",
+        "noiDung": "#lichtoi",
+        "ngayTao": "2026-10-13T19:22:06.901454818",
+        "goiY": null
+      },
+      "traLoi": {
+        "id": 26,
+        "nguoiGui": "CHATBOT",
+        "loai": "TRA_LOI",
+        "noiDung": "DA TRA CUU: {\"error\":\"Personal data is not available in this chat. Tell the user that signed-in patients see their appointments and visit history on the site. Do not guess.\"}",
+        "ngayTao": "2026-10-13T19:22:06.902937252",
+        "goiY": null
+      }
+    }
+  }
+}

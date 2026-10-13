@@ -34,7 +34,7 @@ public class DoiEmailController {
     @PostMapping
     public PhanHoiApi<YeuCauDoiEmailResponse> yeuCau(@Valid @RequestBody DoiEmailRequest request) {
         return PhanHoiApi.ok(doiEmailService.yeuCau(NguoiDungHienTai.layIdTaiKhoan(), request),
-                "Đã gửi liên kết xác nhận tới email mới, vui lòng kiểm tra hộp thư");
+                "thanhCong.guiLienKetDoiEmail");
     }
 
     @Operation(summary = "Yêu cầu đổi email đang chờ xác nhận; không có thì duLieu vắng mặt")
@@ -47,7 +47,7 @@ public class DoiEmailController {
     @DeleteMapping
     public PhanHoiApi<Void> huy() {
         doiEmailService.huy(NguoiDungHienTai.layIdTaiKhoan());
-        return PhanHoiApi.ok(null, "Đã huỷ yêu cầu đổi email");
+        return PhanHoiApi.ok(null, "thanhCong.huyDoiEmail");
     }
 
 }

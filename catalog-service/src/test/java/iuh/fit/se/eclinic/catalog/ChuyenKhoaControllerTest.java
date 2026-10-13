@@ -27,6 +27,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import iuh.fit.se.eclinic.catalog.controller.ChuyenKhoaController;
 import iuh.fit.se.eclinic.catalog.dto.request.ChuyenKhoaRequest;
+import iuh.fit.se.eclinic.catalog.dto.response.ChuyenKhoaQuanTriResponse;
 import iuh.fit.se.eclinic.catalog.dto.response.ChuyenKhoaResponse;
 import iuh.fit.se.eclinic.catalog.service.ChuyenKhoaService;
 import iuh.fit.se.eclinic.common.dto.TrangDuLieu;
@@ -54,6 +55,8 @@ class ChuyenKhoaControllerTest {
     @MockitoBean ChuyenKhoaService chuyenKhoaService;
 
     private final ChuyenKhoaResponse noiTiet = new ChuyenKhoaResponse(1L, "Nội tiết", "Tiểu đường, tuyến giáp");
+    private final ChuyenKhoaQuanTriResponse noiTietQuanTri = new ChuyenKhoaQuanTriResponse(1L, "Nội tiết", null,
+            "Tiểu đường, tuyến giáp", null, null, null);
 
     @Test
     void khachXemDanhSachKhongCanDangNhap() throws Exception {
@@ -103,7 +106,7 @@ class ChuyenKhoaControllerTest {
 
     @Test
     void adminThemChuyenKhoa() throws Exception {
-        when(chuyenKhoaService.tao(any(ChuyenKhoaRequest.class))).thenReturn(noiTiet);
+        when(chuyenKhoaService.tao(any(ChuyenKhoaRequest.class))).thenReturn(noiTietQuanTri);
 
         mockMvc.perform(post(URL).with(NguoiDungGiaLap.quanTriVien())
                         .contentType(MediaType.APPLICATION_JSON).content(BODY_HOP_LE))
@@ -124,7 +127,7 @@ class ChuyenKhoaControllerTest {
 
     @Test
     void adminSuaVaXoa() throws Exception {
-        when(chuyenKhoaService.capNhat(eq(1L), any(ChuyenKhoaRequest.class))).thenReturn(noiTiet);
+        when(chuyenKhoaService.capNhat(eq(1L), any(ChuyenKhoaRequest.class))).thenReturn(noiTietQuanTri);
         doNothing().when(chuyenKhoaService).xoa(1L);
 
         mockMvc.perform(put(URL + "/1").with(NguoiDungGiaLap.quanTriVien())

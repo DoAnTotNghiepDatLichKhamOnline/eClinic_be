@@ -1,0 +1,23 @@
+{
+  "method": "GET",
+  "path": "/api/users/me/sessions",
+  "acceptLanguage": null,
+  "requestBody": null,
+  "status": 200,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "thanhCong": true,
+    "duLieu": [
+      {
+        "id": "85d3516b-2701-497e-ae69-1bbc43d11b66",
+        "thietBi": "Python-urllib/3.14",
+        "dangNhapLuc": "2026-10-13T19:22:04.697708",
+        "hoatDongLuc": "2026-10-13T19:22:04.734197",
+        "hetHanLuc": "2026-10-20T19:22:04.734014",
+        "hienTai": true
+      }
+    ]
+  }
+}

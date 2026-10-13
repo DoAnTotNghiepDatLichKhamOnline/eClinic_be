@@ -29,6 +29,23 @@ public interface DuLieuMauService {
     int boSungHoSoBacSi();
 
     /**
+     * Điền bản tiếng Anh cho chuyên khoa, phòng khám, hồ sơ và ảnh giới thiệu của bác sĩ mẫu, ở những chỗ bản tiếng Anh
+     * còn trống VÀ bản tiếng Việt vẫn đúng như dữ liệu mẫu (nội dung quản trị viên đã sửa thì không điền, để 2 bản
+     * không lệch nhau). Chạy mỗi lần khởi động nên DB có dữ liệu mẫu từ trước cũng được bổ sung.
+     *
+     * @return số chuyên khoa, phòng khám, bác sĩ được bổ sung
+     */
+    int boSungTiengAnh();
+
+    /**
+     * Điền triệu chứng thường gặp (2 ngôn ngữ) cho các chuyên khoa mẫu còn trống cả 2 bản, để chatbot gợi ý được chuyên
+     * khoa. Chạy mỗi lần khởi động; chuyên khoa quản trị viên đã nhập thì không đụng tới.
+     *
+     * @return số chuyên khoa được bổ sung
+     */
+    int boSungTrieuChung();
+
+    /**
      * Bổ sung ca làm việc + khung giờ còn thiếu của các bác sĩ mẫu trong {@code soNgay} ngày tính từ {@code tuNgay}.
      * Bỏ qua ngày bác sĩ đã có ca (kể cả ca đã huỷ) và ca trùng giờ với ca đang hoạt động của phòng.
      *

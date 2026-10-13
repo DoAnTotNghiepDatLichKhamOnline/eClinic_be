@@ -63,7 +63,7 @@ public interface QuanLyCaService {
      * @param idYeuCauDangDuyet yêu cầu đang được duyệt trong cùng transaction (không bị đóng); null khi hủy trực tiếp
      * @return số lịch hẹn vừa được đánh dấu cần đổi lịch
      */
-    int huyCaDaKhoa(LichLamViec ca, QuanTriVien quanTri, String lyDo, Long idYeuCauDangDuyet);
+    int huyCaDaKhoa(LichLamViec ca, QuanTriVien quanTri, LyDoHuyCa lyDo, Long idYeuCauDangDuyet);
 
     /**
      * Sửa 1 ca đã khoá (cùng quy tắc với {@link #sua}). Không báo bác sĩ: nơi gọi tự báo.

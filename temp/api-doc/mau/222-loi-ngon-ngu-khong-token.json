@@ -1,0 +1,17 @@
+{
+  "method": "PUT",
+  "path": "/api/users/me/language",
+  "acceptLanguage": null,
+  "requestBody": {
+    "ngonNgu": "EN"
+  },
+  "status": 401,
+  "headers": {
+    "Content-Type": "application/json;charset=UTF-8"
+  },
+  "body": {
+    "thanhCong": false,
+    "maLoi": "CHUA_DANG_NHAP",
+    "thongDiep": "Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn"
+  }
+}

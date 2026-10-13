@@ -10,8 +10,8 @@ import jakarta.validation.constraints.Size;
  */
 public record DatLaiMatKhauRequest(
 
-        @NotBlank(message = "Token không được để trống")
-        @Size(max = 100, message = "Token không hợp lệ")
+        @NotBlank(message = "{kiemTra.token.batBuoc}")
+        @Size(max = 100, message = "{kiemTra.token.khongHopLe}")
         String token,
 
         @MatKhauHopLe

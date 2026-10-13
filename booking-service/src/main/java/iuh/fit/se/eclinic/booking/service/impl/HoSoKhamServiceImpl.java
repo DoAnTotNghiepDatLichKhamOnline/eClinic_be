@@ -27,6 +27,7 @@ import iuh.fit.se.eclinic.booking.service.TaiKhoanService;
 import iuh.fit.se.eclinic.common.entity.booking.HoSoBenhNhan;
 import iuh.fit.se.eclinic.common.entity.booking.LichHen;
 import iuh.fit.se.eclinic.common.entity.medical.HoSoBenhAn;
+import iuh.fit.se.eclinic.common.enums.NgonNgu;
 import iuh.fit.se.eclinic.common.exception.LoiNghiepVu;
 import iuh.fit.se.eclinic.common.exception.MaLoi;
 import lombok.RequiredArgsConstructor;
@@ -75,7 +76,7 @@ public class HoSoKhamServiceImpl implements HoSoKhamService {
         Long idBacSi = taiKhoanService.layBacSiDangHoatDong(idTaiKhoanBacSi).getId();
         return lichHen
                 .filter(timThay -> timThay.getBacSi().getId().equals(idBacSi))
-                .orElseThrow(() -> new LoiNghiepVu(MaLoi.KHONG_TIM_THAY, "Không tìm thấy lịch hẹn"));
+                .orElseThrow(() -> new LoiNghiepVu(MaLoi.KHONG_TIM_THAY, "loi.KHONG_TIM_THAY.lichHen"));
     }
 
     private HoSoKhamResponse toResponse(LichHen lichHen) {
@@ -100,7 +101,8 @@ public class HoSoKhamServiceImpl implements HoSoKhamService {
     private HoSoKhamResponse.LanKham toLanKham(LichHen lichHen, HoSoBenhAn benhAn) {
         LocalDateTime gioKham = lichHen.getKhungGio().getGioBatDau();
         return new HoSoKhamResponse.LanKham(lichHen.getId(), lichHen.getMaTraCuu(), gioKham.toLocalDate(), gioKham,
-                caKhamMapper.toBacSiTomTat(lichHen.getBacSi()), lichHen.getBacSi().getChuyenKhoa().getTenChuyenKhoa(),
+                caKhamMapper.toBacSiTomTat(lichHen.getBacSi()),
+                lichHen.getBacSi().getChuyenKhoa().ten(NgonNgu.hienTai()),
                 lichHen.getTrangThai(), lichHen.getLyDoKham(), ketQuaKhamMapper.toResponse(benhAn));
     }
 

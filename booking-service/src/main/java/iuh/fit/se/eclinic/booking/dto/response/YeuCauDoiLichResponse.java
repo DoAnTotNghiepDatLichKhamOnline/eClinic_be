@@ -14,7 +14,8 @@ import iuh.fit.se.eclinic.common.enums.TrangThaiYeuCau;
  *                            cầu thì các lịch hẹn đó phải đổi lịch)
  * @param ngayMongMuon        chỉ có với DOI_CA (cùng 2 trường giờ)
  * @param phongKhamMongMuon   chỉ có với DOI_CA; null = giữ phòng khám hiện tại
- * @param ghiChuXuLy          ghi chú của quản trị viên khi duyệt / từ chối; null khi còn chờ duyệt hoặc đã rút
+ * @param ghiChuXuLy          ghi chú của quản trị viên khi duyệt / từ chối (nguyên văn), hoặc câu của hệ thống khi ca bị hủy
+ *                            làm đóng yêu cầu (theo ngôn ngữ của request); null khi còn chờ duyệt hoặc đã rút
  * @param ngayXuLy            thời điểm duyệt / từ chối / rút
  */
 public record YeuCauDoiLichResponse(Long id, LoaiYeuCauDoiLich loaiYeuCau, TrangThaiYeuCau trangThai, String lyDo,

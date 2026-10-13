@@ -100,3 +100,25 @@ label.tren-dong { display: inline; font-weight: normal; margin-right: 6px; }
 .hang-loc { display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 8px; }
 .danh-sach-tron { font-size: .9rem; margin: 4px 0 8px; padding-left: 0; list-style: none; }
 .danh-sach-tron li { border-top: 1px solid #d5d9e2; padding: 4px 0; }
+
+/* Nút chọn ngôn ngữ EN | VI ở thanh trên */
+.ngon-ngu { display: inline-flex; gap: 2px; }
+.ngon-ngu button.dang-chon { background: #1f6feb; color: #fff; border-color: #1f6feb; }
+
+/* ===== Khung chat với chatbot (chung.js: veChat) ===== */
+button.nut-chat { position: fixed; right: 16px; bottom: 16px; width: auto; padding: 10px 16px; border-radius: 999px; box-shadow: 0 2px 8px rgba(0, 0, 0, .25); z-index: 20; }
+.khung-chat { position: fixed; right: 16px; bottom: 64px; width: min(380px, calc(100vw - 32px)); max-height: min(600px, calc(100vh - 96px)); display: flex; flex-direction: column;
+    background: #fff; border: 1px solid #8c959f; border-radius: 10px; box-shadow: 0 4px 16px rgba(0, 0, 0, .25); padding: 8px 10px; z-index: 20; }
+.dau-chat { display: flex; justify-content: space-between; align-items: center; }
+.chat-tin-nhan { flex: 1; min-height: 160px; overflow-y: auto; padding: 4px 0; }
+.tin-chat { margin: 6px 0; padding: 6px 8px; border-radius: 8px; font-size: .9rem; max-width: 92%; }
+.tin-chat .noi-dung { white-space: pre-wrap; overflow-wrap: anywhere; }
+.tin-chat.cua-toi { background: #ddf4ff; margin-left: auto; }
+.tin-chat.cua-bot { background: #f6f8fa; }
+.tin-chat.khan-cap { background: #ffebe9; border: 1px solid #cf222e; }
+.the-chat { border: 1px solid #d5d9e2; border-radius: 6px; background: #fff; padding: 6px 8px; margin-top: 6px; font-size: .85rem; }
+.the-chat a { display: inline-block; margin-top: 2px; }
+.khung-gio-chat a { margin: 2px 4px 2px 0; padding: 2px 6px; border: 1px solid #8c959f; border-radius: 6px; text-decoration: none; }
+.khung-chat form { display: flex; gap: 6px; align-items: flex-end; }
+.khung-chat form button { width: auto; }
+.khung-chat textarea { resize: none; }

@@ -4,6 +4,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import iuh.fit.se.eclinic.common.enums.GioiTinh;
@@ -117,6 +118,28 @@ public final class DuLieuMau {
             return "0790000000%02d".formatted(so);
         }
     }
+
+    /**
+     * Triệu chứng thường gặp của từng chuyên khoa mẫu (theo tên chuyên khoa), viết bằng lời người bệnh hay dùng: chatbot
+     * dựa vào đây để gợi ý chuyên khoa.
+     */
+    public static final Map<String, String> TRIEU_CHUNG = Map.of(
+            "Nội tổng quát", "sốt, mệt mỏi, ho kéo dài, khó thở nhẹ, đau bụng, đầy hơi, ợ chua, tiêu chảy, táo bón, buồn nôn,"
+                    + " đau đầu, chóng mặt, sụt cân, tiểu đường, khát nước nhiều, khám sức khoẻ tổng quát",
+            "Nhi khoa", "trẻ sốt, trẻ ho, sổ mũi, trẻ nôn trớ, tiêu chảy ở trẻ, trẻ biếng ăn, chậm tăng cân, phát ban ở trẻ,"
+                    + " trẻ quấy khóc, tư vấn dinh dưỡng và tiêm chủng cho trẻ dưới 15 tuổi",
+            "Da liễu", "mụn trứng cá, ngứa da, nổi mẩn đỏ, mề đay, dị ứng da, chàm, vảy nến, nấm da, rụng tóc, gàu, nám,"
+                    + " tàn nhang, mụn cóc, móng bị nấm",
+            "Tai Mũi Họng", "đau họng, viêm họng, khàn tiếng, nghẹt mũi, chảy mũi, viêm xoang, hắt hơi nhiều, đau tai, ù tai,"
+                    + " nghe kém, chảy mủ tai, ngủ ngáy, hóc dị vật nhỏ",
+            "Tim mạch", "huyết áp cao, hồi hộp, đánh trống ngực, tim đập nhanh, tim đập không đều, tức ngực khi gắng sức,"
+                    + " khó thở khi gắng sức, phù chân, mỡ máu cao, theo dõi bệnh tim",
+            "Sản phụ khoa", "khám thai, trễ kinh, rối loạn kinh nguyệt, đau bụng kinh, ra khí hư bất thường, ngứa vùng kín,"
+                    + " tư vấn tránh thai, chuẩn bị mang thai, khám phụ khoa định kỳ",
+            "Mắt", "nhìn mờ, cận thị, viễn thị, loạn thị, mỏi mắt, khô mắt, đỏ mắt, ngứa mắt, chảy nước mắt, đau mắt đỏ,"
+                    + " lẹo mắt, đo thị lực, cắt kính",
+            "Răng Hàm Mặt", "đau răng, sâu răng, ê buốt răng, chảy máu chân răng, viêm nướu, hôi miệng, răng khôn mọc lệch,"
+                    + " mẻ răng, lấy cao răng, niềng răng");
 
     public static final List<ChuyenKhoaMau> CHUYEN_KHOA = List.of(
             new ChuyenKhoaMau("Nội tổng quát",

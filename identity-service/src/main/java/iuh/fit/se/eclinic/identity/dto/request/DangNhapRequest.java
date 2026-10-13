@@ -9,12 +9,12 @@ import jakarta.validation.constraints.Size;
  */
 public record DangNhapRequest(
 
-        @NotBlank(message = "Email không được để trống")
-        @Size(max = 255, message = "Email tối đa 255 ký tự")
+        @NotBlank(message = "{kiemTra.email.batBuoc}")
+        @Size(max = 255, message = "{kiemTra.email.toiDa}")
         String email,
 
-        @NotBlank(message = "Mật khẩu không được để trống")
-        @Size(max = 1000, message = "Mật khẩu quá dài")
+        @NotBlank(message = "{kiemTra.matKhau.batBuoc}")
+        @Size(max = 1000, message = "{kiemTra.matKhau.quaDai}")
         String matKhau) {
 
     /** Không in mật khẩu (tránh lộ khi request bị log). */

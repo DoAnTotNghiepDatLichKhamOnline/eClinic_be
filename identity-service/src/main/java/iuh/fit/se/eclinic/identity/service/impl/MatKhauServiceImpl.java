@@ -62,7 +62,8 @@ public class MatKhauServiceImpl implements MatKhauService {
                     // Sau khi giữ được khoá chờ (quy ước của TokenLienKetService); liên kết cũ hết hiệu lực
                     String token = tokenLienKetService.tao(tk.getId(), MucDichLienKet.DAT_LAI_MAT_KHAU,
                             lienKetProperties.thoiHanDatLaiMatKhau());
-                    eventPublisher.publishEvent(new EmailDatLaiMatKhauEvent(tk.getEmail(), tk.getHoTen(), token));
+                    eventPublisher.publishEvent(new EmailDatLaiMatKhauEvent(tk.getEmail(), tk.getHoTen(), token,
+                            tk.getNgonNgu()));
                     log.info("Gửi liên kết đặt lại mật khẩu id={}", tk.getId());
                 });
     }
@@ -91,7 +92,8 @@ public class MatKhauServiceImpl implements MatKhauService {
         gioiHanDangNhapService.xoa(taiKhoan.getEmail());
         // Yêu cầu đổi email đang chờ (nếu có) được tạo bằng mật khẩu cũ: huỷ
         tokenLienKetService.huy(idTaiKhoan, MucDichLienKet.DOI_EMAIL);
-        eventPublisher.publishEvent(new EmailDoiMatKhauEvent(taiKhoan.getEmail(), taiKhoan.getHoTen()));
+        eventPublisher.publishEvent(new EmailDoiMatKhauEvent(taiKhoan.getEmail(), taiKhoan.getHoTen(),
+                taiKhoan.getNgonNgu()));
         log.info("Đặt lại mật khẩu id={}, thu hồi {} phiên", idTaiKhoan, soPhien);
     }
 
@@ -113,7 +115,8 @@ public class MatKhauServiceImpl implements MatKhauService {
         gioiHanDangNhapService.xoa(taiKhoan.getEmail());
         // Người vừa đổi mật khẩu vì nhận thông báo "có yêu cầu đổi email": liên kết đổi email phải chết theo
         tokenLienKetService.huy(idTaiKhoan, MucDichLienKet.DOI_EMAIL);
-        eventPublisher.publishEvent(new EmailDoiMatKhauEvent(taiKhoan.getEmail(), taiKhoan.getHoTen()));
+        eventPublisher.publishEvent(new EmailDoiMatKhauEvent(taiKhoan.getEmail(), taiKhoan.getHoTen(),
+                taiKhoan.getNgonNgu()));
         log.info("Đổi mật khẩu id={}, thu hồi {} phiên khác", idTaiKhoan, soPhien);
     }
 

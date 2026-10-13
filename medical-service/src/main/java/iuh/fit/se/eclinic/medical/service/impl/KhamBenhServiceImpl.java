@@ -95,12 +95,12 @@ public class KhamBenhServiceImpl implements KhamBenhService {
     private static LichHen cuaBacSi(BacSi bacSi, Optional<LichHen> lichHen) {
         return lichHen
                 .filter(timThay -> timThay.getBacSi().getId().equals(bacSi.getId()))
-                .orElseThrow(() -> new LoiNghiepVu(MaLoi.KHONG_TIM_THAY, "Không tìm thấy lịch hẹn"));
+                .orElseThrow(() -> new LoiNghiepVu(MaLoi.KHONG_TIM_THAY, "loi.KHONG_TIM_THAY.lichHen"));
     }
 
     private HoSoBenhAn layBenhAn(Long idLichHen) {
         return hoSoBenhAnRepository.timTheoLichHenKemDonThuoc(idLichHen)
-                .orElseThrow(() -> new LoiNghiepVu(MaLoi.KHONG_TIM_THAY, "Lịch hẹn này chưa có hồ sơ bệnh án"));
+                .orElseThrow(() -> new LoiNghiepVu(MaLoi.KHONG_TIM_THAY, "loi.KHONG_TIM_THAY.benhAn"));
     }
 
     /** Ghi chẩn đoán, ghi chú, ngày tái khám và thay toàn bộ đơn thuốc bằng các dòng trong request. */

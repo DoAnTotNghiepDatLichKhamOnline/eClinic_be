@@ -1,0 +1,18 @@
+{
+  "method": "POST",
+  "path": "/api/booking/lich-hen/cua-toi/mk8Do7MJb6iEY9DBDPsLpRaLVgHCFgmKuvpoqZNe174/doi-lich",
+  "acceptLanguage": null,
+  "requestBody": {
+    "idLichLamViec": 17,
+    "gioBatDauKhung": "2026-10-14T10:00:00"
+  },
+  "status": 409,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "thanhCong": false,
+    "maLoi": "LICH_HEN_KHONG_HUY_DOI_DUOC",
+    "thongDiep": "Lịch hẹn đã khám xong, đã hủy hoặc bị từ chối nên không hủy / đổi được"
+  }
+}

@@ -15,6 +15,10 @@
     const SO_NGAY = 42;
     let trang = 0, tongSoTrang = 0;
 
+    // Tiêu đề cột dùng chung cho 2 bảng (gọi lúc vẽ để theo ngôn ngữ đang chọn)
+    const cotBang = () => [t('Giờ khám dự kiến', 'Expected time'), t('STT', 'No.'), t('Bệnh nhân', 'Patient'), t('Tuổi', 'Age'),
+        t('Lý do khám', 'Reason for visit'), t('Mã tra cứu', 'Lookup code'), t('Thao tác', 'Actions')];
+
     async function xuLy(lich, hanhDong) {
         let ketQua;
         if (hanhDong === 'xac-nhan') {
@@ -22,14 +26,14 @@
         } else {
             const lyDo = $('yc-ly-do').value.trim();
             if (!lyDo) {
-                bao('yc-trang-thai', 'Nhập lý do từ chối trước khi bấm Decline.', 'loi');
+                bao('yc-trang-thai', t('Nhập lý do từ chối trước khi bấm Decline.', 'Enter the reason for declining before clicking Decline.'), 'loi');
                 $('yc-ly-do').focus();
                 return;
             }
             ketQua = await goi(`${LICH_HEN}/${lich.id}/tu-choi`, { lyDo });
         }
         const { status, json } = ketQua;
-        bao('yc-trang-thai', status === 200 ? `${json.thongDiep}: ${lich.maTraCuu}` : thongDiepLoi(json, 'Không thực hiện được.'),
+        bao('yc-trang-thai', status === 200 ? `${json.thongDiep}: ${lich.maTraCuu}` : thongDiepLoi(json, t('Không thực hiện được.', 'The action failed.')),
             status === 200 ? 'tot' : 'loi');
         if (status === 200 && hanhDong !== 'xac-nhan') $('yc-ly-do').value = '';
         // Lỗi 409 nghĩa là lịch hẹn đã đổi trạng thái ở nơi khác: tải lại để danh sách đúng
@@ -41,7 +45,7 @@
         const khung = $('yc-ds');
         if (!khung) return;
         if (status !== 200) {
-            khung.replaceChildren(the('p', thongDiepLoi(json, 'Không tải được danh sách.'), 'ghi-chu loi'));
+            khung.replaceChildren(the('p', thongDiepLoi(json, t('Không tải được danh sách.', 'Could not load the list.')), 'ghi-chu loi'));
             return;
         }
         const duLieu = json.duLieu;
@@ -51,13 +55,14 @@
             return taiYeuCau(imLang);
         }
         tongSoTrang = duLieu.tongSoTrang;
-        $('yc-trang').textContent = `Trang ${duLieu.trang + 1} / ${Math.max(duLieu.tongSoTrang, 1)} · ${duLieu.tongSoPhanTu} yêu cầu đang chờ`;
+        $('yc-trang').textContent = t(`Trang ${duLieu.trang + 1} / ${Math.max(duLieu.tongSoTrang, 1)} · ${duLieu.tongSoPhanTu} yêu cầu đang chờ`,
+            `Page ${duLieu.trang + 1} / ${Math.max(duLieu.tongSoTrang, 1)} · ${duLieu.tongSoPhanTu} pending requests`);
         if (!duLieu.noiDung.length) {
-            khung.replaceChildren(ghiChu('No data yet — không có yêu cầu đặt lịch nào đang chờ.'));
+            khung.replaceChildren(ghiChu(t('Không có yêu cầu đặt lịch nào đang chờ.', 'No pending booking requests.')));
             return;
         }
-        khung.replaceChildren(bang(['Giờ khám dự kiến', 'STT', 'Bệnh nhân', 'Tuổi', 'Lý do khám', 'Mã tra cứu', 'Thao tác'], duLieu.noiDung.map((lich) => dong([
-            ngayGioVn(lich.gioKhamDuKien), lich.soThuTu, lich.benhNhan.hoTen + (lich.doiChieu.canDoiChieu ? ' ⚠ cần đối chiếu' : ''),
+        khung.replaceChildren(bang(cotBang(), duLieu.noiDung.map((lich) => dong([
+            ngayGioVn(lich.gioKhamDuKien), lich.soThuTu, lich.benhNhan.hoTen + (lich.doiChieu.canDoiChieu ? t(' ⚠ cần đối chiếu', ' ⚠ identity check needed') : ''),
             lich.benhNhan.tuoi, lich.lyDoKham, lich.maTraCuu,
             [nut('Accept', () => xuLy(lich, 'xac-nhan')), nut('Decline', () => xuLy(lich, 'tu-choi'), 'nguy-hiem nho'),
                 lienKet('Open record', '/doctor/consultation?id=' + lich.id)],
@@ -69,15 +74,15 @@
         const khung = $('yc-da-xac-nhan');
         if (!khung) return;
         if (status !== 200) {
-            khung.replaceChildren(the('p', thongDiepLoi(json, 'Không tải được danh sách.'), 'ghi-chu loi'));
+            khung.replaceChildren(the('p', thongDiepLoi(json, t('Không tải được danh sách.', 'Could not load the list.')), 'ghi-chu loi'));
             return;
         }
         const ds = json.duLieu.filter((lich) => lich.trangThai === 'DA_XAC_NHAN');
         if (!ds.length) {
-            khung.replaceChildren(ghiChu('Chưa có lịch hẹn nào đã xác nhận.'));
+            khung.replaceChildren(ghiChu(t('Chưa có lịch hẹn nào đã xác nhận.', 'No confirmed appointments yet.')));
             return;
         }
-        khung.replaceChildren(bang(['Giờ khám dự kiến', 'STT', 'Bệnh nhân', 'Tuổi', 'Lý do khám', 'Mã tra cứu', 'Thao tác'], ds.map((lich) => dong([
+        khung.replaceChildren(bang(cotBang(), ds.map((lich) => dong([
             ngayGioVn(lich.gioKhamDuKien), lich.soThuTu, lich.benhNhan.hoTen, lich.benhNhan.tuoi, lich.lyDoKham, lich.maTraCuu,
             lienKet('Open record', '/doctor/consultation?id=' + lich.id),
         ]))));
@@ -86,22 +91,24 @@
     dangKy({
         duongDan: '/doctor/appointment-requests',
         vaiTro: 'BAC_SI',
-        tieuDe: 'Appointment Requests',
+        tieuDe: cap('Yêu cầu đặt lịch', 'Appointment Requests'),
         async ve(khung) {
             trang = 0;
             khuon(khung, `
                 <section>
-                    <h2>Yêu cầu đặt lịch đang chờ xác nhận</h2>
-                    <p class="ghi-chu">Chỉ xác nhận / từ chối được trước giờ khám. Lịch chưa kịp xác nhận vẫn khám được vào ngày khám.</p>
-                    <input id="yc-ly-do" placeholder="Lý do từ chối (bắt buộc, nhập trước khi bấm Decline; bệnh nhân sẽ đọc được)" maxlength="500">
+                    <h2>${t('Yêu cầu đặt lịch đang chờ xác nhận', 'Booking requests pending confirmation')}</h2>
+                    <p class="ghi-chu">${t('Chỉ xác nhận / từ chối được trước giờ khám. Lịch chưa kịp xác nhận vẫn khám được vào ngày khám.',
+                        'Requests can only be confirmed or declined before the appointment time. An appointment not yet confirmed can still be seen on the day.')}</p>
+                    <input id="yc-ly-do" placeholder="${t('Lý do từ chối (bắt buộc, nhập trước khi bấm Decline; bệnh nhân sẽ đọc được)',
+                        'Reason for declining (required, enter it before clicking Decline; the patient will read it)')}" maxlength="500">
                     <div id="yc-ds" class="bang"></div>
                     <p id="yc-trang" class="ghi-chu"></p>
-                    <button id="yc-truoc" class="phu nho">‹ Trang trước</button>
-                    <button id="yc-sau" class="phu nho">Trang sau ›</button>
+                    <button id="yc-truoc" class="phu nho">‹ ${t('Trang trước', 'Previous page')}</button>
+                    <button id="yc-sau" class="phu nho">${t('Trang sau', 'Next page')} ›</button>
                     <p id="yc-trang-thai" class="ghi-chu"></p>
                 </section>
                 <section>
-                    <h2>Đã xác nhận, trong ${SO_NGAY} ngày tới</h2>
+                    <h2>${t(`Đã xác nhận, trong ${SO_NGAY} ngày tới`, `Confirmed, in the next ${SO_NGAY} days`)}</h2>
                     <div id="yc-da-xac-nhan" class="bang"></div>
                 </section>`);
             $('yc-truoc').addEventListener('click', () => {

@@ -20,11 +20,11 @@ public final class KhoangNgay {
     /** Ném DU_LIEU_KHONG_HOP_LE nếu denNgay trước tuNgay hoặc khoảng dài hơn {@link #SO_NGAY_TOI_DA} ngày. */
     public static void kiemTra(LocalDate tuNgay, LocalDate denNgay) {
         if (denNgay.isBefore(tuNgay)) {
-            throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE, "denNgay phải từ tuNgay trở đi");
+            throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE, "loi.DU_LIEU_KHONG_HOP_LE.khoangNgay");
         }
         if (ChronoUnit.DAYS.between(tuNgay, denNgay) >= SO_NGAY_TOI_DA) {
             throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE,
-                    "Mỗi lần chỉ xem được tối đa " + SO_NGAY_TOI_DA + " ngày");
+                    "loi.DU_LIEU_KHONG_HOP_LE.khoangNgayToiDa", String.valueOf(SO_NGAY_TOI_DA));
         }
     }
 

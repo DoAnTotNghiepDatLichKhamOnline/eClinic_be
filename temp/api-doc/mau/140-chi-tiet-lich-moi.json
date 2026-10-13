@@ -1,0 +1,56 @@
+{
+  "method": "GET",
+  "path": "/api/booking/lich-hen/cua-toi/Xnipx50PyD6kce3L6AUV6yTuQt-WXWfnC3yz3suxxLc",
+  "acceptLanguage": null,
+  "requestBody": null,
+  "status": 200,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "thanhCong": true,
+    "duLieu": {
+      "lichHen": {
+        "maPhieuKham": "Xnipx50PyD6kce3L6AUV6yTuQt-WXWfnC3yz3suxxLc",
+        "maTraCuu": "ECL-20261014-8812",
+        "linkPhieuKham": "http://localhost:5173/phieu-kham/Xnipx50PyD6kce3L6AUV6yTuQt-WXWfnC3yz3suxxLc",
+        "trangThai": "CHO_XAC_NHAN",
+        "soThuTu": 19,
+        "ngay": "2026-10-14",
+        "gioKhamDuKien": "2026-10-14T11:00:00",
+        "gioBatDauKhung": "2026-10-14T11:00:00",
+        "gioKetThucKhung": "2026-10-14T11:30:00",
+        "bacSi": {
+          "id": 5,
+          "hoTen": "Hoàng Minh Đức",
+          "hocVi": "ThS.BS",
+          "anhDaiDien": "https://placehold.co/400x400/0f766e/ffffff/png?text=BS+5"
+        },
+        "tenChuyenKhoa": "Da liễu",
+        "phongKham": {
+          "id": 3,
+          "tenPhong": "Phòng 103",
+          "tang": "Tầng 1"
+        },
+        "hoTenBenhNhan": "Nguyễn Thị Mai",
+        "laBanThan": true,
+        "hoTenNguoiGiamHo": null,
+        "lyDoKham": "Khám định kỳ",
+        "ngayDat": "2026-10-13T19:21:59.418002",
+        "nguoiDat": "TOI",
+        "thongTinKhacHoSo": false,
+        "lyDoHuy": null,
+        "duocHuyDoi": true,
+        "hanHuyDoi": "2026-10-14T09:00:00",
+        "canDoiLich": false
+      },
+      "ngaySinhBenhNhan": "1995-03-12",
+      "gioiTinhBenhNhan": "NU",
+      "soDienThoaiLienHe": "0902000001",
+      "emailLienHe": null,
+      "ketQua": null,
+      "duocDanhGia": false,
+      "danhGia": null
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "method": "POST",
+  "path": "/api/booking/lich-hen/cua-toi/_xmRCfByzJIzEPnG1qz_pc8JGCg7zgbyJ4x0Jt5an-c/doi-lich",
+  "acceptLanguage": null,
+  "requestBody": {
+    "idLichLamViec": 17,
+    "gioBatDauKhung": "2026-10-14T11:00:00"
+  },
+  "status": 409,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "thanhCong": false,
+    "maLoi": "QUA_HAN_HUY_DOI_LICH",
+    "thongDiep": "Đã quá hạn hủy / đổi lịch hẹn này trên hệ thống, vui lòng liên hệ phòng khám"
+  }
+}

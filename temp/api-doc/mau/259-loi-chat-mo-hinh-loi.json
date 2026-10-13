@@ -1,0 +1,17 @@
+{
+  "method": "POST",
+  "path": "/api/chatbot/phien/1/tin-nhan",
+  "acceptLanguage": null,
+  "requestBody": {
+    "noiDung": "#500"
+  },
+  "status": 503,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "thanhCong": false,
+    "maLoi": "CHATBOT_KHONG_KHA_DUNG",
+    "thongDiep": "Trợ lý ảo tạm thời không trả lời được, vui lòng gửi lại sau ít phút"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "method": "POST",
+  "path": "/api/booking/lich-hen/cua-toi/K3lZ6TwiGmLI_ke97oUUCBZ9txQ_p3JPxFuHTbqv-NI/huy",
+  "acceptLanguage": null,
+  "requestBody": null,
+  "status": 404,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "thanhCong": false,
+    "maLoi": "KHONG_TIM_THAY",
+    "thongDiep": "Không tìm thấy lịch hẹn"
+  }
+}

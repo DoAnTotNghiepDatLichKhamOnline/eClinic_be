@@ -1,0 +1,17 @@
+{
+  "method": "POST",
+  "path": "/api/booking/phieu-kham/UDTjM0r-8RmR-GRfBd8wQMtHZhQmRXkheBQCwy43hnI/huy",
+  "acceptLanguage": null,
+  "requestBody": {
+    "lyDo": "Bận"
+  },
+  "status": 400,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "thanhCong": false,
+    "maLoi": "DU_LIEU_KHONG_HOP_LE",
+    "thongDiep": "Nhập số điện thoại đã dùng khi đặt lịch (10 chữ số, bắt đầu bằng 0)"
+  }
+}

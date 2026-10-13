@@ -15,17 +15,17 @@ import jakarta.validation.constraints.Size;
  * @param donThuoc          bỏ trống = không kê đơn; khi sửa, danh sách này thay toàn bộ đơn thuốc cũ
  */
 public record BenhAnRequest(
-        @NotBlank(message = "Chẩn đoán không được để trống")
-        @Size(max = 5000, message = "Chẩn đoán tối đa 5000 ký tự")
+        @NotBlank(message = "{kiemTra.chanDoan.batBuoc}")
+        @Size(max = 5000, message = "{kiemTra.chanDoan.toiDa}")
         String chanDoan,
 
-        @Size(max = 5000, message = "Ghi chú tối đa 5000 ký tự")
+        @Size(max = 5000, message = "{kiemTra.ghiChu.toiDa}")
         String ghiChu,
 
-        @Future(message = "Ngày tái khám đề xuất phải sau hôm nay")
+        @Future(message = "{kiemTra.ngayTaiKham.sauHomNay}")
         LocalDate ngayTaiKhamDeXuat,
 
         @Valid
-        @Size(max = 30, message = "Đơn thuốc tối đa 30 dòng")
+        @Size(max = 30, message = "{kiemTra.donThuoc.toiDa}")
         List<DonThuocRequest> donThuoc) {
 }

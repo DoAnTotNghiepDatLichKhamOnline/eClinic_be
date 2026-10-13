@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.MessageSource;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.dao.PessimisticLockingFailureException;
@@ -31,6 +32,7 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import iuh.fit.se.eclinic.common.dto.ChiTietLoi;
 import iuh.fit.se.eclinic.common.dto.PhanHoiApi;
+import iuh.fit.se.eclinic.common.enums.NgonNgu;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Path;
@@ -39,6 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * Chuyển mọi exception của controller thành PhanHoiApi, HTTP status lấy từ MaLoi.
  * Lỗi 401/403 xảy ra trước controller (filter bảo mật) do LoiBaoMatHandler xử lý.
+ * Thông điệp soạn theo ngôn ngữ của request từ khoá trong thong-diep/*.properties.
  */
 @Slf4j
 @RestControllerAdvice
@@ -48,14 +51,17 @@ public class XuLyLoiHandler {
 
     /** Chỉ để ghi vào thông điệp lỗi; giới hạn thật do servlet container áp dụng. */
     private final DataSize kichThuocTepToiDa;
+    private final MessageSource messageSource;
 
-    public XuLyLoiHandler(@Value("${spring.servlet.multipart.max-file-size:1MB}") DataSize kichThuocTepToiDa) {
+    public XuLyLoiHandler(@Value("${spring.servlet.multipart.max-file-size:1MB}") DataSize kichThuocTepToiDa,
+            MessageSource messageSource) {
         this.kichThuocTepToiDa = kichThuocTepToiDa;
+        this.messageSource = messageSource;
     }
 
     @ExceptionHandler(LoiNghiepVu.class)
     public ResponseEntity<PhanHoiApi<Void>> xuLyLoiNghiepVu(LoiNghiepVu ex) {
-        return traVe(ex.getMaLoi(), ex.getMessage(), null);
+        return traVe(ex.getMaLoi(), dich(ex.getKhoaThongDiep(), ex.getThamSo()), null);
     }
 
     // ---- 400: dữ liệu đầu vào ----
@@ -101,13 +107,13 @@ public class XuLyLoiHandler {
     public ResponseEntity<PhanHoiApi<Void>> xuLyYeuCauSai(Exception ex) {
         String thongDiep = null;
         if (ex instanceof HttpMessageNotReadableException) {
-            thongDiep = "Nội dung request không đọc được (JSON sai định dạng)";
+            thongDiep = dich("yeuCau.jsonSai");
         } else if (ex instanceof MethodArgumentTypeMismatchException e) {
-            thongDiep = "Tham số '" + e.getName() + "' sai kiểu dữ liệu";
+            thongDiep = dich("yeuCau.saiKieu", e.getName());
         } else if (ex instanceof MissingServletRequestParameterException e) {
-            thongDiep = "Thiếu tham số '" + e.getParameterName() + "'";
+            thongDiep = dich("yeuCau.thieuThamSo", e.getParameterName());
         } else if (ex instanceof HttpMediaTypeNotSupportedException e) {
-            thongDiep = "Content-Type không được hỗ trợ: " + e.getContentType();
+            thongDiep = dich("yeuCau.contentTypeKhongHoTro", String.valueOf(e.getContentType()));
         }
         return traVe(MaLoi.DU_LIEU_KHONG_HOP_LE, thongDiep, null);
     }
@@ -117,21 +123,20 @@ public class XuLyLoiHandler {
     /** Tệp hoặc cả request vượt spring.servlet.multipart.max-file-size / max-request-size. */
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     public ResponseEntity<PhanHoiApi<Void>> xuLyTepQuaLon(MaxUploadSizeExceededException ex) {
-        return traVe(MaLoi.TEP_QUA_LON,
-                "Tệp tải lên vượt quá dung lượng cho phép (tối đa " + docDungLuong(kichThuocTepToiDa) + ")", null);
+        return traVe(MaLoi.TEP_QUA_LON, dich("loi.TEP_QUA_LON.toiDa", docDungLuong(kichThuocTepToiDa)), null);
     }
 
     /** Body multipart hỏng (thiếu boundary, bị cắt giữa chừng...). */
     @ExceptionHandler(MultipartException.class)
     public ResponseEntity<PhanHoiApi<Void>> xuLyMultipartSai(MultipartException ex) {
         log.info("Request multipart không đọc được: {}", ex.getMessage());
-        return traVe(MaLoi.DU_LIEU_KHONG_HOP_LE, "Nội dung tải lên không đọc được", null);
+        return traVe(MaLoi.DU_LIEU_KHONG_HOP_LE, dich("yeuCau.multipartSai"), null);
     }
 
     /** Thiếu phần tệp mà @RequestPart yêu cầu. */
     @ExceptionHandler(MissingServletRequestPartException.class)
     public ResponseEntity<PhanHoiApi<Void>> xuLyThieuTep(MissingServletRequestPartException ex) {
-        return traVe(MaLoi.DU_LIEU_KHONG_HOP_LE, "Thiếu tệp '" + ex.getRequestPartName() + "'", null);
+        return traVe(MaLoi.DU_LIEU_KHONG_HOP_LE, dich("yeuCau.thieuTep", ex.getRequestPartName()), null);
     }
 
     // ---- 401/403/404/405/409 ----
@@ -143,7 +148,7 @@ public class XuLyLoiHandler {
 
     @ExceptionHandler(NoResourceFoundException.class)
     public ResponseEntity<PhanHoiApi<Void>> xuLyKhongCoDuongDan(NoResourceFoundException ex) {
-        return traVe(MaLoi.KHONG_TIM_THAY, "Không tìm thấy đường dẫn /" + ex.getResourcePath(), null);
+        return traVe(MaLoi.KHONG_TIM_THAY, dich("loi.KHONG_TIM_THAY.duongDan", ex.getResourcePath()), null);
     }
 
     /**
@@ -171,7 +176,7 @@ public class XuLyLoiHandler {
     @ExceptionHandler(PessimisticLockingFailureException.class)
     public ResponseEntity<PhanHoiApi<Void>> xuLyKhongKhoaDuoc(PessimisticLockingFailureException ex) {
         log.warn("Không khoá được dòng dữ liệu: {}", ex.getMostSpecificCause().getMessage());
-        return traVe(MaLoi.DU_LIEU_DA_THAY_DOI, "Hệ thống đang bận, vui lòng thử lại", null);
+        return traVe(MaLoi.DU_LIEU_DA_THAY_DOI, dich("yeuCau.heThongBan"), null);
     }
 
     // ---- 500 ----
@@ -182,9 +187,15 @@ public class XuLyLoiHandler {
         return traVe(MaLoi.LOI_HE_THONG, null, null);
     }
 
-    private static ResponseEntity<PhanHoiApi<Void>> traVe(MaLoi maLoi, String thongDiep, List<ChiTietLoi> chiTiet) {
-        String noiDung = thongDiep != null ? thongDiep : maLoi.getThongDiepMacDinh();
+    /** @param thongDiep câu đã soạn theo ngôn ngữ của request; null thì dùng thông điệp mặc định của mã lỗi */
+    private ResponseEntity<PhanHoiApi<Void>> traVe(MaLoi maLoi, String thongDiep, List<ChiTietLoi> chiTiet) {
+        String noiDung = thongDiep != null ? thongDiep : dich(maLoi.khoa());
         return ResponseEntity.status(maLoi.getTrangThaiHttp()).body(PhanHoiApi.loi(maLoi, noiDung, chiTiet));
+    }
+
+    /** Không tìm thấy khoá thì trả về chính chuỗi đó (thông điệp chuyển nguyên từ service khác). */
+    private String dich(String khoa, Object... thamSo) {
+        return messageSource.getMessage(khoa, thamSo, khoa, NgonNgu.hienTai().locale());
     }
 
     private static String docDungLuong(DataSize dungLuong) {

@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.stereotype.Component;
 
 import iuh.fit.se.eclinic.catalog.dto.request.CapNhatHoSoBacSiRequest;
+import iuh.fit.se.eclinic.catalog.dto.response.AnhBacSiQuanTriResponse;
 import iuh.fit.se.eclinic.catalog.dto.response.AnhBacSiResponse;
 import iuh.fit.se.eclinic.catalog.dto.response.BacSiChiTietResponse;
 import iuh.fit.se.eclinic.catalog.dto.response.BacSiQuanTriResponse;
@@ -14,6 +15,7 @@ import iuh.fit.se.eclinic.catalog.repository.DanhGiaChiDocRepository.DiemTheoBac
 import iuh.fit.se.eclinic.common.entity.catalog.AnhBacSi;
 import iuh.fit.se.eclinic.common.entity.catalog.BacSi;
 import iuh.fit.se.eclinic.common.entity.identity.TaiKhoan;
+import iuh.fit.se.eclinic.common.enums.NgonNgu;
 import iuh.fit.se.eclinic.common.util.DiemDanhGia;
 
 /**
@@ -24,35 +26,46 @@ import iuh.fit.se.eclinic.common.util.DiemDanhGia;
 @Component
 public class BacSiMapper {
 
-    /** @param diem điểm đánh giá của bác sĩ; null nếu chưa có đánh giá nào */
+    /**
+     * Chữ của hồ sơ theo ngôn ngữ của request; họ tên, học vị không dịch.
+     *
+     * @param diem điểm đánh giá của bác sĩ; null nếu chưa có đánh giá nào
+     */
     public BacSiResponse toResponse(BacSi bacSi, DiemTheoBacSi diem) {
+        NgonNgu ngonNgu = NgonNgu.hienTai();
         return new BacSiResponse(bacSi.getId(), bacSi.getTaiKhoan().getHoTen(), bacSi.getTaiKhoan().getAnhDaiDien(),
-                bacSi.getHocVi(), bacSi.getChucVu(), bacSi.getSoNamKinhNghiem(), bacSi.getGioiThieuNgan(),
-                bacSi.getChuyenKhoa().getId(), bacSi.getChuyenKhoa().getTenChuyenKhoa(),
+                bacSi.getHocVi(), bacSi.chucVu(ngonNgu), bacSi.getSoNamKinhNghiem(), bacSi.gioiThieuNgan(ngonNgu),
+                bacSi.getChuyenKhoa().getId(), bacSi.getChuyenKhoa().ten(ngonNgu),
                 diem == null ? null : DiemDanhGia.lamTron(diem.getDiemTrungBinh()),
                 diem == null ? 0 : diem.getSoDanhGia());
     }
 
     /** @param diem như {@link #toResponse} */
     public BacSiChiTietResponse toChiTietResponse(BacSi bacSi, List<AnhBacSi> danhSachAnh, DiemTheoBacSi diem) {
+        NgonNgu ngonNgu = NgonNgu.hienTai();
         return new BacSiChiTietResponse(bacSi.getId(), bacSi.getTaiKhoan().getHoTen(),
-                bacSi.getTaiKhoan().getAnhDaiDien(), bacSi.getHocVi(), bacSi.getChucVu(), bacSi.getSoNamKinhNghiem(),
-                bacSi.getGioiThieuNgan(), bacSi.getChuyenKhoa().getId(), bacSi.getChuyenKhoa().getTenChuyenKhoa(),
-                bacSi.getTieuSu(), tachDong(bacSi.getQuaTrinhDaoTao()), tachDong(bacSi.getQuaTrinhCongTac()),
-                tachDong(bacSi.getLinhVucKhamChua()), toAnhResponse(danhSachAnh),
+                bacSi.getTaiKhoan().getAnhDaiDien(), bacSi.getHocVi(), bacSi.chucVu(ngonNgu),
+                bacSi.getSoNamKinhNghiem(), bacSi.gioiThieuNgan(ngonNgu), bacSi.getChuyenKhoa().getId(),
+                bacSi.getChuyenKhoa().ten(ngonNgu), bacSi.tieuSu(ngonNgu), tachDong(bacSi.quaTrinhDaoTao(ngonNgu)),
+                tachDong(bacSi.quaTrinhCongTac(ngonNgu)), tachDong(bacSi.linhVucKhamChua(ngonNgu)),
+                danhSachAnh.stream().map(anh -> toAnhResponse(anh, ngonNgu)).toList(),
                 diem == null ? null : DiemDanhGia.lamTron(diem.getDiemTrungBinh()),
                 diem == null ? 0 : diem.getSoDanhGia());
     }
 
+    /** Các mục giới thiệu: chữ đã lưu của cả 2 ngôn ngữ. Tên chuyên khoa: theo ngôn ngữ của request. */
     public HoSoBacSiQuanTriResponse toQuanTriResponse(BacSi bacSi, List<AnhBacSi> danhSachAnh) {
         TaiKhoan taiKhoan = bacSi.getTaiKhoan();
         return new HoSoBacSiQuanTriResponse(bacSi.getId(), maBacSi(bacSi.getId()), taiKhoan.getHoTen(),
                 taiKhoan.getEmail(), taiKhoan.getSoDienThoai(), taiKhoan.getAnhDaiDien(), bacSi.getSoGiayPhep(),
                 bacSi.getTrangThai(), taiKhoan.getTrangThai(), taiKhoan.isPhaiDoiMatKhau(), bacSi.getHocVi(),
-                bacSi.getChucVu(), bacSi.getSoNamKinhNghiem(), bacSi.getGioiThieuNgan(),
-                bacSi.getChuyenKhoa().getId(), bacSi.getChuyenKhoa().getTenChuyenKhoa(), bacSi.getTieuSu(),
-                tachDong(bacSi.getQuaTrinhDaoTao()), tachDong(bacSi.getQuaTrinhCongTac()),
-                tachDong(bacSi.getLinhVucKhamChua()), toAnhResponse(danhSachAnh));
+                bacSi.getChucVu(), bacSi.getChucVuEn(), bacSi.getSoNamKinhNghiem(), bacSi.getGioiThieuNgan(),
+                bacSi.getGioiThieuNganEn(), bacSi.getChuyenKhoa().getId(),
+                bacSi.getChuyenKhoa().ten(NgonNgu.hienTai()), bacSi.getTieuSu(), bacSi.getTieuSuEn(),
+                tachDong(bacSi.getQuaTrinhDaoTao()), tachDong(bacSi.getQuaTrinhDaoTaoEn()),
+                tachDong(bacSi.getQuaTrinhCongTac()), tachDong(bacSi.getQuaTrinhCongTacEn()),
+                tachDong(bacSi.getLinhVucKhamChua()), tachDong(bacSi.getLinhVucKhamChuaEn()),
+                toAnhQuanTriResponse(danhSachAnh));
     }
 
     /** 1 dòng của danh bạ bác sĩ cho quản trị viên. */
@@ -60,7 +73,7 @@ public class BacSiMapper {
         TaiKhoan taiKhoan = bacSi.getTaiKhoan();
         return new BacSiQuanTriResponse(bacSi.getId(), maBacSi(bacSi.getId()), taiKhoan.getHoTen(), taiKhoan.getEmail(),
                 taiKhoan.getSoDienThoai(), taiKhoan.getAnhDaiDien(), bacSi.getHocVi(), bacSi.getSoGiayPhep(),
-                bacSi.getChuyenKhoa().getId(), bacSi.getChuyenKhoa().getTenChuyenKhoa(), soLuotDaKham,
+                bacSi.getChuyenKhoa().getId(), bacSi.getChuyenKhoa().ten(NgonNgu.hienTai()), soLuotDaKham,
                 bacSi.getTrangThai(), taiKhoan.getTrangThai(), taiKhoan.isPhaiDoiMatKhau());
     }
 
@@ -69,24 +82,36 @@ public class BacSiMapper {
         return String.format("BS%04d", id);
     }
 
-    public AnhBacSiResponse toAnhResponse(AnhBacSi anh) {
-        return new AnhBacSiResponse(anh.getId(), anh.getLoai(), anh.getUrl(), anh.getChuThich());
+    /** Bản công khai: chú thích theo ngôn ngữ đã cho. */
+    public AnhBacSiResponse toAnhResponse(AnhBacSi anh, NgonNgu ngonNgu) {
+        return new AnhBacSiResponse(anh.getId(), anh.getLoai(), anh.getUrl(), anh.chuThich(ngonNgu));
     }
 
-    public List<AnhBacSiResponse> toAnhResponse(List<AnhBacSi> danhSachAnh) {
-        return danhSachAnh.stream().map(this::toAnhResponse).toList();
+    public AnhBacSiQuanTriResponse toAnhQuanTriResponse(AnhBacSi anh) {
+        return new AnhBacSiQuanTriResponse(anh.getId(), anh.getLoai(), anh.getUrl(), anh.getChuThich(),
+                anh.getChuThichEn());
     }
 
-    /** Ghi đè mọi trường của hồ sơ giới thiệu: chuỗi được bỏ khoảng trắng thừa, rỗng thành null. */
+    public List<AnhBacSiQuanTriResponse> toAnhQuanTriResponse(List<AnhBacSi> danhSachAnh) {
+        return danhSachAnh.stream().map(this::toAnhQuanTriResponse).toList();
+    }
+
+    /** Ghi đè mọi trường của hồ sơ giới thiệu, cả 2 ngôn ngữ: chuỗi được bỏ khoảng trắng thừa, rỗng thành null. */
     public void capNhatHoSo(BacSi bacSi, CapNhatHoSoBacSiRequest request) {
         bacSi.setHocVi(chuanHoa(request.hocVi()));
         bacSi.setChucVu(chuanHoa(request.chucVu()));
+        bacSi.setChucVuEn(chuanHoa(request.chucVuEn()));
         bacSi.setSoNamKinhNghiem(request.soNamKinhNghiem());
         bacSi.setGioiThieuNgan(chuanHoa(request.gioiThieuNgan()));
+        bacSi.setGioiThieuNganEn(chuanHoa(request.gioiThieuNganEn()));
         bacSi.setTieuSu(chuanHoa(request.tieuSu()));
+        bacSi.setTieuSuEn(chuanHoa(request.tieuSuEn()));
         bacSi.setQuaTrinhDaoTao(gopDong(request.quaTrinhDaoTao()));
+        bacSi.setQuaTrinhDaoTaoEn(gopDong(request.quaTrinhDaoTaoEn()));
         bacSi.setQuaTrinhCongTac(gopDong(request.quaTrinhCongTac()));
+        bacSi.setQuaTrinhCongTacEn(gopDong(request.quaTrinhCongTacEn()));
         bacSi.setLinhVucKhamChua(gopDong(request.linhVucKhamChua()));
+        bacSi.setLinhVucKhamChuaEn(gopDong(request.linhVucKhamChuaEn()));
     }
 
     /** Bỏ khoảng trắng thừa, chuỗi rỗng thành null. */

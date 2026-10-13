@@ -1,0 +1,34 @@
+{
+  "method": "PUT",
+  "path": "/api/booking/ho-so-benh-nhan/cua-toi",
+  "acceptLanguage": null,
+  "requestBody": {
+    "hoTen": "Phạm Văn Long",
+    "ngaySinh": "1988-11-02",
+    "gioiTinh": "NAM",
+    "soDienThoai": "0933000092",
+    "cccd": "079188000002",
+    "diaChi": "25 Quang Trung, Gò Vấp, TP.HCM",
+    "soBaoHiemYTe": null,
+    "tienSuBenhLy": null
+  },
+  "status": 200,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "thanhCong": true,
+    "thongDiep": "Đã lưu hồ sơ bệnh nhân",
+    "duLieu": {
+      "trangThaiLienKet": "DA_LIEN_KET",
+      "cccd": "079188000002",
+      "hoTen": "Phạm Văn Long",
+      "ngaySinh": "1988-11-02",
+      "gioiTinh": "NAM",
+      "soDienThoai": "0933000092",
+      "diaChi": "25 Quang Trung, Gò Vấp, TP.HCM",
+      "soBaoHiemYTe": null,
+      "tienSuBenhLy": null
+    }
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "method": "GET",
+  "path": "/api/booking/phieu-kham/BZSSRxMWb80ftw5j37yeJy2ldfBTT5pJeSvVoxUvDG8",
+  "acceptLanguage": null,
+  "requestBody": null,
+  "status": 200,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "thanhCong": true,
+    "duLieu": {
+      "maPhieuKham": "BZSSRxMWb80ftw5j37yeJy2ldfBTT5pJeSvVoxUvDG8",
+      "maTraCuu": "ECL-20261014-1146",
+      "linkPhieuKham": "http://localhost:5173/phieu-kham/BZSSRxMWb80ftw5j37yeJy2ldfBTT5pJeSvVoxUvDG8",
+      "trangThai": "CHO_XAC_NHAN",
+      "soThuTu": 2,
+      "ngay": "2026-10-14",
+      "gioKhamDuKien": "2026-10-14T08:10:00",
+      "gioBatDauKhung": "2026-10-14T08:00:00",
+      "gioKetThucKhung": "2026-10-14T09:00:00",
+      "bacSi": {
+        "id": 5,
+        "hoTen": "Hoàng Minh Đức",
+        "hocVi": "ThS.BS",
+        "anhDaiDien": "https://placehold.co/400x400/0f766e/ffffff/png?text=BS+5"
+      },
+      "tenChuyenKhoa": "Da liễu",
+      "phongKham": {
+        "id": 3,
+        "tenPhong": "Phòng 103",
+        "tang": "Tầng 1"
+      },
+      "lyDoKham": "Sốt, ho",
+      "ngayDat": "2026-10-13T19:21:54.207492",
+      "benhNhan": {
+        "hoTen": "Trần Gia Bảo",
+        "namSinh": 2018,
+        "gioiTinh": "NAM",
+        "cccd": null,
+        "soDienThoai": null
+      },
+      "nguoiGiamHo": {
+        "hoTen": "Trần Văn Khách",
+        "quanHe": "CHA",
+        "soDienThoai": "091****601"
+      },
+      "canNguoiGiamHoDiCung": true,
+      "lyDoHuy": null,
+      "duocHuyDoi": true,
+      "hanHuyDoi": "2026-10-14T06:10:00",
+      "canDoiLich": false
+    }
+  }
+}

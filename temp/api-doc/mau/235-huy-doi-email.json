@@ -1,0 +1,14 @@
+{
+  "method": "DELETE",
+  "path": "/api/users/me/change-email",
+  "acceptLanguage": null,
+  "requestBody": null,
+  "status": 200,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "thanhCong": true,
+    "thongDiep": "Đã huỷ yêu cầu đổi email"
+  }
+}

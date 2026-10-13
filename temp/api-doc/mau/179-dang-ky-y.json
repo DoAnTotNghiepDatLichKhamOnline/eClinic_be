@@ -1,0 +1,29 @@
+{
+  "method": "POST",
+  "path": "/api/auth/register",
+  "acceptLanguage": null,
+  "requestBody": {
+    "hoTen": "Phạm Văn Long",
+    "email": "y.1791894122@example.com",
+    "matKhau": "MatKhau@123",
+    "soDienThoai": "0933000092",
+    "cccd": null
+  },
+  "status": 201,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "thanhCong": true,
+    "thongDiep": "Đăng ký thành công, vui lòng kiểm tra email để kích hoạt tài khoản",
+    "duLieu": {
+      "id": 21,
+      "hoTen": "Phạm Văn Long",
+      "email": "y.1791894122@example.com",
+      "soDienThoai": "0933000092",
+      "vaiTro": "BENH_NHAN",
+      "trangThai": "CHO_XAC_NHAN",
+      "ngonNgu": "VI"
+    }
+  }
+}

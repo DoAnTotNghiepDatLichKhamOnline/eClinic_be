@@ -57,15 +57,15 @@ public class LichLamViecServiceImpl implements LichLamViecService {
     public void kiemTraKhongTrungLich(Long bacSiId, Long phongKhamId, LocalDate ngayLamViec, LocalTime gioBatDau,
             LocalTime gioKetThuc, Long excludeLichLamViecId) {
         if (!gioKetThuc.isAfter(gioBatDau)) {
-            throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE, "Giờ kết thúc phải sau giờ bắt đầu");
+            throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE, "loi.DU_LIEU_KHONG_HOP_LE.gioKetThuc");
         }
         if (lichLamViecRepository.existsTrungCaCuaBacSi(bacSiId, ngayLamViec, gioBatDau, gioKetThuc,
                 excludeLichLamViecId)) {
-            throw new LoiNghiepVu(MaLoi.TRUNG_LICH_LAM_VIEC, "Bác sĩ đã có ca làm việc trùng giờ");
+            throw new LoiNghiepVu(MaLoi.TRUNG_LICH_LAM_VIEC, "loi.TRUNG_LICH_LAM_VIEC.bacSi");
         }
         if (lichLamViecRepository.existsTrungCaCuaPhongKham(phongKhamId, ngayLamViec, gioBatDau, gioKetThuc,
                 excludeLichLamViecId)) {
-            throw new LoiNghiepVu(MaLoi.TRUNG_LICH_LAM_VIEC, "Phòng khám đã được xếp ca trùng giờ");
+            throw new LoiNghiepVu(MaLoi.TRUNG_LICH_LAM_VIEC, "loi.TRUNG_LICH_LAM_VIEC.phongKham");
         }
     }
 
@@ -137,7 +137,7 @@ public class LichLamViecServiceImpl implements LichLamViecService {
         return lichHenService.timTheoMa(ma)
                 .filter(timThay -> idBacSi == null || timThay.getBacSi().getId().equals(idBacSi))
                 .map(timThay -> lichHenMapper.toTrongCaResponse(timThay, idBacSi == null))
-                .orElseThrow(() -> new LoiNghiepVu(MaLoi.KHONG_TIM_THAY, "Không tìm thấy lịch hẹn với mã này"));
+                .orElseThrow(() -> new LoiNghiepVu(MaLoi.KHONG_TIM_THAY, "loi.KHONG_TIM_THAY.lichHenTheoMa"));
     }
 
     /** Gắn số lượt khám cho từng ca bằng 1 câu query đếm cho mọi ca. */

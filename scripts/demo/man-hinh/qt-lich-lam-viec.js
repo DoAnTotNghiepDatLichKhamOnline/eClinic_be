@@ -30,16 +30,16 @@
 
     // Bảng lịch hẹn (dùng cho cả "lịch hẹn của ca" và kết quả tra cứu theo mã)
     function bangLichHen(ds, taiLai) {
-        return bang(['STT', 'Giờ khám', 'Bệnh nhân', 'Tuổi', 'SĐT', 'Bác sĩ', 'Trạng thái', 'Mã tra cứu', 'Thao tác'], ds.map((lich) => {
-            const thaoTac = [lienKet('Hồ sơ bệnh nhân', '/admin/patients?id=' + lich.idHoSoBenhNhan)];
+        return bang([t('STT', 'No.'), t('Giờ khám', 'Visit time'), t('Bệnh nhân', 'Patient'), t('Tuổi', 'Age'), t('SĐT', 'Phone'), t('Bác sĩ', 'Doctor'), t('Trạng thái', 'Status'), t('Mã tra cứu', 'Lookup code'), t('Thao tác', 'Actions')], ds.map((lich) => {
+            const thaoTac = [lienKet(t('Hồ sơ bệnh nhân', 'Patient profile'), '/admin/patients?id=' + lich.idHoSoBenhNhan)];
             if (lich.doiChieu.canDoiChieu) {
-                thaoTac.push(nut('Đã đối chiếu', async () => {
+                thaoTac.push(nut(t('Đã đối chiếu', 'Identity checked'), async () => {
                     const { status } = await goi(`${LICH_HEN}/${lich.id}/da-doi-chieu`);
                     if (status === 200) await taiLai();
                 }));
             }
             return dong([
-                lich.soThuTu, ngayGioVn(lich.gioKhamDuKien), lich.benhNhan.hoTen + (lich.doiChieu.canDoiChieu ? ' ⚠ cần đối chiếu' : ''),
+                lich.soThuTu, ngayGioVn(lich.gioKhamDuKien), lich.benhNhan.hoTen + (lich.doiChieu.canDoiChieu ? t(' ⚠ cần đối chiếu', ' ⚠ identity check needed') : ''),
                 lich.benhNhan.tuoi, lich.benhNhan.soDienThoai, tenBacSi(lich.bacSi), TRANG_THAI[lich.trangThai] || lich.trangThai,
                 lich.maTraCuu, thaoTac,
             ]);
@@ -51,11 +51,11 @@
         const khung = $('qt-lich-hen-ca');
         if (!khung) return;
         $('qt-khoi-lich-hen-ca').classList.remove('an');
-        $('qt-tieu-de-ca').textContent = `Lịch hẹn của ca #${id}`;
+        $('qt-tieu-de-ca').textContent = t(`Lịch hẹn của ca #${id}`, `Appointments of shift #${id}`);
         if (status !== 200) {
-            khung.replaceChildren(the('p', thongDiepLoi(json, 'Không tải được lịch hẹn của ca.'), 'ghi-chu loi'));
+            khung.replaceChildren(the('p', thongDiepLoi(json, t('Không tải được lịch hẹn của ca.', 'Could not load the appointments of the shift.')), 'ghi-chu loi'));
         } else if (!json.duLieu.length) {
-            khung.replaceChildren(ghiChu('Ca này chưa có lịch hẹn nào.'));
+            khung.replaceChildren(ghiChu(t('Ca này chưa có lịch hẹn nào.', 'This shift has no appointments yet.')));
         } else {
             khung.replaceChildren(bangLichHen(json.duLieu, () => xemLichHenCuaCa(id)));
         }
@@ -75,7 +75,8 @@
     function moSuaCa(ca) {
         const form = $('form-sua-ca');
         $('qt-khoi-sua-ca').classList.remove('an');
-        $('qt-tieu-de-sua-ca').textContent = `Sửa ca #${ca.idLichLamViec}: ${tenBacSi(ca.bacSi)}, ${moTaCa(ca)} (đã đặt ${ca.soLuotDaDat}/${ca.tongSoLuot})`;
+        $('qt-tieu-de-sua-ca').textContent = t(`Sửa ca #${ca.idLichLamViec}: ${tenBacSi(ca.bacSi)}, ${moTaCa(ca)} (đã đặt ${ca.soLuotDaDat}/${ca.tongSoLuot})`,
+            `Edit shift #${ca.idLichLamViec}: ${tenBacSi(ca.bacSi)}, ${moTaCa(ca)} (booked ${ca.soLuotDaDat}/${ca.tongSoLuot})`);
         form.dataset.id = ca.idLichLamViec;
         form.elements.idPhongKham.value = ca.phongKham.id;
         form.elements.gioBatDau.value = gioPhut(ca.gioBatDau);
@@ -87,10 +88,12 @@
     }
 
     async function huyCa(ca) {
-        const lyDo = prompt(`Hủy ca #${ca.idLichLamViec} (${moTaCa(ca)})? ${ca.soLuotDaDat} lượt đã có người đặt sẽ được đánh dấu cần đổi lịch.\nNhập lý do:`);
+        const lyDo = prompt(t(`Hủy ca #${ca.idLichLamViec} (${moTaCa(ca)})? ${ca.soLuotDaDat} lượt đã có người đặt sẽ được đánh dấu cần đổi lịch.\nNhập lý do:`,
+            `Cancel shift #${ca.idLichLamViec} (${moTaCa(ca)})? ${ca.soLuotDaDat} booked visit slots will be marked as needing a reschedule.\nEnter the reason:`));
         if (!lyDo || !lyDo.trim()) return;
         const kq = await goi(`${CA}/${ca.idLichLamViec}/huy`, { lyDo: lyDo.trim() });
-        if (ketQua('qt-ca-trang-thai', kq, kq.json && kq.json.duLieu ? `Đã hủy ca. ${kq.json.duLieu.soLichHenCanDoi} lịch hẹn cần đổi lịch.` : '', 'Không hủy được ca.')) {
+        if (ketQua('qt-ca-trang-thai', kq, kq.json && kq.json.duLieu ? t(`Đã hủy ca. ${kq.json.duLieu.soLichHenCanDoi} lịch hẹn cần đổi lịch.`,
+            `Shift cancelled. ${kq.json.duLieu.soLichHenCanDoi} appointments need a reschedule.`) : '', t('Không hủy được ca.', 'Could not cancel the shift.'))) {
             taiCa();
             taiCanDoi();
             taiYeuCau();
@@ -102,31 +105,33 @@
         if (!khung) return;
         const { status, json } = await lay(`${YEU_CAU}?kichThuoc=50&tatCa=${$('qt-yc-tat-ca').checked}`, true);
         if (status !== 200) {
-            khung.replaceChildren(the('p', thongDiepLoi(json, 'Không tải được yêu cầu.'), 'ghi-chu loi'));
+            khung.replaceChildren(the('p', thongDiepLoi(json, t('Không tải được yêu cầu.', 'Could not load the requests.')), 'ghi-chu loi'));
             return;
         }
         if (!json.duLieu.noiDung.length) {
-            khung.replaceChildren(ghiChu('Không có yêu cầu nào.'));
+            khung.replaceChildren(ghiChu(t('Không có yêu cầu nào.', 'No requests.')));
             return;
         }
         const xuLy = async (yc, hanhDong, canGhiChu) => {
             const ghiChu = prompt(hanhDong === 'duyet'
-                ? `Duyệt yêu cầu #${yc.id}? Ca đang có ${yc.ca.soLuotDaDat} lượt đã đặt.\nGhi chú (không bắt buộc):`
-                : `Từ chối yêu cầu #${yc.id}. Ghi chú (bắt buộc):`);
+                ? t(`Duyệt yêu cầu #${yc.id}? Ca đang có ${yc.ca.soLuotDaDat} lượt đã đặt.\nGhi chú (không bắt buộc):`,
+                    `Approve request #${yc.id}? The shift has ${yc.ca.soLuotDaDat} booked visit slots.\nNote (optional):`)
+                : t(`Từ chối yêu cầu #${yc.id}. Ghi chú (bắt buộc):`, `Reject request #${yc.id}. Note (required):`));
             if (ghiChu === null || (canGhiChu && !ghiChu.trim())) return;
             const kq = await goi(`${YEU_CAU}/${yc.id}/${hanhDong}`, { ghiChu: ghiChu.trim() || null });
-            ketQua('qt-yc-trang-thai', kq, hanhDong === 'duyet' ? 'Đã duyệt, lịch làm việc đã đổi theo.' : 'Đã từ chối.', 'Không xử lý được yêu cầu.');
+            ketQua('qt-yc-trang-thai', kq, hanhDong === 'duyet' ? t('Đã duyệt, lịch làm việc đã đổi theo.', 'Approved, the work schedule was updated.') : t('Đã từ chối.', 'Rejected.'),
+                t('Không xử lý được yêu cầu.', 'Could not process the request.'));
             taiYeuCau();
             taiCa();
             taiCanDoi();
         };
-        khung.replaceChildren(bang(['Gửi lúc', 'Bác sĩ', 'Loại', 'Ca', 'Đã đặt', 'Mong muốn', 'Lý do', 'Trạng thái', 'Ghi chú', 'Thao tác'], json.duLieu.noiDung.map((yc) => dong([
+        khung.replaceChildren(bang([t('Gửi lúc', 'Sent at'), t('Bác sĩ', 'Doctor'), t('Loại', 'Type'), t('Ca', 'Shift'), t('Đã đặt', 'Booked'), t('Mong muốn', 'Requested'), t('Lý do', 'Reason'), t('Trạng thái', 'Status'), t('Ghi chú', 'Note'), t('Thao tác', 'Actions')], json.duLieu.noiDung.map((yc) => dong([
             ngayGioVn(yc.ngayGui), tenBacSi(yc.ca.bacSi), LOAI_YEU_CAU[yc.loaiYeuCau],
-            moTaCa(yc.ca) + (yc.ca.trangThai === 'DA_HUY' ? ' (đã hủy)' : ''), `${yc.ca.soLuotDaDat} / ${yc.ca.tongSoLuot}`,
+            moTaCa(yc.ca) + (yc.ca.trangThai === 'DA_HUY' ? t(' (đã hủy)', ' (cancelled)') : ''), `${yc.ca.soLuotDaDat} / ${yc.ca.tongSoLuot}`,
             yc.ngayMongMuon ? `${ngayVn(yc.ngayMongMuon)} ${gioPhut(yc.gioBatDauMongMuon)}–${gioPhut(yc.gioKetThucMongMuon)}`
                 + (yc.phongKhamMongMuon ? ' · ' + tenPhong(yc.phongKhamMongMuon) : '') : null,
             yc.lyDo, TRANG_THAI_YEU_CAU[yc.trangThai], yc.ghiChuXuLy,
-            yc.trangThai === 'CHO_DUYET' ? [nut('Duyệt', () => xuLy(yc, 'duyet', false)), nut('Từ chối', () => xuLy(yc, 'tu-choi', true), 'nguy-hiem nho')] : null,
+            yc.trangThai === 'CHO_DUYET' ? [nut(t('Duyệt', 'Approve'), () => xuLy(yc, 'duyet', false)), nut(t('Từ chối', 'Reject'), () => xuLy(yc, 'tu-choi', true), 'nguy-hiem nho')] : null,
         ]))));
     }
 
@@ -135,12 +140,12 @@
         if (!khung) return;
         const { status, json } = await lay(`${CA}/can-doi-lich?kichThuoc=50`, true);
         if (status !== 200) {
-            khung.replaceChildren(the('p', thongDiepLoi(json, 'Không tải được danh sách.'), 'ghi-chu loi'));
+            khung.replaceChildren(the('p', thongDiepLoi(json, t('Không tải được danh sách.', 'Could not load the list.')), 'ghi-chu loi'));
             return;
         }
         khung.replaceChildren(json.duLieu.noiDung.length
             ? bangLichHen(json.duLieu.noiDung, taiCanDoi)
-            : ghiChu('Không có lịch hẹn nào đang chờ đổi lịch.'));
+            : ghiChu(t('Không có lịch hẹn nào đang chờ đổi lịch.', 'No appointments are waiting for a reschedule.')));
     }
 
     async function taiCa() {
@@ -149,19 +154,19 @@
         const khung = $('qt-ds-ca');
         if (!khung) return;
         if (status !== 200) {
-            khung.replaceChildren(the('p', thongDiepLoi(json, 'Không tải được lịch làm việc.'), 'ghi-chu loi'));
+            khung.replaceChildren(the('p', thongDiepLoi(json, t('Không tải được lịch làm việc.', 'Could not load the work schedule.')), 'ghi-chu loi'));
             return;
         }
         if (!json.duLieu.length) {
-            khung.replaceChildren(ghiChu('No data yet — không có ca làm việc nào khớp bộ lọc.'));
+            khung.replaceChildren(ghiChu(t('Không có ca làm việc nào khớp bộ lọc.', 'No shifts match the filter.')));
             return;
         }
-        khung.replaceChildren(bang(['Ngày', 'Giờ', 'Bác sĩ', 'Chuyên khoa', 'Phòng', 'Đã đặt / tổng', 'Còn trống', 'Trạng thái', 'Thao tác'], json.duLieu.map((ca) => dong([
+        khung.replaceChildren(bang([t('Ngày', 'Date'), t('Giờ', 'Time'), t('Bác sĩ', 'Doctor'), t('Chuyên khoa', 'Specialty'), t('Phòng', 'Room'), t('Đã đặt / tổng', 'Booked / total'), t('Còn trống', 'Free'), t('Trạng thái', 'Status'), t('Thao tác', 'Actions')], json.duLieu.map((ca) => dong([
             `${thuCuaNgay(ca.ngay)} ${ngayVn(ca.ngay)}`, `${ca.gioBatDau.slice(0, 5)}–${ca.gioKetThuc.slice(0, 5)}`, tenBacSi(ca.bacSi),
             ca.tenChuyenKhoa, tenPhong(ca.phongKham), `${ca.soLuotDaDat} / ${ca.tongSoLuot}`, ca.soLuotConTrong, ca.trangThai,
-            [nut(`Lịch hẹn của ca #${ca.idLichLamViec}`, () => xemLichHenCuaCa(ca.idLichLamViec)),
+            [nut(t(`Lịch hẹn của ca #${ca.idLichLamViec}`, `Appointments of shift #${ca.idLichLamViec}`), () => xemLichHenCuaCa(ca.idLichLamViec)),
                 // Chỉ ca còn hoạt động và chưa bắt đầu mới sửa / hủy được (API trả 409 CA_KHONG_SUA_DUOC nếu không)
-                ...(ca.trangThai === 'HOAT_DONG' ? [nut('Sửa', () => moSuaCa(ca), 'phu nho'), nut('Hủy ca', () => huyCa(ca), 'nguy-hiem nho')] : [])],
+                ...(ca.trangThai === 'HOAT_DONG' ? [nut(t('Sửa', 'Edit'), () => moSuaCa(ca), 'phu nho'), nut(t('Hủy ca', 'Cancel shift'), () => huyCa(ca), 'nguy-hiem nho')] : [])],
         ]))));
     }
 
@@ -178,72 +183,74 @@
     dangKy({
         duongDan: '/admin/schedule-management',
         vaiTro: 'QUAN_TRI_VIEN',
-        tieuDe: 'Schedule Management',
+        tieuDe: cap('Quản lý lịch làm việc', 'Schedule Management'),
         async ve(khung) {
             khuon(khung, `
                 <section>
-                    <h2>Xếp ca làm việc</h2>
+                    <h2>${t('Xếp ca làm việc', 'Schedule shifts')}</h2>
                     <form id="form-tao-ca" class="hai-cot">
-                        <div><label>Bác sĩ</label><select name="idBacSi" id="qt-tao-bac-si" required></select></div>
-                        <div><label>Phòng khám (cùng chuyên khoa với bác sĩ)</label><select name="idPhongKham" id="qt-tao-phong" required></select></div>
-                        <div><label>Ngày</label><input name="ngay" type="date" required></div>
-                        <div><label>Giờ bắt đầu</label><input name="gioBatDau" type="time" value="08:00" required></div>
-                        <div><label>Giờ kết thúc</label><input name="gioKetThuc" type="time" value="11:30" required></div>
-                        <div><label>Số lượt mỗi giờ (N)</label><input name="soLuotToiDaMoiGio" type="number" min="1" max="60" value="6" required></div>
-                        <div><label>Số phút mỗi lượt (t), N x t ≤ 60</label><input name="thoiLuongLuotPhut" type="number" min="1" max="60" value="10" required></div>
-                        <div class="ca-dong"><label>Lặp lại vào các thứ (bỏ trống = chỉ 1 ca)</label>
+                        <div><label>${t('Bác sĩ', 'Doctor')}</label><select name="idBacSi" id="qt-tao-bac-si" required></select></div>
+                        <div><label>${t('Phòng khám (cùng chuyên khoa với bác sĩ)', 'Room (same specialty as the doctor)')}</label><select name="idPhongKham" id="qt-tao-phong" required></select></div>
+                        <div><label>${t('Ngày', 'Date')}</label><input name="ngay" type="date" required></div>
+                        <div><label>${t('Giờ bắt đầu', 'Start time')}</label><input name="gioBatDau" type="time" value="08:00" required></div>
+                        <div><label>${t('Giờ kết thúc', 'End time')}</label><input name="gioKetThuc" type="time" value="11:30" required></div>
+                        <div><label>${t('Số lượt mỗi giờ (N)', 'Visit slots per hour (N)')}</label><input name="soLuotToiDaMoiGio" type="number" min="1" max="60" value="6" required></div>
+                        <div><label>${t('Số phút mỗi lượt (t), N x t ≤ 60', 'Minutes per visit slot (t), N x t ≤ 60')}</label><input name="thoiLuongLuotPhut" type="number" min="1" max="60" value="10" required></div>
+                        <div class="ca-dong"><label>${t('Lặp lại vào các thứ (bỏ trống = chỉ 1 ca)', 'Repeat on weekdays (none checked = a single shift)')}</label>
                             <span id="qt-tao-thu"></span></div>
-                        <div><label>Lặp lại đến ngày</label><input name="denNgay" type="date"></div>
-                        <button>Xếp ca</button>
+                        <div><label>${t('Lặp lại đến ngày', 'Repeat until')}</label><input name="denNgay" type="date"></div>
+                        <button>${t('Xếp ca', 'Schedule shift')}</button>
                     </form>
                     <p id="qt-tao-ca-trang-thai" class="ghi-chu"></p>
                 </section>
                 <section>
-                    <h2>Lịch làm việc toàn viện</h2>
+                    <h2>${t('Lịch làm việc toàn viện', 'Clinic-wide work schedule')}</h2>
                     <form id="form-loc-ca" class="hai-cot">
-                        <div><label>Từ ngày</label><input name="tuNgay" type="date" required></div>
-                        <div><label>Đến ngày (tối đa 42 ngày)</label><input name="denNgay" type="date" required></div>
-                        <div><label>Chuyên khoa</label><select name="idChuyenKhoa" id="qt-loc-chuyen-khoa"><option value="">Tất cả</option></select></div>
-                        <div><label>Bác sĩ</label><select name="idBacSi" id="qt-loc-bac-si"><option value="">Tất cả</option></select></div>
-                        <div><label>Phòng khám (id)</label><input name="idPhongKham" type="number" min="1"></div>
-                        <button>Xem</button>
+                        <div><label>${t('Từ ngày', 'From date')}</label><input name="tuNgay" type="date" required></div>
+                        <div><label>${t('Đến ngày (tối đa 42 ngày)', 'To date (up to 42 days)')}</label><input name="denNgay" type="date" required></div>
+                        <div><label>${t('Chuyên khoa', 'Specialty')}</label><select name="idChuyenKhoa" id="qt-loc-chuyen-khoa"><option value="">${t('Tất cả', 'All')}</option></select></div>
+                        <div><label>${t('Bác sĩ', 'Doctor')}</label><select name="idBacSi" id="qt-loc-bac-si"><option value="">${t('Tất cả', 'All')}</option></select></div>
+                        <div><label>${t('Phòng khám (id)', 'Room (id)')}</label><input name="idPhongKham" type="number" min="1"></div>
+                        <button>${t('Xem', 'View')}</button>
                     </form>
                     <p id="qt-ca-trang-thai" class="ghi-chu"></p>
                     <div id="qt-ds-ca" class="bang"></div>
                 </section>
                 <section id="qt-khoi-sua-ca" class="an">
-                    <h2 id="qt-tieu-de-sua-ca">Sửa ca</h2>
-                    <p class="ghi-chu">Đổi phòng luôn được (bệnh nhân đã đặt được báo). Đổi giờ / sức chứa chỉ được khi mọi lượt đã có người đặt còn nguyên.</p>
+                    <h2 id="qt-tieu-de-sua-ca">${t('Sửa ca', 'Edit shift')}</h2>
+                    <p class="ghi-chu">${t('Đổi phòng luôn được (bệnh nhân đã đặt được báo). Đổi giờ / sức chứa chỉ được khi mọi lượt đã có người đặt còn nguyên.',
+                        'The room can always be changed (patients who booked are notified). The time / capacity can only be changed when every booked visit slot stays intact.')}</p>
                     <form id="form-sua-ca" class="hai-cot">
-                        <div><label>Phòng khám</label><select name="idPhongKham" id="qt-sua-phong" required></select></div>
-                        <div><label>Giờ bắt đầu</label><input name="gioBatDau" type="time" required></div>
-                        <div><label>Giờ kết thúc</label><input name="gioKetThuc" type="time" required></div>
-                        <div><label>Số lượt mỗi giờ (N)</label><input name="soLuotToiDaMoiGio" type="number" min="1" max="60" required></div>
-                        <div><label>Số phút mỗi lượt (t)</label><input name="thoiLuongLuotPhut" type="number" min="1" max="60" required></div>
-                        <button>Lưu ca</button>
+                        <div><label>${t('Phòng khám', 'Room')}</label><select name="idPhongKham" id="qt-sua-phong" required></select></div>
+                        <div><label>${t('Giờ bắt đầu', 'Start time')}</label><input name="gioBatDau" type="time" required></div>
+                        <div><label>${t('Giờ kết thúc', 'End time')}</label><input name="gioKetThuc" type="time" required></div>
+                        <div><label>${t('Số lượt mỗi giờ (N)', 'Visit slots per hour (N)')}</label><input name="soLuotToiDaMoiGio" type="number" min="1" max="60" required></div>
+                        <div><label>${t('Số phút mỗi lượt (t)', 'Minutes per visit slot (t)')}</label><input name="thoiLuongLuotPhut" type="number" min="1" max="60" required></div>
+                        <button>${t('Lưu ca', 'Save shift')}</button>
                     </form>
                     <p id="qt-sua-ca-trang-thai" class="ghi-chu"></p>
                 </section>
                 <section>
-                    <h2>Yêu cầu đổi ca / xin nghỉ của bác sĩ</h2>
-                    <label><input type="checkbox" id="qt-yc-tat-ca"> Hiện cả yêu cầu đã xử lý</label>
+                    <h2>${t('Yêu cầu đổi ca / xin nghỉ của bác sĩ', 'Doctors\' shift-change / leave requests')}</h2>
+                    <label><input type="checkbox" id="qt-yc-tat-ca"> ${t('Hiện cả yêu cầu đã xử lý', 'Also show handled requests')}</label>
                     <p id="qt-yc-trang-thai" class="ghi-chu"></p>
                     <div id="qt-ds-yeu-cau" class="bang"></div>
                 </section>
                 <section>
-                    <h2>Lịch hẹn cần đổi lịch (ca khám đã bị hủy)</h2>
-                    <p class="ghi-chu">Bệnh nhân đã được báo trong ứng dụng; khách đặt không đăng nhập thì phòng khám cần gọi điện.</p>
+                    <h2>${t('Lịch hẹn cần đổi lịch (ca khám đã bị hủy)', 'Appointments that need a reschedule (shift was cancelled)')}</h2>
+                    <p class="ghi-chu">${t('Bệnh nhân đã được báo trong ứng dụng; khách đặt không đăng nhập thì phòng khám cần gọi điện.',
+                        'Patients were notified in the app; for guests who booked without signing in, the clinic needs to call them.')}</p>
                     <div id="qt-ds-can-doi" class="bang"></div>
                 </section>
                 <section id="qt-khoi-lich-hen-ca" class="an">
-                    <h2 id="qt-tieu-de-ca">Lịch hẹn của ca</h2>
+                    <h2 id="qt-tieu-de-ca">${t('Lịch hẹn của ca', 'Appointments of the shift')}</h2>
                     <div id="qt-lich-hen-ca" class="bang"></div>
                 </section>
                 <section>
-                    <h2>Tra lịch hẹn theo mã</h2>
+                    <h2>${t('Tra lịch hẹn theo mã', 'Look up an appointment by code')}</h2>
                     <form id="form-tra-cuu" class="hai-cot">
-                        <div><label>Mã tra cứu (ECL-…) hoặc mã phiếu khám</label><input name="ma" required></div>
-                        <button>Tra cứu</button>
+                        <div><label>${t('Mã tra cứu (ECL-…) hoặc mã phiếu khám', 'Lookup code (ECL-…) or ticket code')}</label><input name="ma" required></div>
+                        <button>${t('Tra cứu', 'Look up')}</button>
                     </form>
                     <div id="qt-tra-cuu" class="bang"></div>
                 </section>`);
@@ -255,12 +262,12 @@
                 const { status, json } = await lay(`${LICH_HEN}/tra-cuu?ma=${encodeURIComponent(v.ma.trim())}`);
                 $('qt-tra-cuu').replaceChildren(status === 200
                     ? bangLichHen([json.duLieu], () => traCuu(v))
-                    : the('p', thongDiepLoi(json, 'Không tìm thấy lịch hẹn.'), 'ghi-chu loi'));
+                    : the('p', thongDiepLoi(json, t('Không tìm thấy lịch hẹn.', 'Appointment not found.')), 'ghi-chu loi'));
             });
             // Xếp ca
             const taoCa = $('form-tao-ca');
             taoCa.elements.ngay.value = congNgay(1);
-            ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'].forEach((ten, i) => {
+            [THU[1], THU[2], THU[3], THU[4], THU[5], THU[6], THU[0]].forEach((ten, i) => {
                 const nhan = the('label', null, 'tren-dong');
                 const o = the('input');
                 o.type = 'checkbox';
@@ -275,12 +282,12 @@
                 if (cacThu.length || v.denNgay) than.lapLai = { cacThu, denNgay: v.denNgay || null };
                 const kq = await goi(CA, than);
                 const dl = kq.json && kq.json.duLieu;
-                if (ketQua('qt-tao-ca-trang-thai', kq, dl ? `Đã xếp ${dl.daTao.length} ca.`
-                    + (dl.boQua.length ? ' Bỏ qua: ' + dl.boQua.map((b) => `${ngayVn(b.ngay)} (${b.lyDo})`).join('; ') : '') : '', 'Không xếp được ca.')) taiCa();
+                if (ketQua('qt-tao-ca-trang-thai', kq, dl ? t(`Đã xếp ${dl.daTao.length} ca.`, `Scheduled ${dl.daTao.length} shift(s).`)
+                    + (dl.boQua.length ? t(' Bỏ qua: ', ' Skipped: ') + dl.boQua.map((b) => `${ngayVn(b.ngay)} (${b.lyDo})`).join('; ') : '') : '', t('Không xếp được ca.', 'Could not schedule the shift.'))) taiCa();
             });
             khiGui('form-sua-ca', async (v, form) => {
                 const kq = await goi(`${CA}/${form.dataset.id}`, thanForm(form, ['idPhongKham', 'gioBatDau', 'gioKetThuc', 'soLuotToiDaMoiGio', 'thoiLuongLuotPhut']), 'PUT');
-                if (ketQua('qt-sua-ca-trang-thai', kq, 'Đã lưu ca.', 'Không sửa được ca.')) taiCa();
+                if (ketQua('qt-sua-ca-trang-thai', kq, t('Đã lưu ca.', 'Shift saved.'), t('Không sửa được ca.', 'Could not edit the shift.'))) taiCa();
             });
             lay('/api/catalog/phong-kham', true).then(({ status, json }) => {
                 if (status !== 200) return;

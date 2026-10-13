@@ -1,0 +1,23 @@
+{
+  "method": "POST",
+  "path": "/api/booking/lich-hen/cua-toi/2XPvL-G2Su7oURW1TOzrCPNpYoTGHljUAjrHhfJhHUs/danh-gia",
+  "acceptLanguage": null,
+  "requestBody": {
+    "soSao": 5,
+    "nhanXet": "Bác sĩ tư vấn kỹ, dễ hiểu."
+  },
+  "status": 201,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "thanhCong": true,
+    "thongDiep": "Đã gửi đánh giá",
+    "duLieu": {
+      "soSao": 5,
+      "nhanXet": "Bác sĩ tư vấn kỹ, dễ hiểu.",
+      "ngayTao": "2026-10-13T19:21:58.800632874",
+      "duocSuaDen": "2026-10-20T19:21:58.800632874"
+    }
+  }
+}

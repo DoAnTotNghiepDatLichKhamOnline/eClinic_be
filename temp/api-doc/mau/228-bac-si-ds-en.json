@@ -1,0 +1,34 @@
+{
+  "method": "GET",
+  "path": "/api/catalog/bac-si?kichThuoc=1",
+  "acceptLanguage": "en",
+  "requestBody": null,
+  "status": 200,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "thanhCong": true,
+    "duLieu": {
+      "noiDung": [
+        {
+          "id": 8,
+          "hoTen": "Bùi Thị Hương",
+          "anhDaiDien": "https://placehold.co/400x400/0f766e/ffffff/png?text=BS+8",
+          "hocVi": "BSCKI",
+          "chucVu": "Attending physician",
+          "soNamKinhNghiem": 7,
+          "gioiThieuNgan": "ENT care for adults and children, treatment of allergic rhinitis.",
+          "idChuyenKhoa": 4,
+          "tenChuyenKhoa": "Ear, Nose and Throat",
+          "diemDanhGia": null,
+          "soDanhGia": 0
+        }
+      ],
+      "trang": 0,
+      "kichThuoc": 1,
+      "tongSoPhanTu": 12,
+      "tongSoTrang": 12
+    }
+  }
+}

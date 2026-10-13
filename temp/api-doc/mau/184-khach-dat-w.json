@@ -1,0 +1,51 @@
+{
+  "method": "POST",
+  "path": "/api/booking/lich-hen",
+  "acceptLanguage": null,
+  "requestBody": {
+    "idLichLamViec": 17,
+    "gioBatDauKhung": "2026-10-14T09:00:00",
+    "benhNhan": {
+      "hoTen": "Võ Minh Quân",
+      "ngaySinh": "1988-11-02",
+      "gioiTinh": "NAM",
+      "soDienThoai": "0933000003",
+      "cccd": "079188000003"
+    },
+    "lyDoKham": "Khám tổng quát"
+  },
+  "status": 201,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "thanhCong": true,
+    "thongDiep": "Đặt lịch thành công",
+    "duLieu": {
+      "maPhieuKham": "hu1pSBjvpygKZN6P8lJBTDdsfZpYRqap7aEll3_GLTk",
+      "maTraCuu": "ECL-20261014-6767",
+      "linkPhieuKham": "http://localhost:5173/phieu-kham/hu1pSBjvpygKZN6P8lJBTDdsfZpYRqap7aEll3_GLTk",
+      "soThuTu": 8,
+      "ngay": "2026-10-14",
+      "gioKhamDuKien": "2026-10-14T09:00:00",
+      "gioBatDauKhung": "2026-10-14T09:00:00",
+      "gioKetThucKhung": "2026-10-14T10:00:00",
+      "trangThai": "CHO_XAC_NHAN",
+      "bacSi": {
+        "id": 5,
+        "hoTen": "Hoàng Minh Đức",
+        "hocVi": "ThS.BS",
+        "anhDaiDien": "https://placehold.co/400x400/0f766e/ffffff/png?text=BS+5"
+      },
+      "phongKham": {
+        "id": 3,
+        "tenPhong": "Phòng 103",
+        "tang": "Tầng 1"
+      },
+      "hoTenBenhNhan": "Võ Minh Quân",
+      "hoTenNguoiGiamHo": null,
+      "luuVaoTaiKhoan": false,
+      "bacSiDoPhongKhamXep": false
+    }
+  }
+}

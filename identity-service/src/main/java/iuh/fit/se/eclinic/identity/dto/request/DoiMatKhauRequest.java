@@ -10,8 +10,8 @@ import jakarta.validation.constraints.Size;
  */
 public record DoiMatKhauRequest(
 
-        @NotBlank(message = "Mật khẩu hiện tại không được để trống")
-        @Size(max = 1000, message = "Mật khẩu quá dài")
+        @NotBlank(message = "{kiemTra.matKhauHienTai.batBuoc}")
+        @Size(max = 1000, message = "{kiemTra.matKhau.quaDai}")
         String matKhauCu,
 
         @MatKhauHopLe

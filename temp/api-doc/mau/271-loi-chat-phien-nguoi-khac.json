@@ -1,0 +1,15 @@
+{
+  "method": "GET",
+  "path": "/api/chatbot/phien/4/tin-nhan",
+  "acceptLanguage": null,
+  "requestBody": null,
+  "status": 404,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "thanhCong": false,
+    "maLoi": "KHONG_TIM_THAY",
+    "thongDiep": "Không tìm thấy phiên chat"
+  }
+}

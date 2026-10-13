@@ -1,0 +1,31 @@
+{
+  "method": "POST",
+  "path": "/api/auth/login",
+  "acceptLanguage": null,
+  "requestBody": {
+    "email": "bacsi04@eclinic.local",
+    "matKhau": "Demo@123"
+  },
+  "status": 200,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "thanhCong": true,
+    "thongDiep": "Đăng nhập thành công",
+    "duLieu": {
+      "accessToken": "eyJhbGciOiJIUzI1NiJ9.eyJ2YWlUcm8iOiJCQUNfU0kiLCJzdWIiOiI1IiwicGhpZW4iOiI0ZGQwMjdkMi03ZWU5LTQwY2QtYmQ3NS0xNjYyODBhMTk4NTMiLCJpc3MiOiJlY2xpbmljIiwiZXhwIjoxNzkxODk1OTE3LCJpYXQiOjE3OTE4OTQxMTcsImVtYWlsIjoiYmFjc2kwNEBlY2xpbmljLmxvY2FsIn0.tjpDHJp8HDXSekPMese-Q7vhdPCCoqfbF3CxxPmi2Rg",
+      "loaiToken": "Bearer",
+      "thoiHanAccessToken": 1800,
+      "taiKhoan": {
+        "id": 5,
+        "hoTen": "Phạm Thị Dung",
+        "email": "bacsi04@eclinic.local",
+        "soDienThoai": "0901000004",
+        "vaiTro": "BAC_SI",
+        "trangThai": "DA_KICH_HOAT",
+        "ngonNgu": "VI"
+      }
+    }
+  }
+}

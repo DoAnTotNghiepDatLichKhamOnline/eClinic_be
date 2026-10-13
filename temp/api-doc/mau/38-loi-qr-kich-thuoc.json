@@ -1,0 +1,21 @@
+{
+  "method": "GET",
+  "path": "/api/booking/phieu-kham/K3lZ6TwiGmLI_ke97oUUCBZ9txQ_p3JPxFuHTbqv-NI/qr?kichThuoc=50",
+  "acceptLanguage": null,
+  "requestBody": null,
+  "status": 400,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "thanhCong": false,
+    "maLoi": "DU_LIEU_KHONG_HOP_LE",
+    "thongDiep": "Dữ liệu không hợp lệ",
+    "chiTiet": [
+      {
+        "truong": "kichThuoc",
+        "thongDiep": "phải từ 100 trở lên"
+      }
+    ]
+  }
+}

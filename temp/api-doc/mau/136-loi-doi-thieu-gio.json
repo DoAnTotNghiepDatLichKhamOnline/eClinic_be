@@ -1,0 +1,23 @@
+{
+  "method": "POST",
+  "path": "/api/booking/lich-hen/cua-toi/mk8Do7MJb6iEY9DBDPsLpRaLVgHCFgmKuvpoqZNe174/doi-lich",
+  "acceptLanguage": null,
+  "requestBody": {
+    "idLichLamViec": 17
+  },
+  "status": 400,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "thanhCong": false,
+    "maLoi": "DU_LIEU_KHONG_HOP_LE",
+    "thongDiep": "Dữ liệu không hợp lệ",
+    "chiTiet": [
+      {
+        "truong": "gioBatDauKhung",
+        "thongDiep": "Chưa chọn khung giờ khám"
+      }
+    ]
+  }
+}

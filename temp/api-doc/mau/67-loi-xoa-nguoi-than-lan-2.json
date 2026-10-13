@@ -1,0 +1,15 @@
+{
+  "method": "DELETE",
+  "path": "/api/booking/thong-tin-dat-lich/cua-toi/nguoi-than/1",
+  "acceptLanguage": null,
+  "requestBody": null,
+  "status": 404,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "thanhCong": false,
+    "maLoi": "KHONG_TIM_THAY",
+    "thongDiep": "NguoiThanDaLuu không tồn tại (id = 1)"
+  }
+}

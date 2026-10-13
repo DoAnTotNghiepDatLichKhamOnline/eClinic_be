@@ -13,7 +13,7 @@ public class TaiKhoanMapper {
 
     public TaiKhoanResponse toResponse(TaiKhoan taiKhoan) {
         return new TaiKhoanResponse(taiKhoan.getId(), taiKhoan.getHoTen(), taiKhoan.getEmail(),
-                taiKhoan.getSoDienThoai(), taiKhoan.getVaiTro(), taiKhoan.getTrangThai());
+                taiKhoan.getSoDienThoai(), taiKhoan.getVaiTro(), taiKhoan.getTrangThai(), taiKhoan.getNgonNgu());
     }
 
 }

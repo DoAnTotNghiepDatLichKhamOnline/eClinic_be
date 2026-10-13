@@ -1,0 +1,19 @@
+{
+  "method": "GET",
+  "path": "/api/booking/thong-tin-dat-lich/cua-toi",
+  "acceptLanguage": null,
+  "requestBody": null,
+  "status": 200,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "thanhCong": true,
+    "duLieu": {
+      "banThan": null,
+      "emailTaiKhoan": "x.1791894122@example.com",
+      "nguoiThan": [],
+      "lanDatGanNhat": null
+    }
+  }
+}

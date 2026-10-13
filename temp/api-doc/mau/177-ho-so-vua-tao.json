@@ -1,0 +1,24 @@
+{
+  "method": "GET",
+  "path": "/api/booking/ho-so-benh-nhan/cua-toi",
+  "acceptLanguage": null,
+  "requestBody": null,
+  "status": 200,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "thanhCong": true,
+    "duLieu": {
+      "trangThaiLienKet": "DA_LIEN_KET",
+      "cccd": "079188000001",
+      "hoTen": "Đỗ Văn Xuân",
+      "ngaySinh": "1988-11-02",
+      "gioiTinh": "NAM",
+      "soDienThoai": "0933000001",
+      "diaChi": "25 Quang Trung, Gò Vấp, TP.HCM",
+      "soBaoHiemYTe": null,
+      "tienSuBenhLy": null
+    }
+  }
+}

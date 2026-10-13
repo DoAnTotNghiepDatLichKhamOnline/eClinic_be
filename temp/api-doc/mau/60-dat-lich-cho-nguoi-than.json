@@ -1,0 +1,52 @@
+{
+  "method": "POST",
+  "path": "/api/booking/lich-hen",
+  "acceptLanguage": null,
+  "requestBody": {
+    "idLichLamViec": 17,
+    "gioBatDauKhung": "2026-10-14T09:00:00",
+    "benhNhan": {
+      "hoTen": "Lê Thị Hoa",
+      "ngaySinh": "1960-02-10",
+      "gioiTinh": "NU",
+      "soDienThoai": "0912345777",
+      "cccd": "079160000301",
+      "diaChi": "5 Lê Lợi, Quận 1, TP.HCM"
+    },
+    "lyDoKham": "Đau khớp gối"
+  },
+  "status": 201,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "thanhCong": true,
+    "thongDiep": "Đặt lịch thành công",
+    "duLieu": {
+      "maPhieuKham": "rcRH-20kBjkBZeiv1DZf6qBeLstv8ke8IYqFFqz5VD8",
+      "maTraCuu": "ECL-20261014-7051",
+      "linkPhieuKham": "http://localhost:5173/phieu-kham/rcRH-20kBjkBZeiv1DZf6qBeLstv8ke8IYqFFqz5VD8",
+      "soThuTu": 7,
+      "ngay": "2026-10-14",
+      "gioKhamDuKien": "2026-10-14T09:00:00",
+      "gioBatDauKhung": "2026-10-14T09:00:00",
+      "gioKetThucKhung": "2026-10-14T10:00:00",
+      "trangThai": "CHO_XAC_NHAN",
+      "bacSi": {
+        "id": 5,
+        "hoTen": "Hoàng Minh Đức",
+        "hocVi": "ThS.BS",
+        "anhDaiDien": "https://placehold.co/400x400/0f766e/ffffff/png?text=BS+5"
+      },
+      "phongKham": {
+        "id": 3,
+        "tenPhong": "Phòng 103",
+        "tang": "Tầng 1"
+      },
+      "hoTenBenhNhan": "Lê Thị Hoa",
+      "hoTenNguoiGiamHo": null,
+      "luuVaoTaiKhoan": true,
+      "bacSiDoPhongKhamXep": false
+    }
+  }
+}

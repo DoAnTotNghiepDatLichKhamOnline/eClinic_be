@@ -9,8 +9,8 @@ import jakarta.validation.constraints.Size;
  */
 public record QuenMatKhauRequest(
 
-        @NotBlank(message = "Email không được để trống")
-        @Email(message = "Email không đúng định dạng")
-        @Size(max = 255, message = "Email tối đa 255 ký tự")
+        @NotBlank(message = "{kiemTra.email.batBuoc}")
+        @Email(message = "{kiemTra.email.dinhDang}")
+        @Size(max = 255, message = "{kiemTra.email.toiDa}")
         String email) {
 }

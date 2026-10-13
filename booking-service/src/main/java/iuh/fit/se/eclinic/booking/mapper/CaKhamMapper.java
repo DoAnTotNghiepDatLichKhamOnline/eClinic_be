@@ -11,6 +11,7 @@ import iuh.fit.se.eclinic.booking.dto.response.PhongKhamTomTatResponse;
 import iuh.fit.se.eclinic.common.entity.catalog.BacSi;
 import iuh.fit.se.eclinic.common.entity.catalog.PhongKham;
 import iuh.fit.se.eclinic.common.entity.scheduling.LichLamViec;
+import iuh.fit.se.eclinic.common.enums.NgonNgu;
 
 /**
  * Chuyển ca làm việc sang DTO xem khung giờ. Họ tên, ảnh đại diện bác sĩ lấy từ tài khoản của bác sĩ.
@@ -29,8 +30,10 @@ public class CaKhamMapper {
                 bacSi.getTaiKhoan().getAnhDaiDien());
     }
 
+    /** Tên phòng, tầng theo ngôn ngữ của request. */
     public PhongKhamTomTatResponse toPhongKhamTomTat(PhongKham phongKham) {
-        return new PhongKhamTomTatResponse(phongKham.getId(), phongKham.getTenPhong(), phongKham.getTang());
+        NgonNgu ngonNgu = NgonNgu.hienTai();
+        return new PhongKhamTomTatResponse(phongKham.getId(), phongKham.ten(ngonNgu), phongKham.tang(ngonNgu));
     }
 
 }

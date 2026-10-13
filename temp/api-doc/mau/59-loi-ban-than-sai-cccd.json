@@ -1,0 +1,27 @@
+{
+  "method": "POST",
+  "path": "/api/booking/lich-hen",
+  "acceptLanguage": null,
+  "requestBody": {
+    "idLichLamViec": 17,
+    "gioBatDauKhung": "2026-10-14T09:00:00",
+    "benhNhan": {
+      "hoTen": "Nguyễn Thị Mai",
+      "ngaySinh": "1995-03-12",
+      "gioiTinh": "NAM",
+      "soDienThoai": "0902000001",
+      "cccd": "079190000999"
+    },
+    "lyDoKham": "Khám định kỳ",
+    "datChoBanThan": true
+  },
+  "status": 409,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "thanhCong": false,
+    "maLoi": "THONG_TIN_BENH_NHAN_KHONG_KHOP",
+    "thongDiep": "Số CCCD không trùng với hồ sơ bệnh nhân của tài khoản; nếu đặt cho người thân, hãy bỏ chọn \"đặt cho bản thân\""
+  }
+}

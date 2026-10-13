@@ -11,6 +11,7 @@ import iuh.fit.se.eclinic.common.entity.catalog.PhongKham;
 import iuh.fit.se.eclinic.common.entity.identity.TaiKhoan;
 import iuh.fit.se.eclinic.common.entity.scheduling.KhungGioKham;
 import iuh.fit.se.eclinic.common.enums.GioiTinh;
+import iuh.fit.se.eclinic.common.enums.NgonNgu;
 import iuh.fit.se.eclinic.common.enums.TrangThaiLichHen;
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.Column;
@@ -95,9 +96,21 @@ public class LichHen extends AuditableEntity {
     @Column(name = "so_dien_thoai_lien_he", length = 20)
     private String soDienThoaiLienHe;
 
-    /** Email người đặt nhập trên form (không bắt buộc), để sau này gửi phiếu khám / nhắc lịch. */
+    /**
+     * Email người đặt nhập trên form (không bắt buộc). Email xác nhận đặt lịch gửi tới đây; để trống thì gửi tới email
+     * của tài khoản đã đặt, khách đặt mà để trống thì không có email nào.
+     */
     @Column(name = "email_lien_he", length = 255)
     private String emailLienHe;
+
+    /**
+     * Ngôn ngữ của request đã tạo lịch hẹn (V19). Email gửi tới khách dùng ngôn ngữ này; lịch hẹn do tài khoản đặt thì
+     * email theo ngôn ngữ đã lưu của tài khoản. Null = lịch hẹn tạo trước V19.
+     */
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
+    @Column(name = "ngon_ngu", length = 5)
+    private NgonNgu ngonNgu;
 
     /**
      * Họ tên, ngày sinh, giới tính người khám và họ tên người giám hộ ĐÚNG như người đặt nhập trên form. Số CCCD đã có

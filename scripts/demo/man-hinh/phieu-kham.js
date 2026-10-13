@@ -13,14 +13,14 @@
 (() => {
     dangKy({
         duongDan: /^\/phieu-kham\/([^/]+)$/,
-        tieuDe: 'Appointment Ticket',
+        tieuDe: cap('Phiếu khám', 'Appointment Ticket'),
         async ve(khung, { khop }) {
-            const trangThai = the('p', 'Đang tải phiếu khám…');
+            const trangThai = the('p', t('Đang tải phiếu khám…', 'Loading the appointment ticket…'));
             const noiDung = the('div');
-            khung.append(trangThai, noiDung, lienKet('Đặt lịch khám', '/appointment'));
+            khung.append(trangThai, noiDung, lienKet(t('Đặt lịch khám', 'Book an appointment'), '/appointment'));
             const { status, json } = await taiPhieu(khop[1], false);
             if (status === 200) {
-                trangThai.textContent = 'Xuất trình phiếu này (hoặc mã QR) khi đến khám.';
+                trangThai.textContent = t('Xuất trình phiếu này (hoặc mã QR) khi đến khám.', 'Show this ticket (or the QR code) when you arrive.');
                 const hien = (phieu) => {
                     hienPhieu(noiDung, phieu);
                     const goc = '/api/booking/phieu-kham/' + encodeURIComponent(phieu.maPhieuKham);
@@ -31,7 +31,7 @@
                         khiXong(hanhDong, duLieu) {
                             if (hanhDong === 'huy') {
                                 hien(duLieu);
-                                bao(trangThai, 'Đã hủy lịch hẹn.', 'tot');
+                                bao(trangThai, t('Đã hủy lịch hẹn.', 'Appointment cancelled.'), 'tot');
                             } else {
                                 // Lịch mới có phiếu khám mới: chuyển sang trang của phiếu đó
                                 diToi('/phieu-kham/' + encodeURIComponent(duLieu.maPhieuKham));
@@ -41,7 +41,7 @@
                 };
                 hien(json.duLieu);
             } else {
-                bao(trangThai, thongDiepLoi(json, 'Không tải được phiếu khám.'), 'loi');
+                bao(trangThai, thongDiepLoi(json, t('Không tải được phiếu khám.', 'Could not load the appointment ticket.')), 'loi');
             }
         },
     });

@@ -8,7 +8,7 @@ import jakarta.validation.constraints.Size;
  */
 public record PhienDangNhapRequest(
 
-        @Size(max = 100, message = "Refresh token không hợp lệ")
+        @Size(max = 100, message = "{kiemTra.refreshToken.khongHopLe}")
         String refreshToken) {
 
     /** Không in token (tránh lộ khi request bị log). */
