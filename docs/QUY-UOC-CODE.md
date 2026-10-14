@@ -202,7 +202,7 @@ viết tắt), tên thuốc. Chữ người dùng tự gõ (lý do khám, chẩn
 ## 6. Database và migration
 
 - Schema do **Flyway** quản lý, file nằm trong `common/src/main/resources/db/migration`.
-- Muốn đổi schema: tạo file **mới** `V<số tiếp theo>__mo_ta_ngan.sql` (hiện đã có V1–V24, file tiếp theo là `V25__...sql`).
+- Muốn đổi schema: tạo file **mới** `V<số tiếp theo>__mo_ta_ngan.sql` (hiện đã có V1–V28, file tiếp theo là `V29__...sql`).
   **Không bao giờ sửa file đã chạy** (kể cả `V1__init_schema.sql`): Flyway so checksum và service sẽ không khởi động.
 - Sửa entity trong `common` cho khớp: Hibernate chạy `ddl-auto: validate`, entity lệch schema thì service báo lỗi.
 - DB dùng collation `utf8mb4_unicode_ci`: so sánh `=` và `LIKE` không phân biệt hoa thường và dấu

@@ -19,8 +19,11 @@ public interface KhamBenhService {
     BenhAnResponse ghiNhan(Long idTaiKhoanBacSi, Long idLichHen, BenhAnRequest request);
 
     /**
-     * Sửa hồ sơ bệnh án đã ghi: thay chẩn đoán, ghi chú, ngày tái khám và toàn bộ đơn thuốc. Lịch hẹn giữ nguyên trạng
-     * thái. Ném KHONG_TIM_THAY nếu lịch hẹn chưa có hồ sơ bệnh án.
+     * Sửa hồ sơ bệnh án đã ghi: thay chẩn đoán, ghi chú, ngày tái khám và toàn bộ đơn thuốc, tăng phiên bản và thêm 1
+     * dòng lịch sử sửa (lý do, nội dung trước / sau). Lịch hẹn giữ nguyên trạng thái.
+     * <p>
+     * Ném KHONG_TIM_THAY nếu lịch hẹn chưa có hồ sơ bệnh án; HET_HAN_SUA_BENH_AN nếu đã quá hạn sửa; DU_LIEU_DA_THAY_DOI
+     * nếu {@code request.phienBan()} không còn là phiên bản đang lưu; DU_LIEU_KHONG_HOP_LE nếu nội dung không đổi gì.
      */
     BenhAnResponse sua(Long idTaiKhoanBacSi, Long idLichHen, BenhAnRequest request);
 

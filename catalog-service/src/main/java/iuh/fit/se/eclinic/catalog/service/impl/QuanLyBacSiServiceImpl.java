@@ -78,6 +78,7 @@ public class QuanLyBacSiServiceImpl implements QuanLyBacSiService {
     public HoSoBacSiQuanTriResponse them(ThemBacSiRequest request) {
         Long idChuyenKhoa = request.idChuyenKhoa();
         String soGiayPhep = bacSiMapper.chuanHoa(request.soGiayPhep());
+        HoSoBacSiServiceImpl.kiemTraNamBatDauHanhNghe(request.namBatDauHanhNghe());
         if (!chuyenKhoaRepository.existsById(idChuyenKhoa)) {
             throw new LoiKhongTimThay("ChuyenKhoa", idChuyenKhoa);
         }
@@ -96,7 +97,7 @@ public class QuanLyBacSiServiceImpl implements QuanLyBacSiService {
                 bacSi.setSoGiayPhep(soGiayPhep);
                 bacSi.setHocVi(bacSiMapper.chuanHoa(request.hocVi()));
                 bacSi.setChucVu(bacSiMapper.chuanHoa(request.chucVu()));
-                bacSi.setSoNamKinhNghiem(request.soNamKinhNghiem());
+                bacSi.setNamBatDauHanhNghe(request.namBatDauHanhNghe());
                 return bacSiRepository.saveAndFlush(bacSi).getId();
             });
         } catch (RuntimeException ex) {

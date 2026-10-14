@@ -62,8 +62,8 @@ Body cũ không có `…En` vẫn chạy.
 |---|---|---|
 | Medical Catalog: chuyên khoa | `GET /api/catalog/quan-tri/chuyen-khoa` (mới, đọc cả 2 bản), `POST /api/catalog/chuyen-khoa`, `PUT /api/catalog/chuyen-khoa/{id}` | `tenChuyenKhoaEn`, `moTaEn`, và cặp `trieuChung` / `trieuChungEn` (triệu chứng thường gặp, tối đa 2000 ký tự: chatbot dùng để gợi ý chuyên khoa, không hiện ở API công khai) |
 | Medical Catalog: phòng khám | `/api/catalog/quan-tri/phong-kham` | `tenPhongEn`, `tangEn` |
-| Medical Catalog: thuốc | `/api/medical/quan-tri/thuoc` | `donViEn`, `moTaEn` (tên thuốc không có bản tiếng Anh) |
-| Doctor Management: hồ sơ bác sĩ | `/api/catalog/quan-tri/bac-si` | `chucVuEn`, `gioiThieuNganEn`, `tieuSuEn`, `quaTrinhDaoTaoEn`, `quaTrinhCongTacEn`, `linhVucKhamChuaEn` |
+| Medical Catalog: thuốc | `/api/medical/quan-tri/thuoc` | `dangBaoCheEn`, `donViEn`, `moTaEn` (tên thuốc, hoạt chất, hàm lượng không có bản tiếng Anh; đường dùng là mã, nhãn do frontend đặt) |
+| Doctor Management: hồ sơ bác sĩ | `/api/catalog/quan-tri/bac-si` | `chucVuEn`, `noiCapGiayPhepEn`, `phamViHanhNgheEn`, `gioiThieuNganEn`, `tieuSuEn`, `quaTrinhDaoTaoEn`, `quaTrinhCongTacEn`, `linhVucKhamChuaEn`, `giaiThuongEn`, `congTrinhNghienCuuEn` (bác sĩ tự sửa bản EN của giới thiệu, tiểu sử, giải thưởng, nghiên cứu: `/api/catalog/bac-si/toi/ho-so`) |
 | Doctor Management: ảnh giới thiệu | thêm / sửa ảnh | `chuThichEn` |
 
 Tên tiếng Anh của chuyên khoa và phòng khám cũng không được trùng nhau (409 như tên tiếng Việt).

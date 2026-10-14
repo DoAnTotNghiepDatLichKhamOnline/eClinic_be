@@ -46,6 +46,12 @@ const TRANG_THAI = nhan({
     DA_HUY: cap('Đã hủy', 'Cancelled'), DA_HUY_DO_DOI_LICH: cap('Đã hủy do đổi lịch', 'Cancelled (rescheduled)'),
 });
 const DA_HUY = ['BI_TU_CHOI', 'DA_HUY', 'DA_HUY_DO_DOI_LICH'];
+// Hàng đợi khám của bác sĩ: buổi của ca (theo giờ bắt đầu) và trạng thái trong hàng đợi (DA_KHAM = đã ghi nhận kết quả khám)
+const BUOI = nhan({ SANG: cap('Ca sáng', 'Morning shift'), CHIEU: cap('Ca chiều', 'Afternoon shift'), TOI: cap('Ca tối', 'Evening shift') });
+const HANG_DOI = nhan({
+    CHO_KHAM: cap('Chờ khám', 'Waiting'), DANG_KHAM: cap('Đang khám', 'In examination'),
+    VANG_MAT: cap('Vắng mặt', 'Absent'), DA_KHAM: cap('Đã khám', 'Examined'),
+});
 // Dùng như chuỗi: the('p', CAN_DOI_LICH) và `${CAN_DOI_LICH}` đều ra chữ của ngôn ngữ đang chọn
 const CAN_DOI_LICH = cap('Ca khám của lịch hẹn này đã bị hủy. Hãy đổi sang khung giờ khác (hoặc hủy lịch hẹn).',
     'The shift of this appointment was cancelled. Please move it to another time slot (or cancel the appointment).');
@@ -70,6 +76,28 @@ const LIEN_KET = nhan({
 const VAI_TRO = nhan({
     BENH_NHAN: cap('Bệnh nhân', 'Patient'), BAC_SI: cap('Bác sĩ', 'Doctor'), QUAN_TRI_VIEN: cap('Quản trị viên', 'Administrator'),
 });
+// Đường dùng của thuốc (enum DuongDungThuoc)
+const DUONG_DUNG = nhan({
+    UONG: cap('Uống', 'Oral'), NGAM_DUOI_LUOI: cap('Ngậm dưới lưỡi', 'Sublingual'), TIEM: cap('Tiêm', 'Injection'),
+    BOI_NGOAI_DA: cap('Bôi / dùng ngoài da', 'Topical'), NHO_MAT: cap('Nhỏ mắt', 'Eye drops'), NHO_TAI: cap('Nhỏ tai', 'Ear drops'),
+    NHO_MUI: cap('Nhỏ / xịt mũi', 'Nasal'), XIT_HIT: cap('Xịt / hít', 'Inhaled'), DAT: cap('Đặt', 'Rectal / vaginal'),
+    KHAC: cap('Khác', 'Other'),
+});
+// "Paracetamol 500mg (Paracetamol) · Viên nén · Uống · viên" — thuốc trong gợi ý hoặc dòng đơn thuốc; trường null bị bỏ
+function moTaThuoc(thuoc) {
+    const ten = [thuoc.tenThuoc, thuoc.hamLuong].filter(Boolean).join(' ')
+        + (thuoc.hoatChat && thuoc.hoatChat.toLowerCase() !== thuoc.tenThuoc.toLowerCase() ? ` (${thuoc.hoatChat})` : '');
+    return [ten, thuoc.dangBaoChe, thuoc.duongDung ? DUONG_DUNG[thuoc.duongDung] : null, thuoc.donVi].filter(Boolean).join(' · ');
+}
+// Ngôn ngữ khám của bác sĩ: mã ISO 639 ("vi", "en") -> tên theo ngôn ngữ đang xem ("Tiếng Anh" / "English")
+function tenNgonNgu(ma) {
+    try {
+        return new Intl.DisplayNames([ngonNgu], { type: 'language' }).of(ma) || ma;
+    } catch {
+        return ma;
+    }
+}
+const dsNgonNgu = (cacMa) => (cacMa || []).map(tenNgonNgu).join(', ');
 // Chủ nhật đứng đầu, như Date.getDay()
 const THU = nhan([cap('CN', 'Sun'), cap('T2', 'Mon'), cap('T3', 'Tue'), cap('T4', 'Wed'), cap('T5', 'Thu'), cap('T6', 'Fri'),
     cap('T7', 'Sat')]);
@@ -89,8 +117,12 @@ const trangChu = () => TRANG_CHU[vaiTro()] || '/login';
 // API công khai chỉ đọc: không gửi access token (token hết hạn sẽ làm cả API công khai trả 401)
 const GET_CONG_KHAI = ['/api/booking/khung-gio', '/api/booking/phieu-kham', '/api/catalog/chuyen-khoa', '/api/catalog/bac-si'];
 
+// Nằm dưới đường dẫn công khai nhưng cần đăng nhập (hồ sơ của bác sĩ đang đăng nhập)
+const GET_CAN_TOKEN = ['/api/catalog/bac-si/toi/'];
+
 function coGuiToken(duongDan, phuongThuc) {
     if (!accessToken || duongDan.startsWith('/api/auth/')) return false;
+    if (GET_CAN_TOKEN.some((dau) => duongDan.startsWith(dau))) return true;
     return !(phuongThuc === 'GET' && GET_CONG_KHAI.some((dau) => duongDan.startsWith(dau)));
 }
 
@@ -425,17 +457,63 @@ async function taoLich(el, nguon, tuyChon) {
 // Kết quả khám: chẩn đoán, lời dặn, đơn thuốc (màn hình bệnh nhân và bác sĩ)
 function ketQuaKham(ketQua) {
     const khung = the('div');
+    if (ketQua.ngaySuaCuoi) khung.append(ghiChu(t(`Đã chỉnh sửa lúc ${ngayGioVn(ketQua.ngaySuaCuoi)}`, `Edited on ${ngayGioVn(ketQua.ngaySuaCuoi)}`)));
     khung.append(thongTin([[t('Chẩn đoán', 'Diagnosis'), ketQua.chanDoan], [t('Lời dặn', 'Doctor\'s advice'), ketQua.ghiChu],
         [t('Ngày tái khám đề xuất', 'Suggested follow-up date'), ketQua.ngayTaiKhamDeXuat ? ngayVn(ketQua.ngayTaiKhamDeXuat) : null]]));
     if (ketQua.donThuoc && ketQua.donThuoc.length) {
         khung.append(bang([t('Thuốc', 'Medicine'), t('Liều dùng', 'Dosage'), t('Lần/ngày', 'Times/day'), t('Số ngày', 'Days'),
             t('Ghi chú', 'Note')], ketQua.donThuoc.map((thuoc) => dong([
-            thuoc.tenThuoc + (thuoc.donVi ? ` (${thuoc.donVi})` : ''), thuoc.lieuDung, thuoc.soLanMoiNgay, thuoc.soNgayDung,
+            moTaThuoc(thuoc), thuoc.lieuDung, thuoc.soLanMoiNgay, thuoc.soNgayDung,
             thuoc.ghiChuSuDung]))));
     } else {
         khung.append(ghiChu(t('Không kê đơn thuốc.', 'No prescription.')));
     }
     return khung;
+}
+
+// Lịch sử sửa hồ sơ bệnh án (bác sĩ: GET /api/medical/bac-si/toi/lich-hen/{id}/benh-an/lich-su; quản trị viên:
+// GET /api/medical/quan-tri/lich-hen/{id}/benh-an/lich-su). Mỗi lần sửa: ai, lúc nào, lý do, và chỉ phần đã đổi (trước -> sau).
+const TRUONG_BENH_AN = nhan({
+    CHAN_DOAN: cap('Chẩn đoán', 'Diagnosis'), GHI_CHU: cap('Lời dặn', 'Doctor\'s advice'),
+    NGAY_TAI_KHAM: cap('Ngày tái khám đề xuất', 'Suggested follow-up date'), DON_THUOC: cap('Đơn thuốc', 'Prescription'),
+});
+function noiDungTruong(noiDung, truong) {
+    if (truong === 'CHAN_DOAN') return noiDung.chanDoan || '—';
+    if (truong === 'GHI_CHU') return noiDung.ghiChu || '—';
+    if (truong === 'NGAY_TAI_KHAM') return noiDung.ngayTaiKhamDeXuat ? ngayVn(noiDung.ngayTaiKhamDeXuat) : '—';
+    if (!noiDung.donThuoc || !noiDung.donThuoc.length) return ghiChu(t('Không kê đơn thuốc.', 'No prescription.'));
+    return bang([t('Thuốc', 'Medicine'), t('Liều dùng', 'Dosage'), t('Lần/ngày', 'Times/day'), t('Số ngày', 'Days'), t('Ghi chú', 'Note')],
+        noiDung.donThuoc.map((d) => dong([[d.tenThuoc, d.hamLuong].filter(Boolean).join(' '), d.lieuDung, d.soLanMoiNgay, d.soNgayDung, d.ghiChuSuDung])));
+}
+function lichSuSuaBenhAn(duLieu) {
+    const khung = the('div', null, 'lich-su-sua');
+    khung.append(ghiChu(t(`Ghi nhận lúc ${ngayGioVn(duLieu.ngayGhiNhan)} · phiên bản hiện tại ${duLieu.phienBanHienTai}`,
+        `Recorded on ${ngayGioVn(duLieu.ngayGhiNhan)} · current version ${duLieu.phienBanHienTai}`)));
+    if (!duLieu.cacLanSua.length) {
+        khung.append(ghiChu(t('Hồ sơ bệnh án chưa được sửa lần nào.', 'The medical record has never been edited.')));
+        return khung;
+    }
+    for (const lan of duLieu.cacLanSua) {
+        const khoi = the('div', null, 'lan-kham');
+        khoi.append(the('b', t(`Phiên bản ${lan.phienBan} · ${ngayGioVn(lan.ngaySua)} · BS ${lan.bacSi.hoTen}`,
+            `Version ${lan.phienBan} · ${ngayGioVn(lan.ngaySua)} · Dr. ${lan.bacSi.hoTen}`)),
+            the('p', t('Lý do: ', 'Reason: ') + lan.lyDo, 'ghi-chu'),
+            bang([t('Phần đã đổi', 'Changed'), t('Trước', 'Before'), t('Sau', 'After')],
+                lan.cacTruongDoi.map((truong) => dong([TRUONG_BENH_AN[truong] || truong, noiDungTruong(lan.truoc, truong), noiDungTruong(lan.sau, truong)]))));
+        khung.append(khoi);
+    }
+    return khung;
+}
+// Mở / đóng lịch sử sửa ngay dưới nút bấm: tải lại mỗi lần mở
+async function batTatLichSuSua(nutBam, duongDan) {
+    const daMo = nutBam.nextElementSibling && nutBam.nextElementSibling.classList.contains('lich-su-sua');
+    if (daMo) {
+        nutBam.nextElementSibling.remove();
+        return;
+    }
+    const { status, json } = await lay(duongDan);
+    nutBam.after(status === 200 ? lichSuSuaBenhAn(json.duLieu)
+        : the('p', thongDiepLoi(json, t('Không tải được lịch sử sửa.', 'Could not load the edit history.')), 'ghi-chu loi lich-su-sua'));
 }
 
 // Hủy / đổi lịch hẹn (màn hình /patient/appointments và /phieu-kham/<mã>). UI chưa có màn hình cho việc này.

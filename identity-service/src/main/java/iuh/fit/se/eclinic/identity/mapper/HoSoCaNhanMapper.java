@@ -33,7 +33,7 @@ public class HoSoCaNhanMapper {
         NgonNgu ngonNgu = NgonNgu.hienTai();
         return new HoSoBacSiResponse(bacSi.getId(), bacSi.getChuyenKhoa().getId(),
                 bacSi.getChuyenKhoa().ten(ngonNgu), bacSi.getHocVi(), bacSi.getSoGiayPhep(),
-                bacSi.getSoNamKinhNghiem(), bacSi.tieuSu(ngonNgu), bacSi.getTrangThai());
+                bacSi.soNamKinhNghiem(), bacSi.tieuSu(ngonNgu), bacSi.getTrangThai());
     }
 
     private HoSoBenhNhanResponse toResponse(HoSoBenhNhan hoSo) {

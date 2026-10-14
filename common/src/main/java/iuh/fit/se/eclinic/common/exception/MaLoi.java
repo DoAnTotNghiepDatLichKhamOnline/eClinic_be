@@ -98,8 +98,17 @@ public enum MaLoi {
     // Khám bệnh
     /** Bác sĩ chỉ ghi nhận kết quả khám từ ngày khám của lịch hẹn trở đi. */
     CHUA_DEN_NGAY_KHAM(HttpStatus.CONFLICT),
+    HET_HAN_SUA_BENH_AN(HttpStatus.CONFLICT),
     /** Lịch hẹn đã khám xong, đã hủy hoặc bị từ chối. */
     LICH_HEN_KHONG_KHAM_DUOC(HttpStatus.CONFLICT),
+
+    // Hàng đợi khám của bác sĩ
+    /** Bác sĩ đang khám 1 bệnh nhân khác chưa ghi nhận kết quả: chỉ 1 bệnh nhân đang khám mỗi lúc. */
+    DANG_KHAM_BENH_NHAN_KHAC(HttpStatus.CONFLICT),
+    /** Ca không còn bệnh nhân nào chờ gọi. */
+    HANG_DOI_TRONG(HttpStatus.CONFLICT),
+    /** Chỉ gọi / đánh dấu vắng mặt được trong ngày khám của lịch hẹn. */
+    KHONG_PHAI_NGAY_KHAM(HttpStatus.CONFLICT),
 
     // Ca làm việc, yêu cầu đổi ca / xin nghỉ
     CA_KHONG_SUA_DUOC(HttpStatus.CONFLICT),
@@ -121,6 +130,8 @@ public enum MaLoi {
     TEN_THUOC_DA_TON_TAI(HttpStatus.CONFLICT),
     THUOC_DA_DUOC_KE(HttpStatus.CONFLICT),
     THUOC_NGUNG_DUNG(HttpStatus.CONFLICT),
+    THUOC_CHUA_XAC_MINH(HttpStatus.CONFLICT),
+    THUOC_THIEU_THONG_TIN(HttpStatus.CONFLICT),
 
     // Đánh giá lượt khám
     LICH_HEN_CHUA_KHAM_XONG(HttpStatus.CONFLICT),

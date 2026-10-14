@@ -17,11 +17,16 @@
 //   POST /api/catalog/quan-tri/phong-kham/{id}/ngung-hoat-dong   409 PHONG_CON_CA_LAM_VIEC nếu còn ca sắp tới (chuyển ca sang phòng khác trước)
 //   POST /api/catalog/quan-tri/phong-kham/{id}/hoat-dong-lai
 // API (thuốc):
-//   GET  /api/medical/quan-tri/thuoc?tuKhoa=&daXacMinh=&trangThai=&trang=&kichThuoc=   chưa xác minh trước, rồi theo tên:
-//                                                         id, tenThuoc, donVi, donViEn, moTa, moTaEn, daXacMinh, trangThai, tenBacSiTao, soLanKe
-//   POST /api/medical/quan-tri/thuoc                      { tenThuoc, donVi?, donViEn?, moTa?, moTaEn? } -> 201, đã xác minh (409 TEN_THUOC_DA_TON_TAI)
-//   PUT  /api/medical/quan-tri/thuoc/{id}                 cùng thân; thuốc đã được kê mà đổi sang tên khác: 409 THUOC_DA_DUOC_KE
-//   POST /api/medical/quan-tri/thuoc/{id}/xac-minh        xác minh thuốc bác sĩ tự thêm khi kê đơn
+//   GET  /api/medical/quan-tri/thuoc?tuKhoa=&daXacMinh=&trangThai=&trang=&kichThuoc=   chưa xác minh trước, rồi theo tên, hàm lượng;
+//                                                         tuKhoa khớp tên hoặc hoạt chất: id, tenThuoc, hoatChat, hamLuong, dangBaoChe,
+//                                                         dangBaoCheEn, duongDung, donVi, donViEn, moTa, moTaEn, daXacMinh, trangThai,
+//                                                         tenBacSiTao, soLanKe
+//   POST /api/medical/quan-tri/thuoc                      { tenThuoc, hoatChat, hamLuong, dangBaoChe?, dangBaoCheEn?, duongDung?, donVi?,
+//                                                         donViEn?, moTa?, moTaEn? } -> 201, đã xác minh (409 TEN_THUOC_DA_TON_TAI: trùng tên + hàm lượng)
+//   PUT  /api/medical/quan-tri/thuoc/{id}                 cùng thân; thuốc đã được kê mà đổi tên / hoạt chất / hàm lượng / dạng bào chế /
+//                                                         đường dùng: 409 THUOC_DA_DUOC_KE (trường đang trống thì điền được)
+//   POST /api/medical/quan-tri/thuoc/{id}/xac-minh        xác minh thuốc bác sĩ tự thêm khi kê đơn trước đây (409 THUOC_THIEU_THONG_TIN nếu
+//                                                         chưa có hoạt chất / hàm lượng)
 //   POST /api/medical/quan-tri/thuoc/{id}/ngung-dung      không còn được gợi ý, không kê mới được (409 THUOC_NGUNG_DUNG phía bác sĩ)
 //   POST /api/medical/quan-tri/thuoc/{id}/dung-lai
 (() => {
@@ -84,14 +89,19 @@
         thuocDangSua = thuoc;
         const f = $('form-thuoc');
         f.elements.tenThuoc.value = thuoc ? thuoc.tenThuoc : '';
+        f.elements.hoatChat.value = thuoc && thuoc.hoatChat ? thuoc.hoatChat : '';
+        f.elements.hamLuong.value = thuoc && thuoc.hamLuong ? thuoc.hamLuong : '';
+        f.elements.dangBaoChe.value = thuoc && thuoc.dangBaoChe ? thuoc.dangBaoChe : '';
+        f.elements.dangBaoCheEn.value = thuoc && thuoc.dangBaoCheEn ? thuoc.dangBaoCheEn : '';
+        f.elements.duongDung.value = thuoc && thuoc.duongDung ? thuoc.duongDung : '';
         f.elements.donVi.value = thuoc && thuoc.donVi ? thuoc.donVi : '';
         f.elements.moTa.value = thuoc && thuoc.moTa ? thuoc.moTa : '';
         f.elements.donViEn.value = thuoc && thuoc.donViEn ? thuoc.donViEn : '';
         f.elements.moTaEn.value = thuoc && thuoc.moTaEn ? thuoc.moTaEn : '';
         $('tieu-de-form-thuoc').textContent = thuoc
             ? t(`Sửa thuốc #${thuoc.id}`, `Edit medicine #${thuoc.id}`) + (thuoc.soLanKe > 0
-                ? t(` (đã kê ${thuoc.soLanKe} lần: tên chỉ sửa được cách viết hoa / khoảng trắng)`,
-                    ` (prescribed ${thuoc.soLanKe} times: only the capitalisation / spacing of the name can change)`) : '')
+                ? t(` (đã kê ${thuoc.soLanKe} lần: tên chỉ sửa được cách viết hoa / khoảng trắng; hoạt chất, hàm lượng, dạng bào chế, đường dùng không đổi được, chỉ điền được ô còn trống)`,
+                    ` (prescribed ${thuoc.soLanKe} times: only the capitalisation / spacing of the name can change; active ingredient, strength, dosage form and route are fixed, empty ones can be filled in)`) : '')
             : t('Thêm thuốc', 'Add medicine');
         $('nut-huy-sua-thuoc').classList.toggle('an', !thuoc);
     }
@@ -113,9 +123,11 @@
             khung.replaceChildren(ghiChu(t('Chưa có thuốc nào khớp.', 'No matching medicines.')));
             return;
         }
-        khung.replaceChildren(bang(['Id', t('Tên thuốc', 'Medicine name'), t('Đơn vị', 'Unit'), t('Mô tả', 'Description'), t('Xác minh', 'Verification'),
+        khung.replaceChildren(bang(['Id', t('Tên thuốc', 'Medicine name'), t('Hoạt chất', 'Active ingredient'), t('Hàm lượng', 'Strength'),
+            t('Dạng bào chế', 'Dosage form'), t('Đường dùng', 'Route'), t('Đơn vị', 'Unit'), t('Mô tả', 'Description'), t('Xác minh', 'Verification'),
             t('Đã kê', 'Prescribed'), t('Trạng thái', 'Status'), t('Thao tác', 'Actions')], duLieu.noiDung.map((thuoc) => dong([
-            thuoc.id, thuoc.tenThuoc, theoNgonNgu(thuoc.donVi, thuoc.donViEn), theoNgonNgu(thuoc.moTa, thuoc.moTaEn),
+            thuoc.id, thuoc.tenThuoc, thuoc.hoatChat || '—', thuoc.hamLuong || '—', theoNgonNgu(thuoc.dangBaoChe, thuoc.dangBaoCheEn),
+            thuoc.duongDung ? DUONG_DUNG[thuoc.duongDung] : '', theoNgonNgu(thuoc.donVi, thuoc.donViEn), theoNgonNgu(thuoc.moTa, thuoc.moTaEn),
             thuoc.daXacMinh ? t('Đã xác minh', 'Verified') : t('Chưa xác minh', 'Not verified')
                 + (thuoc.tenBacSiTao ? t(` · bác sĩ ${thuoc.tenBacSiTao} thêm`, ` · added by Dr. ${thuoc.tenBacSiTao}`) : ''),
             thuoc.soLanKe, TRANG_THAI_THUOC[thuoc.trangThai] || thuoc.trangThai,
@@ -241,7 +253,7 @@
                 <section>
                     <h2>${t('Thuốc', 'Medicines')}</h2>
                     <form id="form-tim-thuoc" class="hai-cot">
-                        <input name="tuKhoa" placeholder="${t('Tìm theo tên thuốc', 'Search by medicine name')}">
+                        <input name="tuKhoa" placeholder="${t('Tìm theo tên thuốc hoặc hoạt chất', 'Search by medicine name or active ingredient')}">
                         <select name="daXacMinh"><option value="">${t('(xác minh: tất cả)', '(verification: all)')}</option><option value="false">${t('Chưa xác minh', 'Not verified')}</option><option value="true">${t('Đã xác minh', 'Verified')}</option></select>
                         <select name="trangThai"><option value="">${t('(mọi trạng thái)', '(all statuses)')}</option><option value="DANG_DUNG">${TRANG_THAI_THUOC.DANG_DUNG}</option><option value="NGUNG_DUNG">${TRANG_THAI_THUOC.NGUNG_DUNG}</option></select>
                         <button class="phu">${t('Tìm', 'Search')}</button>
@@ -254,6 +266,15 @@
                     <form id="form-thuoc">
                         <div class="hai-cot">
                             <div><label>${t('Tên thuốc', 'Medicine name')}</label><input name="tenThuoc" required maxlength="255"></div>
+                            <div><label>${t('Hoạt chất (tên chung quốc tế; phối hợp nối bằng " + ")', 'Active ingredient (generic name; join combinations with " + ")')}</label><input name="hoatChat" required maxlength="255"></div>
+                            <div><label>${t('Hàm lượng (500mg, 250mg/5ml...)', 'Strength (500mg, 250mg/5ml...)')}</label><input name="hamLuong" required maxlength="100"></div>
+                        </div>
+                        <div class="hai-cot">
+                            <div><label>${t('Dạng bào chế (viên nén, siro...)', 'Dosage form (Vietnamese)')}</label><input name="dangBaoChe" maxlength="50"></div>
+                            <div><label>${t('Dạng bào chế (English: tablet, syrup...)', 'Dosage form (English: tablet, syrup...)')}</label><input name="dangBaoCheEn" maxlength="50"></div>
+                            <div><label>${t('Đường dùng', 'Route')}</label><select name="duongDung"><option value="">${t('— chưa chọn —', '— not set —')}</option>${Object.keys(DUONG_DUNG).map((ma) => `<option value="${ma}">${DUONG_DUNG[ma]}</option>`).join('')}</select></div>
+                        </div>
+                        <div class="hai-cot">
                             <div><label>${t('Đơn vị (viên, ml, gói...)', 'Unit (Vietnamese)')}</label><input name="donVi" maxlength="30"></div>
                             <div><label>${t('Đơn vị (English: tablet, ml, sachet...)', 'Unit (English: tablet, ml, sachet...)')}</label><input name="donViEn" maxlength="30"></div>
                         </div>
@@ -301,7 +322,9 @@
             $('nut-huy-sua-thuoc').addEventListener('click', () => datFormThuoc(null));
             khiGui('form-thuoc', async (v) => {
                 const than = {
-                    tenThuoc: v.tenThuoc.trim(), donVi: v.donVi.trim() || null, donViEn: v.donViEn.trim() || null,
+                    tenThuoc: v.tenThuoc.trim(), hoatChat: v.hoatChat.trim(), hamLuong: v.hamLuong.trim(),
+                    dangBaoChe: v.dangBaoChe.trim() || null, dangBaoCheEn: v.dangBaoCheEn.trim() || null, duongDung: v.duongDung || null,
+                    donVi: v.donVi.trim() || null, donViEn: v.donViEn.trim() || null,
                     moTa: v.moTa.trim() || null, moTaEn: v.moTaEn.trim() || null,
                 };
                 const { status, json } = thuocDangSua

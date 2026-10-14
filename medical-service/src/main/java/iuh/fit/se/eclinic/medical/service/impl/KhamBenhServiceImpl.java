@@ -1,8 +1,11 @@
 package iuh.fit.se.eclinic.medical.service.impl;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -10,23 +13,27 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import iuh.fit.se.eclinic.common.config.BenhAnProperties;
 import iuh.fit.se.eclinic.common.entity.booking.LichHen;
 import iuh.fit.se.eclinic.common.entity.catalog.BacSi;
 import iuh.fit.se.eclinic.common.entity.medical.ChiTietDonThuoc;
 import iuh.fit.se.eclinic.common.entity.medical.HoSoBenhAn;
 import iuh.fit.se.eclinic.common.entity.medical.Thuoc;
 import iuh.fit.se.eclinic.common.enums.TrangThaiLichHen;
+import iuh.fit.se.eclinic.common.enums.TruongBenhAn;
 import iuh.fit.se.eclinic.common.exception.LoiNghiepVu;
 import iuh.fit.se.eclinic.common.exception.MaLoi;
 import iuh.fit.se.eclinic.common.util.TokenNgauNhien;
 import iuh.fit.se.eclinic.medical.dto.request.BenhAnRequest;
 import iuh.fit.se.eclinic.medical.dto.request.DonThuocRequest;
 import iuh.fit.se.eclinic.medical.dto.response.BenhAnResponse;
+import iuh.fit.se.eclinic.medical.dto.response.NoiDungBenhAn;
 import iuh.fit.se.eclinic.medical.mapper.BenhAnMapper;
 import iuh.fit.se.eclinic.medical.repository.HoSoBenhAnRepository;
 import iuh.fit.se.eclinic.medical.repository.LichHenKhamRepository;
 import iuh.fit.se.eclinic.medical.service.BacSiDangNhapService;
 import iuh.fit.se.eclinic.medical.service.KhamBenhService;
+import iuh.fit.se.eclinic.medical.service.LichSuSuaBenhAnService;
 import iuh.fit.se.eclinic.medical.service.ThuocService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -45,7 +52,9 @@ public class KhamBenhServiceImpl implements KhamBenhService {
     private final LichHenKhamRepository lichHenKhamRepository;
     private final HoSoBenhAnRepository hoSoBenhAnRepository;
     private final ThuocService thuocService;
+    private final LichSuSuaBenhAnService lichSuSuaBenhAnService;
     private final BenhAnMapper benhAnMapper;
+    private final BenhAnProperties benhAnProperties;
 
     @Override
     @Transactional
@@ -64,7 +73,7 @@ public class KhamBenhServiceImpl implements KhamBenhService {
         benhAn.setHoSoBenhNhan(lichHen.getHoSoBenhNhan());
         benhAn.setBacSi(bacSi);
         benhAn.setMaTokenSoKham(TokenNgauNhien.tao());
-        ganNoiDung(benhAn, request, bacSi.getId());
+        ganNoiDung(benhAn, request);
         hoSoBenhAnRepository.saveAndFlush(benhAn);
         // Ngoại lệ có chủ đích (xem LichHenKhamRepository): chỉ đổi trạng thái, cùng transaction với hồ sơ bệnh án
         lichHen.setTrangThai(TrangThaiLichHen.DA_HOAN_THANH);
@@ -76,11 +85,29 @@ public class KhamBenhServiceImpl implements KhamBenhService {
     @Transactional
     public BenhAnResponse sua(Long idTaiKhoanBacSi, Long idLichHen, BenhAnRequest request) {
         BacSi bacSi = bacSiDangNhapService.layBacSiDangHoatDong(idTaiKhoanBacSi);
-        LichHen lichHen = cuaBacSi(bacSi, lichHenKhamRepository.findById(idLichHen));
+        // Khoá dòng lịch hẹn: 2 lần sửa cùng lúc chạy lần lượt, lần sau thấy phiên bản đã tăng
+        LichHen lichHen = cuaBacSi(bacSi, lichHenKhamRepository.findByIdForUpdate(idLichHen));
         HoSoBenhAn benhAn = layBenhAn(idLichHen);
-        ganNoiDung(benhAn, request, bacSi.getId());
+        if (LocalDateTime.now().isAfter(benhAnProperties.hanSua(benhAn.getNgayTao()))) {
+            throw new LoiNghiepVu(MaLoi.HET_HAN_SUA_BENH_AN);
+        }
+        if (request.phienBan() != benhAn.getPhienBan()) {
+            throw new LoiNghiepVu(MaLoi.DU_LIEU_DA_THAY_DOI);
+        }
+        NoiDungBenhAn truoc = NoiDungBenhAn.tu(benhAn);
+        ganNoiDung(benhAn, request);
+        NoiDungBenhAn sau = NoiDungBenhAn.tu(benhAn);
+        List<TruongBenhAn> cacTruongDoi = NoiDungBenhAn.cacTruongDoi(truoc, sau);
+        if (cacTruongDoi.isEmpty()) {
+            // Ném trong transaction: đơn thuốc vừa thay trong bộ nhớ bị rollback, không ghi gì
+            throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE, "loi.DU_LIEU_KHONG_HOP_LE.benhAnKhongDoi");
+        }
+        benhAn.setPhienBan(benhAn.getPhienBan() + 1);
+        benhAn.setNgaySuaCuoi(LocalDateTime.now());
         hoSoBenhAnRepository.saveAndFlush(benhAn);
-        log.info("Bác sĩ id={} sửa hồ sơ bệnh án của lịch hẹn id={}", bacSi.getId(), idLichHen);
+        lichSuSuaBenhAnService.ghi(benhAn, bacSi, request.lyDoSua().trim(), truoc, sau);
+        log.info("Bác sĩ id={} sửa hồ sơ bệnh án của lịch hẹn id={} lên phiên bản {}, đổi {}", bacSi.getId(), idLichHen,
+                benhAn.getPhienBan(), cacTruongDoi);
         return benhAnMapper.toResponse(benhAn, lichHen);
     }
 
@@ -104,25 +131,35 @@ public class KhamBenhServiceImpl implements KhamBenhService {
     }
 
     /** Ghi chẩn đoán, ghi chú, ngày tái khám và thay toàn bộ đơn thuốc bằng các dòng trong request. */
-    private void ganNoiDung(HoSoBenhAn benhAn, BenhAnRequest request, Long idBacSi) {
-        // Tra / thêm thuốc trước khi đụng tới hồ sơ bệnh án: việc thêm thuốc chạy câu lệnh native
+    private void ganNoiDung(HoSoBenhAn benhAn, BenhAnRequest request) {
+        // Kiểm tra thuốc trước khi đụng tới hồ sơ bệnh án: đơn có thuốc không kê được thì không đổi gì
         List<DonThuocRequest> cacDong = request.donThuoc() == null ? List.of() : request.donThuoc();
-        // Thuốc đơn này đã có từ trước vẫn giữ được dù quản trị viên đã cho ngừng dùng; chỉ dòng thêm mới bị từ chối
+        // Thuốc đơn này đã có từ trước vẫn giữ được dù đã ngừng dùng / chưa xác minh; chỉ dòng thêm mới bị từ chối
         Set<Long> idThuocDaCo = benhAn.getChiTietDonThuoc().stream()
                 .map(chiTiet -> chiTiet.getThuoc().getId())
                 .collect(Collectors.toSet());
-        List<Thuoc> cacThuoc = new ArrayList<>();
-        for (DonThuocRequest dong : cacDong) {
-            cacThuoc.add(thuocService.layHoacTao(dong.tenThuoc(), rongThanhNull(dong.donVi()), idBacSi, idThuocDaCo));
+        List<Long> idCacThuoc = cacDong.stream().map(DonThuocRequest::idThuoc).toList();
+        Map<Long, Thuoc> thuocTheoId = thuocService.layDeKe(idCacThuoc, idThuocDaCo);
+        Set<Long> daGap = new HashSet<>();
+        for (Long idThuoc : idCacThuoc) {
+            if (!daGap.add(idThuoc)) {
+                throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE, "loi.DU_LIEU_KHONG_HOP_LE.thuocTrungLap",
+                        thuocTheoId.get(idThuoc).getTenThuoc());
+            }
+        }
+        LocalDate ngayTaiKham = request.ngayTaiKhamDeXuat();
+        // Sửa mà giữ nguyên ngày tái khám cũ thì được dù ngày đó đã qua; ngày mới phải sau hôm nay
+        if (ngayTaiKham != null && !ngayTaiKham.isAfter(LocalDate.now())
+                && !ngayTaiKham.equals(benhAn.getNgayTaiKhamDeXuat())) {
+            throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE, "loi.DU_LIEU_KHONG_HOP_LE.ngayTaiKham");
         }
         benhAn.setChanDoan(request.chanDoan().trim());
         benhAn.setGhiChu(rongThanhNull(request.ghiChu()));
         benhAn.setNgayTaiKhamDeXuat(request.ngayTaiKhamDeXuat());
         new ArrayList<>(benhAn.getChiTietDonThuoc()).forEach(benhAn::removeChiTietDonThuoc);
-        for (int i = 0; i < cacDong.size(); i++) {
-            DonThuocRequest dong = cacDong.get(i);
+        for (DonThuocRequest dong : cacDong) {
             ChiTietDonThuoc chiTiet = new ChiTietDonThuoc();
-            chiTiet.setThuoc(cacThuoc.get(i));
+            chiTiet.setThuoc(thuocTheoId.get(dong.idThuoc()));
             chiTiet.setLieuDung(rongThanhNull(dong.lieuDung()));
             chiTiet.setSoLanMoiNgay(dong.soLanMoiNgay());
             chiTiet.setSoNgayDung(dong.soNgayDung());

@@ -1,6 +1,7 @@
 package iuh.fit.se.eclinic.common.entity.medical;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -59,6 +60,14 @@ public class HoSoBenhAn extends CreatableEntity {
 
     @Column(name = "ma_token_so_kham", nullable = false, unique = true, length = 64)
     private String maTokenSoKham;
+
+    /** 1 khi ghi nhận, tăng 1 mỗi lần sửa; client gửi lại khi sửa để không đè lên lần sửa của người khác. */
+    @Column(name = "phien_ban", nullable = false)
+    private int phienBan = 1;
+
+    /** Lần sửa gần nhất; null = chưa sửa lần nào. */
+    @Column(name = "ngay_sua_cuoi")
+    private LocalDateTime ngaySuaCuoi;
 
     @Setter(AccessLevel.NONE)
     @OneToMany(mappedBy = "hoSoBenhAn", cascade = CascadeType.ALL, orphanRemoval = true)

@@ -1,6 +1,7 @@
 package iuh.fit.se.eclinic.common.entity.booking;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
@@ -12,6 +13,7 @@ import iuh.fit.se.eclinic.common.entity.identity.TaiKhoan;
 import iuh.fit.se.eclinic.common.entity.scheduling.KhungGioKham;
 import iuh.fit.se.eclinic.common.enums.GioiTinh;
 import iuh.fit.se.eclinic.common.enums.NgonNgu;
+import iuh.fit.se.eclinic.common.enums.TrangThaiHangDoi;
 import iuh.fit.se.eclinic.common.enums.TrangThaiLichHen;
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.Column;
@@ -162,6 +164,16 @@ public class LichHen extends AuditableEntity {
     @Column(name = "can_doi_lich", nullable = false)
     private boolean canDoiLich;
 
+    /** Trạng thái trong hàng đợi khám của bác sĩ (chỉ booking-service ghi); không bao giờ lưu DA_KHAM. */
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
+    @Column(name = "trang_thai_hang_doi", nullable = false, length = 20)
+    private TrangThaiHangDoi trangThaiHangDoi = TrangThaiHangDoi.CHO_KHAM;
+
+    /** Lần gần nhất bác sĩ gọi bệnh nhân vào khám. */
+    @Column(name = "goi_luc")
+    private LocalDateTime goiLuc;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_lich_hen_cu")
     private LichHen lichHenCu;
@@ -169,5 +181,10 @@ public class LichHen extends AuditableEntity {
     @Version
     @Column(name = "version", nullable = false)
     private Long version;
+
+    /** Trạng thái hàng đợi để hiển thị: DA_KHAM khi đã ghi nhận kết quả khám, còn lại là giá trị đã lưu. */
+    public TrangThaiHangDoi hangDoiHienThi() {
+        return trangThai == TrangThaiLichHen.DA_HOAN_THANH ? TrangThaiHangDoi.DA_KHAM : trangThaiHangDoi;
+    }
 
 }

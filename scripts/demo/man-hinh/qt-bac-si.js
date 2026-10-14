@@ -6,7 +6,7 @@
 //                                                                    maBacSi, hoTen, email, soDienThoai, tenChuyenKhoa, soLuotDaKham,
 //                                                                    trangThai, trangThaiTaiKhoan, phaiDoiMatKhau
 //   POST   /api/catalog/quan-tri/bac-si                              "Add New Doctor": { hoTen, email, soDienThoai?, idChuyenKhoa,
-//                                                                    soGiayPhep?, hocVi?, chucVu?, soNamKinhNghiem? } -> 201. Tài khoản
+//                                                                    soGiayPhep?, hocVi?, chucVu?, namBatDauHanhNghe? } -> 201. Tài khoản
 //                                                                    mang mật khẩu mặc định, bác sĩ đặt mật khẩu ở lần đăng nhập đầu
 //   PUT    /api/catalog/quan-tri/bac-si/{id}                         { hoTen, soDienThoai?, idChuyenKhoa, soGiayPhep? } (email không sửa)
 //   GET    /api/catalog/quan-tri/bac-si/{id}/anh-huong-ngung-cong-tac   { soCaSapToi, soLichHenBiAnhHuong }
@@ -14,8 +14,13 @@
 //                                                                    503 DICH_VU_NOI_BO_LOI: gửi lại để chạy nốt
 //   POST   /api/catalog/quan-tri/bac-si/{id}/cong-tac-lai
 //   GET    /api/catalog/quan-tri/bac-si/{id}                         hồ sơ giới thiệu, kể cả bác sĩ không hiển thị công khai
-//   PUT    /api/catalog/quan-tri/bac-si/{id}/ho-so                   ghi đè mọi trường (kèm bản tiếng Anh ...En, trừ hocVi): hocVi, chucVu, soNamKinhNghiem, gioiThieuNgan,
-//                                                                    tieuSu, quaTrinhDaoTao[], quaTrinhCongTac[], linhVucKhamChua[]
+//                                                                    (kèm phienBanHoSo; soNamKinhNghiem suy ra từ namBatDauHanhNghe)
+//   PUT    /api/catalog/quan-tri/bac-si/{id}/ho-so                   ghi đè mọi trường (kèm bản tiếng Anh ...En, trừ hocVi, ngày cấp, năm, ngôn ngữ):
+//                                                                    phienBan (bắt buộc, = phienBanHoSo đã tải; cũ -> 409 DU_LIEU_DA_THAY_DOI),
+//                                                                    hocVi, chucVu, namBatDauHanhNghe, ngayCapGiayPhep, noiCapGiayPhep, phamViHanhNghe,
+//                                                                    gioiThieuNgan, tieuSu, ngonNguKham[] (mã ISO 639), quaTrinhDaoTao[], quaTrinhCongTac[],
+//                                                                    linhVucKhamChua[], giaiThuong[], congTrinhNghienCuu[]. Bác sĩ tự sửa được giới thiệu
+//                                                                    ngắn, tiểu sử, ngôn ngữ, giải thưởng, nghiên cứu (/doctor/profile)
 //   POST   /api/catalog/quan-tri/bac-si/{id}/anh                     multipart: tệp "anh" (JPEG / PNG / WebP, tối đa 4 MB),
 //                                                                    "loai" = ANH_CONG_VIEC | CHUNG_CHI, "chuThich", "chuThichEn" -> 201
 //   PUT    /api/catalog/quan-tri/bac-si/{id}/anh/{idAnh}             { loai, chuThich, chuThichEn }
@@ -25,7 +30,9 @@
 //   (PUT /api/catalog/quan-tri/bac-si/{id}/anh/thu-tu { idAnh: [...] } sắp xếp ảnh: có API, trang demo không dùng)
 (() => {
     const QUAN_TRI = '/api/catalog/quan-tri/bac-si';
-    const CAC_DANH_SACH = ['quaTrinhDaoTao', 'quaTrinhCongTac', 'linhVucKhamChua'];
+    const CAC_DANH_SACH = ['quaTrinhDaoTao', 'quaTrinhCongTac', 'linhVucKhamChua', 'giaiThuong', 'congTrinhNghienCuu'];
+    const CAC_O_CHU = ['hocVi', 'chucVu', 'namBatDauHanhNghe', 'ngayCapGiayPhep', 'noiCapGiayPhep', 'phamViHanhNghe', 'gioiThieuNgan', 'tieuSu',
+        'chucVuEn', 'noiCapGiayPhepEn', 'phamViHanhNgheEn', 'gioiThieuNganEn', 'tieuSuEn'];
     const LOAI_ANH = nhan({ ANH_CONG_VIEC: cap('Ảnh công việc', 'Work photo'), CHUNG_CHI: cap('Chứng chỉ', 'Certificate') });
     const TRANG_THAI_BAC_SI = nhan({
         DANG_CONG_TAC: cap('Active — đang công tác', 'Active'), NGUNG_CONG_TAC: cap('Inactive — ngừng công tác', 'Inactive'),
@@ -102,6 +109,8 @@
             [t('Mã', 'Code'), bs.maBacSi], [t('Họ tên', 'Full name'), bs.hoTen], [t('Email đăng nhập', 'Sign-in email'), bs.email],
             [t('Số điện thoại', 'Phone number'), bs.soDienThoai],
             [t('Chuyên khoa', 'Specialty'), bs.tenChuyenKhoa], [t('Số giấy phép', 'License number'), bs.soGiayPhep],
+            [t('Số năm kinh nghiệm', 'Years of experience'), bs.soNamKinhNghiem],
+            [t('Phiên bản hồ sơ', 'Profile version'), bs.phienBanHoSo],
             [t('Trạng thái', 'Status'), TRANG_THAI_BAC_SI[bs.trangThai] || bs.trangThai],
             [t('Tài khoản', 'Account'), bs.trangThaiTaiKhoan + (bs.phaiDoiMatKhau
                 ? t(' · còn mật khẩu mặc định, chưa đăng nhập lần nào', ' · still has the default password, never signed in') : '')],
@@ -113,7 +122,8 @@
         cb.elements.soGiayPhep.value = bs.soGiayPhep || '';
         hienTrangThai(bs);
         const f = $('form-ho-so-bac-si');
-        for (const ten of ['hocVi', 'chucVu', 'soNamKinhNghiem', 'gioiThieuNgan', 'tieuSu', 'chucVuEn', 'gioiThieuNganEn', 'tieuSuEn']) f.elements[ten].value = bs[ten] ?? '';
+        for (const ten of CAC_O_CHU) f.elements[ten].value = bs[ten] ?? '';
+        f.elements.ngonNguKham.value = (bs.ngonNguKham || []).join(', ');
         for (const ten of CAC_DANH_SACH) {
             f.elements[ten].value = (bs[ten] || []).join('\n');
             f.elements[ten + 'En'].value = (bs[ten + 'En'] || []).join('\n');
@@ -240,7 +250,7 @@
                             <div><label>${t('Số giấy phép hành nghề', 'Practice license number')}</label><input name="soGiayPhep" maxlength="50"></div>
                             <div><label>${t('Học vị', 'Academic degree')}</label><input name="hocVi" maxlength="100" placeholder="${t('vd ThS.BS', 'e.g. ThS.BS')}"></div>
                             <div><label>${t('Chức vụ', 'Position')}</label><input name="chucVu" maxlength="150"></div>
-                            <div><label>${t('Số năm kinh nghiệm', 'Years of experience')}</label><input name="soNamKinhNghiem" type="number" min="0" max="80"></div>
+                            <div><label>${t('Năm bắt đầu hành nghề', 'Year started practising')}</label><input name="namBatDauHanhNghe" type="number" min="1950" max="${new Date().getFullYear()}"></div>
                         </div>
                         <button>${t('Thêm bác sĩ', 'Add doctor')}</button>
                     </form>
@@ -268,21 +278,31 @@
                             <div class="hai-cot">
                                 <div><label>${t('Học vị', 'Academic degree')}</label><input name="hocVi" maxlength="100"></div>
                                 <div><label>${t('Chức vụ', 'Position')}</label><input name="chucVu" maxlength="150"></div>
-                                <div><label>${t('Số năm kinh nghiệm', 'Years of experience')}</label><input name="soNamKinhNghiem" type="number" min="0" max="80"></div>
+                                <div><label>${t('Năm bắt đầu hành nghề (số năm kinh nghiệm tính từ đây)', 'Year started practising (years of experience count from it)')}</label><input name="namBatDauHanhNghe" type="number" min="1950" max="${new Date().getFullYear()}"></div>
+                                <div><label>${t('Ngày cấp giấy phép hành nghề', 'Licence issue date')}</label><input name="ngayCapGiayPhep" type="date"></div>
+                                <div><label>${t('Nơi cấp giấy phép', 'Licence issuer')}</label><input name="noiCapGiayPhep" maxlength="200"></div>
+                                <div><label>${t('Ngôn ngữ khám (mã ISO, cách nhau dấu phẩy: vi, en)', 'Consultation languages (ISO codes, comma separated: vi, en)')}</label><input name="ngonNguKham" placeholder="vi, en"></div>
                             </div>
+                            <label>${t('Phạm vi hành nghề', 'Scope of practice')}</label><input name="phamViHanhNghe" maxlength="500">
                             <label>${t('Giới thiệu ngắn (hiện trên thẻ bác sĩ)', 'Short introduction (shown on the doctor card)')}</label><input name="gioiThieuNgan" maxlength="300">
                             <label>${t('Tiểu sử', 'Biography')}</label><textarea name="tieuSu" rows="3" maxlength="5000"></textarea>
                             <label>${t('Quá trình đào tạo (mỗi dòng 1 ý, tối đa 20 ý)', 'Education (one item per line, up to 20 items)')}</label><textarea name="quaTrinhDaoTao" rows="3"></textarea>
                             <label>${t('Quá trình công tác (mỗi dòng 1 ý)', 'Work history (one item per line)')}</label><textarea name="quaTrinhCongTac" rows="3"></textarea>
                             <label>${t('Lĩnh vực khám chữa (mỗi dòng 1 ý)', 'Areas of treatment (one item per line)')}</label><textarea name="linhVucKhamChua" rows="3"></textarea>
+                            <label>${t('Giải thưởng (mỗi dòng 1 ý)', 'Awards (one item per line)')}</label><textarea name="giaiThuong" rows="2"></textarea>
+                            <label>${t('Công trình nghiên cứu (mỗi dòng 1 ý)', 'Research (one item per line)')}</label><textarea name="congTrinhNghienCuu" rows="2"></textarea>
                             <h4>${t('English (bỏ trống mục nào thì người xem tiếng Anh thấy bản tiếng Việt của mục đó; học vị không dịch)',
                                 'English (a field left empty shows its Vietnamese version to English viewers; the academic degree is not translated)')}</h4>
                             <label>${t('Chức vụ (English)', 'Position (English)')}</label><input name="chucVuEn" maxlength="150">
+                            <label>${t('Nơi cấp giấy phép (English)', 'Licence issuer (English)')}</label><input name="noiCapGiayPhepEn" maxlength="200">
+                            <label>${t('Phạm vi hành nghề (English)', 'Scope of practice (English)')}</label><input name="phamViHanhNgheEn" maxlength="500">
                             <label>${t('Giới thiệu ngắn (English)', 'Short introduction (English)')}</label><input name="gioiThieuNganEn" maxlength="300">
                             <label>${t('Tiểu sử (English)', 'Biography (English)')}</label><textarea name="tieuSuEn" rows="3" maxlength="5000"></textarea>
                             <label>${t('Quá trình đào tạo (English, mỗi dòng 1 ý)', 'Education (English, one item per line)')}</label><textarea name="quaTrinhDaoTaoEn" rows="3"></textarea>
                             <label>${t('Quá trình công tác (English, mỗi dòng 1 ý)', 'Work history (English, one item per line)')}</label><textarea name="quaTrinhCongTacEn" rows="3"></textarea>
                             <label>${t('Lĩnh vực khám chữa (English, mỗi dòng 1 ý)', 'Areas of treatment (English, one item per line)')}</label><textarea name="linhVucKhamChuaEn" rows="3"></textarea>
+                            <label>${t('Giải thưởng (English, mỗi dòng 1 ý)', 'Awards (English, one item per line)')}</label><textarea name="giaiThuongEn" rows="2"></textarea>
+                            <label>${t('Công trình nghiên cứu (English, mỗi dòng 1 ý)', 'Research (English, one item per line)')}</label><textarea name="congTrinhNghienCuuEn" rows="2"></textarea>
                             <button>${t('Lưu hồ sơ (ghi đè mọi trường, trường bỏ trống bị xoá trắng)', 'Save profile (overwrites every field, empty fields are cleared)')}</button>
                         </form>
                         <p id="ho-so-bac-si-trang-thai" class="ghi-chu"></p>
@@ -306,7 +326,7 @@
                 const than = {
                     hoTen: v.hoTen.trim(), email: v.email.trim(), soDienThoai: v.soDienThoai.trim() || null, idChuyenKhoa: Number(v.idChuyenKhoa),
                     soGiayPhep: v.soGiayPhep.trim() || null, hocVi: v.hocVi.trim() || null, chucVu: v.chucVu.trim() || null,
-                    soNamKinhNghiem: v.soNamKinhNghiem === '' ? null : Number(v.soNamKinhNghiem),
+                    namBatDauHanhNghe: v.namBatDauHanhNghe === '' ? null : Number(v.namBatDauHanhNghe),
                 };
                 const { status, json } = await goi(QUAN_TRI, than);
                 if (status !== 201) {
@@ -332,17 +352,22 @@
                 taiDanhSach(true);
             });
             khiGui('form-ho-so-bac-si', async (v) => {
-                const than = {
-                    hocVi: v.hocVi.trim() || null, chucVu: v.chucVu.trim() || null,
-                    soNamKinhNghiem: v.soNamKinhNghiem === '' ? null : Number(v.soNamKinhNghiem),
-                    gioiThieuNgan: v.gioiThieuNgan.trim() || null, tieuSu: v.tieuSu.trim() || null,
-                    chucVuEn: v.chucVuEn.trim() || null, gioiThieuNganEn: v.gioiThieuNganEn.trim() || null,
-                    tieuSuEn: v.tieuSuEn.trim() || null,
-                };
+                const than = { phienBan: bacSiDangSua.phienBanHoSo };
+                for (const ten of CAC_O_CHU) than[ten] = v[ten].trim() || null;
+                than.namBatDauHanhNghe = than.namBatDauHanhNghe === null ? null : Number(than.namBatDauHanhNghe);
+                than.ngonNguKham = v.ngonNguKham.split(',').map((ma) => ma.trim()).filter(Boolean);
                 for (const ten of [...CAC_DANH_SACH, ...CAC_DANH_SACH.map((muc) => muc + 'En')]) than[ten] = v[ten].split('\n').map((y) => y.trim()).filter(Boolean);
                 const { status, json } = await goi(`${QUAN_TRI}/${bacSiDangSua.id}/ho-so`, than, 'PUT');
                 if (status !== 200) {
-                    bao('ho-so-bac-si-trang-thai', thongDiepLoi(json, t('Không lưu được hồ sơ bác sĩ.', 'Could not save the doctor profile.')), 'loi');
+                    const loi = thongDiepLoi(json, t('Không lưu được hồ sơ bác sĩ.', 'Could not save the doctor profile.'));
+                    // Bác sĩ (hoặc quản trị viên khác) vừa lưu hồ sơ: tải lại bản mới, nội dung đang nhập trên form bị thay
+                    if (json?.maLoi === 'DU_LIEU_DA_THAY_DOI') {
+                        await moHoSo(bacSiDangSua.id);
+                        bao('ho-so-bac-si-trang-thai', loi + t(' Đã tải lại hồ sơ mới nhất, hãy nhập lại thay đổi.',
+                            ' The latest profile has been reloaded; enter your changes again.'), 'loi');
+                        return;
+                    }
+                    bao('ho-so-bac-si-trang-thai', loi, 'loi');
                     return;
                 }
                 hienHoSo(json.duLieu);

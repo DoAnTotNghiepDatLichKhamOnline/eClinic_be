@@ -2,6 +2,7 @@ package iuh.fit.se.eclinic.identity.dulieumau;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Hồ sơ giới thiệu mẫu của các bác sĩ mẫu, theo số thứ tự trong {@link DuLieuMau#BAC_SI}. Nội dung chỉ để thử / demo.
@@ -14,6 +15,26 @@ import java.util.Map;
  */
 public record HoSoBacSiMau(String chucVu, String gioiThieuNgan, List<String> daoTao, List<String> congTac,
         List<String> linhVuc) {
+
+    /** Bác sĩ mẫu khám được cả tiếng Anh (ngôn ngữ khám "vi,en"); các bác sĩ khác chỉ "vi". */
+    public static final Set<Integer> KHAM_TIENG_ANH = Set.of(1, 3, 5, 9, 10);
+
+    /** Giải thưởng và công trình nghiên cứu mẫu, mỗi phần tử 1 ý; chỉ vài bác sĩ có. */
+    public record GiaiThuongMau(List<String> giaiThuong, List<String> nghienCuu) {
+    }
+
+    public static final Map<Integer, GiaiThuongMau> GIAI_THUONG = Map.of(
+            1, new GiaiThuongMau(
+                    List.of("2019: Bằng khen của Sở Y tế TP. Hồ Chí Minh vì thành tích chuyên môn"),
+                    List.of("2016: Đặc điểm lâm sàng viêm loét dạ dày do Helicobacter pylori ở người trưởng thành")),
+            3, new GiaiThuongMau(
+                    List.of("2018: Thầy thuốc tiêu biểu ngành Nhi thành phố"),
+                    List.of("2015: Hiệu quả của khí dung trong điều trị viêm tiểu phế quản ở trẻ dưới 2 tuổi",
+                            "2020: Tình trạng suy dinh dưỡng ở trẻ dưới 5 tuổi tại khu vực nội thành")),
+            9, new GiaiThuongMau(
+                    List.of("2017: Danh hiệu Thầy thuốc ưu tú", "2021: Giải thưởng nghiên cứu khoa học của Hội Tim mạch"),
+                    List.of("2011: Tỷ lệ tăng huyết áp chưa được kiểm soát ở người trên 60 tuổi",
+                            "2019: Kết quả can thiệp mạch vành qua da ở bệnh nhân đái tháo đường")));
 
     public static final Map<Integer, HoSoBacSiMau> THEO_SO = Map.ofEntries(
             Map.entry(1, new HoSoBacSiMau("Trưởng khoa Nội tổng quát",

@@ -13,6 +13,24 @@ hẹn và chatbot nằm ở [BAN-GIAO-FRONTEND-NGON-NGU-EMAIL-CHATBOT.md](BAN-GI
 API trả về trong tài liệu này (`thongDiep`, tên chuyên khoa, phòng, chức vụ..., câu thông báo) nay theo ngôn ngữ của
 request; hình dạng phản hồi không đổi. Trang mẫu có nút EN | VI và khung chat ở mọi màn hình.
 
+**Thay đổi ngày 14/10/2026 (bệnh án, hàng đợi, danh mục thuốc, hồ sơ bác sĩ).** Bác sĩ chỉ kê thuốc có trong danh mục của
+quản trị viên; sửa hồ sơ bệnh án cần lý do và có lịch sử sửa; trang chủ bác sĩ có hàng đợi khám theo ca; bác sĩ tự sửa 1
+phần hồ sơ giới thiệu. Chi tiết ở 3 mục [Hàng đợi khám](#hàng-đợi-khám-bác-sĩ),
+[Sửa hồ sơ bệnh án và lịch sử sửa](#sửa-hồ-sơ-bệnh-án-và-lịch-sử-sửa) và
+[Hồ sơ bác sĩ: bác sĩ tự sửa](#hồ-sơ-bác-sĩ-bác-sĩ-tự-sửa). Những chỗ frontend **phải** đổi:
+
+| Chỗ | Trước | Bây giờ | Frontend cần làm |
+|---|---|---|---|
+| Dòng đơn thuốc khi ghi / sửa kết quả khám (`POST` / `PUT /api/medical/bac-si/toi/lich-hen/{id}/benh-an`) | `donThuoc[] { tenThuoc, donVi?, ... }`; tên chưa có thì tự thêm vào danh mục (chưa xác minh) | `donThuoc[] { idThuoc, lieuDung?, soLanMoiNgay?, soNgayDung?, ghiChuSuDung? }`, `idThuoc` bắt buộc | Ô thuốc là ô chọn từ gợi ý, gửi `id` của gợi ý. Id không có → 404 `KHONG_TIM_THAY`; thuốc ngừng dùng → 409 `THUOC_NGUNG_DUNG`; chưa xác minh → 409 `THUOC_CHUA_XAC_MINH`; 1 thuốc 2 dòng → 400. Dòng thuốc đã có sẵn trong hồ sơ đang sửa thì giữ được dù thuốc đã ngừng dùng / chưa xác minh |
+| Gợi ý thuốc `GET /api/medical/bac-si/toi/thuoc?tuKhoa=` | `{ id, tenThuoc, donVi, daXacMinh }`, tìm theo tên | `{ id, tenThuoc, hoatChat, hamLuong, dangBaoChe, duongDung, donVi }`, tìm theo tên **hoặc hoạt chất**; chỉ thuốc đang dùng và đã xác minh | Hiện tên + hàm lượng + dạng bào chế / đường dùng để phân biệt (vd Paracetamol 500mg và 250mg). Bỏ nhãn "chưa xác minh" |
+| Mọi chỗ đọc dòng đơn thuốc (`BenhAnResponse.donThuoc[]`, `ketQua.donThuoc[]` ở hồ sơ khám, lịch sử khám, trang cá nhân) | `tenThuoc, donVi, lieuDung, ...` | thêm `idThuoc, hoatChat, hamLuong, duongDung` (null ở thuốc cũ quản trị viên chưa bổ sung) | Hiện hàm lượng cạnh tên thuốc. Form sửa nạp lại `idThuoc` của từng dòng |
+| Thêm / sửa thuốc của quản trị viên (`POST` / `PUT /api/medical/quan-tri/thuoc...`) | `{ tenThuoc, donVi?, moTa? }`, trùng tên → 409 | thêm `hoatChat`, `hamLuong` **bắt buộc**, `dangBaoChe?`, `dangBaoCheEn?`, `duongDung?`; trùng **tên + hàm lượng** → 409 `TEN_THUOC_DA_TON_TAI` | Thêm các ô mới (đường dùng là ô chọn, giá trị ở mục "Patient Management và Medical Catalog"). Xác minh thuốc thiếu hoạt chất / hàm lượng → 409 `THUOC_THIEU_THONG_TIN` |
+| Sửa kết quả khám `PUT .../lich-hen/{id}/benh-an` | Cùng body như `POST`, sửa bao nhiêu lần cũng được | Bắt buộc thêm `lyDoSua` (tối đa 500 ký tự) và `phienBan` (giá trị đang xem). Chỉ sửa được trong 7 ngày kể từ lần lưu đầu | Thêm ô lý do; gửi `phienBan` từ `ketQua` / `BenhAnResponse`. 409 `DU_LIEU_DA_THAY_DOI` → tải lại rồi sửa lại; 409 `HET_HAN_SUA_BENH_AN` hoặc đã quá `hanSua` → form chỉ xem |
+| Ngày tái khám ở quá khứ | 400 lỗi theo trường (`chiTiet`) | 400 `DU_LIEU_KHONG_HOP_LE` từ service, không có `chiTiet` (khi sửa mà giữ nguyên ngày cũ thì vẫn lưu được) | Hiện `thongDiep` |
+| `BenhAnResponse`, `ketQua` ở booking | | `BenhAnResponse` thêm `phienBan`, `ngaySuaCuoi`, `hanSua`. `ketQua` thêm `ngaySuaCuoi` (mọi chỗ); `phienBan`, `hanSua` **chỉ** có ở hồ sơ khám của bác sĩ (không có mặt trong JSON trả cho bệnh nhân) | Hiện "Đã chỉnh sửa lúc …" khi `ngaySuaCuoi` khác null |
+| Thêm bác sĩ `POST /api/catalog/quan-tri/bac-si` | `soNamKinhNghiem?` | `namBatDauHanhNghe?` (năm, từ 1950, không sau năm nay) | Đổi ô "số năm kinh nghiệm" thành "năm bắt đầu hành nghề" |
+| Hồ sơ giới thiệu của quản trị viên `PUT /api/catalog/quan-tri/bac-si/{id}/ho-so` | không có `phienBan`; `soNamKinhNghiem` | bắt buộc `phienBan` (= `phienBanHoSo` đã tải), `namBatDauHanhNghe` thay `soNamKinhNghiem`, thêm giấy phép, ngôn ngữ, giải thưởng, nghiên cứu | 409 `DU_LIEU_DA_THAY_DOI` → tải lại hồ sơ rồi lưu lại. Mọi phản hồi vẫn có `soNamKinhNghiem` (nay suy ra từ năm bắt đầu) |
+
 | Đường dẫn | Vai trò | Màn hình UI | File trong `scripts/demo/man-hinh/` |
 |---|---|---|---|
 | `/login`, `/register`, `/forgot-password`, `/reset-password` | công khai | Authentication | `dang-nhap.js`, `dang-ky.js`, `quen-mat-khau.js`, `dat-lai-mat-khau.js` |
@@ -42,17 +60,17 @@ request; hình dạng phản hồi không đổi. Trang mẫu có nút EN | VI v
 | Patient: Appointment | `GET /api/catalog/chuyen-khoa`, `GET /api/catalog/bac-si`, `GET /api/booking/khung-gio...`, `POST /api/booking/lich-hen` | Mục 2 "Appointment" |
 | Patient: Appointment Ticket | `GET /api/booking/phieu-kham/{ma}`, `POST .../huy`, `POST .../doi-lich` | Mục 2 "Appointment Ticket"; bảng "Bệnh nhân hủy / đổi lịch" |
 | (ngoài UI) lịch hẹn của tôi, kết quả khám, đánh giá | `GET /api/booking/lich-hen/cua-toi...`, `GET /api/booking/lich-su-kham/cua-toi`, `POST / PUT .../danh-gia` | Mục 2 "Lịch hẹn của tôi"; mục "Đánh giá lượt khám" |
-| Doctor: Dashboard | `GET /api/booking/bac-si/toi/tong-quan`, `GET /api/booking/bac-si/toi/lich-hen?ngay=`, `GET /api/booking/bac-si/toi/danh-gia` | Mục "Dashboard"; mục "Đánh giá lượt khám" |
+| Doctor: Dashboard | `GET /api/booking/bac-si/toi/tong-quan`, `GET /api/booking/bac-si/toi/hang-doi?ngay=` (+ gọi khám / vắng mặt), `GET /api/booking/bac-si/toi/danh-gia` | Mục "Dashboard"; mục "Hàng đợi khám"; mục "Đánh giá lượt khám" |
 | Doctor: Work Schedule | `GET /api/booking/bac-si/toi/lich-lam-viec`, `GET .../lich-hen/lich`, `POST /api/booking/bac-si/toi/yeu-cau-doi-lich` | Mục 3; bảng "Ca làm việc và yêu cầu đổi ca / xin nghỉ" |
 | Doctor: Appointment Requests | `GET /api/booking/bac-si/toi/lich-hen/yeu-cau`, `POST .../{id}/xac-nhan`, `POST .../{id}/tu-choi` | Mục 3 |
-| Doctor: Consultation / EMR | `GET .../lich-hen/tra-cuu`, `GET .../{id}/ho-so-kham`, `POST / PUT /api/medical/bac-si/toi/lich-hen/{id}/benh-an`, `GET /api/medical/bac-si/toi/thuoc` | Mục 3 |
-| Doctor: Doctor Profile, menu tài khoản | `GET /api/users/me`, `GET /api/catalog/bac-si/{id}`, `/api/users/me/...` | Mục 3; README "Tài khoản của tôi" |
+| Doctor: Consultation / EMR | `GET .../lich-hen/tra-cuu`, `GET .../{id}/ho-so-kham`, `POST / PUT /api/medical/bac-si/toi/lich-hen/{id}/benh-an`, `GET .../benh-an/lich-su`, `GET /api/medical/bac-si/toi/thuoc` | Mục 3; mục "Sửa hồ sơ bệnh án và lịch sử sửa" |
+| Doctor: Doctor Profile, menu tài khoản | `GET` / `PUT /api/catalog/bac-si/toi/ho-so`, `/api/catalog/bac-si/toi/anh...`, `GET /api/users/me`, `/api/users/me/...` | Mục "Hồ sơ bác sĩ: bác sĩ tự sửa"; README "Tài khoản của tôi" |
 | Chuông thông báo (Doctor, Patient, Admin) | `GET /api/notification/thong-bao`, `GET .../so-chua-doc`, `POST .../{id}/da-doc` | README "Thông báo trong ứng dụng" |
 | Admin: Dashboard | `GET /api/booking/quan-tri/tong-quan` | Mục "Dashboard" |
 | Admin: Schedule Management | `GET / POST / PUT /api/booking/quan-tri/lich-lam-viec...`, `/api/booking/quan-tri/yeu-cau-doi-lich...` | Mục 4; bảng "Ca làm việc và yêu cầu đổi ca / xin nghỉ" |
 | Admin: Medical Catalog | `/api/catalog/chuyen-khoa`, `/api/catalog/quan-tri/phong-kham...`, `/api/medical/quan-tri/thuoc...` | Mục "Patient Management và Medical Catalog" |
 | Admin: Doctor Management | `/api/catalog/quan-tri/bac-si...`, `GET /api/booking/quan-tri/danh-gia?idBacSi=` | Mục "Doctor Management"; mục 4 (hồ sơ, ảnh giới thiệu) |
-| Admin: Patient Management | `/api/booking/quan-tri/ho-so-benh-nhan...` | Mục "Patient Management và Medical Catalog"; mục 4 |
+| Admin: Patient Management | `/api/booking/quan-tri/ho-so-benh-nhan...`, `GET /api/medical/quan-tri/lich-hen/{id}/benh-an/lich-su` | Mục "Patient Management và Medical Catalog"; mục "Sửa hồ sơ bệnh án và lịch sử sửa"; mục 4 |
 | (ngoài UI) quản trị tài khoản | `/api/users...` | README "Tài khoản của tôi và quản trị tài khoản" |
 
 Mọi màn hình trong danh sách UI đều đã có API; riêng ô "System Uptime" của Admin Dashboard không được cung cấp.
@@ -138,7 +156,7 @@ frontend dùng đường dẫn khác thì báo lại để trang mẫu đổi th
 | API | Ai gọi | Ghi chú |
 |---|---|---|
 | `GET /api/catalog/quan-tri/bac-si?tuKhoa=&idChuyenKhoa=&trangThai=&trang=&kichThuoc=` | `QUAN_TRI_VIEN` | Danh bạ bác sĩ, bác sĩ mới thêm đứng trước, **cả bác sĩ ngừng công tác**. `tuKhoa` so với họ tên, email, số điện thoại, số giấy phép. Mỗi dòng: `id`, `maBacSi`, `hoTen`, `email`, `soDienThoai`, `anhDaiDien`, `hocVi`, `soGiayPhep`, `idChuyenKhoa`, `tenChuyenKhoa`, `soLuotDaKham`, `trangThai` (`DANG_CONG_TAC` / `NGUNG_CONG_TAC`), `trangThaiTaiKhoan`, `phaiDoiMatKhau` |
-| `POST /api/catalog/quan-tri/bac-si` | `QUAN_TRI_VIEN` | "Add New Doctor": `{ hoTen, email, soDienThoai?, idChuyenKhoa, soGiayPhep?, hocVi?, chucVu?, soNamKinhNghiem? }` → 201, trả hồ sơ quản trị của bác sĩ. Tạo tài khoản đăng nhập và hồ sơ bác sĩ trong 1 bước |
+| `POST /api/catalog/quan-tri/bac-si` | `QUAN_TRI_VIEN` | "Add New Doctor": `{ hoTen, email, soDienThoai?, idChuyenKhoa, soGiayPhep?, hocVi?, chucVu?, namBatDauHanhNghe? }` → 201, trả hồ sơ quản trị của bác sĩ. Tạo tài khoản đăng nhập và hồ sơ bác sĩ trong 1 bước. `namBatDauHanhNghe` từ 1950, không sau năm nay (400); số năm kinh nghiệm suy ra từ đây |
 | `PUT /api/catalog/quan-tri/bac-si/{id}` | `QUAN_TRI_VIEN` | Thông tin cơ bản, ghi đè cả 4 trường: `{ hoTen, soDienThoai?, idChuyenKhoa, soGiayPhep? }`. Email không sửa ở đây. Hồ sơ giới thiệu vẫn sửa bằng `PUT .../{id}/ho-so` |
 | `GET /api/catalog/quan-tri/bac-si/{id}/anh-huong-ngung-cong-tac` | `QUAN_TRI_VIEN` | `{ soCaSapToi, soLichHenBiAnhHuong }`: hiện cho quản trị viên trước khi xác nhận |
 | `POST /api/catalog/quan-tri/bac-si/{id}/ngung-cong-tac` | `QUAN_TRI_VIEN` | `{ lyDo }` (bắt buộc) → `{ bacSi, soCaDaHuy, soLichHenCanDoi }` |
@@ -175,9 +193,9 @@ frontend dùng đường dẫn khác thì báo lại để trang mẫu đổi th
 | `GET /api/catalog/quan-tri/phong-kham?tuKhoa=&idChuyenKhoa=&trangThai=&trang=&kichThuoc=` | `QUAN_TRI_VIEN` | Medical Catalog: mọi phòng khám theo tên, **cả phòng ngừng hoạt động**: `id`, `tenPhong`, `tang`, `idChuyenKhoa`, `tenChuyenKhoa`, `trangThai` (`HOAT_DONG` / `NGUNG_HOAT_DONG`), `soCaSapToi` |
 | `POST /api/catalog/quan-tri/phong-kham`, `PUT .../{id}` | `QUAN_TRI_VIEN` | `{ tenPhong, tang?, idChuyenKhoa }`; thêm → 201. Trùng tên: 409 `TEN_PHONG_DA_TON_TAI` |
 | `POST /api/catalog/quan-tri/phong-kham/{id}/ngung-hoat-dong`, `POST .../{id}/hoat-dong-lai` | `QUAN_TRI_VIEN` | Phòng ngừng hoạt động không còn trong `GET /api/catalog/phong-kham` và không xếp ca mới vào được |
-| `GET /api/medical/quan-tri/thuoc?tuKhoa=&daXacMinh=&trangThai=&trang=&kichThuoc=` | `QUAN_TRI_VIEN` | Medical Catalog: danh mục thuốc, chưa xác minh trước rồi theo tên: `id`, `tenThuoc`, `donVi`, `moTa`, `daXacMinh`, `trangThai` (`DANG_DUNG` / `NGUNG_DUNG`), `tenBacSiTao`, `soLanKe` |
-| `POST /api/medical/quan-tri/thuoc`, `PUT .../{id}` | `QUAN_TRI_VIEN` | `{ tenThuoc, donVi?, moTa? }`; thêm → 201, thuốc đã xác minh. Trùng tên (không phân biệt hoa thường / khoảng trắng): 409 `TEN_THUOC_DA_TON_TAI` |
-| `POST /api/medical/quan-tri/thuoc/{id}/xac-minh`, `POST .../{id}/ngung-dung`, `POST .../{id}/dung-lai` | `QUAN_TRI_VIEN` | Xác minh thuốc bác sĩ tự thêm khi kê đơn; cho ngừng dùng / dùng lại. Gọi lại nhiều lần không sao |
+| `GET /api/medical/quan-tri/thuoc?tuKhoa=&daXacMinh=&trangThai=&trang=&kichThuoc=` | `QUAN_TRI_VIEN` | Medical Catalog: danh mục thuốc, chưa xác minh trước rồi theo tên: `id`, `tenThuoc`, `hoatChat`, `hamLuong`, `dangBaoChe`, `dangBaoCheEn`, `duongDung`, `donVi`, `donViEn`, `moTa`, `moTaEn`, `daXacMinh`, `trangThai` (`DANG_DUNG` / `NGUNG_DUNG`), `tenBacSiTao`, `soLanKe` |
+| `POST /api/medical/quan-tri/thuoc`, `PUT .../{id}` | `QUAN_TRI_VIEN` | `{ tenThuoc, hoatChat, hamLuong, dangBaoChe?, dangBaoCheEn?, duongDung?, donVi?, donViEn?, moTa?, moTaEn? }`; thêm → 201, thuốc đã xác minh. `duongDung`: `UONG`, `NGAM_DUOI_LUOI`, `TIEM`, `BOI_NGOAI_DA`, `NHO_MAT`, `NHO_TAI`, `NHO_MUI`, `XIT_HIT`, `DAT` (đặt hậu môn / âm đạo), `KHAC` (nhãn do frontend đặt). Trùng **tên + hàm lượng** (không phân biệt hoa thường / khoảng trắng): 409 `TEN_THUOC_DA_TON_TAI` |
+| `POST /api/medical/quan-tri/thuoc/{id}/xac-minh`, `POST .../{id}/ngung-dung`, `POST .../{id}/dung-lai` | `QUAN_TRI_VIEN` | Xác minh thuốc bác sĩ đã tự thêm trước đây (nay bác sĩ không thêm được nữa): thuốc thiếu hoạt chất hoặc hàm lượng → 409 `THUOC_THIEU_THONG_TIN`, bổ sung bằng `PUT` trước. Cho ngừng dùng / dùng lại. Gọi lại nhiều lần không sao |
 
 - **Tìm hồ sơ bệnh nhân.** `tuKhoa` so với họ tên, số điện thoại, số bảo hiểm y tế (chứa từ khoá). Số CCCD chỉ tra được khi
   gõ **đủ 12 số** (khớp hoàn toàn); gõ 1 phần số CCCD không ra kết quả. Danh sách chỉ trả 4 số cuối của CCCD, số đầy đủ có
@@ -185,9 +203,11 @@ frontend dùng đường dẫn khác thì báo lại để trang mẫu đổi th
 - **Phòng khám không xoá được**, chỉ ngừng hoạt động. Phòng còn ca sắp tới (`soCaSapToi > 0`) thì ngừng hoạt động và đổi
   chuyên khoa đều trả 409 `PHONG_CON_CA_LAM_VIEC` (thông điệp có số ca): chuyển các ca đó sang phòng khác bằng
   `PUT /api/booking/quan-tri/lich-lam-viec/{id}` trước. Tên phòng và tầng sửa được bất cứ lúc nào.
-- **Thuốc không xoá và không gộp được.** Thuốc đã có trong đơn thuốc (`soLanKe > 0`) chỉ sửa được cách viết hoa / khoảng
-  trắng của tên; đổi sang tên khác trả 409 `THUOC_DA_DUOC_KE` (dòng đơn thuốc chỉ lưu id thuốc, đổi tên là sửa luôn đơn
-  cũ). Đơn vị và mô tả sửa được bất cứ lúc nào.
+- **Bác sĩ chỉ kê thuốc trong danh mục này**, đang dùng và đã xác minh; bác sĩ không thêm được thuốc mới (thuốc chưa có
+  thì quản trị viên thêm). Thuốc chưa xác minh là thuốc bác sĩ đã tự thêm trước thay đổi ngày 14/10.
+- **Thuốc không xoá và không gộp được.** Thuốc đã có trong đơn thuốc (`soLanKe > 0`) không đổi được tên, hoạt chất, hàm
+  lượng, dạng bào chế, đường dùng nữa (chỉ sửa được cách viết hoa / khoảng trắng của tên); đổi → 409 `THUOC_DA_DUOC_KE`
+  (dòng đơn thuốc chỉ lưu id thuốc, đổi là sửa luôn đơn cũ). Đơn vị và mô tả sửa được bất cứ lúc nào.
 - **Thuốc ngừng dùng** không còn trong gợi ý `GET /api/medical/bac-si/toi/thuoc`, và bác sĩ kê thuốc đó ở đơn mới nhận 409
   `THUOC_NGUNG_DUNG` (thông điệp có tên thuốc). Hồ sơ bệnh án đã có thuốc đó vẫn sửa / lưu lại được với dòng thuốc cũ, và
   bệnh nhân vẫn thấy thuốc trong kết quả khám cũ.
@@ -240,6 +260,75 @@ bảng đánh giá ẩn danh ở Dashboard của bác sĩ và bảng có tên b�
 - `tinhLuc` là thời điểm backend tính các số; số được đếm trực tiếp mỗi lần gọi, không lưu sẵn.
 - "System Uptime" trên Dashboard của quản trị viên **không có API** (đã thống nhất bỏ): frontend ẩn ô này.
 
+### Hàng đợi khám (bác sĩ)
+
+Đặt ở đầu Dashboard của bác sĩ (trang mẫu `bs-tong-quan.js` mở thẳng vào hàng đợi hôm nay, bảng "lịch hẹn hôm nay" cũ
+được thay bằng hàng đợi). `GET /api/booking/bac-si/toi/lich-hen?ngay=` vẫn còn, không đổi.
+
+| API | Ai gọi | Ghi chú |
+|---|---|---|
+| `GET /api/booking/bac-si/toi/hang-doi?ngay=` | `BAC_SI` | `ngay` bỏ trống = hôm nay. `{ ngay, idCaHienTai, tinhLuc, cacCa[] }`; mỗi ca đang hoạt động (giờ bắt đầu sớm nhất trước): `{ idLichLamViec, buoi: SANG \| CHIEU \| TOI, gioBatDau, gioKetThuc, phongKham, soLuong { tong, choKham, dangKham, vangMat, daKham }, idDangKham, idTiepTheo, cacLuot[] }`; mỗi lượt (theo số thứ tự): `{ trangThaiHangDoi, goiLuc, lichHen }`, `lichHen` như dòng danh sách trong ngày (mục 3) |
+| `POST /api/booking/bac-si/toi/hang-doi/goi-tiep?idLichLamViec=` | `BAC_SI` | Gọi người `CHO_KHAM` có số thứ tự nhỏ nhất của ca (không gọi người vắng mặt) |
+| `POST /api/booking/bac-si/toi/lich-hen/{id}/goi-kham` | `BAC_SI` | Gọi 1 người cụ thể: người đang chờ, hoặc gọi lại người vắng mặt; gọi lại người đang khám vẫn 200 |
+| `POST /api/booking/bac-si/toi/lich-hen/{id}/vang-mat` | `BAC_SI` | Đánh dấu vắng mặt; gọi lại được sau. Đã vắng mặt vẫn 200 |
+
+- Mỗi thao tác trả lại toàn bộ hàng đợi hôm nay (cùng dạng `GET`): vẽ lại màn hình từ phản hồi, không gọi thêm.
+- `trangThaiHangDoi`: `CHO_KHAM` (chưa gọi), `DANG_KHAM` (đã gọi vào khám), `VANG_MAT`, `DA_KHAM` (đã ghi kết quả khám:
+  ghi kết quả bằng `POST .../benh-an` là xong lượt, không có nút "khám xong" riêng). Trạng thái hàng đợi tách khỏi
+  `trangThai` của lịch hẹn, không đổi `trangThai`.
+- `buoi` suy ra từ giờ bắt đầu ca: trước 12:00 `SANG`, trước 17:00 `CHIEU`, còn lại `TOI`. `idCaHienTai` = ca nên mở sẵn:
+  hôm nay là ca đang diễn ra, không có thì ca kế tiếp, hết ca thì ca cuối; ngày khác là ca đầu tiên; null khi không có ca.
+- `idDangKham` / `idTiepTheo`: id lịch hẹn đang khám / sẽ được gọi tiếp của ca (`idTiepTheo` chỉ có ở hôm nay).
+- Mỗi bác sĩ chỉ 1 người đang khám mỗi lúc: gọi người khác khi chưa ghi kết quả / chưa đánh dấu vắng mặt người đang khám
+  → 409 `DANG_KHAM_BENH_NHAN_KHAC` (thông điệp có tên và số thứ tự người đang khám). Ca không còn ai chờ → 409
+  `HANG_DOI_TRONG`. Thao tác ở ngày khác hôm nay → 409 `KHONG_PHAI_NGAY_KHAM` (ngày khác chỉ xem). Lịch hẹn đã hủy / đã
+  khám → 409 `LICH_HEN_KHONG_KHAM_DUOC`. Lịch / ca của bác sĩ khác → 404.
+- Không có đẩy realtime: gọi lại `GET hang-doi` khoảng 15 giây 1 lần (trang mẫu làm vậy), giữ tab ca đang chọn.
+
+### Sửa hồ sơ bệnh án và lịch sử sửa
+
+| API | Ai gọi | Ghi chú |
+|---|---|---|
+| `PUT /api/medical/bac-si/toi/lich-hen/{idLichHen}/benh-an` | `BAC_SI` của lượt khám | Body như `POST` cộng `lyDoSua` (bắt buộc, tối đa 500 ký tự) và `phienBan` (bắt buộc: `phienBan` đang xem). 200 trả `BenhAnResponse` với `phienBan` mới |
+| `GET /api/medical/bac-si/toi/lich-hen/{idLichHen}/benh-an/lich-su` | `BAC_SI` | Bác sĩ của lượt khám, hoặc bác sĩ có lịch hẹn với cùng bệnh nhân từ giờ khám đó trở đi (thấy lượt khám này trong "lần khám trước" của hồ sơ khám); không thì 404 |
+| `GET /api/medical/quan-tri/lich-hen/{idLichHen}/benh-an/lich-su` | `QUAN_TRI_VIEN` | Lịch sử của mọi lượt khám (trang mẫu: nút "Lịch sử sửa" ở lịch hẹn đã khám của Patient Management) |
+
+- **Luật sửa.** Sửa được trong `RECORD_EDIT_DAYS` (mặc định 7) ngày **kể từ lần lưu đầu tiên** (`hanSua` trong phản hồi);
+  sau đó hồ sơ chỉ xem → 409 `HET_HAN_SUA_BENH_AN`. Người khác đã sửa trước (gửi `phienBan` cũ) → 409
+  `DU_LIEU_DA_THAY_DOI`: tải lại rồi sửa lại. Nội dung không khác bản đang lưu → 400 `DU_LIEU_KHONG_HOP_LE` (không ghi
+  gì). 2 lần sửa cùng lúc chạy lần lượt, lần sau nhận 409.
+- **Lịch sử:** `{ idLichHen, maTraCuu, phienBanHienTai, ngayGhiNhan, cacLanSua[] }`, mới nhất trước; mỗi lần sửa
+  `{ phienBan, ngaySua, bacSi { id, hoTen }, lyDo, cacTruongDoi[], truoc, sau }`. `cacTruongDoi`: `CHAN_DOAN`, `GHI_CHU`,
+  `NGAY_TAI_KHAM`, `DON_THUOC`; `truoc` / `sau` là toàn bộ nội dung `{ chanDoan, ghiChu, ngayTaiKhamDeXuat, donThuoc[] {
+  idThuoc, tenThuoc, hamLuong, lieuDung, soLanMoiNgay, soNgayDung, ghiChuSuDung } }` để so cũ / mới. Không sửa, không xoá
+  được dòng lịch sử.
+- **Bệnh nhân** chỉ thấy `ketQua.ngaySuaCuoi` ("Đã chỉnh sửa lúc …"), không thấy lý do, nội dung cũ, `phienBan`, `hanSua`.
+- Việc **mở / xem** hồ sơ bệnh án không được ghi lại (chưa làm, đã thống nhất để sau).
+
+### Hồ sơ bác sĩ: bác sĩ tự sửa
+
+| Ai sửa | Mục |
+|---|---|
+| Bác sĩ tự sửa (có hiệu lực ngay, không chờ duyệt) | Ảnh đại diện, số điện thoại (`/api/users/me...`); giới thiệu ngắn, tiểu sử, ngôn ngữ khám, giải thưởng, công trình nghiên cứu (bản VI và EN); ảnh làm việc |
+| Chỉ quản trị viên | Họ tên, email, chuyên khoa, số giấy phép, ngày cấp, nơi cấp, phạm vi hành nghề, học vị, chức vụ, năm bắt đầu hành nghề, quá trình đào tạo, quá trình công tác, lĩnh vực khám chữa, ảnh chứng chỉ, trạng thái. Quản trị viên sửa được cả các mục bác sĩ tự sửa |
+
+| API | Ai gọi | Ghi chú |
+|---|---|---|
+| `GET /api/catalog/bac-si/toi/ho-so` | `BAC_SI` | Hồ sơ của chính bác sĩ, cùng dạng `GET /api/catalog/quan-tri/bac-si/{id}` (đủ 2 ngôn ngữ, có `phienBanHoSo`, `namBatDauHanhNghe`, giấy phép, `anh[]` kèm `loai`). Hiện các mục quản trị viên quản lý dạng chỉ xem |
+| `PUT /api/catalog/bac-si/toi/ho-so` | `BAC_SI` | `{ phienBan, gioiThieuNgan, gioiThieuNganEn, tieuSu, tieuSuEn, ngonNguKham[], giaiThuong[], giaiThuongEn[], congTrinhNghienCuu[], congTrinhNghienCuuEn[] }`, gửi đủ (bỏ trống = xoá trắng); trường khác gửi kèm bị bỏ qua. Trả hồ sơ mới (`phienBanHoSo` + 1) |
+| `POST /api/catalog/bac-si/toi/anh` | `BAC_SI` | Multipart: `anh` (JPEG / PNG / WebP, tối đa 4 MB), `chuThich?`, `chuThichEn?` (tối đa 200 ký tự). Luôn là `ANH_CONG_VIEC`, thêm vào cuối. 201. Tối đa 12 ảnh / bác sĩ (409 `VUOT_SO_ANH_BAC_SI`) |
+| `PUT /api/catalog/bac-si/toi/anh/{idAnh}` | `BAC_SI` | `{ chuThich?, chuThichEn? }`: chỉ đổi chú thích (bỏ trống = xoá). Không đổi thứ tự (quản trị viên sắp xếp) |
+| `DELETE /api/catalog/bac-si/toi/anh/{idAnh}` | `BAC_SI` | Xoá ảnh làm việc của mình |
+
+- **Ảnh chứng chỉ** (`loai = CHUNG_CHI`): bác sĩ sửa / xoá → 403 `KHONG_CO_QUYEN`; ảnh của bác sĩ khác → 404. Trang mẫu ghi
+  "Quản trị viên quản lý" và ẩn nút.
+- **Lưu đè.** Bác sĩ và quản trị viên cùng sửa được các mục trên: mỗi lần lưu gửi `phienBan` = `phienBanHoSo` đã tải; người
+  kia đã lưu trước → 409 `DU_LIEU_DA_THAY_DOI`: tải lại hồ sơ rồi sửa lại. Thêm / sửa / xoá ảnh không cần `phienBan`.
+- **Ngôn ngữ khám** là mã ISO 639 (2–3 chữ cái, vd `vi`, `en`, `fr`), tối đa 10, không phân biệt hoa thường, trùng thì gộp;
+  API trả mảng mã viết thường. Frontend hiện tên ngôn ngữ theo ngôn ngữ giao diện (`Intl.DisplayNames`).
+- **Token.** `GET /api/catalog/bac-si/**` là công khai nên frontend dễ bỏ token cho mọi GET dưới đó; riêng
+  `/api/catalog/bac-si/toi/**` **phải** gửi token (không có → 401). Tài khoản bác sĩ bị vô hiệu hoá mà token còn hạn → 403.
+
 ## 1. Những chỗ frontend phải đổi
 
 | Trên UI 05/10 | Backend | Frontend cần làm |
@@ -261,9 +350,9 @@ bảng đánh giá ẩn danh ở Dashboard của bác sĩ và bảng có tên b�
 | Bước | API | Ghi chú |
 |---|---|---|
 | Chuyên khoa | `GET /api/catalog/chuyen-khoa?kichThuoc=100` | Công khai |
-| Thẻ bác sĩ | `GET /api/catalog/bac-si?idChuyenKhoa=` | `id`, `hoTen`, `anhDaiDien`, `hocVi`, `chucVu`, `soNamKinhNghiem`, `gioiThieuNgan`, `diemDanhGia` (null khi chưa có), `soDanhGia` |
+| Thẻ bác sĩ | `GET /api/catalog/bac-si?idChuyenKhoa=` | `id`, `hoTen`, `anhDaiDien`, `hocVi`, `chucVu`, `soNamKinhNghiem` (suy ra từ năm bắt đầu hành nghề; null khi chưa có), `gioiThieuNgan`, `diemDanhGia` (null khi chưa có), `soDanhGia` |
 | "Ngày sớm nhất còn chỗ" trên thẻ | `GET /api/booking/khung-gio/ngay-som-nhat?idChuyenKhoa=` | `[{ idBacSi, ngay, soChoConLai }]`; ghép với thẻ theo `idBacSi`. Bác sĩ không còn chỗ thì không có dòng |
-| Chi tiết bác sĩ (popup) | `GET /api/catalog/bac-si/{id}` | Thêm `tieuSu` (giới thiệu), `quaTrinhDaoTao[]`, `quaTrinhCongTac[]`, `linhVucKhamChua[]`, `anh[]` gồm `{ id, loai: ANH_CONG_VIEC \| CHUNG_CHI, url, chuThich }` theo đúng thứ tự hiển thị |
+| Chi tiết bác sĩ (popup) | `GET /api/catalog/bac-si/{id}` | Thêm `tieuSu` (giới thiệu), `quaTrinhDaoTao[]`, `quaTrinhCongTac[]`, `linhVucKhamChua[]`, `giaiThuong[]`, `congTrinhNghienCuu[]` (mảng rỗng khi chưa có), `ngonNguKham[]` (mã ISO 639 viết thường, vd `["vi","en"]`: hiện tên ngôn ngữ, vd bằng `Intl.DisplayNames`), khối giấy phép hành nghề `soGiayPhep`, `ngayCapGiayPhep`, `noiCapGiayPhep`, `phamViHanhNghe` (công khai để người bệnh tra cứu; null khi chưa nhập), `anh[]` gồm `{ id, loai: ANH_CONG_VIEC \| CHUNG_CHI, url, chuThich }` theo đúng thứ tự hiển thị |
 | Ngày + giờ của 1 bác sĩ | `GET /api/booking/khung-gio/nhieu-ngay?idBacSi=&tuNgay=&denNgay=` | Tối đa 7 ngày (mặc định hôm nay + 6). Mỗi ca có `idLichLamViec`, `bacSi`, `phongKham`, `khungGio[]` |
 | Ngày còn chỗ (bác sĩ bất kỳ) | `GET /api/booking/khung-gio/ngay-con-cho?tuNgay=&denNgay=&idChuyenKhoa=` | |
 | Giờ gộp (bác sĩ bất kỳ) | `GET /api/booking/khung-gio/gop?idChuyenKhoa=&ngay=` | `[{ gioBatDau, gioKetThuc, tongSoCho, soChoConLai, hetCho, soBacSi }]` |
@@ -343,8 +432,10 @@ người giám hộ đã che thông tin, `canNguoiGiamHoDiCung`.
   với `loc` + `cuaAi`, hoặc lịch sử khám bên dưới.
 - Lịch sử khám: `GET /api/booking/lich-su-kham/cua-toi?cuaAi=TAT_CA|BAN_THAN|NGUOI_KHAC&trang=&kichThuoc=` → các lượt đã
   khám xong, mới nhất trước. Mỗi dòng `{ lichHen, ketQua }`: `lichHen` như dòng "lịch hẹn của tôi", `ketQua { chanDoan,
-  ghiChu, ngayTaiKhamDeXuat, donThuoc[] { tenThuoc, donVi, lieuDung, soLanMoiNgay, soNgayDung, ghiChuSuDung } }` (trường
-  không có giá trị là `null`, không kê đơn thì `donThuoc: []`). `ngayTaiKhamDeXuat` chỉ là gợi ý, không phải lịch hẹn.
+  ghiChu, ngayTaiKhamDeXuat, donThuoc[] { idThuoc, tenThuoc, hoatChat, hamLuong, duongDung, donVi, lieuDung,
+  soLanMoiNgay, soNgayDung, ghiChuSuDung }, ngaySuaCuoi }` (trường không có giá trị là `null`, không kê đơn thì
+  `donThuoc: []`). `ngayTaiKhamDeXuat` chỉ là gợi ý, không phải lịch hẹn. `ngaySuaCuoi` khác null: bác sĩ đã sửa kết quả
+  sau khi lưu, hiện "Đã chỉnh sửa lúc <ngày giờ>"; bệnh nhân không thấy lý do hay nội dung cũ.
 - Khi nào hiện nút "Xem kết quả" ở danh sách lịch hẹn: `trangThai = DA_HOAN_THANH` **và** (`laBanThan` hoặc
   `nguoiDat = TOI`). Chi tiết `GET .../lich-hen/cua-toi/{maPhieuKham}` trả thêm `ketQua` theo đúng quy tắc đó; lịch chỉ
   thấy vì tôi là người giám hộ (người khác đặt) thì `ketQua` không có.
@@ -384,12 +475,12 @@ Cần biết khi thiết kế màn hình và khi viết báo cáo:
 | Appointment Requests: Accept | `POST /api/booking/bac-si/toi/lich-hen/{id}/xac-nhan` (không body) | 200, trả dòng lịch hẹn với `trangThai: DA_XAC_NHAN`. Đã xử lý rồi → 409 `LICH_HEN_KHONG_CHO_XAC_NHAN`; lượt khám đã bắt đầu → 409 `LICH_HEN_DA_QUA_GIO`; lịch của bác sĩ khác → 404 |
 | Appointment Requests: Decline | `POST /api/booking/bac-si/toi/lich-hen/{id}/tu-choi` `{ lyDo }` | `lyDo` bắt buộc, tối đa 500 ký tự (thiếu → 400). 200, trả dòng lịch hẹn với `trangThai: BI_TU_CHOI`, `lyDoHuy`; lượt khám được mở lại cho người khác đặt. Lỗi như Accept. Lịch đã xác nhận không từ chối được |
 | Consultation: nhập mã / quét QR | `GET /api/booking/bac-si/toi/lich-hen/tra-cuu?ma=` | `ma` = `maTraCuu`, `maPhieuKham`, hoặc **cả chuỗi link** máy quét QR trả về (`.../phieu-kham/<mã>`). Lịch của bác sĩ khác → 404 |
-| Hồ sơ khám của bệnh nhân | `GET /api/booking/bac-si/toi/lich-hen/{id}/ho-so-kham` (bấm vào 1 dòng / số thứ tự), `GET /api/booking/bac-si/toi/lich-hen/tra-cuu/ho-so-kham?ma=` (gõ mã / quét QR, `ma` như trên) | Cùng 1 kết quả: `lichHen` (như dòng danh sách), `hoSoBenhNhan { id, cccd, hoTen, ngaySinh, tuoi, gioiTinh, soDienThoai, diaChi, soBaoHiemYTe, tienSuBenhLy, daLienKetTaiKhoan }` (CCCD không che), `lanKhamTruoc[] { idLichHen, maTraCuu, ngay, gioKhamDuKien, bacSi, tenChuyenKhoa, trangThai, lyDoKham, ketQua { chanDoan, ghiChu, ngayTaiKhamDeXuat } }` mới nhất trước, gồm cả lần khám với bác sĩ khác; `ketQua` null khi lần đó chưa có bệnh án. Lịch của bác sĩ khác → 404 |
+| Hồ sơ khám của bệnh nhân | `GET /api/booking/bac-si/toi/lich-hen/{id}/ho-so-kham` (bấm vào 1 dòng / số thứ tự), `GET /api/booking/bac-si/toi/lich-hen/tra-cuu/ho-so-kham?ma=` (gõ mã / quét QR, `ma` như trên) | Cùng 1 kết quả: `lichHen` (như dòng danh sách), `hoSoBenhNhan { id, cccd, hoTen, ngaySinh, tuoi, gioiTinh, soDienThoai, diaChi, soBaoHiemYTe, tienSuBenhLy, daLienKetTaiKhoan }` (CCCD không che), `lanKhamTruoc[] { idLichHen, maTraCuu, ngay, gioKhamDuKien, bacSi, tenChuyenKhoa, trangThai, lyDoKham, ketQua { chanDoan, ghiChu, ngayTaiKhamDeXuat, donThuoc[], ngaySuaCuoi } }` mới nhất trước, gồm cả lần khám với bác sĩ khác; `ketQua` null khi lần đó chưa có bệnh án. Ở hồ sơ khám (cả `ketQua` của lịch hẹn đang mở lẫn `lanKhamTruoc[].ketQua`) mỗi kết quả có thêm `phienBan`, `hanSua` (form sửa dùng `ketQua` của lịch hẹn đang mở). Lịch của bác sĩ khác → 404 |
 | Đối chiếu giấy tờ | `PUT /api/booking/bac-si/toi/lich-hen/{id}/benh-nhan` `{ hoTen, ngaySinh, gioiTinh?, soDienThoai, diaChi?, soBaoHiemYTe?, cccd? }`, `POST .../lich-hen/{id}/da-doi-chieu` | Khi `lichHen.doiChieu.canDoiChieu`: bác sĩ sửa hồ sơ cho đúng giấy tờ (trả lại hồ sơ khám mới; `cccd` chỉ điền được khi hồ sơ chưa có số) rồi bấm "đã đối chiếu". Hai thao tác độc lập |
-| Doctor Profile (chỉ xem) | `GET /api/users/me` | Hồ sơ giới thiệu công khai: `GET /api/catalog/bac-si/{id}` |
-| Consultation: ghi kết quả khám | `POST /api/medical/bac-si/toi/lich-hen/{idLichHen}/benh-an` `{ chanDoan, ghiChu?, ngayTaiKhamDeXuat?, donThuoc?: [{ tenThuoc, donVi?, lieuDung?, soLanMoiNgay?, soNgayDung?, ghiChuSuDung? }] }` | 201; lịch hẹn chuyển sang `DA_HOAN_THANH` cùng lúc. Chỉ với lịch hẹn của chính bác sĩ (khác → 404), còn `CHO_XAC_NHAN` / `DA_XAC_NHAN` (khác → 409 `LICH_HEN_KHONG_KHAM_DUOC`), và từ ngày khám trở đi (sớm hơn → 409 `CHUA_DEN_NGAY_KHAM`). `chanDoan` bắt buộc; `ngayTaiKhamDeXuat` phải sau hôm nay; đơn thuốc tối đa 30 dòng. Tên thuốc chưa có trong danh mục được tự thêm (chưa xác minh) |
-| Consultation: xem / sửa kết quả đã ghi | `GET` / `PUT /api/medical/bac-si/toi/lich-hen/{idLichHen}/benh-an` | `PUT` cùng body như `POST`, thay toàn bộ nội dung và đơn thuốc; lịch hẹn giữ `DA_HOAN_THANH`. Chưa có kết quả → 404. Kết quả cũng hiện ở hồ sơ khám (`ketQua`, và `lanKhamTruoc[].ketQua` kèm `donThuoc[]`) |
-| Consultation: gợi ý tên thuốc | `GET /api/medical/bac-si/toi/thuoc?tuKhoa=` | Tối đa 20 dòng `{ id, tenThuoc, donVi, daXacMinh }`; từ khoá trống → `[]`. Thuốc quản trị viên đã cho ngừng dùng không được gợi ý; kê thuốc đó ở đơn mới: 409 `THUOC_NGUNG_DUNG` |
+| Doctor Profile (xem và tự sửa 1 phần) | `GET` / `PUT /api/catalog/bac-si/toi/ho-so`, `POST /api/catalog/bac-si/toi/anh`, `PUT` / `DELETE .../toi/anh/{idAnh}`; tài khoản: `GET /api/users/me` | Mục "Hồ sơ bác sĩ: bác sĩ tự sửa". Trang công khai của bác sĩ: `GET /api/catalog/bac-si/{id}` |
+| Consultation: ghi kết quả khám | `POST /api/medical/bac-si/toi/lich-hen/{idLichHen}/benh-an` `{ chanDoan, ghiChu?, ngayTaiKhamDeXuat?, donThuoc?: [{ idThuoc, lieuDung?, soLanMoiNgay?, soNgayDung?, ghiChuSuDung? }] }` | 201; lịch hẹn chuyển sang `DA_HOAN_THANH` cùng lúc (hàng đợi hiện `DA_KHAM`). Chỉ với lịch hẹn của chính bác sĩ (khác → 404), còn `CHO_XAC_NHAN` / `DA_XAC_NHAN` (khác → 409 `LICH_HEN_KHONG_KHAM_DUOC`), và từ ngày khám trở đi (sớm hơn → 409 `CHUA_DEN_NGAY_KHAM`). `chanDoan` bắt buộc; `ngayTaiKhamDeXuat` phải sau hôm nay; đơn thuốc tối đa 30 dòng, mỗi thuốc 1 dòng. `idThuoc` lấy từ gợi ý thuốc: bác sĩ không thêm thuốc mới (lỗi ở bảng "Thay đổi ngày 14/10/2026") |
+| Consultation: xem / sửa kết quả đã ghi | `GET` / `PUT /api/medical/bac-si/toi/lich-hen/{idLichHen}/benh-an` | `PUT` như `POST` cộng `lyDoSua`, `phienBan` (bắt buộc), thay toàn bộ nội dung và đơn thuốc; lịch hẹn giữ `DA_HOAN_THANH`. Luật sửa và lịch sử sửa: mục "Sửa hồ sơ bệnh án và lịch sử sửa". Chưa có kết quả → 404. Kết quả cũng hiện ở hồ sơ khám (`ketQua`, và `lanKhamTruoc[].ketQua` kèm `donThuoc[]`) |
+| Consultation: gợi ý thuốc | `GET /api/medical/bac-si/toi/thuoc?tuKhoa=` | Tối đa 20 dòng `{ id, tenThuoc, hoatChat, hamLuong, dangBaoChe, duongDung, donVi }`, khớp tên **hoặc hoạt chất**; từ khoá trống → `[]`. Chỉ thuốc đang dùng và đã xác minh; kê thuốc đã ngừng dùng ở đơn mới: 409 `THUOC_NGUNG_DUNG` |
 | Dashboard: 4 ô số liệu | `GET /api/booking/bac-si/toi/tong-quan` | Mục "Dashboard" ở đầu tài liệu. Lịch mới luôn ở `CHO_XAC_NHAN` cho tới khi bác sĩ xác nhận hoặc ghi kết quả khám |
 
 ## 4. Quản trị viên (vai trò `QUAN_TRI_VIEN`)
@@ -401,7 +492,7 @@ Cần biết khi thiết kế màn hình và khi viết báo cáo:
 | Tra lịch hẹn theo mã | `GET /api/booking/quan-tri/lich-hen/tra-cuu?ma=` | Mỗi lịch hẹn (cả ở danh sách của bác sĩ và của 1 ca) có `idHoSoBenhNhan`, `benhNhan` (dữ liệu của hồ sơ) và `doiChieu` `{ canDoiChieu, hoTenDaNhap, ngaySinhDaNhap, gioiTinhDaNhap, hoTenGiamHoDaNhap }` (những gì người đặt nhập). `canDoiChieu: true` → hiện cảnh báo "thông tin nhập khác hồ sơ, cần đối chiếu giấy tờ" |
 | Đã đối chiếu giấy tờ | `POST /api/booking/quan-tri/lich-hen/{id}/da-doi-chieu` | Bỏ `canDoiChieu` của lịch hẹn; gọi lại vẫn 200 |
 | Patient Management: xem / sửa hồ sơ | `GET /api/booking/quan-tri/ho-so-benh-nhan/{id}`, `PUT .../{id}` `{ hoTen, ngaySinh, gioiTinh?, soDienThoai, diaChi?, soBaoHiemYTe?, cccd? }` | `{id}` là `idHoSoBenhNhan` của lịch hẹn. Số CCCD không che. `cccd` chỉ điền được khi hồ sơ chưa có số: đổi số đã có → 400, số thuộc hồ sơ khác → 409 `XUNG_DOT_DU_LIEU`. Sửa hồ sơ không tự bỏ `canDoiChieu` của lịch hẹn |
-| Doctor Management: hồ sơ giới thiệu | `GET /api/catalog/quan-tri/bac-si/{id}`, `PUT .../{id}/ho-so` | PUT thay toàn bộ: `hocVi`, `chucVu`, `soNamKinhNghiem`, `gioiThieuNgan`, `tieuSu`, `quaTrinhDaoTao[]`, `quaTrinhCongTac[]`, `linhVucKhamChua[]` |
+| Doctor Management: hồ sơ giới thiệu | `GET /api/catalog/quan-tri/bac-si/{id}`, `PUT .../{id}/ho-so` | PUT thay toàn bộ (trường bỏ trống bị xoá trắng): `phienBan` (bắt buộc, = `phienBanHoSo` đã tải), `hocVi`, `chucVu(En)`, `namBatDauHanhNghe`, `ngayCapGiayPhep`, `noiCapGiayPhep(En)`, `phamViHanhNghe(En)`, `gioiThieuNgan(En)`, `tieuSu(En)`, `ngonNguKham[]`, `quaTrinhDaoTao[]`, `quaTrinhCongTac[]`, `linhVucKhamChua[]`, `giaiThuong[]`, `congTrinhNghienCuu[]` (mỗi danh sách có bản `...En`). Bác sĩ cũng tự sửa 1 phần hồ sơ này, nên lưu bằng phiên bản cũ → 409 `DU_LIEU_DA_THAY_DOI`: tải lại rồi lưu lại. GET có thêm `phienBanHoSo`, `namBatDauHanhNghe`, `soNamKinhNghiem` (suy ra) |
 | Doctor Management: ảnh giới thiệu | `POST .../{id}/anh` (multipart: `anh`, `loai`, `chuThich`), `PUT .../{id}/anh/{idAnh}`, `PUT .../{id}/anh/thu-tu` `{ idAnh: [] }`, `DELETE .../{id}/anh/{idAnh}` | Tối đa 12 ảnh / bác sĩ (409 `VUOT_SO_ANH_BAC_SI`), mỗi ảnh tối đa 4 MB (413), JPEG / PNG / WebP |
 | Patient Management: hồ sơ chờ xác minh | `GET /api/booking/quan-tri/ho-so-benh-nhan/cho-xac-minh?trang=&kichThuoc=`, `POST .../{id}/duyet`, `POST .../{id}/tu-choi` `{ lyDo }` | `{id}` là id hồ sơ. Mỗi dòng có `hoSo`, `taiKhoan`, `khopHoTen`, `khopSoDienThoai` để quản trị viên đối chiếu. Tài khoản đang có hồ sơ chờ xác minh thì chưa xoá được: từ chối trước |
 | Medical Catalog: chuyên khoa | `/api/catalog/chuyen-khoa` (CRUD) | Có từ trước |
@@ -417,3 +508,9 @@ Cần biết khi thiết kế màn hình và khi viết báo cáo:
 `SEED_DATA=true`: `admin@eclinic.local` / `Admin@123`; `bacsi01..12@eclinic.local` và `benhnhan01..04@eclinic.local` /
 `Demo@123`. 12 bác sĩ mẫu có đủ hồ sơ giới thiệu và 3 ảnh mẫu (ảnh lấy từ `placehold.co`, cần internet). Trong dữ liệu mẫu,
 2 bác sĩ cùng chuyên khoa làm lệch buổi nhau nên giờ gộp của "bác sĩ bất kỳ" luôn có `soBacSi: 1`.
+
+Từ 14/10/2026 dữ liệu mẫu có thêm 16 thuốc thường dùng đã xác minh (có hoạt chất, hàm lượng, dạng bào chế, đường dùng; vd
+Paracetamol 500mg và Hapacol 250 cùng hoạt chất), và mỗi bác sĩ mẫu có giấy phép hành nghề (ngày cấp, nơi cấp, phạm vi),
+năm bắt đầu hành nghề, ngôn ngữ khám (5 bác sĩ khám được tiếng Anh); bác sĩ 01, 03, 09 có giải thưởng / nghiên cứu. DB đã có dữ liệu mẫu
+từ trước cũng được bổ sung ở lần khởi động tiếp theo với `SEED_DATA=true` (chỉ bác sĩ mẫu chưa có ngôn ngữ khám, thuốc
+mẫu chưa có trong danh mục).

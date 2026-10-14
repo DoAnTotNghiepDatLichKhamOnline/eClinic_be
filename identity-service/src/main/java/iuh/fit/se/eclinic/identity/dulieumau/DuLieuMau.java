@@ -3,10 +3,12 @@ package iuh.fit.se.eclinic.identity.dulieumau;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.Year;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import iuh.fit.se.eclinic.common.enums.DuongDungThuoc;
 import iuh.fit.se.eclinic.common.enums.GioiTinh;
 import iuh.fit.se.eclinic.common.enums.TrangThaiTaiKhoan;
 
@@ -85,6 +87,11 @@ public final class DuLieuMau {
 
         public String email() {
             return "bacsi%02d@eclinic.local".formatted(so);
+        }
+
+        /** Số năm kinh nghiệm mẫu tính tới năm nay (DB chỉ lưu năm bắt đầu hành nghề). */
+        public int namBatDauHanhNghe() {
+            return Year.now().getValue() - soNamKinhNghiem;
         }
 
         public String soDienThoai() {
@@ -211,5 +218,45 @@ public final class DuLieuMau {
             new BenhNhanMau(5, "Hoàng Thị Quyên", TrangThaiTaiKhoan.CHO_XAC_NHAN, null, null),
             new BenhNhanMau(6, "Vũ Đình Sơn", TrangThaiTaiKhoan.VO_HIEU_HOA,
                     "Tài khoản mẫu bị vô hiệu hoá để thử chức năng quản lý tài khoản", null));
+
+    /** 1 thuốc mẫu trong danh mục (đã xác minh, đang dùng); tên + hàm lượng không trùng nhau. */
+    public record ThuocMau(String ten, String hoatChat, String hamLuong, String dangBaoChe, DuongDungThuoc duongDung,
+            String donVi, String moTa) {
+    }
+
+    /** Thuốc ngoại trú thường dùng, để bác sĩ mẫu kê đơn được. Bản tiếng Anh ở {@link DuLieuMauTiengAnh#THUOC}. */
+    public static final List<ThuocMau> THUOC = List.of(
+            new ThuocMau("Paracetamol", "Paracetamol", "500mg", "Viên nén", DuongDungThuoc.UONG, "viên",
+                    "Giảm đau, hạ sốt"),
+            new ThuocMau("Hapacol 250", "Paracetamol", "250mg", "Thuốc bột sủi bọt", DuongDungThuoc.UONG, "gói",
+                    "Hạ sốt, giảm đau cho trẻ em"),
+            new ThuocMau("Amoxicillin", "Amoxicillin", "500mg", "Viên nang", DuongDungThuoc.UONG, "viên",
+                    "Kháng sinh nhóm penicilin"),
+            new ThuocMau("Cefuroxim", "Cefuroxim", "500mg", "Viên nén bao phim", DuongDungThuoc.UONG, "viên",
+                    "Kháng sinh nhóm cephalosporin"),
+            new ThuocMau("Ibuprofen", "Ibuprofen", "400mg", "Viên nén bao phim", DuongDungThuoc.UONG, "viên",
+                    "Kháng viêm, giảm đau, hạ sốt"),
+            new ThuocMau("Loratadin", "Loratadin", "10mg", "Viên nén", DuongDungThuoc.UONG, "viên",
+                    "Chống dị ứng (kháng histamin)"),
+            new ThuocMau("Cetirizin", "Cetirizin", "10mg", "Viên nén bao phim", DuongDungThuoc.UONG, "viên",
+                    "Chống dị ứng (kháng histamin)"),
+            new ThuocMau("Omeprazol", "Omeprazol", "20mg", "Viên nang tan trong ruột", DuongDungThuoc.UONG, "viên",
+                    "Giảm tiết acid dạ dày"),
+            new ThuocMau("Domperidon", "Domperidon", "10mg", "Viên nén", DuongDungThuoc.UONG, "viên",
+                    "Chống nôn, buồn nôn"),
+            new ThuocMau("Salbutamol", "Salbutamol", "100mcg/liều", "Bình xịt định liều", DuongDungThuoc.XIT_HIT,
+                    "bình", "Cắt cơn hen, giãn phế quản"),
+            new ThuocMau("Amlodipin", "Amlodipin", "5mg", "Viên nén", DuongDungThuoc.UONG, "viên",
+                    "Hạ huyết áp"),
+            new ThuocMau("Metformin", "Metformin", "500mg", "Viên nén bao phim", DuongDungThuoc.UONG, "viên",
+                    "Điều trị đái tháo đường type 2"),
+            new ThuocMau("Vitamin C", "Acid ascorbic", "500mg", "Viên nén", DuongDungThuoc.UONG, "viên",
+                    "Bổ sung vitamin C"),
+            new ThuocMau("Oresol", "Natri clorid + Kali clorid + Natri citrat + Glucose khan", "4,22g",
+                    "Thuốc bột pha dung dịch uống", DuongDungThuoc.UONG, "gói", "Bù nước và điện giải"),
+            new ThuocMau("Povidon iod", "Povidon iod", "10%", "Dung dịch dùng ngoài", DuongDungThuoc.BOI_NGOAI_DA,
+                    "chai", "Sát khuẩn da, vết thương"),
+            new ThuocMau("Cloramphenicol", "Cloramphenicol", "0,4%", "Thuốc nhỏ mắt", DuongDungThuoc.NHO_MAT, "lọ",
+                    "Kháng sinh nhỏ mắt"));
 
 }

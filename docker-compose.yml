@@ -208,6 +208,8 @@ services:
       # Ca làm việc: hạn gửi yêu cầu đổi ca / xin nghỉ trước giờ bắt đầu ca, số ngày tới được xếp ca
       SHIFT_REQUEST_LEAD: ${SHIFT_REQUEST_LEAD:-24h}
       SHIFT_MAX_DAYS: ${SHIFT_MAX_DAYS:-90}
+      # Hạn sửa hồ sơ bệnh án (xem .env.example): booking-service trả hạn sửa cho màn hình của bác sĩ
+      RECORD_EDIT_DAYS: ${RECORD_EDIT_DAYS:-7}
       # Thông báo trong ứng dụng: job của booking-service gửi sự kiện sang notification-service (gọi thẳng, không qua
       # gateway). Không khai depends_on: notification-service chưa chạy thì thông báo nằm chờ, booking-service vẫn chạy.
       NOTIFICATION_URL: http://notification-service:8086
@@ -229,6 +231,8 @@ services:
       - "8085:8085"
     environment:
       <<: *moi-truong-chung
+      # Hạn sửa hồ sơ bệnh án (xem .env.example): medical-service chặn sửa sau hạn này
+      RECORD_EDIT_DAYS: ${RECORD_EDIT_DAYS:-7}
     healthcheck:
       <<: *kiem-tra
       test: ["CMD", "curl", "-fsS", "http://localhost:8085/actuator/health"]

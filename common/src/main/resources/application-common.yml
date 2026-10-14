@@ -43,6 +43,10 @@ management:
         include: health,info
 
 app:
+  benh-an:
+    # Bác sĩ sửa được hồ sơ bệnh án trong số ngày này kể từ lúc ghi nhận, sau đó chỉ xem. Đặt ở đây vì medical-service
+    # chặn sửa còn booking-service trả hạn sửa cho màn hình của bác sĩ (BenhAnProperties).
+    so-ngay-duoc-sua: ${RECORD_EDIT_DAYS:7}
   # Kho ảnh Cloudinary (gói miễn phí, không cần thẻ): xem .env.example. Chỉ service đặt app.cloudinary.bat: true mới tạo
   # kho ảnh (identity-service: ảnh đại diện; catalog-service: ảnh giới thiệu bác sĩ). Thiếu 1 trong 3 giá trị đầu:
   # các API tải ảnh lên trả 503, service vẫn khởi động bình thường.

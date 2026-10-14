@@ -12,12 +12,18 @@
 //   PUT  /api/booking/bac-si/toi/lich-hen/{id}/benh-nhan                            sửa hồ sơ bệnh nhân sau khi đối chiếu giấy tờ
 //   POST /api/booking/bac-si/toi/lich-hen/{id}/da-doi-chieu                         bỏ đánh dấu "cần đối chiếu"
 //   POST /api/medical/bac-si/toi/lich-hen/{id}/benh-an                              ghi kết quả khám (lịch hẹn -> DA_HOAN_THANH)
-//   PUT  /api/medical/bac-si/toi/lich-hen/{id}/benh-an                              sửa kết quả khám đã ghi
-//   GET  /api/medical/bac-si/toi/thuoc?tuKhoa=                                      gợi ý tên thuốc khi kê đơn
+//   PUT  /api/medical/bac-si/toi/lich-hen/{id}/benh-an                              sửa kết quả khám đã ghi: kèm lyDoSua và phienBan
+//                                                                                   đang xem; chỉ sửa được trước ketQua.hanSua
+//   GET  /api/medical/bac-si/toi/lich-hen/{id}/benh-an/lich-su                      lịch sử sửa của 1 lượt khám (của mình, hoặc lần
+//                                                                                   khám trước của bệnh nhân đang mở)
+//   GET  /api/medical/bac-si/toi/thuoc?tuKhoa=                                      gợi ý thuốc kê được theo tên hoặc hoạt chất:
+//                                                                                   id, tenThuoc, hoatChat, hamLuong, dangBaoChe, duongDung, donVi
+// Đơn thuốc chỉ chọn thuốc trong danh mục: mỗi dòng gửi idThuoc (thuốc đã có trong đơn đang sửa giữ nguyên id cũ).
 // QR: dùng BarcodeDetector nếu trình duyệt có, không thì thư viện jsQR tải từ CDN (cần internet).
 (() => {
     let hoSoKham = null;                   // hồ sơ khám đang mở
     let luongCamera = null, henQuet = null, henGoiY = null;
+    const goiYTheoChu = new Map();         // chữ hiện trong ô thuốc -> thuốc gợi ý (để lấy id)
 
     const KHUNG = () => `
         <section>
@@ -71,12 +77,14 @@
                 <label>${t('Chẩn đoán', 'Diagnosis')}</label><textarea name="chanDoan" rows="2" required maxlength="5000"></textarea>
                 <label>${t('Lời dặn', 'Doctor\'s advice')}</label><textarea name="ghiChu" rows="2" maxlength="5000"></textarea>
                 <div class="hai-cot"><div><label>${t('Ngày tái khám đề xuất', 'Suggested follow-up date')}</label><input name="ngayTaiKhamDeXuat" type="date"></div></div>
-                <label>${t('Đơn thuốc (tên thuốc · đơn vị · liều dùng · lần/ngày · số ngày · ghi chú)', 'Prescription (medicine name · unit · dosage · times/day · days · note)')}</label>
+                <label>${t('Đơn thuốc (thuốc trong danh mục · liều dùng · lần/ngày · số ngày · ghi chú) — gõ tên thuốc hoặc hoạt chất rồi chọn trong danh sách', 'Prescription (catalog medicine · dosage · times/day · days · note) — type a medicine name or active ingredient, then pick from the list')}</label>
                 <div id="don-thuoc"></div>
                 <datalist id="goi-y-thuoc"></datalist>
+                <div id="khoi-ly-do-sua" class="an"><label>${t('Lý do sửa (bắt buộc, lưu vào lịch sử sửa)', 'Reason for the change (required, kept in the edit history)')}</label><textarea name="lyDoSua" rows="2" maxlength="500"></textarea></div>
                 <div class="hai-cot"><button type="button" id="nut-them-thuoc" class="phu">${t('Thêm dòng thuốc', 'Add a medicine row')}</button><button id="nut-luu-ket-qua">${t('Lưu kết quả khám', 'Save visit result')}</button></div>
             </form>
             <p id="bs-ket-qua-trang-thai" class="ghi-chu"></p>
+            <div id="bs-lich-su-sua"></div>
             <h3>${t('Các lần khám trước', 'Previous visits')}</h3>
             <div id="bs-lan-kham-truoc"></div>
             </div>
@@ -170,7 +178,11 @@
         const kq = hs.ketQua;
         const fk = $('form-ket-qua');
         const khamDuoc = ['CHO_XAC_NHAN', 'DA_XAC_NHAN'].includes(lich.trangThai);
-        $('tieu-de-ket-qua').textContent = kq ? t('Kết quả khám đã ghi (sửa được)', 'Recorded visit result (editable)') : t('Ghi kết quả khám', 'Record the visit result');
+        // Quá hạn sửa: chỉ xem (server cũng chặn, 409 HET_HAN_SUA_BENH_AN)
+        const daKhoa = !!kq && new Date(kq.hanSua) < new Date();
+        $('tieu-de-ket-qua').textContent = !kq ? t('Ghi kết quả khám', 'Record the visit result')
+            : daKhoa ? t('Kết quả khám đã ghi (đã khóa, chỉ xem)', 'Recorded visit result (locked, read-only)')
+                : t('Kết quả khám đã ghi (sửa được)', 'Recorded visit result (editable)');
         fk.classList.toggle('an', !kq && !khamDuoc);
         if (!kq && !khamDuoc) {
             bao('bs-ket-qua-trang-thai', t('Lịch hẹn đã hủy hoặc bị từ chối: không ghi kết quả khám được.',
@@ -183,12 +195,26 @@
         (kq ? kq.donThuoc : []).forEach(themDongThuoc);
         $('nut-luu-ket-qua').textContent = kq ? t('Lưu thay đổi', 'Save changes')
             : t('Lưu kết quả khám (lịch hẹn chuyển sang đã hoàn thành)', 'Save visit result (the appointment becomes completed)');
+        $('khoi-ly-do-sua').classList.toggle('an', !kq || daKhoa);
+        fk.elements.lyDoSua.value = '';
+        fk.elements.lyDoSua.required = !!kq && !daKhoa;
+        for (const el of fk.elements) el.disabled = daKhoa;
+        if (daKhoa) {
+            bao('bs-ket-qua-trang-thai', t(`Đã khóa từ ${ngayGioVn(kq.hanSua)}: hồ sơ bệnh án chỉ còn xem được.`,
+                `Locked since ${ngayGioVn(kq.hanSua)}: the medical record is read-only.`));
+        } else if (kq) {
+            bao('bs-ket-qua-trang-thai', t(`Sửa được đến ${ngayGioVn(kq.hanSua)}. Mỗi lần sửa cần ghi lý do và được lưu vào lịch sử sửa.`,
+                `Editable until ${ngayGioVn(kq.hanSua)}. Each change needs a reason and is kept in the edit history.`));
+        }
+        const lichSu = (idLichHen) => `/api/medical/bac-si/toi/lich-hen/${idLichHen}/benh-an/lich-su`;
+        $('bs-lich-su-sua').replaceChildren(...(kq ? [nut(t('Lịch sử sửa', 'Edit history'), (e) => batTatLichSuSua(e.currentTarget, lichSu(lich.id)))] : []));
 
         const truoc = hs.lanKhamTruoc.map((lan) => {
             const khoi = the('div', null, 'lan-kham');
             khoi.append(the('b', `${ngayGioVn(lan.gioKhamDuKien)} · ${t('BS', 'Dr.')} ${lan.bacSi.hoTen} (${lan.tenChuyenKhoa}) · ${TRANG_THAI[lan.trangThai] || lan.trangThai}`),
                 the('p', lan.lyDoKham ? t('Lý do khám: ', 'Reason for visit: ') + lan.lyDoKham : null, 'ghi-chu'),
                 lan.ketQua ? ketQuaKham(lan.ketQua) : ghiChu(t('Chưa có kết quả khám.', 'No visit result yet.')));
+            if (lan.ketQua && lan.ketQua.ngaySuaCuoi) khoi.append(nut(t('Lịch sử sửa', 'Edit history'), (e) => batTatLichSuSua(e.currentTarget, lichSu(lan.idLichHen))));
             return khoi;
         });
         $('bs-lan-kham-truoc').replaceChildren(...(truoc.length ? truoc
@@ -207,10 +233,18 @@
             return i;
         };
         const muc = thuoc || {};
-        const ten = o('tenThuoc', muc.tenThuoc, null, t('Tên thuốc', 'Medicine name'));
+        // Ô chọn thuốc: không gửi chữ, chỉ gửi id của thuốc đã chọn (hang.dataset.idThuoc)
+        const ten = o('chonThuoc', thuoc ? moTaThuoc(muc) : '', null, t('Tên thuốc hoặc hoạt chất', 'Medicine name or active ingredient'));
+        ten.className = 'chon-thuoc';
+        if (thuoc) hang.dataset.idThuoc = muc.idThuoc;
         ten.setAttribute('list', 'goi-y-thuoc');
-        ten.addEventListener('input', () => goiYThuoc(ten.value));
-        hang.append(ten, o('donVi', muc.donVi, null, t('Đơn vị', 'Unit')), o('lieuDung', muc.lieuDung, null, t('Liều dùng', 'Dosage')),
+        ten.addEventListener('input', () => {
+            const daChon = goiYTheoChu.get(ten.value);
+            if (daChon) hang.dataset.idThuoc = daChon.id;
+            else { delete hang.dataset.idThuoc; goiYThuoc(ten.value); }
+            ten.classList.toggle('chua-chon', !hang.dataset.idThuoc && ten.value.trim() !== '');
+        });
+        hang.append(ten, o('lieuDung', muc.lieuDung, null, t('Liều dùng', 'Dosage')),
             o('soLanMoiNgay', muc.soLanMoiNgay, 'number', t('Lần/ngày', 'Times/day')),
             o('soNgayDung', muc.soNgayDung, 'number', t('Số ngày', 'Days')), o('ghiChuSuDung', muc.ghiChuSuDung, null, t('Ghi chú', 'Note')),
             nut(t('Xóa', 'Remove'), () => hang.remove()));
@@ -224,21 +258,29 @@
             if (status !== 200 || !$('goi-y-thuoc')) return;
             $('goi-y-thuoc').replaceChildren(...json.duLieu.map((muc) => {
                 const lc = document.createElement('option');
-                lc.value = muc.tenThuoc;
-                lc.label = (muc.donVi || '') + (muc.daXacMinh ? '' : t(' (chưa xác minh)', ' (not verified)'));
+                lc.value = moTaThuoc(muc);
+                goiYTheoChu.set(lc.value, muc);
                 return lc;
             }));
         }, 250);
     }
+    // Trả null nếu có dòng đã nhập nhưng chưa chọn thuốc trong danh sách gợi ý; dòng để trống hết thì bỏ qua
     function docDonThuoc() {
-        return [...$('don-thuoc').children].map((hang) => {
+        const cacDong = [];
+        for (const hang of $('don-thuoc').children) {
             const thuoc = {};
             for (const o of hang.querySelectorAll('input')) {
                 const giaTri = o.value.trim();
-                if (giaTri) thuoc[o.dataset.truong] = o.type === 'number' ? Number(giaTri) : giaTri;
+                if (giaTri && o.dataset.truong !== 'chonThuoc') thuoc[o.dataset.truong] = o.type === 'number' ? Number(giaTri) : giaTri;
             }
-            return thuoc;
-        }).filter((thuoc) => Object.keys(thuoc).length);
+            const coChu = hang.querySelector('.chon-thuoc').value.trim() !== '';
+            if (!hang.dataset.idThuoc) {
+                if (coChu || Object.keys(thuoc).length) return null;
+                continue;
+            }
+            cacDong.push({ idThuoc: Number(hang.dataset.idThuoc), ...thuoc });
+        }
+        return cacDong;
     }
 
     // ===== QR: camera, ảnh, hoặc gõ / dán mã =====
@@ -379,6 +421,15 @@
                 const id = hoSoKham.lichHen.id;
                 const than = thanForm(e.target, ['chanDoan', 'ghiChu', 'ngayTaiKhamDeXuat']);
                 than.donThuoc = docDonThuoc();
+                if (!than.donThuoc) {
+                    bao('bs-ket-qua-trang-thai', t('Có dòng thuốc chưa chọn thuốc trong danh mục: gõ tên rồi chọn trong danh sách gợi ý, hoặc xóa dòng đó.',
+                        'A prescription row has no catalog medicine: type a name and pick it from the suggestions, or remove the row.'), 'loi');
+                    return;
+                }
+                if (hoSoKham.ketQua) {
+                    than.lyDoSua = e.target.elements.lyDoSua.value;
+                    than.phienBan = hoSoKham.ketQua.phienBan;
+                }
                 const { status, json } = await goi(`/api/medical/bac-si/toi/lich-hen/${id}/benh-an`, than, hoSoKham.ketQua ? 'PUT' : 'POST');
                 if (status !== 200 && status !== 201) {
                     bao('bs-ket-qua-trang-thai', thongDiepLoi(json, t('Không lưu được kết quả khám.', 'Could not save the visit result.')), 'loi');

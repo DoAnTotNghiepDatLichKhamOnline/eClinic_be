@@ -14,6 +14,7 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 
 import iuh.fit.se.eclinic.common.entity.booking.LichHen;
+import iuh.fit.se.eclinic.common.enums.TrangThaiHangDoi;
 import iuh.fit.se.eclinic.common.enums.TrangThaiLichHen;
 import jakarta.persistence.LockModeType;
 
@@ -165,6 +166,35 @@ public interface LichHenRepository extends JpaRepository<LichHen, Long> {
             order by k.gioBatDau asc, l.id asc
             """)
     List<LichHen> timCuaBacSiTrongKhoang(Long idBacSi, LocalDateTime tu, LocalDateTime den);
+
+    /** Id lịch hẹn của 1 ca đang chờ gọi vào khám, số thứ tự nhỏ nhất trước (hàng đợi khám). Đọc không khoá. */
+    @Query("""
+            select l.id from LichHen l
+            where l.khungGio.lichLamViec.id = :idLichLamViec
+              and l.trangThaiHangDoi = :choKham
+              and l.trangThai in :trangThai
+              and l.canDoiLich = false
+            order by l.soThuTu asc, l.id asc
+            """)
+    List<Long> timIdChoKhamCuaCa(Long idLichLamViec, TrangThaiHangDoi choKham, Collection<TrangThaiLichHen> trangThai,
+            Limit limit);
+
+    /**
+     * Lịch hẹn khác (trừ {@code idTru}) của bác sĩ đang khám mà chưa ghi nhận kết quả, giờ khám trong [tu, den). Đọc
+     * không khoá: nơi gọi giữ khoá dòng bác sĩ.
+     */
+    @Query("""
+            select l from LichHen l
+            where l.bacSi.id = :idBacSi
+              and l.trangThaiHangDoi = :dangKham
+              and l.trangThai in :trangThai
+              and l.canDoiLich = false
+              and l.khungGio.gioBatDau >= :tu
+              and l.khungGio.gioBatDau < :den
+              and l.id <> :idTru
+            """)
+    List<LichHen> timDangKhamCuaBacSi(Long idBacSi, TrangThaiHangDoi dangKham, Collection<TrangThaiLichHen> trangThai,
+            LocalDateTime tu, LocalDateTime den, Long idTru);
 
     /** Id các lịch hẹn của 1 ca đang ở 1 trong các trạng thái cho trước. Đọc không khoá. */
     @Query("select l.id from LichHen l where l.khungGio.lichLamViec.id = :idLichLamViec and l.trangThai in :trangThai")

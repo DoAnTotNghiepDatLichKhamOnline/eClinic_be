@@ -132,7 +132,7 @@ HELP.md
 # Plan files written by /pm, /p, /s
 /cycles/
 # Second-opinion reviewer transcripts and topic registry
-/temp/seop/
+/temp/
 # Reviewer provider profiles hold live API keys
 seop-providers.json
 

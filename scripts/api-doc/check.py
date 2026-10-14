@@ -161,8 +161,26 @@ def cac_record(loai):
     for service in ("catalog", "booking", "notification", "chatbot"):
         for tep in sorted((GOC / GOI_JAVA.format(service) / "dto" / loai).glob("*.java")):
             ma = tep.read_text(encoding="utf-8")
-            ket_qua += [truong_cua_record(ma, ten) for ten in re.findall(r"\brecord (\w+)\(", ma)]
+            for ten in re.findall(r"\brecord (\w+)\(", ma):
+                truong = truong_cua_record(ma, ten)
+                ket_qua.append(truong)
+                # Trường @JsonInclude(NON_NULL) vắng hẳn khỏi JSON khi null: mẫu không có các trường đó cũng khớp
+                bo_duoc = truong_khong_null(ma, ten)
+                if bo_duoc:
+                    ket_qua.append([t for t in truong if t not in bo_duoc])
     return ket_qua
+
+
+def truong_khong_null(ma, ten):
+    """Tên các thành phần của `record ten(...)` có @JsonInclude(... NON_NULL): vắng khỏi JSON khi giá trị null."""
+    m = re.search(rf"\brecord {ten}\(", ma)
+    vi_tri, sau = m.end(), 1
+    while sau:
+        sau += {"(": 1, ")": -1}.get(ma[vi_tri], 0)
+        vi_tri += 1
+    than = re.sub(r"/\*.*?\*/|//[^\n]*", "", ma[m.end():vi_tri - 1], flags=re.S)
+    return {re.sub(r"@\w+(\([^()]*\))?", "", phan).split()[-1]
+            for phan in re.split(r",(?![^<]*>)(?![^()]*\))", than) if "NON_NULL" in phan}
 
 
 def cac_object(gia_tri):

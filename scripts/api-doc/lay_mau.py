@@ -342,12 +342,18 @@ def cua_toi(token, token_ad, toi_bn, id_ca, khung, ngay, ma_khach):
         token=token_bs, mong=200)
     goi("bac-si-tu-choi", "POST", f"/api/booking/bac-si/toi/lich-hen/{id_cua(bi_tu_choi['maTraCuu'])}/tu-choi",
         {"lyDo": "Bác sĩ có lịch hội chẩn đột xuất, mời bạn đặt khung giờ khác"}, token=token_bs, mong=200)
+    def id_thuoc(tu_khoa, ham_luong):
+        """Dòng đơn thuốc chỉ nhận id thuốc trong danh mục: lấy id từ gợi ý thuốc của bác sĩ (thuốc mẫu)."""
+        _, goi_y = goi("bac-si-goi-y-thuoc", "GET", f"/api/medical/bac-si/toi/thuoc?tuKhoa={tu_khoa}", token=token_bs,
+                       mong=200)
+        return next(t["id"] for t in goi_y["duLieu"] if t["tenThuoc"] == tu_khoa and t["hamLuong"] == ham_luong)
+
     benh_an = {"chanDoan": "Viêm họng cấp", "ghiChu": "Uống nhiều nước ấm, nghỉ ngơi; tái khám nếu sốt trên 38,5 độ.",
                "ngayTaiKhamDeXuat": (date.today() + timedelta(days=7)).isoformat(),
-               "donThuoc": [{"tenThuoc": "Paracetamol 500mg", "donVi": "viên", "lieuDung": "1 viên / lần",
+               "donThuoc": [{"idThuoc": id_thuoc("Paracetamol", "500mg"), "lieuDung": "1 viên / lần",
                              "soLanMoiNgay": 3, "soNgayDung": 5, "ghiChuSuDung": "Uống sau ăn, khi sốt hoặc đau"},
-                            {"tenThuoc": "Nước muối sinh lý 0,9%", "donVi": "chai", "lieuDung": "Súc họng",
-                             "soLanMoiNgay": 3, "soNgayDung": 5, "ghiChuSuDung": None}]}
+                            {"idThuoc": id_thuoc("Oresol", "4,22g"), "lieuDung": "1 gói pha 200 ml nước",
+                             "soLanMoiNgay": 3, "soNgayDung": 3, "ghiChuSuDung": None}]}
     goi("loi-bac-si-kham-truoc-ngay", "POST", f"/api/medical/bac-si/toi/lich-hen/{id_lich}/benh-an", benh_an,
         token=token_bs, mong=409)
     ma_kham, ma_dk = da_kham["maPhieuKham"], dinh_ky["maPhieuKham"]

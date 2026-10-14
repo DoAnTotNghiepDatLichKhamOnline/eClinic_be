@@ -8,7 +8,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 import iuh.fit.se.eclinic.common.entity.medical.Thuoc;
@@ -17,23 +16,24 @@ import jakarta.persistence.LockModeType;
 
 public interface ThuocRepository extends JpaRepository<Thuoc, Long> {
 
-    Optional<Thuoc> findByTenChuanHoa(String tenChuanHoa);
-
     /**
-     * Đọc có khoá (SELECT ... FOR SHARE): luôn thấy bản ghi mới nhất đã commit,
-     * kể cả khi transaction hiện tại đã có snapshot cũ (REPEATABLE READ).
+     * Gợi ý khi bác sĩ gõ: chỉ thuốc kê được (đang dùng, đã xác minh), khớp tên đã chuẩn hoá hoặc hoạt chất (collation
+     * của DB không phân biệt hoa thường, dấu), theo tên rồi hàm lượng.
+     *
+     * @param mau mẫu LIKE (escape '!')
      */
-    @Lock(LockModeType.PESSIMISTIC_READ)
-    @Query("select t from Thuoc t where t.tenChuanHoa = :tenChuanHoa")
-    Optional<Thuoc> findByTenChuanHoaForShare(String tenChuanHoa);
+    @Query("""
+            select t from Thuoc t
+            where t.trangThai = iuh.fit.se.eclinic.common.enums.TrangThaiThuoc.DANG_DUNG
+              and t.daXacMinh = true
+              and (t.tenChuanHoa like :mau escape '!' or t.hoatChat like :mau escape '!')
+            order by t.tenThuoc asc, t.hamLuong asc, t.id asc
+            """)
+    List<Thuoc> goiYKeDon(String mau, Pageable pageable);
 
-    /** Gợi ý tên thuốc khi bác sĩ gõ; chỉ thuốc ở trạng thái đã cho (thuốc ngừng dùng không được gợi ý). */
-    List<Thuoc> findTop20ByTenChuanHoaContainingAndTrangThaiOrderByTenThuocAsc(String keyword,
-            TrangThaiThuoc trangThai);
+    boolean existsByTenChuanHoaAndHamLuongChuanHoa(String tenChuanHoa, String hamLuongChuanHoa);
 
-    boolean existsByTenChuanHoa(String tenChuanHoa);
-
-    boolean existsByTenChuanHoaAndIdNot(String tenChuanHoa, Long id);
+    boolean existsByTenChuanHoaAndHamLuongChuanHoaAndIdNot(String tenChuanHoa, String hamLuongChuanHoa, Long id);
 
     /** Khoá dòng thuốc khi quản trị viên sửa / đổi trạng thái, để 2 thao tác cùng lúc chạy lần lượt. */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
@@ -41,9 +41,9 @@ public interface ThuocRepository extends JpaRepository<Thuoc, Long> {
     Optional<Thuoc> findByIdForUpdate(Long id);
 
     /**
-     * Danh mục thuốc của quản trị viên: thuốc chưa xác minh trước, rồi theo tên; kèm bác sĩ đã thêm (nếu có).
+     * Danh mục thuốc của quản trị viên: thuốc chưa xác minh trước, rồi theo tên, hàm lượng; kèm bác sĩ đã thêm (nếu có).
      *
-     * @param mau       mẫu LIKE (escape '!') so với tên đã chuẩn hoá; null = không lọc
+     * @param mau       mẫu LIKE (escape '!') so với tên đã chuẩn hoá hoặc hoạt chất; null = không lọc
      * @param daXacMinh null = cả hai
      * @param trangThai null = mọi trạng thái
      */
@@ -51,13 +51,13 @@ public interface ThuocRepository extends JpaRepository<Thuoc, Long> {
             select t from Thuoc t
               left join fetch t.bacSiTao b
               left join fetch b.taiKhoan
-            where (:mau is null or t.tenChuanHoa like :mau escape '!')
+            where (:mau is null or t.tenChuanHoa like :mau escape '!' or t.hoatChat like :mau escape '!')
               and (:daXacMinh is null or t.daXacMinh = :daXacMinh)
               and (:trangThai is null or t.trangThai = :trangThai)
-            order by t.daXacMinh asc, t.tenThuoc asc, t.id asc
+            order by t.daXacMinh asc, t.tenThuoc asc, t.hamLuong asc, t.id asc
             """, countQuery = """
             select count(t) from Thuoc t
-            where (:mau is null or t.tenChuanHoa like :mau escape '!')
+            where (:mau is null or t.tenChuanHoa like :mau escape '!' or t.hoatChat like :mau escape '!')
               and (:daXacMinh is null or t.daXacMinh = :daXacMinh)
               and (:trangThai is null or t.trangThai = :trangThai)
             """)
@@ -80,16 +80,5 @@ public interface ThuocRepository extends JpaRepository<Thuoc, Long> {
 
     @Query("select count(c) from ChiTietDonThuoc c where c.thuoc.id = :idThuoc")
     long demSoLanKe(Long idThuoc);
-
-    /**
-     * Thêm thuốc nếu chưa có; trùng ten_chuan_hoa thì bỏ qua (không ném lỗi, không làm hỏng transaction).
-     */
-    @Modifying
-    @Query(value = """
-            INSERT INTO thuoc (ten_thuoc, ten_chuan_hoa, don_vi, da_xac_minh, id_bac_si_tao)
-            VALUES (:tenThuoc, :tenChuanHoa, :donVi, FALSE, :idBacSiTao)
-            ON DUPLICATE KEY UPDATE id_thuoc = id_thuoc
-            """, nativeQuery = true)
-    int insertIfAbsent(String tenThuoc, String tenChuanHoa, String donVi, Long idBacSiTao);
 
 }

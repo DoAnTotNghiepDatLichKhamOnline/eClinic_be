@@ -114,9 +114,29 @@ public class AnhBacSiServiceImpl implements AnhBacSiService {
     }
 
     @Override
+    public AnhBacSiQuanTriResponse capNhatChuThichAnhCongViec(Long idBacSi, Long idAnh, String chuThich,
+            String chuThichEn) {
+        return transactionTemplate.execute(trangThai -> {
+            AnhBacSi anh = timAnhCongViec(idBacSi, idAnh);
+            anh.setChuThich(bacSiMapper.chuanHoa(chuThich));
+            anh.setChuThichEn(bacSiMapper.chuanHoa(chuThichEn));
+            return bacSiMapper.toAnhQuanTriResponse(anh);
+        });
+    }
+
+    @Override
     public void xoa(Long idBacSi, Long idAnh) {
+        xoa(idBacSi, idAnh, false);
+    }
+
+    @Override
+    public void xoaAnhCongViec(Long idBacSi, Long idAnh) {
+        xoa(idBacSi, idAnh, true);
+    }
+
+    private void xoa(Long idBacSi, Long idAnh, boolean chiAnhCongViec) {
         String ma = transactionTemplate.execute(trangThai -> {
-            AnhBacSi anh = timAnh(idBacSi, idAnh);
+            AnhBacSi anh = chiAnhCongViec ? timAnhCongViec(idBacSi, idAnh) : timAnh(idBacSi, idAnh);
             anhBacSiRepository.delete(anh);
             return anh.getMaLuuTru();
         });
@@ -143,6 +163,15 @@ public class AnhBacSiServiceImpl implements AnhBacSiService {
     private AnhBacSi timAnh(Long idBacSi, Long idAnh) {
         return anhBacSiRepository.findByIdAndBacSiId(idAnh, idBacSi)
                 .orElseThrow(() -> new LoiKhongTimThay("AnhBacSi", idAnh));
+    }
+
+    /** Ảnh chứng chỉ: bác sĩ xem được nhưng chỉ quản trị viên sửa / xoá. */
+    private AnhBacSi timAnhCongViec(Long idBacSi, Long idAnh) {
+        AnhBacSi anh = timAnh(idBacSi, idAnh);
+        if (anh.getLoai() != LoaiAnhBacSi.ANH_CONG_VIEC) {
+            throw new LoiNghiepVu(MaLoi.KHONG_CO_QUYEN, "loi.KHONG_CO_QUYEN.anhChungChi");
+        }
+        return anh;
     }
 
     /** Lỗi kho ảnh không ném ra: dòng trong DB đã xoá / chưa từng có, chỉ còn ảnh thừa trong kho phải xoá tay. */

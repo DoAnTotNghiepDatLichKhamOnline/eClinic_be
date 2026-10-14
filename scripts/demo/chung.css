@@ -64,6 +64,10 @@ label.tren-dong { display: inline; font-weight: normal; margin-right: 6px; }
 .o-so { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
 .o-so > div { border: 1px solid #d5d9e2; border-radius: 8px; padding: 10px; }
 .o-so b { display: block; font-size: 1.4rem; }
+/* Hàng đợi khám trên trang chủ bác sĩ */
+.dang-kham { border-left: 4px solid #1a7f37; background: #f0fff4; padding: 8px 12px; border-radius: 6px; margin: 8px 0; }
+.dang-kham b { font-size: 1.1rem; }
+tr.dang-kham-dong { background: #f0fff4; } tr.da-kham-dong { color: #57606a; }
 @media (max-width: 760px) { #than { display: block; } #thanh-ben { width: auto; border-right: 0; border-bottom: 1px solid #d5d9e2; } }
 
 /* ===== Danh sách "nhãn: giá trị" ===== */
@@ -93,7 +97,8 @@ label.tren-dong { display: inline; font-weight: normal; margin-right: 6px; }
 .chu-thich span { display: inline-block; margin-right: 14px; font-size: .85rem; }
 .chu-thich i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 4px; vertical-align: -1px; }
 .lan-kham { border-top: 1px solid #d5d9e2; padding: 8px 0; }
-.dong-thuoc { display: grid; grid-template-columns: 2fr 1fr 1.4fr .8fr .8fr 1.6fr auto; gap: 0 6px; }
+.dong-thuoc { display: grid; grid-template-columns: 3fr 1.4fr .8fr .8fr 1.6fr auto; gap: 0 6px; }
+.dong-thuoc .chua-chon { border-color: #cf222e; }
 .fc { font-size: .88rem; } .fc-event { cursor: pointer; }
 
 /* ===== Tài khoản ===== */

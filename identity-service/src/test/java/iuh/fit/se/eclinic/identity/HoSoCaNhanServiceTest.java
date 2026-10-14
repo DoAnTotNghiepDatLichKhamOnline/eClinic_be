@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.LocalDate;
+import java.time.Year;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -114,7 +115,7 @@ class HoSoCaNhanServiceTest {
         bacSi.setTaiKhoan(taiKhoan);
         bacSi.setChuyenKhoa(chuyenKhoa);
         bacSi.setHocVi("ThS.BS");
-        bacSi.setSoNamKinhNghiem(9);
+        bacSi.setNamBatDauHanhNghe(Year.now().getValue() - 9);
         bacSi.setTieuSu("Tiểu sử");
         fixtures.persist(bacSi);
 
