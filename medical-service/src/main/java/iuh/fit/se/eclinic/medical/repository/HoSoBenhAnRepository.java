@@ -12,9 +12,10 @@ public interface HoSoBenhAnRepository extends JpaRepository<HoSoBenhAn, Long> {
 
     Optional<HoSoBenhAn> findByLichHenId(Long lichHenId);
 
-    /** Hồ sơ bệnh án của 1 lịch hẹn kèm các dòng đơn thuốc và thuốc. */
+    /** Hồ sơ bệnh án của 1 lịch hẹn kèm các dòng đơn thuốc, thuốc và mã ICD-10. */
     @Query("""
             select distinct b from HoSoBenhAn b
+            left join fetch b.icdChinh
             left join fetch b.chiTietDonThuoc c
             left join fetch c.thuoc
             where b.lichHen.id = :lichHenId

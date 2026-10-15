@@ -22,8 +22,8 @@ Mọi đường dẫn API dưới đây đi qua gateway (`http://localhost:8080`
 | Chọn ngôn ngữ của 1 request | Header `Accept-Language: en` (hoặc `en-US`...) = tiếng Anh. Không gửi, hoặc ngôn ngữ khác = tiếng Việt như trước |
 | Cái gì đổi theo header | `thongDiep` (lỗi, thành công), `chiTiet[].thongDiep` (lỗi từng trường), lỗi 401 / 403 và lỗi của gateway; nội dung danh mục (mục 1.3); câu thông báo trên chuông (mục 1.4); câu chào / câu cố định của chatbot |
 | Cái gì KHÔNG đổi | `maLoi` (frontend rẽ nhánh theo mã này, không theo câu chữ), tên trường, giá trị enum, mã HTTP |
-| Không bao giờ dịch | Họ tên người (bệnh nhân, bác sĩ, người giám hộ), học vị (`hocVi`), tên thuốc, mã tra cứu, và mọi chữ người dùng tự gõ: lý do khám, lý do hủy / từ chối, nhận xét đánh giá, chẩn đoán, lời dặn, ghi chú đơn thuốc, tin nhắn chat. Hiển thị nguyên văn ở cả 2 ngôn ngữ |
-| Enum (`CHO_XAC_NHAN`, `NAM`, `XIN_NGHI`...) | API trả mã; nhãn hiển thị là việc của frontend. Bảng nhãn 2 ngôn ngữ của trang demo ở đầu `scripts/demo/chung.js` |
+| Không bao giờ dịch | Họ tên người (bệnh nhân, bác sĩ, người giám hộ), học vị (`hocVi`), tên thuốc, mã tra cứu, và mọi chữ người dùng tự gõ: lý do khám, lý do hủy, nhận xét đánh giá, khám lâm sàng, chẩn đoán, bệnh kèm theo, lời dặn, ghi chú đơn thuốc, tin nhắn chat. Tên mã ICD-10 (`icdChinh.ten`) thì theo `Accept-Language`. Hiển thị nguyên văn ở cả 2 ngôn ngữ |
+| Enum (`DA_XAC_NHAN`, `NAM`, `XIN_NGHI`...) | API trả mã; nhãn hiển thị là việc của frontend. Bảng nhãn 2 ngôn ngữ của trang demo ở đầu `scripts/demo/chung.js` |
 
 Frontend nên gửi `Accept-Language` ở **mọi** request (kể cả request công khai), và sau khi người dùng đổi ngôn ngữ thì tải
 lại dữ liệu đang hiển thị: câu chữ từ API không tự đổi ở phía trình duyệt.
@@ -87,9 +87,10 @@ Frontend không gọi API nào để gửi email; phần này để biết ngư�
 
 | Email | Khi nào gửi | Nút trong email mở |
 |---|---|---|
-| Đã nhận yêu cầu đặt lịch | Ngay sau `POST /api/booking/lich-hen` (khách hoặc tài khoản). Nói rõ lịch đang **chờ bác sĩ xác nhận** | Phiếu khám: `linkPhieuKham` |
+| Đặt lịch khám thành công | Ngay sau `POST /api/booking/lich-hen` (khách hoặc tài khoản). Nói rõ lịch **đã được xác nhận** (từ 15/10/2026; trước đó là "đã nhận yêu cầu", chờ bác sĩ xác nhận) | Phiếu khám: `linkPhieuKham` |
 | Đã đổi lịch | Sau khi bệnh nhân đổi lịch: 1 email cho lịch mới (mã mới) | Phiếu khám mới |
-| Nhắc lịch khám | Trước giờ khám 3 ngày và 1 ngày, chỉ gửi trong 07:00 đến 21:00. Lịch chưa được xác nhận vẫn nhắc, với câu nói rõ điều đó. Lịch đã hủy, bị từ chối, đang chờ đổi (`canDoiLich`) không nhắc; đặt sát giờ thì bỏ mốc đã qua | Phiếu khám |
+| Bác sĩ hủy lịch (`email.bacSiHuy`) | Ngay khi bác sĩ hủy 1 lịch đã xác nhận, trước giờ khám, kèm lý do (lịch thành `BI_TU_CHOI`). Gửi tới cùng địa chỉ liên hệ như email đặt lịch. Có từ 15/10/2026 | Phiếu khám: lý do hủy ghi trên phiếu |
+| Nhắc lịch khám | Trước giờ khám 3 ngày và 1 ngày, chỉ gửi trong 07:00 đến 21:00. Lịch đã hủy, bác sĩ đã hủy, đang chờ đổi (`canDoiLich`) không nhắc; đặt sát giờ thì bỏ mốc đã qua | Phiếu khám |
 | Bác sĩ hẹn tái khám / đổi ngày tái khám | Trong vòng 5 phút sau khi bác sĩ ghi hoặc sửa `ngayTaiKhamDeXuat` (xoá ngày thì không gửi gì) | Trang đặt lịch |
 | Nhắc tái khám | 7 ngày trước ngày tái khám; bỏ qua khi bệnh nhân đã có lịch hẹn sắp tới cùng chuyên khoa | Trang đặt lịch |
 

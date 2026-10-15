@@ -26,11 +26,10 @@ import lombok.RequiredArgsConstructor;
 @Transactional(readOnly = true)
 public class TongQuanServiceImpl implements TongQuanService {
 
-    /** Lịch hẹn không còn là 1 lượt khám của ngày: đã hủy, đã hủy do đổi lịch, bị bác sĩ từ chối. */
+    /** Lịch hẹn không còn là 1 lượt khám của ngày: đã hủy, đã hủy do đổi lịch, bác sĩ đã hủy. */
     private static final List<TrangThaiLichHen> KHONG_TINH = List.of(TrangThaiLichHen.DA_HUY,
             TrangThaiLichHen.DA_HUY_DO_DOI_LICH, TrangThaiLichHen.BI_TU_CHOI);
-    private static final List<TrangThaiLichHen> CHUA_KHAM = List.of(TrangThaiLichHen.CHO_XAC_NHAN,
-            TrangThaiLichHen.DA_XAC_NHAN);
+    private static final List<TrangThaiLichHen> CHUA_KHAM = List.of(TrangThaiLichHen.DA_XAC_NHAN);
 
     private final LichHenRepository lichHenRepository;
     private final TaiKhoanChiDocRepository taiKhoanChiDocRepository;
@@ -51,7 +50,7 @@ public class TongQuanServiceImpl implements TongQuanService {
                 lichHenRepository.demCuaBacSiTrongKhoangThuoc(idBacSi, dauNgay, cuoiNgay,
                         List.of(TrangThaiLichHen.DA_HOAN_THANH)),
                 danhGia.diemTrungBinh(), danhGia.soDanhGia(),
-                lichHenRepository.demYeuCauChoXacNhan(idBacSi, TrangThaiLichHen.CHO_XAC_NHAN, bayGio), bayGio);
+                lichHenRepository.demSapToiCuaBacSi(idBacSi, TrangThaiLichHen.DA_XAC_NHAN, bayGio), bayGio);
     }
 
     @Override

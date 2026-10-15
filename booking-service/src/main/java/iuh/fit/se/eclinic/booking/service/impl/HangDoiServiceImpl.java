@@ -49,12 +49,11 @@ import lombok.extern.slf4j.Slf4j;
 @Transactional(readOnly = true)
 public class HangDoiServiceImpl implements HangDoiService {
 
-    /** Lịch hẹn có mặt trong hàng đợi (DA_HOAN_THANH hiện là đã khám). */
-    private static final Set<TrangThaiLichHen> TRONG_HANG_DOI = EnumSet.of(TrangThaiLichHen.CHO_XAC_NHAN,
-            TrangThaiLichHen.DA_XAC_NHAN, TrangThaiLichHen.DA_HOAN_THANH);
+    /** Lịch hẹn có mặt trong hàng đợi (DA_HOAN_THANH hiện là đã khám, KHONG_DEN của ngày đã qua hiện là vắng mặt). */
+    private static final Set<TrangThaiLichHen> TRONG_HANG_DOI = EnumSet.of(TrangThaiLichHen.DA_XAC_NHAN,
+            TrangThaiLichHen.DA_HOAN_THANH, TrangThaiLichHen.KHONG_DEN);
     /** Lịch hẹn còn khám được (như KhamBenhServiceImpl ở medical-service). */
-    private static final Set<TrangThaiLichHen> KHAM_DUOC = EnumSet.of(TrangThaiLichHen.CHO_XAC_NHAN,
-            TrangThaiLichHen.DA_XAC_NHAN);
+    private static final Set<TrangThaiLichHen> KHAM_DUOC = EnumSet.of(TrangThaiLichHen.DA_XAC_NHAN);
 
     private final TaiKhoanService taiKhoanService;
     private final BacSiChiDocRepository bacSiChiDocRepository;

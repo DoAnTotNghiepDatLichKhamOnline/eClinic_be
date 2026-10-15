@@ -9,7 +9,10 @@ public enum TrangThaiHangDoi {
     CHO_KHAM,
     /** Bác sĩ đã gọi vào khám; mỗi bác sĩ chỉ 1 lượt như vậy chưa khám xong trong ngày. */
     DANG_KHAM,
-    /** Đã gọi mà bệnh nhân không có mặt; bác sĩ gọi lại được. */
+    /**
+     * Đã gọi mà bệnh nhân không có mặt; bác sĩ gọi lại được trong ngày. Cũng là giá trị hiển thị của lịch hẹn KHONG_DEN
+     * (ngày đã qua, không lưu vào cột).
+     */
     VANG_MAT,
     /** Đã ghi nhận kết quả khám. Chỉ để hiển thị, suy ra từ lịch hẹn DA_HOAN_THANH; không bao giờ lưu vào cột. */
     DA_KHAM

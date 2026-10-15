@@ -141,3 +141,6 @@ seop-providers.json
 # ==========================================
 /*.docx
 /yeu-cau-toan-dien-dat-lich-kham-benh.md
+
+# Python bytecode cache (scripts/api-doc)
+__pycache__/

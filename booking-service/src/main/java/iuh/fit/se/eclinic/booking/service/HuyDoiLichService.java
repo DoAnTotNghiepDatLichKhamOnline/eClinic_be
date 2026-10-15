@@ -13,7 +13,7 @@ import iuh.fit.se.eclinic.booking.dto.response.PhieuKhamResponse;
  * <li>cầm link phiếu khám ({@code ...TheoPhieu}): nhập đúng SĐT liên hệ của lượt khám. Thiếu / sai dạng:
  * DU_LIEU_KHONG_HOP_LE; không khớp: SO_DIEN_THOAI_KHONG_KHOP. Mã phiếu khám không có: KHONG_TIM_THAY.</li>
  * </ul>
- * Chung cho cả hai: chỉ lịch CHO_XAC_NHAN / DA_XAC_NHAN (khác: LICH_HEN_KHONG_HUY_DOI_DUOC) và còn cách giờ khám ít nhất
+ * Chung cho cả hai: chỉ lịch DA_XAC_NHAN (khác: LICH_HEN_KHONG_HUY_DOI_DUOC) và còn cách giờ khám ít nhất
  * {@code app.dat-lich.huy-doi-truoc-toi-thieu} (khác: QUA_HAN_HUY_DOI_LICH). Lượt khám cũ được mở lại cho người khác đặt.
  */
 public interface HuyDoiLichService {
@@ -22,7 +22,7 @@ public interface HuyDoiLichService {
     PhieuKhamResponse huyCuaToi(Long idTaiKhoan, String maPhieuKham, String lyDo);
 
     /**
-     * Lịch cũ -> DA_HUY_DO_DOI_LICH, tạo lịch mới CHO_XAC_NHAN với phiếu khám mới, trong 1 transaction. Ném thêm
+     * Lịch cũ -> DA_HUY_DO_DOI_LICH, tạo lịch mới DA_XAC_NHAN với phiếu khám mới, trong 1 transaction. Ném thêm
      * VUOT_SO_LAN_DOI_LICH và các mã của {@link DatLichService#datLaiTuLichCu}.
      */
     DatLichResponse doiCuaToi(Long idTaiKhoan, String maPhieuKham, DoiLichRequest request);

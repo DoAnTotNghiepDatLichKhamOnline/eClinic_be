@@ -41,11 +41,14 @@ const chuCua = (x) => (x instanceof CapChu ? x.toString() : x);
 const nhan = (bang) => new Proxy(bang, { get: (goc, khoa, noiNhan) => chuCua(Reflect.get(goc, khoa, noiNhan)) });
 
 const TRANG_THAI = nhan({
-    CHO_XAC_NHAN: cap('Chờ xác nhận', 'Pending confirmation'), DA_XAC_NHAN: cap('Đã xác nhận', 'Confirmed'),
-    BI_TU_CHOI: cap('Bị từ chối', 'Declined'), DA_HOAN_THANH: cap('Đã hoàn thành', 'Completed'),
+    DA_XAC_NHAN: cap('Đã xác nhận', 'Confirmed'),
+    BI_TU_CHOI: cap('Bác sĩ đã hủy', 'Cancelled by doctor'), DA_HOAN_THANH: cap('Đã hoàn thành', 'Completed'),
     DA_HUY: cap('Đã hủy', 'Cancelled'), DA_HUY_DO_DOI_LICH: cap('Đã hủy do đổi lịch', 'Cancelled (rescheduled)'),
+    KHONG_DEN: cap('Không đến', 'No-show'),
 });
 const DA_HUY = ['BI_TU_CHOI', 'DA_HUY', 'DA_HUY_DO_DOI_LICH'];
+// Lịch không còn khám: đã hủy (các kiểu) hoặc đã đóng là không đến (job đóng ngày khám, sang ngày hôm sau); tô cùng màu
+const KHONG_CON_KHAM = [...DA_HUY, 'KHONG_DEN'];
 // Hàng đợi khám của bác sĩ: buổi của ca (theo giờ bắt đầu) và trạng thái trong hàng đợi (DA_KHAM = đã ghi nhận kết quả khám)
 const BUOI = nhan({ SANG: cap('Ca sáng', 'Morning shift'), CHIEU: cap('Ca chiều', 'Afternoon shift'), TOI: cap('Ca tối', 'Evening shift') });
 const HANG_DOI = nhan({
@@ -454,16 +457,32 @@ async function taoLich(el, nguon, tuyChon) {
 }
 
 // ===== Khối dùng ở nhiều màn hình =====
-// Kết quả khám: chẩn đoán, lời dặn, đơn thuốc (màn hình bệnh nhân và bác sĩ)
+// Sinh hiệu trên 1 dòng: "Mạch 80/phút · Nhiệt độ 37.5 °C · HA 120/80 mmHg · …"; null nếu chưa đo chỉ số nào
+function sinhHieuChu(sh) {
+    if (!sh) return null;
+    const co = (giaTri) => giaTri !== null && giaTri !== undefined;
+    return [co(sh.mach) ? t(`Mạch ${sh.mach}/phút`, `Pulse ${sh.mach}/min`) : null,
+        co(sh.nhietDo) ? t(`Nhiệt độ ${sh.nhietDo} °C`, `Temperature ${sh.nhietDo} °C`) : null,
+        co(sh.huyetApTamThu) ? t(`HA ${sh.huyetApTamThu}/${sh.huyetApTamTruong} mmHg`, `BP ${sh.huyetApTamThu}/${sh.huyetApTamTruong} mmHg`) : null,
+        co(sh.nhipTho) ? t(`Nhịp thở ${sh.nhipTho}/phút`, `Breathing ${sh.nhipTho}/min`) : null,
+        co(sh.canNang) ? t(`Cân nặng ${sh.canNang} kg`, `Weight ${sh.canNang} kg`) : null,
+        co(sh.chieuCao) ? t(`Chiều cao ${sh.chieuCao} cm`, `Height ${sh.chieuCao} cm`) : null].filter(Boolean).join(' · ') || null;
+}
+// "J06.9 — Nhiễm trùng đường hô hấp trên cấp… (mạn tính)"
+const icdChu = (icd) => icd ? `${icd.ma} — ${icd.ten}` + (icd.manTinh ? t(' (mạn tính)', ' (chronic)') : '') : null;
+// Kết quả khám: lý do khám, sinh hiệu, khám lâm sàng, chẩn đoán, lời dặn, đơn thuốc (màn hình bệnh nhân và bác sĩ)
 function ketQuaKham(ketQua) {
     const khung = the('div');
     if (ketQua.ngaySuaCuoi) khung.append(ghiChu(t(`Đã chỉnh sửa lúc ${ngayGioVn(ketQua.ngaySuaCuoi)}`, `Edited on ${ngayGioVn(ketQua.ngaySuaCuoi)}`)));
-    khung.append(thongTin([[t('Chẩn đoán', 'Diagnosis'), ketQua.chanDoan], [t('Lời dặn', 'Doctor\'s advice'), ketQua.ghiChu],
+    khung.append(thongTin([[t('Lý do khám', 'Reason for visit'), ketQua.lyDoKham], [t('Sinh hiệu', 'Vital signs'), sinhHieuChu(ketQua.sinhHieu)],
+        [t('Khám lâm sàng', 'Examination findings'), ketQua.khamLamSang],
+        [t('Chẩn đoán', 'Diagnosis'), ketQua.chanDoan], [t('Mã ICD-10', 'ICD-10 code'), icdChu(ketQua.icdChinh)],
+        [t('Chẩn đoán kèm theo', 'Secondary diagnoses'), ketQua.chanDoanKemTheo], [t('Lời dặn', 'Doctor\'s advice'), ketQua.ghiChu],
         [t('Ngày tái khám đề xuất', 'Suggested follow-up date'), ketQua.ngayTaiKhamDeXuat ? ngayVn(ketQua.ngayTaiKhamDeXuat) : null]]));
     if (ketQua.donThuoc && ketQua.donThuoc.length) {
         khung.append(bang([t('Thuốc', 'Medicine'), t('Liều dùng', 'Dosage'), t('Lần/ngày', 'Times/day'), t('Số ngày', 'Days'),
-            t('Ghi chú', 'Note')], ketQua.donThuoc.map((thuoc) => dong([
-            moTaThuoc(thuoc), thuoc.lieuDung, thuoc.soLanMoiNgay, thuoc.soNgayDung,
+            t('Số lượng', 'Quantity'), t('Ghi chú', 'Note')], ketQua.donThuoc.map((thuoc) => dong([
+            moTaThuoc(thuoc), thuoc.lieuDung, thuoc.soLanMoiNgay, thuoc.soNgayDung, thuoc.soLuong,
             thuoc.ghiChuSuDung]))));
     } else {
         khung.append(ghiChu(t('Không kê đơn thuốc.', 'No prescription.')));
@@ -474,16 +493,23 @@ function ketQuaKham(ketQua) {
 // Lịch sử sửa hồ sơ bệnh án (bác sĩ: GET /api/medical/bac-si/toi/lich-hen/{id}/benh-an/lich-su; quản trị viên:
 // GET /api/medical/quan-tri/lich-hen/{id}/benh-an/lich-su). Mỗi lần sửa: ai, lúc nào, lý do, và chỉ phần đã đổi (trước -> sau).
 const TRUONG_BENH_AN = nhan({
-    CHAN_DOAN: cap('Chẩn đoán', 'Diagnosis'), GHI_CHU: cap('Lời dặn', 'Doctor\'s advice'),
+    LY_DO_KHAM: cap('Lý do khám', 'Reason for visit'), SINH_HIEU: cap('Sinh hiệu', 'Vital signs'),
+    KHAM_LAM_SANG: cap('Khám lâm sàng', 'Examination findings'), CHAN_DOAN_KEM_THEO: cap('Chẩn đoán kèm theo', 'Secondary diagnoses'),
+    CHAN_DOAN: cap('Chẩn đoán (kèm mã ICD-10)', 'Diagnosis (with ICD-10 code)'), GHI_CHU: cap('Lời dặn', 'Doctor\'s advice'),
     NGAY_TAI_KHAM: cap('Ngày tái khám đề xuất', 'Suggested follow-up date'), DON_THUOC: cap('Đơn thuốc', 'Prescription'),
 });
 function noiDungTruong(noiDung, truong) {
-    if (truong === 'CHAN_DOAN') return noiDung.chanDoan || '—';
+    // Lịch sử ghi trước khi có các trường mới không có các trường đó: hiện "—"
+    if (truong === 'LY_DO_KHAM') return noiDung.lyDoKham || '—';
+    if (truong === 'SINH_HIEU') return sinhHieuChu(noiDung.sinhHieu) || '—';
+    if (truong === 'KHAM_LAM_SANG') return noiDung.khamLamSang || '—';
+    if (truong === 'CHAN_DOAN_KEM_THEO') return noiDung.chanDoanKemTheo || '—';
+    if (truong === 'CHAN_DOAN') return (noiDung.chanDoan || '—') + (noiDung.maIcdChinh ? ` [${noiDung.maIcdChinh}]` : '');
     if (truong === 'GHI_CHU') return noiDung.ghiChu || '—';
     if (truong === 'NGAY_TAI_KHAM') return noiDung.ngayTaiKhamDeXuat ? ngayVn(noiDung.ngayTaiKhamDeXuat) : '—';
     if (!noiDung.donThuoc || !noiDung.donThuoc.length) return ghiChu(t('Không kê đơn thuốc.', 'No prescription.'));
-    return bang([t('Thuốc', 'Medicine'), t('Liều dùng', 'Dosage'), t('Lần/ngày', 'Times/day'), t('Số ngày', 'Days'), t('Ghi chú', 'Note')],
-        noiDung.donThuoc.map((d) => dong([[d.tenThuoc, d.hamLuong].filter(Boolean).join(' '), d.lieuDung, d.soLanMoiNgay, d.soNgayDung, d.ghiChuSuDung])));
+    return bang([t('Thuốc', 'Medicine'), t('Liều dùng', 'Dosage'), t('Lần/ngày', 'Times/day'), t('Số ngày', 'Days'), t('Số lượng', 'Quantity'), t('Ghi chú', 'Note')],
+        noiDung.donThuoc.map((d) => dong([[d.tenThuoc, d.hamLuong].filter(Boolean).join(' '), d.lieuDung, d.soLanMoiNgay, d.soNgayDung, d.soLuong, d.ghiChuSuDung])));
 }
 function lichSuSuaBenhAn(duLieu) {
     const khung = the('div', null, 'lich-su-sua');
@@ -529,14 +555,14 @@ function khoiHuyDoi({ lich, canSoDienThoai, gui, khiXong }) {
     // canDoiLich: ca khám đã bị hủy; hủy / đổi được tới giờ khám cũ và không tính vào số lần đổi lịch
     if (lich.canDoiLich) khung.append(the('p', CAN_DOI_LICH, 'canh-bao'));
     if (!lich.duocHuyDoi) {
-        khung.append(ghiChu(['CHO_XAC_NHAN', 'DA_XAC_NHAN'].includes(lich.trangThai)
+        khung.append(ghiChu(lich.trangThai === 'DA_XAC_NHAN'
             ? t(`Không hủy / đổi được trên hệ thống (hạn chót: ${ngayGioVn(lich.hanHuyDoi)}, hoặc tài khoản này không phải người đặt / người khám). Vui lòng liên hệ phòng khám.`,
                 `This appointment cannot be cancelled or rescheduled online (deadline: ${ngayGioVn(lich.hanHuyDoi)}, or this account is neither the booker nor the patient). Please contact the clinic.`)
             : t('Lịch hẹn này không còn hủy / đổi được.', 'This appointment can no longer be cancelled or rescheduled.')));
         return khung;
     }
-    khung.append(ghiChu(t(`Hủy / đổi được đến ${ngayGioVn(lich.hanHuyDoi)}. Đổi lịch = hủy lịch này và tạo lịch mới (chờ xác nhận, phiếu khám mới).`,
-        `Can be cancelled or rescheduled until ${ngayGioVn(lich.hanHuyDoi)}. Rescheduling cancels this appointment and creates a new one (pending confirmation, new ticket).`)));
+    khung.append(ghiChu(t(`Hủy / đổi được đến ${ngayGioVn(lich.hanHuyDoi)}. Đổi lịch = hủy lịch này và tạo lịch mới (xác nhận ngay, phiếu khám mới).`,
+        `Can be cancelled or rescheduled until ${ngayGioVn(lich.hanHuyDoi)}. Rescheduling cancels this appointment and creates a new one (confirmed at once, new ticket).`)));
     const trangThai = ghiChu('');
     const oSdt = the('input');
     if (canSoDienThoai) {
@@ -606,7 +632,7 @@ function hienPhieu(khung, phieu) {
     them(t('Số thứ tự', 'Queue number'), phieu.soThuTu, 'so-thu-tu');
     them(t('Trạng thái', 'Status'), TRANG_THAI[phieu.trangThai] || phieu.trangThai);
     if (phieu.canDoiLich) them(t('Cần đổi lịch', 'Needs rescheduling'), CAN_DOI_LICH);
-    if (phieu.lyDoHuy) them(t('Lý do từ chối / hủy', 'Reason for declining / cancelling'), phieu.lyDoHuy);
+    if (phieu.lyDoHuy) them(t('Lý do hủy', 'Cancellation reason'), phieu.lyDoHuy);
     them(t('Ngày khám', 'Visit date'), `${thuCuaNgay(phieu.ngay)} ${ngayVn(phieu.ngay)}`);
     them(t('Giờ khám dự kiến', 'Expected time'), gio(phieu.gioKhamDuKien));
     them(t('Khung giờ', 'Time slot'), `${gio(phieu.gioBatDauKhung)} – ${gio(phieu.gioKetThucKhung)}`);
@@ -715,7 +741,7 @@ function diToi(duongDan) {
 const THANH_BEN = {
     BAC_SI: [
         [cap('Lịch làm việc', 'Work Schedule'), '/doctor/work-schedule'],
-        [cap('Yêu cầu đặt lịch', 'Appointment Requests'), '/doctor/appointment-requests'],
+        [cap('Lịch hẹn sắp tới', 'Upcoming Appointments'), '/doctor/upcoming-appointments'],
         [cap('Khám bệnh / bệnh án', 'Consultation / EMR'), '/doctor/consultation'],
         [cap('Hồ sơ bác sĩ', 'Doctor Profile'), '/doctor/profile'],
     ],
@@ -776,7 +802,7 @@ function veKhung(duongDan) {
         lienKet(t('Tài khoản của tôi / đổi mật khẩu', 'My account / change password'), '/account'),
         lienKet(t('Mở trang làm việc', 'Open workspace'), trangChu()), nut(t('Đăng xuất', 'Log out'), dangXuat, 'phu'));
     menu.append(the('summary', taiKhoan.hoTen), noiDung);
-    // Chuông của UI chỉ vẽ ở khu bác sĩ; trang mẫu hiện cho mọi vai trò vì bệnh nhân cũng nhận thông báo (xác nhận / từ chối)
+    // Chuông của UI chỉ vẽ ở khu bác sĩ; trang mẫu hiện cho mọi vai trò vì bệnh nhân cũng nhận thông báo (bác sĩ hủy, ca bị hủy, nhắc lịch)
     khuTaiKhoan.replaceChildren(nutNgonNgu(), veChuong(), menu);
     capNhatChuong();
 }
@@ -799,7 +825,7 @@ let soChuaDoc = 0;
 
 // Màn hình mở khi bấm 1 thông báo
 function dichCuaThongBao(tb) {
-    if (vaiTro() === 'BAC_SI') return tb.loai === 'LICH_HEN_MOI' || tb.loai === 'LICH_HEN_DA_DOI' ? '/doctor/appointment-requests' : '/doctor/work-schedule';
+    if (vaiTro() === 'BAC_SI') return tb.loai === 'LICH_HEN_MOI' || tb.loai === 'LICH_HEN_DA_DOI' ? '/doctor/upcoming-appointments' : '/doctor/work-schedule';
     // Quản trị viên: YEU_CAU_DOI_LICH_MOI (tb.idYeuCau) -> bảng yêu cầu ở Schedule Management
     if (vaiTro() === 'QUAN_TRI_VIEN') return '/admin/schedule-management';
     if (vaiTro() === 'BENH_NHAN' && tb.loai === 'NHAC_TAI_KHAM') return '/appointment';

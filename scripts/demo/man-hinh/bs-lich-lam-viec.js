@@ -17,7 +17,7 @@
 // Cần internet: thư viện lịch FullCalendar tải từ CDN.
 (() => {
     function mauLichBacSi(lich) {
-        if (DA_HUY.includes(lich.trangThai)) return MAU.daHuy;
+        if (KHONG_CON_KHAM.includes(lich.trangThai)) return MAU.daHuy;
         if (lich.trangThai === 'DA_HOAN_THANH') return MAU.daKham;
         return lich.doiChieu && lich.doiChieu.canDoiChieu ? MAU.doiChieu : MAU.cuaToi;
     }

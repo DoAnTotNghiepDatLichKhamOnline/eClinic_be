@@ -5,8 +5,8 @@ import java.time.LocalDate;
 import iuh.fit.se.eclinic.booking.dto.response.HangDoiResponse;
 
 /**
- * Hàng đợi khám trong ngày của CHÍNH bác sĩ đang đăng nhập, theo ca. Gồm lịch hẹn CHO_XAC_NHAN / DA_XAC_NHAN /
- * DA_HOAN_THANH (đã khám) của các ca đang hoạt động, trừ lịch hẹn cần đổi lịch. Lỗi tài khoản như
+ * Hàng đợi khám trong ngày của CHÍNH bác sĩ đang đăng nhập, theo ca. Gồm lịch hẹn DA_XAC_NHAN / DA_HOAN_THANH
+ * (đã khám) của các ca đang hoạt động, trừ lịch hẹn cần đổi lịch. Lỗi tài khoản như
  * {@link TaiKhoanService#layBacSiDangHoatDong}.
  * <p>
  * Các thao tác chỉ làm được trong ngày khám (KHONG_PHAI_NGAY_KHAM), với lịch hẹn còn khám được

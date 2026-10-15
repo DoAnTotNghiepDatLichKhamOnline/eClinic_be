@@ -5,8 +5,8 @@ package iuh.fit.se.eclinic.booking.dto.request;
  */
 public enum LocLichHen {
     TAT_CA,
-    /** Lịch CHO_XAC_NHAN / DA_XAC_NHAN mà lượt khám chưa kết thúc. */
+    /** Lịch DA_XAC_NHAN mà lượt khám chưa kết thúc. */
     SAP_TOI,
-    /** Mọi lịch còn lại: đã khám, đã hủy, bị từ chối, hoặc đã qua giờ khám. */
+    /** Mọi lịch còn lại: đã khám, đã hủy, bác sĩ đã hủy, không đến, hoặc đã qua giờ khám. */
     LICH_SU
 }

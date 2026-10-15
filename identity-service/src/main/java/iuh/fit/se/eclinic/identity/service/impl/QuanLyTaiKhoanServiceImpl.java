@@ -53,8 +53,7 @@ import lombok.extern.slf4j.Slf4j;
 public class QuanLyTaiKhoanServiceImpl implements QuanLyTaiKhoanService {
 
     /** Lịch hẹn còn phải khám: chặn việc vô hiệu hoá bác sĩ (UC-DOCT-03). */
-    private static final List<TrangThaiLichHen> LICH_HEN_CON_HIEU_LUC = List.of(TrangThaiLichHen.CHO_XAC_NHAN,
-            TrangThaiLichHen.DA_XAC_NHAN);
+    private static final List<TrangThaiLichHen> LICH_HEN_CON_HIEU_LUC = List.of(TrangThaiLichHen.DA_XAC_NHAN);
 
     private final TaiKhoanRepository taiKhoanRepository;
     private final TaiKhoanService taiKhoanService;

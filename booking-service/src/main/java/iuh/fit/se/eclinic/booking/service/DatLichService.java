@@ -11,7 +11,7 @@ public interface DatLichService {
     /**
      * Đặt lịch khám (BOOK-01, BOOK-03, BOOK-04, BOOK-11, BOOK-12) trong 1 transaction: kiểm tra lại ca và khung giờ,
      * khoá khung giờ rồi lấy lượt khám trống sớm nhất, tìm hoặc tạo hồ sơ bệnh nhân theo CCCD, tạo lịch hẹn
-     * CHO_XAC_NHAN kèm số thứ tự và mã phiếu khám.
+     * DA_XAC_NHAN (xác nhận ngay, không chờ bác sĩ duyệt) kèm số thứ tự và mã phiếu khám.
      * <p>
      * Số CCCD đã có hồ sơ: luôn dùng lại hồ sơ đó, kể cả khi họ tên / ngày sinh nhập vào khác hồ sơ. Hồ sơ không bị
      * sửa; lịch hẹn giữ bản sao thông tin đã nhập và được đánh dấu cần đối chiếu khi có khác biệt.
@@ -31,7 +31,7 @@ public interface DatLichService {
 
     /**
      * Phần "tạo lịch mới" của đổi lịch (quy tắc #10): chọn và khoá lượt khám của khung giờ mới như {@link #datLich}, rồi
-     * tạo lịch hẹn CHO_XAC_NHAN với phiếu khám mới, {@code lichHenCu} trỏ về {@code cu}. Hồ sơ bệnh nhân, người giám hộ,
+     * tạo lịch hẹn DA_XAC_NHAN với phiếu khám mới, {@code lichHenCu} trỏ về {@code cu}. Hồ sơ bệnh nhân, người giám hộ,
      * tài khoản đặt, lý do khám, liên hệ và thông tin đã nhập lấy nguyên từ {@code cu}. Phải gọi trong transaction
      * READ_COMMITTED đã chuyển {@code cu} sang DA_HUY_DO_DOI_LICH và đã flush.
      * <p>

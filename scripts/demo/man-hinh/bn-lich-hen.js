@@ -5,10 +5,10 @@
 //   GET /api/booking/lich-hen/cua-toi/lich?tuNgay=&denNgay=&cuaAi=TAT_CA|BAN_THAN|NGUOI_KHAC   lịch hẹn trong khoảng ngày (vẽ lịch)
 //   GET /api/booking/lich-hen/cua-toi?loc=TAT_CA|SAP_TOI|LICH_SU&trang=&kichThuoc=             danh sách phân trang
 //   GET /api/booking/lich-hen/cua-toi/{maPhieuKham}                                            chi tiết + kết quả khám (nếu được xem)
-// Kết quả khám chỉ trả về cho người khám hoặc người đã đặt lịch. Lịch bị bác sĩ từ chối (BI_TU_CHOI) có lyDoHuy, hiện ở phần chi tiết.
+// Kết quả khám chỉ trả về cho người khám hoặc người đã đặt lịch. Lịch bị bác sĩ hủy (BI_TU_CHOI) có lyDoHuy, hiện ở phần chi tiết.
 //   POST /api/booking/lich-hen/cua-toi/{maPhieuKham}/huy       { lyDo? }  hủy (tôi đặt, hoặc tôi là người khám) -> phiếu khám DA_HUY
 //   POST /api/booking/lich-hen/cua-toi/{maPhieuKham}/doi-lich  { idLichLamViec | idChuyenKhoa, gioBatDauKhung } -> 201, lịch mới
-//        (CHO_XAC_NHAN, mã phiếu khám mới); lịch cũ thành DA_HUY_DO_DOI_LICH. Tối đa 2 lần đổi cho 1 lần đặt.
+//        (DA_XAC_NHAN, mã phiếu khám mới); lịch cũ thành DA_HUY_DO_DOI_LICH. Tối đa 2 lần đổi cho 1 lần đặt.
 //        Mỗi dòng có duocHuyDoi / hanHuyDoi (hạn chót = giờ khám trừ 2 giờ). Lỗi 409: LICH_HEN_KHONG_HUY_DOI_DUOC,
 //        QUA_HAN_HUY_DOI_LICH, VUOT_SO_LAN_DOI_LICH, KHUNG_GIO_KHONG_CON_TRONG...; 403 nếu chỉ là người giám hộ theo CCCD
 //        canDoiLich = true: ca khám đã bị hủy (quản trị viên hủy ca, hoặc duyệt bác sĩ xin nghỉ / đổi ca); lịch vẫn còn
@@ -73,7 +73,7 @@
     let trangLich = 0, tongSoTrangLich = 0;
 
     function mauLichBenhNhan(lich) {
-        if (DA_HUY.includes(lich.trangThai)) return MAU.daHuy;
+        if (KHONG_CON_KHAM.includes(lich.trangThai)) return MAU.daHuy;
         if (lich.trangThai === 'DA_HOAN_THANH') return MAU.daKham;
         return lich.laBanThan ? MAU.cuaToi : MAU.nguoiKhac;
     }
@@ -117,7 +117,7 @@
         }
         cacPhan.push(thongTin([
             [t('Mã tra cứu', 'Lookup code'), lich.maTraCuu], [t('Trạng thái', 'Status'), TRANG_THAI[lich.trangThai] || lich.trangThai],
-            [t('Cần đổi lịch', 'Needs rescheduling'), lich.canDoiLich ? CAN_DOI_LICH : null], [t('Lý do từ chối / hủy', 'Reason for declining / cancelling'), lich.lyDoHuy],
+            [t('Cần đổi lịch', 'Needs rescheduling'), lich.canDoiLich ? CAN_DOI_LICH : null], [t('Lý do hủy', 'Cancellation reason'), lich.lyDoHuy],
             [t('Số thứ tự', 'Queue number'), lich.soThuTu],
             [t('Giờ khám dự kiến', 'Expected time'), ngayGioVn(lich.gioKhamDuKien)], [t('Bác sĩ', 'Doctor'), tenBacSi(lich.bacSi)],
             [t('Chuyên khoa', 'Specialty'), lich.tenChuyenKhoa], [t('Phòng khám', 'Room'), tenPhong(lich.phongKham)],
@@ -129,7 +129,7 @@
             [t('Ngày đặt', 'Booked at'), ngayGioVn(lich.ngayDat)],
         ]));
         cacPhan.push(the('p'), lienKet(t('Mở phiếu khám (mã QR)', 'Open appointment ticket (QR code)'), '/phieu-kham/' + encodeURIComponent(lich.maPhieuKham), true));
-        if (['CHO_XAC_NHAN', 'DA_XAC_NHAN'].includes(lich.trangThai)) {
+        if (lich.trangThai === 'DA_XAC_NHAN') {
             const goc = '/api/booking/lich-hen/cua-toi/' + encodeURIComponent(lich.maPhieuKham);
             cacPhan.push(khoiHuyDoi({
                 lich,
@@ -206,7 +206,7 @@
                                 <option value="NGUOI_KHAC">${t('Lịch của người khác', 'Appointments for others')}</option>
                             </select></div>
                         <p class="chu-thich"><span><i style="background:#1f6feb"></i>${t('Của tôi', 'Mine')}</span><span><i style="background:#bf8700"></i>${t('Của người khác', 'For others')}</span>
-                            <span><i style="background:#1a7f37"></i>${t('Đã khám', 'Completed')}</span><span><i style="background:#8c959f"></i>${t('Đã hủy / bị từ chối', 'Cancelled / declined')}</span></p>
+                            <span><i style="background:#1a7f37"></i>${t('Đã khám', 'Completed')}</span><span><i style="background:#8c959f"></i>${t('Đã hủy / bác sĩ hủy', 'Cancelled')}</span></p>
                     </div>
                     <div id="lich-bn"></div>
                     <p id="bn-lich-trang-thai" class="ghi-chu"></p>

@@ -83,7 +83,7 @@ public class LichHen extends AuditableEntity {
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.VARCHAR)
     @Column(name = "trang_thai", nullable = false, length = 30)
-    private TrangThaiLichHen trangThai = TrangThaiLichHen.CHO_XAC_NHAN;
+    private TrangThaiLichHen trangThai = TrangThaiLichHen.DA_XAC_NHAN;
 
     @Column(name = "ly_do_kham", length = 500)
     private String lyDoKham;
@@ -182,9 +182,16 @@ public class LichHen extends AuditableEntity {
     @Column(name = "version", nullable = false)
     private Long version;
 
-    /** Trạng thái hàng đợi để hiển thị: DA_KHAM khi đã ghi nhận kết quả khám, còn lại là giá trị đã lưu. */
+    /**
+     * Trạng thái hàng đợi để hiển thị: DA_KHAM khi đã ghi nhận kết quả khám, VANG_MAT khi đã đóng là bệnh nhân không đến,
+     * còn lại là giá trị đã lưu.
+     */
     public TrangThaiHangDoi hangDoiHienThi() {
-        return trangThai == TrangThaiLichHen.DA_HOAN_THANH ? TrangThaiHangDoi.DA_KHAM : trangThaiHangDoi;
+        return switch (trangThai) {
+            case DA_HOAN_THANH -> TrangThaiHangDoi.DA_KHAM;
+            case KHONG_DEN -> TrangThaiHangDoi.VANG_MAT;
+            default -> trangThaiHangDoi;
+        };
     }
 
 }

@@ -11,9 +11,9 @@
 //   POST /api/booking/bac-si/toi/lich-hen/{id}/vang-mat   đánh dấu vắng mặt; ghi nhận kết quả khám (màn hình khám bệnh) là xong lượt
 //                                                         3 thao tác trên trả lại hàng đợi hôm nay; 409 DANG_KHAM_BENH_NHAN_KHAC khi đang
 //                                                         khám người khác, HANG_DOI_TRONG khi ca không còn ai chờ
-//   GET  /api/booking/bac-si/toi/tong-quan                4 ô số liệu trong 1 lần gọi: lichHenHomNay (không tính đã hủy / bị từ chối),
-//                                                         dangCho (chờ xác nhận + đã xác nhận, chưa khám), daKham, diemDanhGia + soDanhGia;
-//                                                         thêm yeuCauChoXacNhan (số trên nhãn Appointment Requests) và tinhLuc
+//   GET  /api/booking/bac-si/toi/tong-quan                4 ô số liệu trong 1 lần gọi: lichHenHomNay (không tính đã hủy / bác sĩ đã hủy),
+//                                                         dangCho (đã xác nhận, chưa khám), daKham, diemDanhGia + soDanhGia;
+//                                                         thêm lichHenSapToi (số trên nhãn Upcoming Appointments) và tinhLuc
 //   GET  /api/booking/bac-si/toi/danh-gia/tong-quan       { diemTrungBinh (null khi chưa có), soDanhGia, phanBo: {1..5} }
 //   GET  /api/booking/bac-si/toi/danh-gia?trang=&kichThuoc=   đánh giá tôi nhận được, mới nhất trước: soSao, nhanXet, ngayKham, ngayTao
 //                                                          (ẩn danh: không có tên bệnh nhân)
@@ -126,13 +126,15 @@
                     t('Hàng đợi', 'Queue'), t('Lịch hẹn', 'Appointment'), t('Gọi lúc', 'Called at'), t('Thao tác', 'Actions')], ca.cacLuot.map((luot) => {
                     const lich = luot.lichHen;
                     const thaoTacDong = [];
-                    if (luot.trangThaiHangDoi === 'CHO_KHAM' || luot.trangThaiHangDoi === 'VANG_MAT') {
+                    // Gọi / vắng chỉ với lịch còn khám được (lịch KHONG_DEN của ngày đã qua cũng hiện "vắng mặt")
+                    const conKham = lich.trangThai === 'DA_XAC_NHAN';
+                    if (conKham && (luot.trangThaiHangDoi === 'CHO_KHAM' || luot.trangThaiHangDoi === 'VANG_MAT')) {
                         const nutGoi = nut(luot.trangThaiHangDoi === 'VANG_MAT' ? t('Gọi lại', 'Call again') : t('Gọi', 'Call'),
                             () => thaoTac(`/api/booking/bac-si/toi/lich-hen/${lich.id}/goi-kham`));
                         nutGoi.disabled = !!dangKham;
                         thaoTacDong.push(nutGoi);
                     }
-                    if (luot.trangThaiHangDoi === 'CHO_KHAM' || luot.trangThaiHangDoi === 'DANG_KHAM') {
+                    if (conKham && (luot.trangThaiHangDoi === 'CHO_KHAM' || luot.trangThaiHangDoi === 'DANG_KHAM')) {
                         thaoTacDong.push(nut(t('Vắng', 'Absent'), () => thaoTac(`/api/booking/bac-si/toi/lich-hen/${lich.id}/vang-mat`), 'nho phu'));
                     }
                     thaoTacDong.push(' ', moHoSo(lich));
@@ -163,8 +165,8 @@
                 oSo.append(o);
             }
             tinhLuc.textContent = sl
-                ? t(`Tính lúc ${ngayGioVn(sl.tinhLuc)} · ${sl.yeuCauChoXacNhan} yêu cầu đang chờ xác nhận (Yêu cầu đặt lịch)`,
-                    `As of ${ngayGioVn(sl.tinhLuc)} · ${sl.yeuCauChoXacNhan} requests pending confirmation (Appointment Requests)`)
+                ? t(`Tính lúc ${ngayGioVn(sl.tinhLuc)} · ${sl.lichHenSapToi} lịch hẹn sắp tới (Lịch hẹn sắp tới)`,
+                    `As of ${ngayGioVn(sl.tinhLuc)} · ${sl.lichHenSapToi} upcoming appointments (Upcoming Appointments)`)
                 : thongDiepLoi(soLieu.json, t('Không tải được số liệu.', 'Could not load the figures.'));
 
             const [tongQuan, danhGia] = await Promise.all([

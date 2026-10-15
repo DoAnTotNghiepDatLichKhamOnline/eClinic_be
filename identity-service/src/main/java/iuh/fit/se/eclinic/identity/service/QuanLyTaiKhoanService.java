@@ -41,7 +41,7 @@ public interface QuanLyTaiKhoanService {
      * <p>
      * Ném KHONG_TIM_THAY; TAI_KHOAN_QUAN_TRI_DUOC_BAO_VE; DU_LIEU_KHONG_HOP_LE (yêu cầu chuyển sang CHO_XAC_NHAN, hoặc vô
      * hiệu hoá mà thiếu lý do); TRANG_THAI_TAI_KHOAN_KHONG_HOP_LE (tài khoản chưa xác thực email: chỉ có thể xoá; hoặc
-     * tài khoản đã ở sẵn trạng thái đó); BAC_SI_CON_LICH_HEN (bác sĩ còn lịch hẹn chờ xác nhận / đã xác nhận chưa diễn
+     * tài khoản đã ở sẵn trạng thái đó); BAC_SI_CON_LICH_HEN (bác sĩ còn lịch hẹn đã xác nhận chưa diễn
      * ra, UC-DOCT-03).
      *
      * @return chi tiết tài khoản sau khi đổi

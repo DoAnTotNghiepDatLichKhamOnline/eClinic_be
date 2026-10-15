@@ -9,8 +9,9 @@ import iuh.fit.se.eclinic.common.entity.medical.HoSoBenhAn;
  * notification-service sau (xem {@link GuiThongBaoService}).
  * <p>
  * Ai nhận: người làm thao tác không nhận thông báo về thao tác của chính mình. Bác sĩ nhận lịch mới, lịch bị bệnh nhân
- * hủy / đổi; phía bệnh nhân nhận xác nhận / từ chối, gửi cho tài khoản đã đặt và tài khoản của hồ sơ bệnh nhân (mỗi tài
- * khoản 1 thông báo). Khách đặt không đăng nhập và người giám hộ chỉ khớp theo CCCD không nhận.
+ * hủy / đổi; phía bệnh nhân nhận tin bác sĩ hủy lịch, gửi cho tài khoản đã đặt và tài khoản của hồ sơ bệnh nhân (mỗi tài
+ * khoản 1 thông báo). Khách đặt không đăng nhập và người giám hộ chỉ khớp theo CCCD không nhận (khi bác sĩ hủy,
+ * người đặt vẫn nhận email theo địa chỉ liên hệ).
  * <p>
  * Email (các hàm {@code email...}) gửi tới 1 địa chỉ, không cần tài khoản: email liên hệ của lịch hẹn, để trống thì
  * email của tài khoản đã đặt; khách đặt mà không nhập email thì không ghi gì. Ngôn ngữ: của tài khoản đã đặt (đã lưu),
@@ -19,14 +20,15 @@ import iuh.fit.se.eclinic.common.entity.medical.HoSoBenhAn;
  */
 public interface ThongBaoLichHenService {
 
-    /** Có lịch hẹn mới chờ xác nhận: báo bác sĩ. */
+    /** Có lịch hẹn mới (đã xác nhận ngay khi đặt): báo bác sĩ. */
     void lichHenMoi(LichHen lichHen);
 
-    /** Bác sĩ đã xác nhận: báo phía bệnh nhân. */
-    void daXacNhan(LichHen lichHen);
-
-    /** Bác sĩ đã từ chối (lý do đã nằm trong {@code lichHen.lyDoHuy}): báo phía bệnh nhân. */
-    void biTuChoi(LichHen lichHen);
+    /**
+     * Bác sĩ đã hủy lịch hẹn (lý do đã nằm trong {@code lichHen.lyDoHuy}): báo trong ứng dụng cho phía bệnh nhân và
+     * email cho người đặt (khách đặt không có tài khoản chỉ biết qua email). Email không chép lý do: lý do ở trên phiếu
+     * khám.
+     */
+    void bacSiHuy(LichHen lichHen);
 
     /** Bệnh nhân đã hủy: báo bác sĩ. */
     void benhNhanDaHuy(LichHen lichHen);
@@ -37,7 +39,7 @@ public interface ThongBaoLichHenService {
      */
     void benhNhanDaDoi(LichHen lichCu, LichHen lichMoi);
 
-    /** Email "đã nhận yêu cầu đặt lịch, chờ bác sĩ xác nhận" cho người đặt. */
+    /** Email "đặt lịch thành công" (lịch đã xác nhận) cho người đặt. */
     void emailDaNhanLich(LichHen lichHen);
 
     /** Email "đã đổi lịch" kèm mã tra cứu và link phiếu khám của lịch mới. */
@@ -45,8 +47,7 @@ public interface ThongBaoLichHenService {
 
     /**
      * Nhắc lịch khám sắp tới: 1 thông báo cho mỗi tài khoản phía bệnh nhân và 1 email cho người đặt (cùng quy tắc người
-     * nhận với email xác nhận). Lịch hẹn còn chờ bác sĩ xác nhận thì câu chữ nói rõ là chưa được xác nhận. Câu chữ ghi
-     * giờ khám thật, không ghi "còn N ngày", nên nhắc trễ vẫn đúng.
+     * nhận với email xác nhận). Câu chữ ghi giờ khám thật, không ghi "còn N ngày", nên nhắc trễ vẫn đúng.
      */
     void nhacLich(LichHen lichHen);
 

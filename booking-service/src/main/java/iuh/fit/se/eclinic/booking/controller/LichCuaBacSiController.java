@@ -16,20 +16,17 @@ import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import iuh.fit.se.eclinic.booking.dto.request.BacSiHuyLichHenRequest;
 import iuh.fit.se.eclinic.booking.dto.request.SuaHoSoBenhNhanRequest;
-import iuh.fit.se.eclinic.booking.dto.request.TuChoiLichHenRequest;
 import iuh.fit.se.eclinic.booking.dto.response.CaLamViecResponse;
 import iuh.fit.se.eclinic.booking.dto.response.HoSoKhamResponse;
 import iuh.fit.se.eclinic.booking.dto.response.LichHenTrongCaResponse;
+import iuh.fit.se.eclinic.booking.service.BacSiHuyLichHenService;
 import iuh.fit.se.eclinic.booking.service.HoSoKhamService;
 import iuh.fit.se.eclinic.booking.service.LichLamViecService;
-import iuh.fit.se.eclinic.booking.service.YeuCauLichHenService;
 import iuh.fit.se.eclinic.common.dto.PhanHoiApi;
-import iuh.fit.se.eclinic.common.dto.TrangDuLieu;
 import iuh.fit.se.eclinic.common.security.NguoiDungHienTai;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -46,7 +43,7 @@ public class LichCuaBacSiController {
 
     private final LichLamViecService lichLamViecService;
     private final HoSoKhamService hoSoKhamService;
-    private final YeuCauLichHenService yeuCauLichHenService;
+    private final BacSiHuyLichHenService bacSiHuyLichHenService;
 
     @Operation(summary = "Các ca làm việc của tôi trong khoảng ngày (tối đa 42 ngày, kể cả ca đã huỷ) kèm số lượt đã đặt")
     @GetMapping("/lich-lam-viec")
@@ -84,29 +81,13 @@ public class LichCuaBacSiController {
                 denNgay));
     }
 
-    @Operation(summary = "Yêu cầu đặt lịch: lịch hẹn đang chờ tôi xác nhận mà lượt khám chưa bắt đầu, giờ khám sớm nhất"
-            + " trước")
-    @GetMapping("/lich-hen/yeu-cau")
-    public PhanHoiApi<TrangDuLieu<LichHenTrongCaResponse>> yeuCau(
-            @RequestParam(defaultValue = "0") @Min(0) int trang,
-            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int kichThuoc) {
-        return PhanHoiApi.ok(yeuCauLichHenService.danhSach(NguoiDungHienTai.layIdTaiKhoan(), trang, kichThuoc));
-    }
-
-    @Operation(summary = "Xác nhận 1 lịch hẹn đang chờ xác nhận của tôi (trước giờ khám)")
-    @PostMapping("/lich-hen/{id}/xac-nhan")
-    public PhanHoiApi<LichHenTrongCaResponse> xacNhan(@PathVariable Long id) {
-        return PhanHoiApi.ok(yeuCauLichHenService.xacNhan(NguoiDungHienTai.layIdTaiKhoan(), id),
-                "thanhCong.xacNhanLichHen");
-    }
-
-    @Operation(summary = "Từ chối 1 lịch hẹn đang chờ xác nhận của tôi (trước giờ khám), bắt buộc có lý do; lượt khám"
-            + " được mở lại cho người khác đặt")
-    @PostMapping("/lich-hen/{id}/tu-choi")
-    public PhanHoiApi<LichHenTrongCaResponse> tuChoi(@PathVariable Long id,
-            @Valid @RequestBody TuChoiLichHenRequest request) {
-        return PhanHoiApi.ok(yeuCauLichHenService.tuChoi(NguoiDungHienTai.layIdTaiKhoan(), id, request.lyDo()),
-                "thanhCong.tuChoiLichHen");
+    @Operation(summary = "Hủy 1 lịch hẹn đã xác nhận của tôi (trước giờ khám), bắt buộc có lý do; lượt khám được mở lại"
+            + " cho người khác đặt, bệnh nhân được báo và đọc được lý do trên phiếu khám")
+    @PostMapping("/lich-hen/{id}/huy")
+    public PhanHoiApi<LichHenTrongCaResponse> huy(@PathVariable Long id,
+            @Valid @RequestBody BacSiHuyLichHenRequest request) {
+        return PhanHoiApi.ok(bacSiHuyLichHenService.huy(NguoiDungHienTai.layIdTaiKhoan(), id, request.lyDo()),
+                "thanhCong.bacSiHuyLichHen");
     }
 
     @Operation(summary = "Hồ sơ khám của bệnh nhân theo mã tra cứu ngắn, mã phiếu khám hoặc link phiếu khám (quét QR)")

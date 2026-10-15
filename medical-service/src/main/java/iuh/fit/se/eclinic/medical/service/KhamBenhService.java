@@ -13,7 +13,8 @@ public interface KhamBenhService {
     /**
      * Lưu hồ sơ bệnh án kèm đơn thuốc và chuyển lịch hẹn sang DA_HOAN_THANH, trong 1 transaction.
      * <p>
-     * Ném LICH_HEN_KHONG_KHAM_DUOC nếu lịch hẹn không còn ở CHO_XAC_NHAN / DA_XAC_NHAN (đã khám, đã hủy, bị từ chối);
+     * Ném LICH_HEN_KHONG_KHAM_DUOC nếu lịch hẹn không còn ở DA_XAC_NHAN (đã khám, đã hủy, bác sĩ đã hủy, đã đóng
+     * là không đến);
      * CHUA_DEN_NGAY_KHAM nếu ngày khám của lịch hẹn sau hôm nay.
      */
     BenhAnResponse ghiNhan(Long idTaiKhoanBacSi, Long idLichHen, BenhAnRequest request);

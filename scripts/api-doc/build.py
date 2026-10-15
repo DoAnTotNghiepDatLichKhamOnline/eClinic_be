@@ -20,11 +20,13 @@ import p5_phu_luc
 import p6_ngon_ngu
 import p7_chatbot
 import p8_benh_an_ho_so_bac_si
+import p9_xac_nhan_ngay_benh_an_day_du
 
 GOC = Path(__file__).resolve().parents[2]
 BAN_1_0 = GOC / "temp/api-doc/eClinic_API_XacThuc_TaiKhoan.v1.0.docx"
 CAC_GIAI_DOAN = (p1_tai_khoan.sua, p2_quy_uoc.sua, p3_dat_lich.sua, p4_cua_toi.sua, p5_phu_luc.sua,
-                 p6_ngon_ngu.sua, p7_chatbot.sua, p8_benh_an_ho_so_bac_si.sua)
+                 p6_ngon_ngu.sua, p7_chatbot.sua, p8_benh_an_ho_so_bac_si.sua,
+                 p9_xac_nhan_ngay_benh_an_day_du.sua)
 
 
 def dung(den=len(CAC_GIAI_DOAN)):

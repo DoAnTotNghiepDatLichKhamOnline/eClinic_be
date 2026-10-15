@@ -48,7 +48,7 @@ public record GoiYResponse(ChuyenKhoa chuyenKhoa, List<BacSi> bacSi, List<LichKh
      * (GET /api/booking/lich-hen/cua-toi/{maPhieuKham}) hoặc {@code linkPhieuKham}. Họ tên và các mã chỉ có ở đây, mô
      * hình không nhận được.
      *
-     * @param trangThai  CHO_XAC_NHAN hoặc DA_XAC_NHAN
+     * @param trangThai  DA_XAC_NHAN
      * @param laBanThan  false: lịch tài khoản đặt cho người khác
      * @param canDoiLich true: ca khám đã bị hủy, lịch đang chờ bệnh nhân đổi sang giờ khác hoặc hủy
      */

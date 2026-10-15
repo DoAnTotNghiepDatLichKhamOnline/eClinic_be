@@ -75,14 +75,12 @@ public enum MaLoi {
     NGUOI_GIAM_HO_KHONG_HOP_LE(HttpStatus.BAD_REQUEST),
     VUOT_GIOI_HAN_DAT_LICH(HttpStatus.CONFLICT),
 
-    // Bác sĩ xác nhận / từ chối lịch hẹn
-    /** Lịch hẹn đã được xác nhận, bị từ chối, đã khám xong hoặc đã hủy. */
-    LICH_HEN_KHONG_CHO_XAC_NHAN(HttpStatus.CONFLICT),
-    /** Lượt khám của lịch hẹn đã bắt đầu: không xác nhận / từ chối được nữa. */
+    // Bác sĩ hủy lịch hẹn
+    /** Lượt khám của lịch hẹn đã bắt đầu: bác sĩ không hủy được nữa. */
     LICH_HEN_DA_QUA_GIO(HttpStatus.CONFLICT),
 
     // Bệnh nhân hủy / đổi lịch hẹn
-    /** Lịch hẹn đã khám xong, đã hủy, đã đổi sang lịch khác hoặc bị từ chối. */
+    /** Lịch hẹn đã khám xong, đã hủy, đã đổi sang lịch khác hoặc bác sĩ đã hủy. */
     LICH_HEN_KHONG_HUY_DOI_DUOC(HttpStatus.CONFLICT),
     /** Còn cách giờ khám ít hơn app.dat-lich.huy-doi-truoc-toi-thieu. */
     QUA_HAN_HUY_DOI_LICH(HttpStatus.CONFLICT),

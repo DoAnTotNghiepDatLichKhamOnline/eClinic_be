@@ -21,9 +21,11 @@ import iuh.fit.se.eclinic.common.dto.PhanHoiApi;
 import iuh.fit.se.eclinic.common.security.NguoiDungHienTai;
 import iuh.fit.se.eclinic.medical.dto.request.BenhAnRequest;
 import iuh.fit.se.eclinic.medical.dto.response.BenhAnResponse;
+import iuh.fit.se.eclinic.medical.dto.response.Icd10Response;
 import iuh.fit.se.eclinic.medical.dto.response.LichSuSuaBenhAnResponse;
 import iuh.fit.se.eclinic.medical.dto.response.ThuocGoiYResponse;
 import iuh.fit.se.eclinic.medical.mapper.BenhAnMapper;
+import iuh.fit.se.eclinic.medical.service.Icd10Service;
 import iuh.fit.se.eclinic.medical.service.KhamBenhService;
 import iuh.fit.se.eclinic.medical.service.LichSuSuaBenhAnService;
 import iuh.fit.se.eclinic.medical.service.ThuocService;
@@ -44,12 +46,15 @@ public class KhamBenhController {
 
     private final KhamBenhService khamBenhService;
     private final ThuocService thuocService;
+    private final Icd10Service icd10Service;
     private final LichSuSuaBenhAnService lichSuSuaBenhAnService;
     private final BenhAnMapper benhAnMapper;
 
     @Operation(summary = "Ghi nhận kết quả khám: lưu hồ sơ bệnh án kèm đơn thuốc và chuyển lịch hẹn sang đã hoàn thành"
             + " (409 nếu chưa đến ngày khám, hoặc lịch hẹn đã khám xong / đã hủy). Thuốc chọn theo idThuoc trong danh mục: 404"
-            + " nếu không có, 409 THUOC_NGUNG_DUNG / THUOC_CHUA_XAC_MINH, 400 nếu 1 thuốc có 2 dòng")
+            + " nếu không có, 409 THUOC_NGUNG_DUNG / THUOC_CHUA_XAC_MINH, 400 nếu 1 thuốc có 2 dòng. 400 nếu mã ICD-10 không"
+            + " có trong danh mục, huyết áp thiếu 1 số hoặc tâm trương >= tâm thu, 1 thuốc quá 30 ngày (90 khi chẩn đoán chính"
+            + " mạn tính), hoặc trẻ dưới 72 tháng có kê thuốc mà thiếu cân nặng")
     @PostMapping("/lich-hen/{idLichHen}/benh-an")
     @ResponseStatus(HttpStatus.CREATED)
     public PhanHoiApi<BenhAnResponse> ghiNhan(@PathVariable Long idLichHen,
@@ -89,6 +94,14 @@ public class KhamBenhController {
     @GetMapping("/thuoc")
     public PhanHoiApi<List<ThuocGoiYResponse>> goiYThuoc(@RequestParam(defaultValue = "") String tuKhoa) {
         return PhanHoiApi.ok(thuocService.timKiem(tuKhoa).stream().map(benhAnMapper::toGoiY).toList());
+    }
+
+    @Operation(summary = "Gợi ý mã ICD-10 cho chẩn đoán chính theo đầu mã hoặc một phần tên tiếng Việt / tiếng Anh (tối đa"
+            + " 20, theo mã; từ khoá trống trả danh sách rỗng). manTinh = bệnh thuộc Phụ lục VII Thông tư 26/2025: thuốc kê"
+            + " được tối đa 90 ngày thay vì 30")
+    @GetMapping("/icd10")
+    public PhanHoiApi<List<Icd10Response>> goiYIcd10(@RequestParam(defaultValue = "") String tuKhoa) {
+        return PhanHoiApi.ok(icd10Service.timKiem(tuKhoa).stream().map(benhAnMapper::toIcd10).toList());
     }
 
 }

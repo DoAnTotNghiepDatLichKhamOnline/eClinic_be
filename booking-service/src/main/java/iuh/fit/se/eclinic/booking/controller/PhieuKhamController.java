@@ -62,7 +62,7 @@ public class PhieuKhamController {
         return PhanHoiApi.ok(huyDoiLichService.huyTheoPhieu(maPhieuKham, request), "thanhCong.huyLichHen");
     }
 
-    @Operation(summary = "Đổi lịch hẹn bằng link phiếu khám (kèm SĐT liên hệ) sang khung giờ khác: trả lịch mới (chờ xác"
+    @Operation(summary = "Đổi lịch hẹn bằng link phiếu khám (kèm SĐT liên hệ) sang khung giờ khác: trả lịch mới (đã xác"
             + " nhận) với phiếu khám mới; số lần gọi từ 1 địa chỉ IP bị giới hạn")
     @PostMapping("/{maPhieuKham}/doi-lich")
     @ResponseStatus(HttpStatus.CREATED)

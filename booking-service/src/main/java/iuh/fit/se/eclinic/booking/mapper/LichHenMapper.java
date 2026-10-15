@@ -53,7 +53,7 @@ public class LichHenMapper {
     /** Lịch còn hiệu lực và chưa quá hạn hủy / đổi (chưa xét ai được làm). */
     private boolean conHuyDoiDuoc(LichHen lichHen) {
         TrangThaiLichHen trangThai = lichHen.getTrangThai();
-        return (trangThai == TrangThaiLichHen.CHO_XAC_NHAN || trangThai == TrangThaiLichHen.DA_XAC_NHAN)
+        return trangThai == TrangThaiLichHen.DA_XAC_NHAN
                 && LocalDateTime.now().isBefore(hanHuyDoi(lichHen));
     }
 

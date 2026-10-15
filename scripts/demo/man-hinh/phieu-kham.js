@@ -2,7 +2,7 @@
 // Đường dẫn:  /phieu-kham/<maPhieuKham>   (= FRONTEND_URL + /phieu-kham/ + mã; chính là nội dung mã QR)
 // Vai trò:    công khai (ai có link đều xem được)
 // API:
-//   GET /api/booking/phieu-kham/{maPhieuKham}        nội dung phiếu; lyDoHuy = lý do bác sĩ từ chối (khi trangThai là BI_TU_CHOI)
+//   GET /api/booking/phieu-kham/{maPhieuKham}        nội dung phiếu; lyDoHuy = lý do bác sĩ hủy (khi trangThai là BI_TU_CHOI)
 //   GET /api/booking/phieu-kham/{maPhieuKham}/qr     ảnh PNG mã QR (?taiVe=true để tải về)
 //   POST /api/booking/phieu-kham/{maPhieuKham}/huy       { soDienThoai, lyDo? }   hủy bằng link phiếu khám + đúng SĐT liên hệ đã nhập
 //        lúc đặt lịch (phiếu chỉ hiện SĐT đã che); trả phiếu khám DA_HUY
