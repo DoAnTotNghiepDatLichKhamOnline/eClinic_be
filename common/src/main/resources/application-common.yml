@@ -2,6 +2,11 @@
 # Mỗi service nạp file này bằng:  spring.config.import: classpath:application-common.yml
 # Biến môi trường: xem .env.example ở thư mục gốc.
 spring:
+  # Chạy bằng IntelliJ: đọc thêm file .env ở thư mục làm việc (run config đặt là thư mục gốc dự án), không có file thì bỏ qua.
+  # Biến môi trường (docker-compose, run config) vẫn được ưu tiên hơn giá trị trong .env.
+  config:
+    import: "optional:file:.env[.properties]"
+
   datasource:
     # Không set serverTimezone/hibernate.jdbc.time_zone: DATETIME lưu đúng giờ "tường" (LocalDateTime),
     # JVM được set mặc định Asia/Ho_Chi_Minh trong hàm main của mỗi service (AppTimeZone.apply()).

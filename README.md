@@ -68,9 +68,15 @@ Qua gateway, mọi API có dạng `http://localhost:8080/api/<service>/...`, ví
 
 Dừng hạ tầng: `docker compose down` (thêm `-v` để xoá luôn dữ liệu).
 
-Service chạy trong IntelliJ không đọc file `.env`; nó dùng giá trị mặc định trong
-`common/src/main/resources/application-common.yml`, vốn khớp với MySQL/Redis của `docker compose up -d`.
-Nếu đổi cổng/mật khẩu trong `.env` thì phải đặt biến môi trường tương ứng (`DB_PORT`, `DB_PASSWORD`...) trong run config.
+Service chạy trong IntelliJ đọc file `.env` ở thư mục gốc (run config có sẵn đặt thư mục làm việc là thư mục gốc dự án),
+nên nhận cùng giá trị như cách 2: email, đăng nhập Google, Cloudinary, khoá chatbot, cổng MySQL... Không có `.env` thì dùng
+giá trị mặc định trong `application.yml` / `common/src/main/resources/application-common.yml`, vốn khớp với MySQL/Redis của
+`docker compose up -d`. Biến môi trường đặt trong run config được ưu tiên hơn `.env` (ví dụ `SEED_DATA=true` của
+identity-service). Tự tạo run config mới thì đặt *Working directory* là thư mục gốc dự án (`$PROJECT_DIR$`).
+
+- Ghi giá trị trong `.env` trơn, không có dấu nháy (`MAIL_USERNAME=ten-ban@gmail.com`).
+- **`MAIL_MODE=smtp` trong `.env` thì service chạy trong IntelliJ cũng gửi email thật.**
+- Máy đã có MySQL / MariaDB khác chiếm cổng 3306: dừng nó, hoặc đặt `DB_PORT=3307` trong `.env` (IntelliJ và Docker cùng theo).
 
 ## Cách 2 — Chạy toàn bộ trong Docker (demo, test frontend)
 
@@ -143,7 +149,7 @@ Giới hạn dung lượng: ảnh tối đa 2 MB (identity-service); mỗi reque
 Ảnh lưu ở [Cloudinary](https://cloudinary.com/users/register_free), gói Free, không cần thẻ:
 1. Đăng ký tài khoản, vào Console > Settings > API Keys: lấy **Cloud name** (đầu trang), **API Key**, **API Secret**.
 2. Trong `.env`: `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` (API Secret là bí mật, chỉ để trong `.env`).
-   Chạy bằng IntelliJ thì đặt 3 biến này trong run config của identity-service **và catalog-service**.
+   Chạy bằng IntelliJ cũng đọc 3 biến này từ `.env` (identity-service và catalog-service), không cần đặt trong run config.
 3. Khởi động lại identity-service và catalog-service.
 
 Mã nối kho ảnh nằm ở `common` (`common/luutru`), cấu hình kết nối ở `application-common.yml`. Chỉ service đặt
@@ -162,7 +168,7 @@ catalog-service (ảnh giới thiệu bác sĩ, lưu tại `<CLOUDINARY_FOLDER>/
 1. Tài khoản Google gửi mail phải bật **Xác minh 2 bước**, rồi tạo **App Password** ở
    https://myaccount.google.com/apppasswords (16 ký tự, không phải mật khẩu Gmail).
 2. Trong `.env`: `MAIL_MODE=smtp`, `MAIL_USERNAME=ten-ban@gmail.com`, `MAIL_APP_PASSWORD=<16 ký tự, bỏ dấu cách>`.
-   Chạy bằng IntelliJ thì đặt 3 biến này trong run config của identity-service.
+   Chạy bằng IntelliJ cũng đọc 3 biến này từ `.env`, không cần đặt trong run config.
 3. Khởi động lại identity-service. Thiếu tài khoản khi `MAIL_MODE=smtp` thì service không khởi động.
 
 **Đăng nhập Google:**
@@ -510,7 +516,7 @@ Lỗi mới (đều 409): `CA_KHONG_SUA_DUOC`, `CA_CON_LICH_HEN`, `CA_DA_CO_YEU_
   tới và không đụng tới trạng thái bác sĩ. Với bác sĩ hãy dùng 2 API ngừng công tác / công tác lại ở trên.
 - catalog-service là nơi nhận mọi request của màn hình này. Tài khoản do identity-service ghi, ca làm việc do booking-service
   ghi: catalog-service gọi API nội bộ `/noi-bo/tai-khoan/**` và `/noi-bo/bac-si/{id}/huy-ca-sap-toi` của 2 service đó
-  (không qua gateway, header `X-Khoa-Noi-Bo`). Chạy IntelliJ: đặt `IDENTITY_URL`, `BOOKING_URL` nếu không dùng cổng mặc định.
+  (không qua gateway, header `X-Khoa-Noi-Bo`). Chạy IntelliJ: đặt `IDENTITY_URL`, `BOOKING_URL` trong `.env` nếu không dùng cổng mặc định.
 
 ## Quản lý bệnh nhân và danh mục phòng khám, thuốc
 
@@ -541,8 +547,8 @@ Lỗi mới (đều 409): `CA_KHONG_SUA_DUOC`, `CA_CON_LICH_HEN`, `CA_DA_CO_YEU_
   bệnh nhân vẫn thấy thuốc trong kết quả khám cũ.
 - **Hồ sơ bệnh án** bác sĩ sửa được trong `RECORD_EDIT_DAYS` ngày (mặc định 7) kể từ lần lưu đầu, mỗi lần sửa cần lý do và
   thêm 1 dòng lịch sử không sửa / xoá được; sau đó chỉ xem (409 `HET_HAN_SUA_BENH_AN`). Biến này đọc ở medical-service (chặn
-  sửa) và booking-service (trả `hanSua` cho màn hình bác sĩ): chạy IntelliJ thì đặt cùng giá trị cho cả 2; docker compose tự
-  truyền từ `.env`. Quản trị viên xem lịch sử sửa bằng `GET /api/medical/quan-tri/lich-hen/{id}/benh-an/lich-su`. Việc mở
+  sửa) và booking-service (trả `hanSua` cho màn hình bác sĩ): đặt trong `.env` thì cả 2 cùng nhận, chạy IntelliJ lẫn docker
+  compose. Quản trị viên xem lịch sử sửa bằng `GET /api/medical/quan-tri/lich-hen/{id}/benh-an/lich-su`. Việc mở
   xem hồ sơ bệnh án không được ghi lại.
 
 ## Đánh giá lượt khám
