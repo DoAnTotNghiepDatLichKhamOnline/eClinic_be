@@ -11,9 +11,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 import iuh.fit.se.eclinic.common.entity.booking.LichHen;
+import iuh.fit.se.eclinic.common.enums.TrangThaiHangDoi;
 import iuh.fit.se.eclinic.common.enums.TrangThaiLichHen;
 import jakarta.persistence.LockModeType;
 
@@ -166,6 +168,35 @@ public interface LichHenRepository extends JpaRepository<LichHen, Long> {
             """)
     List<LichHen> timCuaBacSiTrongKhoang(Long idBacSi, LocalDateTime tu, LocalDateTime den);
 
+    /** Id lịch hẹn của 1 ca đang chờ gọi vào khám, số thứ tự nhỏ nhất trước (hàng đợi khám). Đọc không khoá. */
+    @Query("""
+            select l.id from LichHen l
+            where l.khungGio.lichLamViec.id = :idLichLamViec
+              and l.trangThaiHangDoi = :choKham
+              and l.trangThai in :trangThai
+              and l.canDoiLich = false
+            order by l.soThuTu asc, l.id asc
+            """)
+    List<Long> timIdChoKhamCuaCa(Long idLichLamViec, TrangThaiHangDoi choKham, Collection<TrangThaiLichHen> trangThai,
+            Limit limit);
+
+    /**
+     * Lịch hẹn khác (trừ {@code idTru}) của bác sĩ đang khám mà chưa ghi nhận kết quả, giờ khám trong [tu, den). Đọc
+     * không khoá: nơi gọi giữ khoá dòng bác sĩ.
+     */
+    @Query("""
+            select l from LichHen l
+            where l.bacSi.id = :idBacSi
+              and l.trangThaiHangDoi = :dangKham
+              and l.trangThai in :trangThai
+              and l.canDoiLich = false
+              and l.khungGio.gioBatDau >= :tu
+              and l.khungGio.gioBatDau < :den
+              and l.id <> :idTru
+            """)
+    List<LichHen> timDangKhamCuaBacSi(Long idBacSi, TrangThaiHangDoi dangKham, Collection<TrangThaiLichHen> trangThai,
+            LocalDateTime tu, LocalDateTime den, Long idTru);
+
     /** Id các lịch hẹn của 1 ca đang ở 1 trong các trạng thái cho trước. Đọc không khoá. */
     @Query("select l.id from LichHen l where l.khungGio.lichLamViec.id = :idLichLamViec and l.trangThai in :trangThai")
     List<Long> timIdTheoCaVaTrangThai(Long idLichLamViec, Collection<TrangThaiLichHen> trangThai);
@@ -221,29 +252,9 @@ public interface LichHenRepository extends JpaRepository<LichHen, Long> {
     @Query("select l from LichHen l where l.maTokenPhieuKham = :maPhieuKham")
     Optional<LichHen> findByMaPhieuKhamForUpdate(String maPhieuKham);
 
-    /**
-     * Lịch hẹn của 1 bác sĩ ở 1 trạng thái mà lượt khám bắt đầu sau {@code bayGio}, giờ khám sớm nhất trước. Thứ tự viết
-     * trong JPQL nên {@code pageable} không kèm Sort.
-     */
-    @Query(value = LICH_HEN_KEM_CHI_TIET + """
-            where b.id = :idBacSi
-              and l.trangThai = :trangThai
-              and l.canDoiLich = false
-              and k.gioBatDau > :bayGio
-            order by k.gioBatDau asc, l.id asc
-            """, countQuery = """
-            select count(l) from LichHen l
-            where l.bacSi.id = :idBacSi
-              and l.trangThai = :trangThai
-              and l.canDoiLich = false
-              and l.khungGio.gioBatDau > :bayGio
-            """)
-    Page<LichHen> timCuaBacSiTheoTrangThaiTu(Long idBacSi, TrangThaiLichHen trangThai, LocalDateTime bayGio,
-            Pageable pageable);
-
     // ----- Dashboard: các câu đếm, định nghĩa từng số ở TongQuanBacSiResponse / TongQuanQuanTriResponse -----
 
-    /** Đếm đúng tập của {@link #timCuaBacSiTheoTrangThaiTu} (danh sách yêu cầu chờ bác sĩ xác nhận). */
+    /** Lịch hẹn của 1 bác sĩ ở 1 trạng thái, không bị đánh dấu cần đổi lịch, mà lượt khám bắt đầu sau {@code bayGio}. */
     @Query("""
             select count(l) from LichHen l
             where l.bacSi.id = :idBacSi
@@ -251,7 +262,7 @@ public interface LichHenRepository extends JpaRepository<LichHen, Long> {
               and l.canDoiLich = false
               and l.khungGio.gioBatDau > :bayGio
             """)
-    long demYeuCauChoXacNhan(Long idBacSi, TrangThaiLichHen trangThai, LocalDateTime bayGio);
+    long demSapToiCuaBacSi(Long idBacSi, TrangThaiLichHen trangThai, LocalDateTime bayGio);
 
     /** Số lịch hẹn của bác sĩ có giờ khám trong [tu, den), trạng thái KHÔNG thuộc {@code trangThai}. */
     @Query("""
@@ -369,5 +380,20 @@ public interface LichHenRepository extends JpaRepository<LichHen, Long> {
             """)
     boolean coLichSapToi(Long idHoSoBenhNhan, Collection<TrangThaiLichHen> trangThai, LocalDateTime tu,
             Long idChuyenKhoa);
+
+    /**
+     * Đóng các ngày khám đã qua: lịch {@code conHieuLuc} có lượt khám trước {@code moc}, ca khám không bị hủy và bệnh
+     * nhân không ở {@code dangKham} chuyển sang {@code khongDen}, tăng version. Lệnh UPDATE khoá từng dòng và đọc bản đã
+     * commit mới nhất, nên dòng vừa được ghi nhận kết quả khám cùng lúc không bị đè. Lượt khám đọc qua khoá ngoại trong
+     * subquery (không join trong UPDATE).
+     */
+    @Modifying(clearAutomatically = true)
+    @Query("""
+            update versioned LichHen l set l.trangThai = :khongDen
+            where l.trangThai = :conHieuLuc and l.canDoiLich = false and l.trangThaiHangDoi <> :dangKham
+              and l.khungGio.id in (select k.id from KhungGioKham k where k.gioBatDau < :moc)
+            """)
+    int dongKhongDen(TrangThaiLichHen conHieuLuc, TrangThaiLichHen khongDen, TrangThaiHangDoi dangKham,
+            LocalDateTime moc);
 
 }

@@ -13,14 +13,18 @@ public interface KhamBenhService {
     /**
      * Lưu hồ sơ bệnh án kèm đơn thuốc và chuyển lịch hẹn sang DA_HOAN_THANH, trong 1 transaction.
      * <p>
-     * Ném LICH_HEN_KHONG_KHAM_DUOC nếu lịch hẹn không còn ở CHO_XAC_NHAN / DA_XAC_NHAN (đã khám, đã hủy, bị từ chối);
+     * Ném LICH_HEN_KHONG_KHAM_DUOC nếu lịch hẹn không còn ở DA_XAC_NHAN (đã khám, đã hủy, bác sĩ đã hủy, đã đóng
+     * là không đến);
      * CHUA_DEN_NGAY_KHAM nếu ngày khám của lịch hẹn sau hôm nay.
      */
     BenhAnResponse ghiNhan(Long idTaiKhoanBacSi, Long idLichHen, BenhAnRequest request);
 
     /**
-     * Sửa hồ sơ bệnh án đã ghi: thay chẩn đoán, ghi chú, ngày tái khám và toàn bộ đơn thuốc. Lịch hẹn giữ nguyên trạng
-     * thái. Ném KHONG_TIM_THAY nếu lịch hẹn chưa có hồ sơ bệnh án.
+     * Sửa hồ sơ bệnh án đã ghi: thay chẩn đoán, ghi chú, ngày tái khám và toàn bộ đơn thuốc, tăng phiên bản và thêm 1
+     * dòng lịch sử sửa (lý do, nội dung trước / sau). Lịch hẹn giữ nguyên trạng thái.
+     * <p>
+     * Ném KHONG_TIM_THAY nếu lịch hẹn chưa có hồ sơ bệnh án; HET_HAN_SUA_BENH_AN nếu đã quá hạn sửa; DU_LIEU_DA_THAY_DOI
+     * nếu {@code request.phienBan()} không còn là phiên bản đang lưu; DU_LIEU_KHONG_HOP_LE nếu nội dung không đổi gì.
      */
     BenhAnResponse sua(Long idTaiKhoanBacSi, Long idLichHen, BenhAnRequest request);
 

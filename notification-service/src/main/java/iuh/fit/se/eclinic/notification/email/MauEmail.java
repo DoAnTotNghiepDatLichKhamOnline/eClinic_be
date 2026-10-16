@@ -13,7 +13,7 @@ import lombok.RequiredArgsConstructor;
 
 /**
  * Soạn email lịch hẹn và email tái khám từ mẫu + tham số theo 1 ngôn ngữ. Câu chữ nằm trong thong-diep/notification*.properties: khoá của
- * mẫu ({@code email.datLich}, {@code email.doiLich}, {@code email.nhacLich}...) là tiêu đề, {@code <mau>.moDau} là đoạn mở đầu, các dòng chi tiết
+ * mẫu ({@code email.datLich}, {@code email.doiLich}, {@code email.nhacLich}, {@code email.bacSiHuy}...) là tiêu đề, {@code <mau>.moDau} là đoạn mở đầu, các dòng chi tiết
  * và câu kết dùng chung ở {@code email.lichHen.*}.
  * <p>
  * Tham số (service nguồn ghi bằng {@code ThamSoThongBao}, đúng thứ tự): 0 họ tên bệnh nhân, 1 giờ khám, 2 họ tên bác sĩ,
@@ -32,8 +32,9 @@ public class MauEmail {
     public record Thu(String tieuDe, String html, String lienKet) {
     }
 
+    /** email.nhacLichChoXacNhan giữ cho email đã xếp hàng trước DOANTOTNGH-11 (không còn lịch hẹn chờ xác nhận). */
     private static final Set<String> CAC_MAU = Set.of("email.datLich", "email.doiLich", "email.nhacLich",
-            "email.nhacLichChoXacNhan");
+            "email.nhacLichChoXacNhan", "email.bacSiHuy");
     private static final int SO_THAM_SO = 7;
     private static final Set<String> CAC_MAU_TAI_KHAM = Set.of("email.taiKham", "email.taiKhamDoiNgay",
             "email.nhacTaiKham");

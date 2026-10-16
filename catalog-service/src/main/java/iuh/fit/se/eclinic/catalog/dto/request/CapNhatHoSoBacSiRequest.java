@@ -1,23 +1,44 @@
 package iuh.fit.se.eclinic.catalog.dto.request;
 
+import static iuh.fit.se.eclinic.catalog.dto.request.GioiHanHoSoBacSi.DO_DAI_Y;
+import static iuh.fit.se.eclinic.catalog.dto.request.GioiHanHoSoBacSi.MA_NGON_NGU;
+import static iuh.fit.se.eclinic.catalog.dto.request.GioiHanHoSoBacSi.MA_NGON_NGU_KHONG_HOP_LE;
+import static iuh.fit.se.eclinic.catalog.dto.request.GioiHanHoSoBacSi.MOI_Y_KHONG_TRONG;
+import static iuh.fit.se.eclinic.catalog.dto.request.GioiHanHoSoBacSi.MOI_Y_MOT_DONG;
+import static iuh.fit.se.eclinic.catalog.dto.request.GioiHanHoSoBacSi.MOI_Y_TOI_DA;
+import static iuh.fit.se.eclinic.catalog.dto.request.GioiHanHoSoBacSi.MOT_DONG;
+import static iuh.fit.se.eclinic.catalog.dto.request.GioiHanHoSoBacSi.SO_NGON_NGU_TOI_DA;
+import static iuh.fit.se.eclinic.catalog.dto.request.GioiHanHoSoBacSi.SO_Y_TOI_DA;
+
+import java.time.LocalDate;
 import java.util.List;
 
-import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 /**
  * Hồ sơ giới thiệu của bác sĩ do quản trị viên sửa (DOC-01). Gửi đủ mọi trường: trường bỏ trống / null bị xoá trắng.
- * Chuyên khoa, số giấy phép, trạng thái không sửa ở đây.
+ * Chuyên khoa, số giấy phép, trạng thái không sửa ở đây. Các mục bác sĩ tự sửa được ({@link CapNhatHoSoCuaToiRequest})
+ * cũng nằm ở đây: quản trị viên sửa được mọi mục.
  * <p>
- * 3 mục danh sách: mỗi phần tử 1 ý, không chứa ký tự xuống dòng (lưu mỗi dòng 1 ý).
+ * Các mục danh sách: mỗi phần tử 1 ý, không chứa ký tự xuống dòng (lưu mỗi dòng 1 ý).
  * <p>
  * Các trường {@code ...En} là bản tiếng Anh, cùng giới hạn với bản tiếng Việt; bỏ trống thì người xem tiếng Anh thấy bản
  * tiếng Việt của trường đó. Học vị (chữ viết tắt) không có bản tiếng Anh.
+ *
+ * @param phienBan          phiên bản hồ sơ đã tải ({@code phienBanHoSo}); bác sĩ hoặc quản trị viên khác đã lưu trước
+ *                          thì 409 DU_LIEU_DA_THAY_DOI
+ * @param namBatDauHanhNghe số năm kinh nghiệm suy ra từ đây; không được sau năm nay (kiểm tra ở service)
+ * @param ngonNguKham       mã ngôn ngữ ISO 639 (vd "vi", "en"), không phân biệt hoa thường, trùng thì gộp
  */
 public record CapNhatHoSoBacSiRequest(
+
+        @NotNull(message = "{kiemTra.phienBan.batBuoc}")
+        Integer phienBan,
 
         @Size(max = 100, message = "{kiemTra.hocVi.toiDa}")
         String hocVi,
@@ -28,9 +49,23 @@ public record CapNhatHoSoBacSiRequest(
         @Size(max = 150, message = "{kiemTra.chucVuEn.toiDa}")
         String chucVuEn,
 
-        @Min(value = 0, message = "{kiemTra.soNamKinhNghiem.khongAm}")
-        @Max(value = 80, message = "{kiemTra.soNamKinhNghiem.toiDa}")
-        Integer soNamKinhNghiem,
+        @Min(value = 1950, message = "{kiemTra.namBatDauHanhNghe.toiThieu}")
+        Integer namBatDauHanhNghe,
+
+        @PastOrPresent(message = "{kiemTra.ngayCapGiayPhep.khongTuongLai}")
+        LocalDate ngayCapGiayPhep,
+
+        @Size(max = 200, message = "{kiemTra.noiCapGiayPhep.toiDa}")
+        String noiCapGiayPhep,
+
+        @Size(max = 200, message = "{kiemTra.noiCapGiayPhepEn.toiDa}")
+        String noiCapGiayPhepEn,
+
+        @Size(max = 500, message = "{kiemTra.phamViHanhNghe.toiDa}")
+        String phamViHanhNghe,
+
+        @Size(max = 500, message = "{kiemTra.phamViHanhNgheEn.toiDa}")
+        String phamViHanhNgheEn,
 
         @Size(max = 300, message = "{kiemTra.gioiThieuNgan.toiDa}")
         String gioiThieuNgan,
@@ -43,6 +78,9 @@ public record CapNhatHoSoBacSiRequest(
 
         @Size(max = 5000, message = "{kiemTra.tieuSuEn.toiDa}")
         String tieuSuEn,
+
+        @Size(max = SO_NGON_NGU_TOI_DA, message = "{kiemTra.ngonNguKham.toiDa}")
+        List<@NotBlank(message = MA_NGON_NGU_KHONG_HOP_LE) @Pattern(regexp = MA_NGON_NGU, message = MA_NGON_NGU_KHONG_HOP_LE) String> ngonNguKham,
 
         @Size(max = SO_Y_TOI_DA, message = "{kiemTra.quaTrinhDaoTao.toiDa}")
         List<@NotBlank(message = MOI_Y_KHONG_TRONG) @Size(max = DO_DAI_Y, message = MOI_Y_TOI_DA) @Pattern(regexp = MOT_DONG, message = MOI_Y_MOT_DONG) String> quaTrinhDaoTao,
@@ -60,12 +98,17 @@ public record CapNhatHoSoBacSiRequest(
         List<@NotBlank(message = MOI_Y_KHONG_TRONG) @Size(max = DO_DAI_Y, message = MOI_Y_TOI_DA) @Pattern(regexp = MOT_DONG, message = MOI_Y_MOT_DONG) String> linhVucKhamChua,
 
         @Size(max = SO_Y_TOI_DA, message = "{kiemTra.linhVucKhamChuaEn.toiDa}")
-        List<@NotBlank(message = MOI_Y_KHONG_TRONG) @Size(max = DO_DAI_Y, message = MOI_Y_TOI_DA) @Pattern(regexp = MOT_DONG, message = MOI_Y_MOT_DONG) String> linhVucKhamChuaEn) {
+        List<@NotBlank(message = MOI_Y_KHONG_TRONG) @Size(max = DO_DAI_Y, message = MOI_Y_TOI_DA) @Pattern(regexp = MOT_DONG, message = MOI_Y_MOT_DONG) String> linhVucKhamChuaEn,
 
-    private static final int SO_Y_TOI_DA = 20;
-    private static final int DO_DAI_Y = 300;
-    private static final String MOT_DONG = "[^\r\n]*";
-    private static final String MOI_Y_KHONG_TRONG = "{kiemTra.moiY.batBuoc}";
-    private static final String MOI_Y_TOI_DA = "{kiemTra.moiY.toiDa}";
-    private static final String MOI_Y_MOT_DONG = "{kiemTra.moiY.motDong}";
+        @Size(max = SO_Y_TOI_DA, message = "{kiemTra.giaiThuong.toiDa}")
+        List<@NotBlank(message = MOI_Y_KHONG_TRONG) @Size(max = DO_DAI_Y, message = MOI_Y_TOI_DA) @Pattern(regexp = MOT_DONG, message = MOI_Y_MOT_DONG) String> giaiThuong,
+
+        @Size(max = SO_Y_TOI_DA, message = "{kiemTra.giaiThuongEn.toiDa}")
+        List<@NotBlank(message = MOI_Y_KHONG_TRONG) @Size(max = DO_DAI_Y, message = MOI_Y_TOI_DA) @Pattern(regexp = MOT_DONG, message = MOI_Y_MOT_DONG) String> giaiThuongEn,
+
+        @Size(max = SO_Y_TOI_DA, message = "{kiemTra.congTrinhNghienCuu.toiDa}")
+        List<@NotBlank(message = MOI_Y_KHONG_TRONG) @Size(max = DO_DAI_Y, message = MOI_Y_TOI_DA) @Pattern(regexp = MOT_DONG, message = MOI_Y_MOT_DONG) String> congTrinhNghienCuu,
+
+        @Size(max = SO_Y_TOI_DA, message = "{kiemTra.congTrinhNghienCuuEn.toiDa}")
+        List<@NotBlank(message = MOI_Y_KHONG_TRONG) @Size(max = DO_DAI_Y, message = MOI_Y_TOI_DA) @Pattern(regexp = MOT_DONG, message = MOI_Y_MOT_DONG) String> congTrinhNghienCuuEn) {
 }

@@ -38,12 +38,29 @@ public interface DuLieuMauService {
     int boSungTiengAnh();
 
     /**
+     * Điền giấy phép hành nghề (ngày cấp, nơi cấp, phạm vi), ngôn ngữ khám, giải thưởng và công trình nghiên cứu mẫu (cả
+     * bản tiếng Anh) cho các bác sĩ mẫu CHƯA có ngôn ngữ khám. Chạy mỗi lần khởi động nên DB có dữ liệu mẫu từ trước cũng
+     * được bổ sung; giải thưởng / nghiên cứu đã nhập thì giữ nguyên.
+     *
+     * @return số bác sĩ được bổ sung
+     */
+    int boSungGiayPhepVaNgonNgu();
+
+    /**
      * Điền triệu chứng thường gặp (2 ngôn ngữ) cho các chuyên khoa mẫu còn trống cả 2 bản, để chatbot gợi ý được chuyên
      * khoa. Chạy mỗi lần khởi động; chuyên khoa quản trị viên đã nhập thì không đụng tới.
      *
      * @return số chuyên khoa được bổ sung
      */
     int boSungTrieuChung();
+
+    /**
+     * Thêm các thuốc mẫu (đã xác minh, đang dùng) còn thiếu trong danh mục, so theo tên + hàm lượng, để bác sĩ mẫu kê đơn
+     * được. Chạy mỗi lần khởi động; thuốc đã có (kể cả đã bị sửa / ngừng dùng) thì không đụng tới.
+     *
+     * @return số thuốc đã thêm
+     */
+    int boSungThuoc();
 
     /**
      * Bổ sung ca làm việc + khung giờ còn thiếu của các bác sĩ mẫu trong {@code soNgay} ngày tính từ {@code tuNgay}.

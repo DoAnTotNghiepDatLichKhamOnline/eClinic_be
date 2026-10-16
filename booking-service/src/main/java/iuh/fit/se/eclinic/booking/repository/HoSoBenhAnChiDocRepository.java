@@ -17,9 +17,10 @@ import iuh.fit.se.eclinic.common.entity.medical.HoSoBenhAn;
  */
 public interface HoSoBenhAnChiDocRepository extends Repository<HoSoBenhAn, Long> {
 
-    /** Hồ sơ bệnh án của các lịch hẹn cho trước, kèm các dòng đơn thuốc và thuốc. */
+    /** Hồ sơ bệnh án của các lịch hẹn cho trước, kèm các dòng đơn thuốc, thuốc và mã ICD-10. */
     @Query("""
             select distinct b from HoSoBenhAn b
+            left join fetch b.icdChinh
             left join fetch b.chiTietDonThuoc c
             left join fetch c.thuoc
             where b.lichHen.id in :lichHenIds

@@ -80,8 +80,7 @@ public class DatLichServiceImpl implements DatLichService {
     }
 
     /** Lịch hẹn còn hiệu lực: tính vào trùng giờ và vào giới hạn số lịch đang giữ. */
-    private static final List<TrangThaiLichHen> TRANG_THAI_CON_HIEU_LUC = List.of(TrangThaiLichHen.CHO_XAC_NHAN,
-            TrangThaiLichHen.DA_XAC_NHAN);
+    private static final List<TrangThaiLichHen> TRANG_THAI_CON_HIEU_LUC = List.of(TrangThaiLichHen.DA_XAC_NHAN);
 
     private final LichLamViecRepository lichLamViecRepository;
     private final KhungGioKhamRepository khungGioKhamRepository;

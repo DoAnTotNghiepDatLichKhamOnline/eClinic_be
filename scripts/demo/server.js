@@ -27,7 +27,7 @@ const CAC_DUONG_DAN = new Set([
     '/',
     '/login', '/register', '/forgot-password', '/reset-password', '/verify-email', '/confirm-email-change',
     '/appointment', '/patient/appointments', '/patient/profile', '/account',
-    '/doctor/dashboard', '/doctor/work-schedule', '/doctor/appointment-requests', '/doctor/consultation', '/doctor/profile',
+    '/doctor/dashboard', '/doctor/work-schedule', '/doctor/upcoming-appointments', '/doctor/consultation', '/doctor/profile',
     '/admin/dashboard', '/admin/schedule-management', '/admin/medical-catalog', '/admin/doctors', '/admin/patients',
     '/admin/accounts',
 ]);

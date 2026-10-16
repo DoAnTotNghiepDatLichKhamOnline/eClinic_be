@@ -74,8 +74,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class QuanLyCaServiceImpl implements QuanLyCaService {
 
-    private static final List<TrangThaiLichHen> CON_HIEU_LUC = List.of(TrangThaiLichHen.CHO_XAC_NHAN,
-            TrangThaiLichHen.DA_XAC_NHAN);
+    private static final List<TrangThaiLichHen> CON_HIEU_LUC = List.of(TrangThaiLichHen.DA_XAC_NHAN);
 
     private final LichLamViecRepository lichLamViecRepository;
     private final KhungGioKhamRepository khungGioKhamRepository;

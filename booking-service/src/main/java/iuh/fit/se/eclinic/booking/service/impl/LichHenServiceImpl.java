@@ -45,8 +45,7 @@ import lombok.RequiredArgsConstructor;
 public class LichHenServiceImpl implements LichHenService {
 
     /** Lịch hẹn còn phải khám: cùng lượt khám chưa kết thúc thì là lịch "sắp tới". */
-    private static final List<TrangThaiLichHen> TRANG_THAI_CON_HIEU_LUC = List.of(TrangThaiLichHen.CHO_XAC_NHAN,
-            TrangThaiLichHen.DA_XAC_NHAN);
+    private static final List<TrangThaiLichHen> TRANG_THAI_CON_HIEU_LUC = List.of(TrangThaiLichHen.DA_XAC_NHAN);
 
     /** 4 chữ số (hoặc 6 khi ngày quá đông); lịch hẹn có trước khi có mã dùng id nên có thể dài hơn. */
     private static final Pattern DANG_MA_TRA_CUU = Pattern.compile("(?i)ECL-\\d{8}-\\d{4,7}");

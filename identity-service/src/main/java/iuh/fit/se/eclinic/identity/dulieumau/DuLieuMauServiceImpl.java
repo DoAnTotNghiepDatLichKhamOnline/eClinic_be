@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
@@ -23,6 +24,7 @@ import iuh.fit.se.eclinic.common.entity.catalog.ChuyenKhoa;
 import iuh.fit.se.eclinic.common.entity.catalog.PhongKham;
 import iuh.fit.se.eclinic.common.entity.identity.QuanTriVien;
 import iuh.fit.se.eclinic.common.entity.identity.TaiKhoan;
+import iuh.fit.se.eclinic.common.entity.medical.Thuoc;
 import iuh.fit.se.eclinic.common.entity.scheduling.KhungGioKham;
 import iuh.fit.se.eclinic.common.entity.scheduling.LichLamViec;
 import iuh.fit.se.eclinic.common.enums.LoaiAnhBacSi;
@@ -31,12 +33,14 @@ import iuh.fit.se.eclinic.common.enums.TrangThaiLichLamViec;
 import iuh.fit.se.eclinic.common.enums.TrangThaiLienKet;
 import iuh.fit.se.eclinic.common.enums.TrangThaiPhongKham;
 import iuh.fit.se.eclinic.common.enums.TrangThaiTaiKhoan;
+import iuh.fit.se.eclinic.common.enums.TrangThaiThuoc;
 import iuh.fit.se.eclinic.common.enums.VaiTro;
 import iuh.fit.se.eclinic.common.util.ChiaCaLamViec;
 import iuh.fit.se.eclinic.identity.dulieumau.DuLieuMau.BacSiMau;
 import iuh.fit.se.eclinic.identity.dulieumau.DuLieuMau.BenhNhanMau;
 import iuh.fit.se.eclinic.identity.dulieumau.DuLieuMau.Buoi;
 import iuh.fit.se.eclinic.identity.dulieumau.DuLieuMau.ChuyenKhoaMau;
+import iuh.fit.se.eclinic.identity.dulieumau.DuLieuMau.ThuocMau;
 import iuh.fit.se.eclinic.identity.dulieumau.DuLieuMauTiengAnh.ChuyenKhoaEn;
 import iuh.fit.se.eclinic.identity.dulieumau.DuLieuMauTiengAnh.HoSoBacSiEn;
 import iuh.fit.se.eclinic.identity.repository.TaiKhoanRepository;
@@ -97,7 +101,7 @@ public class DuLieuMauServiceImpl implements DuLieuMauService {
             bacSi.setChuyenKhoa(chuyenKhoaTheoTen.get(mau.chuyenKhoa()));
             bacSi.setSoGiayPhep(mau.soGiayPhep());
             bacSi.setHocVi(mau.hocVi());
-            bacSi.setSoNamKinhNghiem(mau.soNamKinhNghiem());
+            bacSi.setNamBatDauHanhNghe(mau.namBatDauHanhNghe());
             bacSi.setTieuSu(mau.tieuSu());
             entityManager.persist(bacSi);
         }
@@ -260,6 +264,48 @@ public class DuLieuMauServiceImpl implements DuLieuMauService {
 
     @Override
     @Transactional
+    public int boSungGiayPhepVaNgonNgu() {
+        Map<String, BacSiMau> mauTheoEmail = DuLieuMau.BAC_SI.stream()
+                .collect(Collectors.toMap(BacSiMau::email, Function.identity()));
+        List<BacSi> chuaCo = entityManager.createQuery("""
+                select b from BacSi b join fetch b.taiKhoan t
+                where t.email in :emails and b.ngonNguKham is null
+                order by b.id
+                """, BacSi.class)
+                .setParameter("emails", mauTheoEmail.keySet())
+                .getResultList();
+        for (BacSi bacSi : chuaCo) {
+            BacSiMau mau = mauTheoEmail.get(bacSi.getTaiKhoan().getEmail());
+            bacSi.setNgonNguKham(HoSoBacSiMau.KHAM_TIENG_ANH.contains(mau.so()) ? "vi,en" : "vi");
+            if (bacSi.getNgayCapGiayPhep() == null && bacSi.getNoiCapGiayPhep() == null) {
+                int nam = bacSi.getNamBatDauHanhNghe() != null ? bacSi.getNamBatDauHanhNghe() : mau.namBatDauHanhNghe();
+                LocalDate ngayCap = LocalDate.of(nam, 9, 15);
+                bacSi.setNgayCapGiayPhep(ngayCap.isAfter(LocalDate.now()) ? LocalDate.now() : ngayCap);
+                bacSi.setNoiCapGiayPhep("Sở Y tế TP. Hồ Chí Minh");
+                bacSi.setNoiCapGiayPhepEn(DuLieuMauTiengAnh.NOI_CAP_GIAY_PHEP);
+            }
+            if (bacSi.getPhamViHanhNghe() == null) {
+                bacSi.setPhamViHanhNghe("Khám bệnh, chữa bệnh chuyên khoa " + mau.chuyenKhoa());
+                bacSi.setPhamViHanhNgheEn("Medical examination and treatment in "
+                        + DuLieuMauTiengAnh.CHUYEN_KHOA.get(mau.chuyenKhoa()).ten());
+            }
+            HoSoBacSiMau.GiaiThuongMau vi = HoSoBacSiMau.GIAI_THUONG.get(mau.so());
+            if (vi != null && bacSi.getGiaiThuong() == null && bacSi.getCongTrinhNghienCuu() == null) {
+                HoSoBacSiMau.GiaiThuongMau en = DuLieuMauTiengAnh.GIAI_THUONG.get(mau.so());
+                bacSi.setGiaiThuong(String.join("\n", vi.giaiThuong()));
+                bacSi.setGiaiThuongEn(String.join("\n", en.giaiThuong()));
+                bacSi.setCongTrinhNghienCuu(String.join("\n", vi.nghienCuu()));
+                bacSi.setCongTrinhNghienCuuEn(String.join("\n", en.nghienCuu()));
+            }
+        }
+        if (!chuaCo.isEmpty()) {
+            log.info("Đã bổ sung giấy phép, ngôn ngữ khám mẫu cho {} bác sĩ", chuaCo.size());
+        }
+        return chuaCo.size();
+    }
+
+    @Override
+    @Transactional
     public int boSungTrieuChung() {
         int soDong = 0;
         for (ChuyenKhoaMau mau : DuLieuMau.CHUYEN_KHOA) {
@@ -273,6 +319,48 @@ public class DuLieuMauServiceImpl implements DuLieuMauService {
             }
         }
         return soDong;
+    }
+
+    @Override
+    @Transactional
+    public int boSungThuoc() {
+        int soThuoc = 0;
+        for (ThuocMau mau : DuLieuMau.THUOC) {
+            // Cùng cách chuẩn hoá với medical-service (ThuocServiceImpl.normalize): khoá UNIQUE là tên + hàm lượng
+            String tenChuanHoa = chuanHoaThuoc(mau.ten());
+            String hamLuongChuanHoa = chuanHoaThuoc(mau.hamLuong());
+            boolean daCo = entityManager.createQuery("""
+                    select count(t) from Thuoc t where t.tenChuanHoa = :ten and t.hamLuongChuanHoa = :hamLuong
+                    """, Long.class)
+                    .setParameter("ten", tenChuanHoa).setParameter("hamLuong", hamLuongChuanHoa)
+                    .getSingleResult() > 0;
+            if (daCo) {
+                continue;
+            }
+            DuLieuMauTiengAnh.ThuocEn en = DuLieuMauTiengAnh.THUOC.get(mau.ten());
+            Thuoc thuoc = new Thuoc();
+            thuoc.setTenThuoc(mau.ten());
+            thuoc.setTenChuanHoa(tenChuanHoa);
+            thuoc.setHoatChat(mau.hoatChat());
+            thuoc.setHamLuong(mau.hamLuong());
+            thuoc.setHamLuongChuanHoa(hamLuongChuanHoa);
+            thuoc.setDangBaoChe(mau.dangBaoChe());
+            thuoc.setDangBaoCheEn(en.dangBaoChe());
+            thuoc.setDuongDung(mau.duongDung());
+            thuoc.setDonVi(mau.donVi());
+            thuoc.setDonViEn(en.donVi());
+            thuoc.setMoTa(mau.moTa());
+            thuoc.setMoTaEn(en.moTa());
+            thuoc.setDaXacMinh(true);
+            thuoc.setTrangThai(TrangThaiThuoc.DANG_DUNG);
+            entityManager.persist(thuoc);
+            soThuoc++;
+        }
+        return soThuoc;
+    }
+
+    private static String chuanHoaThuoc(String chuoi) {
+        return chuoi.trim().replaceAll("\s+", " ").toLowerCase(Locale.ROOT);
     }
 
     private boolean chuaCo(String cauDem, String ten) {

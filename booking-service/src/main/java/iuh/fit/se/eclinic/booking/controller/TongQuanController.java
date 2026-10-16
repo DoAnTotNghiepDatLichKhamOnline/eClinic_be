@@ -22,7 +22,7 @@ public class TongQuanController {
     private final TongQuanService tongQuanService;
 
     @Operation(summary = "Dashboard của bác sĩ: lịch hẹn hôm nay, đang chờ, đã khám, điểm đánh giá trung bình + số lượt, số"
-            + " yêu cầu chờ xác nhận")
+            + " lịch hẹn sắp tới")
     @GetMapping("/api/booking/bac-si/toi/tong-quan")
     @PreAuthorize("hasRole('BAC_SI')")
     public PhanHoiApi<TongQuanBacSiResponse> cuaBacSi() {

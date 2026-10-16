@@ -20,7 +20,6 @@ import iuh.fit.se.eclinic.common.entity.medical.HoSoBenhAn;
 import iuh.fit.se.eclinic.common.enums.KenhThongBao;
 import iuh.fit.se.eclinic.common.enums.LoaiThongBao;
 import iuh.fit.se.eclinic.common.enums.NgonNgu;
-import iuh.fit.se.eclinic.common.enums.TrangThaiLichHen;
 import iuh.fit.se.eclinic.common.thongbao.ThamSoThongBao;
 import lombok.RequiredArgsConstructor;
 
@@ -48,21 +47,13 @@ public class ThongBaoLichHenServiceImpl implements ThongBaoLichHenService {
     }
 
     @Override
-    public void daXacNhan(LichHen lichHen) {
-        ThamSoThongBao thamSo = ThamSoThongBao.tao().chu(tenBacSi(lichHen)).chu(tenBenhNhan(lichHen))
-                .gioNgay(gioKham(lichHen)).chu(lichHen.getMaTraCuu());
-        for (Long idTaiKhoan : taiKhoanPhiaBenhNhan(lichHen)) {
-            ghi(LoaiThongBao.LICH_HEN_DA_XAC_NHAN, idTaiKhoan, lichHen, "thongBao.daXacNhan", thamSo);
-        }
-    }
-
-    @Override
-    public void biTuChoi(LichHen lichHen) {
+    public void bacSiHuy(LichHen lichHen) {
         ThamSoThongBao thamSo = ThamSoThongBao.tao().chu(tenBacSi(lichHen)).chu(tenBenhNhan(lichHen))
                 .gioNgay(gioKham(lichHen)).chu(lichHen.getMaTraCuu()).chu(lichHen.getLyDoHuy());
         for (Long idTaiKhoan : taiKhoanPhiaBenhNhan(lichHen)) {
-            ghi(LoaiThongBao.LICH_HEN_BI_TU_CHOI, idTaiKhoan, lichHen, "thongBao.biTuChoi", thamSo);
+            ghi(LoaiThongBao.LICH_HEN_BI_TU_CHOI, idTaiKhoan, lichHen, "thongBao.bacSiHuy", thamSo);
         }
+        ghiEmail(lichHen, "email.bacSiHuy");
     }
 
     @Override
@@ -102,16 +93,14 @@ public class ThongBaoLichHenServiceImpl implements ThongBaoLichHenService {
 
     @Override
     public void nhacLich(LichHen lichHen) {
-        boolean choXacNhan = lichHen.getTrangThai() == TrangThaiLichHen.CHO_XAC_NHAN;
         PhongKham phong = lichHen.getPhongKham();
         ThamSoThongBao thamSo = ThamSoThongBao.tao().chu(tenBenhNhan(lichHen)).gioNgay(gioKham(lichHen))
                 .chu(tenBacSi(lichHen)).haiNgonNgu(phong.getTenPhong(), phong.getTenPhongEn())
                 .chu(lichHen.getMaTraCuu());
         for (Long idTaiKhoan : taiKhoanPhiaBenhNhan(lichHen)) {
-            ghi(LoaiThongBao.NHAC_LICH_KHAM, idTaiKhoan, lichHen,
-                    choXacNhan ? "thongBao.nhacLich.choXacNhan" : "thongBao.nhacLich", thamSo);
+            ghi(LoaiThongBao.NHAC_LICH_KHAM, idTaiKhoan, lichHen, "thongBao.nhacLich", thamSo);
         }
-        ghiEmail(lichHen, choXacNhan ? "email.nhacLichChoXacNhan" : "email.nhacLich");
+        ghiEmail(lichHen, "email.nhacLich");
     }
 
     @Override

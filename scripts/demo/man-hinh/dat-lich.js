@@ -6,7 +6,9 @@
 //   GET  /api/catalog/chuyen-khoa?kichThuoc=100                          1. chuyên khoa
 //   GET  /api/catalog/bac-si?idChuyenKhoa=&kichThuoc=100                 2. bác sĩ của chuyên khoa (thẻ)
 //   GET  /api/booking/khung-gio/ngay-som-nhat?idChuyenKhoa=              2. ngày sớm nhất còn chỗ của từng bác sĩ
-//   GET  /api/catalog/bac-si/{id}                                        2. chi tiết bác sĩ (hộp thoại)
+//   GET  /api/catalog/bac-si/{id}                                        2. chi tiết bác sĩ (hộp thoại): kèm giấy phép hành nghề
+//                                                                          (soGiayPhep, ngayCapGiayPhep, noiCapGiayPhep, phamViHanhNghe),
+//                                                                          ngonNguKham[] (mã ISO 639), giaiThuong[], congTrinhNghienCuu[]
 //   GET  /api/booking/khung-gio/nhieu-ngay?idBacSi=&tuNgay=              3 + 4. bác sĩ cụ thể: các ca 7 ngày kèm khung giờ (tuNgay bỏ
 //                                                                        trống = từ hôm nay; có khi mở từ thẻ của chatbot)
 //   GET  /api/booking/khung-gio/ngay-con-cho?tuNgay=&denNgay=&idChuyenKhoa=   3. "bác sĩ bất kỳ": ngày còn chỗ trong 14 ngày
@@ -228,13 +230,23 @@
             chu.append(the('h2', tenBacSi(bs)), the('div', [bs.chucVu, bs.tenChuyenKhoa].filter(Boolean).join(' · '), 'ghi-chu'));
             if (bs.soNamKinhNghiem != null) chu.append(the('div', t(`${bs.soNamKinhNghiem} năm kinh nghiệm`, `${bs.soNamKinhNghiem} years of experience`), 'ghi-chu'));
             chu.append(the('div', diemDanhGia(bs), 'ghi-chu'));
+            if (bs.ngonNguKham && bs.ngonNguKham.length) chu.append(the('div', t('Ngôn ngữ khám: ', 'Consultation languages: ') + dsNgonNgu(bs.ngonNguKham), 'ghi-chu'));
             if (bs.gioiThieuNgan) chu.append(the('p', bs.gioiThieuNgan));
             dau.append(chu);
             const phan = [dau];
             if (bs.tieuSu) phan.push(the('h3', t('Giới thiệu', 'About')), the('p', bs.tieuSu));
             phan.push(...danhSach(t('Khám và điều trị', 'Examination and treatment'), bs.linhVucKhamChua),
                 ...danhSach(t('Quá trình công tác', 'Work experience'), bs.quaTrinhCongTac),
-                ...danhSach(t('Quá trình đào tạo', 'Education and training'), bs.quaTrinhDaoTao));
+                ...danhSach(t('Quá trình đào tạo', 'Education and training'), bs.quaTrinhDaoTao),
+                ...danhSach(t('Giải thưởng', 'Awards'), bs.giaiThuong),
+                ...danhSach(t('Công trình nghiên cứu', 'Research'), bs.congTrinhNghienCuu));
+            if (bs.soGiayPhep) {
+                phan.push(the('h3', t('Giấy phép hành nghề', 'Practice licence')), thongTin([
+                    [t('Số giấy phép', 'Licence number'), bs.soGiayPhep],
+                    [t('Ngày cấp', 'Issue date'), bs.ngayCapGiayPhep ? ngayVn(bs.ngayCapGiayPhep) : null],
+                    [t('Nơi cấp', 'Issuer'), bs.noiCapGiayPhep], [t('Phạm vi hành nghề', 'Scope of practice'), bs.phamViHanhNghe],
+                ]));
+            }
             if (bs.anh && bs.anh.length) {
                 const luoi = the('div', undefined, 'luoi-anh');
                 for (const a of bs.anh) {

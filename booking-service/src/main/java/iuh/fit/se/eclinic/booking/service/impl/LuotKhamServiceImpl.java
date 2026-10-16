@@ -21,8 +21,7 @@ import lombok.RequiredArgsConstructor;
 @Transactional(propagation = Propagation.MANDATORY)
 public class LuotKhamServiceImpl implements LuotKhamService {
 
-    private static final List<TrangThaiLichHen> CON_HIEU_LUC = List.of(TrangThaiLichHen.CHO_XAC_NHAN,
-            TrangThaiLichHen.DA_XAC_NHAN);
+    private static final List<TrangThaiLichHen> CON_HIEU_LUC = List.of(TrangThaiLichHen.DA_XAC_NHAN);
 
     private final KhungGioKhamRepository khungGioKhamRepository;
     private final LichHenRepository lichHenRepository;

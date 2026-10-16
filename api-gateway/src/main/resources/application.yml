@@ -4,6 +4,10 @@ server:
 spring:
   application:
     name: api-gateway
+  # Chạy bằng IntelliJ: đọc thêm file .env ở thư mục làm việc (run config đặt là thư mục gốc dự án), không có file thì bỏ qua.
+  # Biến môi trường (docker-compose, run config) vẫn được ưu tiên hơn giá trị trong .env.
+  config:
+    import: "optional:file:.env[.properties]"
 
   cloud:
     gateway:

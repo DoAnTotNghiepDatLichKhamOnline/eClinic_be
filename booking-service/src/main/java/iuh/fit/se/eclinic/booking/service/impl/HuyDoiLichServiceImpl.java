@@ -48,8 +48,7 @@ public class HuyDoiLichServiceImpl implements HuyDoiLichService {
     private static final Pattern DANG_MA_PHIEU_KHAM = Pattern.compile("[A-Za-z0-9_-]{43}");
     private static final Pattern DANG_SO_DIEN_THOAI = Pattern.compile("0\\d{9}");
 
-    private static final List<TrangThaiLichHen> TRANG_THAI_HUY_DOI_DUOC = List.of(TrangThaiLichHen.CHO_XAC_NHAN,
-            TrangThaiLichHen.DA_XAC_NHAN);
+    private static final List<TrangThaiLichHen> TRANG_THAI_HUY_DOI_DUOC = List.of(TrangThaiLichHen.DA_XAC_NHAN);
 
     private final LichHenRepository lichHenRepository;
     private final LuotKhamService luotKhamService;

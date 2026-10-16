@@ -26,8 +26,8 @@ import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Danh mục thuốc của quản trị viên (màn hình Medical Catalog): xác minh thuốc bác sĩ tự thêm khi kê đơn, thêm / sửa, cho
- * ngừng dùng. Gợi ý thuốc cho bác sĩ ở {@link KhamBenhController}.
+ * Danh mục thuốc của quản trị viên (màn hình Medical Catalog): thêm / sửa, xác minh thuốc bác sĩ đã tự thêm trước đây, cho
+ * ngừng dùng. Bác sĩ chỉ kê thuốc đang dùng và đã xác minh; gợi ý thuốc cho bác sĩ ở {@link KhamBenhController}.
  */
 @Tag(name = "Quản trị danh mục thuốc", description = "Danh sách, thêm, sửa, xác minh, ngừng dùng / dùng lại (quản trị viên)")
 @RestController
@@ -38,8 +38,8 @@ public class QuanTriThuocController {
 
     private final QuanLyThuocService quanLyThuocService;
 
-    @Operation(summary = "Danh mục thuốc (phân trang, thuốc chưa xác minh đứng trước rồi theo tên) kèm số lần đã kê; lọc"
-            + " theo tên, đã xác minh, trạng thái")
+    @Operation(summary = "Danh mục thuốc (phân trang, thuốc chưa xác minh đứng trước rồi theo tên, hàm lượng) kèm số lần đã"
+            + " kê; lọc theo tên hoặc hoạt chất, đã xác minh, trạng thái")
     @GetMapping
     public PhanHoiApi<TrangDuLieu<ThuocQuanTriResponse>> danhSach(
             @RequestParam(required = false) String tuKhoa,
@@ -50,21 +50,23 @@ public class QuanTriThuocController {
         return PhanHoiApi.ok(quanLyThuocService.danhSach(tuKhoa, daXacMinh, trangThai, trang, kichThuoc));
     }
 
-    @Operation(summary = "Thêm thuốc đã xác minh (409 TEN_THUOC_DA_TON_TAI nếu trùng tên, không phân biệt hoa thường /"
-            + " khoảng trắng)")
+    @Operation(summary = "Thêm thuốc đã xác minh; hoạt chất, hàm lượng bắt buộc (409 TEN_THUOC_DA_TON_TAI nếu trùng tên +"
+            + " hàm lượng, không phân biệt hoa thường / khoảng trắng)")
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public PhanHoiApi<ThuocQuanTriResponse> them(@Valid @RequestBody ThuocRequest request) {
         return PhanHoiApi.ok(quanLyThuocService.them(request), "thanhCong.themThuoc");
     }
 
-    @Operation(summary = "Sửa tên, đơn vị, mô tả (thuốc đã có trong đơn thuốc mà đổi sang tên khác: 409 THUOC_DA_DUOC_KE)")
+    @Operation(summary = "Sửa thuốc (thuốc đã có trong đơn thuốc mà đổi tên, hoạt chất, hàm lượng, dạng bào chế, đường dùng:"
+            + " 409 THUOC_DA_DUOC_KE; đơn vị, mô tả luôn sửa được)")
     @PutMapping("/{id}")
     public PhanHoiApi<ThuocQuanTriResponse> sua(@PathVariable Long id, @Valid @RequestBody ThuocRequest request) {
         return PhanHoiApi.ok(quanLyThuocService.sua(id, request), "thanhCong.capNhatThuoc");
     }
 
-    @Operation(summary = "Xác minh thuốc do bác sĩ thêm khi kê đơn")
+    @Operation(summary = "Xác minh thuốc do bác sĩ thêm khi kê đơn trước đây (409 THUOC_THIEU_THONG_TIN nếu chưa có hoạt"
+            + " chất hoặc hàm lượng)")
     @PostMapping("/{id}/xac-minh")
     public PhanHoiApi<ThuocQuanTriResponse> xacMinh(@PathVariable Long id) {
         return PhanHoiApi.ok(quanLyThuocService.xacMinh(id), "thanhCong.xacMinhThuoc");

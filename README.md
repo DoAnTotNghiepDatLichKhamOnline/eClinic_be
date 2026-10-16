@@ -17,10 +17,12 @@ React (5173)  ──►  api-gateway :8080  ──►  identity :8081   catalog 
 - Cách viết code (đặt tên, thêm API mới, migration...): xem [docs/QUY-UOC-CODE.md](docs/QUY-UOC-CODE.md).
 - Bàn giao cho frontend: [docs/BAN-GIAO-FRONTEND-05-10.md](docs/BAN-GIAO-FRONTEND-05-10.md) (từng màn hình) và
   [docs/BAN-GIAO-FRONTEND-NGON-NGU-EMAIL-CHATBOT.md](docs/BAN-GIAO-FRONTEND-NGON-NGU-EMAIL-CHATBOT.md) (đổi ngôn ngữ EN / VI,
-  email lịch hẹn, chatbot).
-- Tài liệu API cho frontend (tài khoản và đặt lịch khám phía bệnh nhân): `eClinic_API_XacThuc_TaiKhoan.docx`, bản 2.1.
+  email lịch hẹn, chatbot). Thay đổi ngày 14/10/2026 (kê thuốc chỉ từ danh mục, sửa hồ sơ bệnh án có lý do và lịch sử sửa,
+  hàng đợi khám, bác sĩ tự sửa hồ sơ) có bảng "Thay đổi ngày 14/10/2026" ở đầu tài liệu 05-10.
+- Tài liệu API cho frontend (tài khoản và đặt lịch khám phía bệnh nhân): `eClinic_API_XacThuc_TaiKhoan.docx`, bản 2.2.
   Mục 2 "Danh sách route" có cột **Thay đổi** ghi route mới / cập nhật theo phiên bản; ngôn ngữ EN / VI ở mục 3.12,
-  email và lời nhắc lịch hẹn ở mục 3.13, trợ lý AI (chatbot) ở mục 19. Tài liệu được dựng bằng `python scripts/api-doc/build.py`, không sửa tay.
+  email và lời nhắc lịch hẹn ở mục 3.13, trợ lý AI (chatbot) ở mục 19; bản 2.2 thêm dòng đơn thuốc theo danh mục, dấu
+  "đã chỉnh sửa" của kết quả khám và giấy phép / ngôn ngữ / giải thưởng của bác sĩ. Tài liệu được dựng bằng `python scripts/api-doc/build.py`, không sửa tay.
 
 Công nghệ: Java 17, Spring Boot 4.1, Spring Cloud Gateway (WebMVC), Spring Security (JWT HS256), Spring Data JPA,
 Flyway, MySQL 8.4, Redis, springdoc (Swagger), Maven, Docker Compose.
@@ -66,9 +68,15 @@ Qua gateway, mọi API có dạng `http://localhost:8080/api/<service>/...`, ví
 
 Dừng hạ tầng: `docker compose down` (thêm `-v` để xoá luôn dữ liệu).
 
-Service chạy trong IntelliJ không đọc file `.env`; nó dùng giá trị mặc định trong
-`common/src/main/resources/application-common.yml`, vốn khớp với MySQL/Redis của `docker compose up -d`.
-Nếu đổi cổng/mật khẩu trong `.env` thì phải đặt biến môi trường tương ứng (`DB_PORT`, `DB_PASSWORD`...) trong run config.
+Service chạy trong IntelliJ đọc file `.env` ở thư mục gốc (run config có sẵn đặt thư mục làm việc là thư mục gốc dự án),
+nên nhận cùng giá trị như cách 2: email, đăng nhập Google, Cloudinary, khoá chatbot, cổng MySQL... Không có `.env` thì dùng
+giá trị mặc định trong `application.yml` / `common/src/main/resources/application-common.yml`, vốn khớp với MySQL/Redis của
+`docker compose up -d`. Biến môi trường đặt trong run config được ưu tiên hơn `.env` (ví dụ `SEED_DATA=true` của
+identity-service). Tự tạo run config mới thì đặt *Working directory* là thư mục gốc dự án (`$PROJECT_DIR$`).
+
+- Ghi giá trị trong `.env` trơn, không có dấu nháy (`MAIL_USERNAME=ten-ban@gmail.com`).
+- **`MAIL_MODE=smtp` trong `.env` thì service chạy trong IntelliJ cũng gửi email thật.**
+- Máy đã có MySQL / MariaDB khác chiếm cổng 3306: dừng nó, hoặc đặt `DB_PORT=3307` trong `.env` (IntelliJ và Docker cùng theo).
 
 ## Cách 2 — Chạy toàn bộ trong Docker (demo, test frontend)
 
@@ -141,7 +149,7 @@ Giới hạn dung lượng: ảnh tối đa 2 MB (identity-service); mỗi reque
 Ảnh lưu ở [Cloudinary](https://cloudinary.com/users/register_free), gói Free, không cần thẻ:
 1. Đăng ký tài khoản, vào Console > Settings > API Keys: lấy **Cloud name** (đầu trang), **API Key**, **API Secret**.
 2. Trong `.env`: `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` (API Secret là bí mật, chỉ để trong `.env`).
-   Chạy bằng IntelliJ thì đặt 3 biến này trong run config của identity-service **và catalog-service**.
+   Chạy bằng IntelliJ cũng đọc 3 biến này từ `.env` (identity-service và catalog-service), không cần đặt trong run config.
 3. Khởi động lại identity-service và catalog-service.
 
 Mã nối kho ảnh nằm ở `common` (`common/luutru`), cấu hình kết nối ở `application-common.yml`. Chỉ service đặt
@@ -160,7 +168,7 @@ catalog-service (ảnh giới thiệu bác sĩ, lưu tại `<CLOUDINARY_FOLDER>/
 1. Tài khoản Google gửi mail phải bật **Xác minh 2 bước**, rồi tạo **App Password** ở
    https://myaccount.google.com/apppasswords (16 ký tự, không phải mật khẩu Gmail).
 2. Trong `.env`: `MAIL_MODE=smtp`, `MAIL_USERNAME=ten-ban@gmail.com`, `MAIL_APP_PASSWORD=<16 ký tự, bỏ dấu cách>`.
-   Chạy bằng IntelliJ thì đặt 3 biến này trong run config của identity-service.
+   Chạy bằng IntelliJ cũng đọc 3 biến này từ `.env`, không cần đặt trong run config.
 3. Khởi động lại identity-service. Thiếu tài khoản khi `MAIL_MODE=smtp` thì service không khởi động.
 
 **Đăng nhập Google:**
@@ -200,7 +208,7 @@ báo "Sai vai trò". Liên kết kích hoạt / đặt lại mật khẩu / xác
 | `/account` | đã đăng nhập | menu tài khoản: Change password (+ hồ sơ, ảnh, đổi email, thiết bị) | `tai-khoan.js` |
 | `/doctor/dashboard` | bác sĩ | Doctor: Dashboard | `bs-tong-quan.js` |
 | `/doctor/work-schedule` | bác sĩ | Doctor: Work Schedule | `bs-lich-lam-viec.js` |
-| `/doctor/appointment-requests` | bác sĩ | Doctor: Appointment Requests | `bs-yeu-cau.js` |
+| `/doctor/upcoming-appointments` | bác sĩ | Doctor: Upcoming Appointments (thay Appointment Requests từ 15/10) | `bs-lich-hen-sap-toi.js` |
 | `/doctor/consultation` | bác sĩ | Doctor: Consultation / EMR | `bs-kham-benh.js` |
 | `/doctor/profile` | bác sĩ | Doctor: Doctor Profile | `bs-ho-so.js` |
 | `/admin/dashboard` | quản trị viên | Admin: Dashboard | `qt-tong-quan.js` |
@@ -286,7 +294,15 @@ hộp thư thật. Trang demo mở ở http://localhost:5173, Swagger của iden
 
 UC-APPT-01 (BOOK-01..07, BOOK-11, BOOK-12): **khách không cần đăng nhập** hoặc **bệnh nhân đã đăng nhập** chọn chuyên khoa,
 bác sĩ (hoặc "bác sĩ bất kỳ"), ngày, khung giờ 1 tiếng, điền thông tin người khám và nhận phiếu khám (số thứ tự, giờ khám dự
-kiến, link, mã QR). Lịch mới ở trạng thái `CHO_XAC_NHAN`. Huỷ / đổi lịch và bác sĩ xác nhận chưa có (task khác); bác sĩ ghi kết quả khám thì lịch chuyển sang `DA_HOAN_THANH`.
+kiến, link, mã QR). Lịch mới ở trạng thái `DA_XAC_NHAN` ngay, không chờ bác sĩ duyệt (từ 15/10/2026). Bác sĩ hủy được lịch
+trước giờ khám, kèm lý do (`BI_TU_CHOI`); bác sĩ ghi kết quả khám thì lịch chuyển sang `DA_HOAN_THANH`.
+
+- **Không đến (`KHONG_DEN`):** job đóng ngày khám của booking-service chạy lúc 00:01 mỗi ngày và mỗi lần service khởi động:
+  lịch `DA_XAC_NHAN` của ngày đã qua mà chưa khám thành `KHONG_DEN`, trừ người đã được gọi vào khám (`DANG_KHAM`) và lịch
+  đang chờ đổi (`canDoiLich`). Lịch `KHONG_DEN` không hủy, đổi hay đánh giá được; hàng đợi của ngày đó hiện là `VANG_MAT`.
+- Những gì frontend phải đổi từ 15/10/2026 (xác nhận ngay, bác sĩ hủy lịch, không đến, bệnh án đầy đủ): khối "Thay đổi ngày
+  15/10/2026" trong `docs/BAN-GIAO-FRONTEND-05-10.md`; phía bệnh nhân có ở tài liệu API bản 2.3
+  (`eClinic_API_XacThuc_TaiKhoan.docx`).
 
 - Mỗi ca làm việc có N lượt khám mỗi giờ, mỗi lượt t phút (dữ liệu mẫu: N = 6, t = 10). Khung 1 tiếng hết N lượt thì hiện
   "Hết chỗ"; người đặt được xếp vào lượt trống sớm nhất của khung. Khung cuối của ca có thể ngắn hơn 1 tiếng.
@@ -318,30 +334,34 @@ Tất cả gọi qua gateway `http://localhost:8080`; thử nhanh trên Swagger 
 | API | Ai gọi | Ghi chú |
 |---|---|---|
 | `GET /api/catalog/chuyen-khoa`, `GET /api/catalog/chuyen-khoa/{id}` | Công khai | Danh sách chuyên khoa (phân trang) |
-| `GET /api/catalog/bac-si?idChuyenKhoa=&tuKhoa=&trang=&kichThuoc=`, `GET /api/catalog/bac-si/{id}` | Công khai | Bác sĩ đang công tác, tài khoản còn hoạt động; không có email, số điện thoại, số giấy phép. Danh sách: `chucVu`, `gioiThieuNgan`; chi tiết thêm `tieuSu`, `quaTrinhDaoTao[]`, `quaTrinhCongTac[]`, `linhVucKhamChua[]`, `anh[]` |
-| `GET /api/catalog/quan-tri/bac-si/{id}`, `PUT .../{id}/ho-so`, `POST .../{id}/anh`, `PUT .../{id}/anh/{idAnh}`, `PUT .../{id}/anh/thu-tu`, `DELETE .../{id}/anh/{idAnh}` | `QUAN_TRI_VIEN` | Sửa hồ sơ giới thiệu của bác sĩ; tải lên (multipart `anh`, `loai`, `chuThich`), sửa, sắp xếp, xoá ảnh giới thiệu. Tối đa 12 ảnh / bác sĩ, 4 MB / ảnh |
+| `GET /api/catalog/bac-si?idChuyenKhoa=&tuKhoa=&trang=&kichThuoc=`, `GET /api/catalog/bac-si/{id}` | Công khai | Bác sĩ đang công tác, tài khoản còn hoạt động; không có email, số điện thoại. Danh sách: `chucVu`, `gioiThieuNgan`, `soNamKinhNghiem` (suy ra từ năm bắt đầu hành nghề); chi tiết thêm `tieuSu`, `quaTrinhDaoTao[]`, `quaTrinhCongTac[]`, `linhVucKhamChua[]`, `giaiThuong[]`, `congTrinhNghienCuu[]`, `ngonNguKham[]` (mã ISO 639), giấy phép hành nghề (`soGiayPhep`, `ngayCapGiayPhep`, `noiCapGiayPhep`, `phamViHanhNghe`), `anh[]` |
+| `GET /api/catalog/quan-tri/bac-si/{id}`, `PUT .../{id}/ho-so`, `POST .../{id}/anh`, `PUT .../{id}/anh/{idAnh}`, `PUT .../{id}/anh/thu-tu`, `DELETE .../{id}/anh/{idAnh}` | `QUAN_TRI_VIEN` | Sửa hồ sơ giới thiệu của bác sĩ (`PUT .../ho-so` bắt buộc `phienBan` = `phienBanHoSo` đã tải; bản cũ -> 409 `DU_LIEU_DA_THAY_DOI`); tải lên (multipart `anh`, `loai`, `chuThich`), sửa, sắp xếp, xoá ảnh giới thiệu. Tối đa 12 ảnh / bác sĩ, 4 MB / ảnh |
+| `GET` / `PUT /api/catalog/bac-si/toi/ho-so`, `POST /api/catalog/bac-si/toi/anh`, `PUT` / `DELETE .../toi/anh/{idAnh}` | `BAC_SI` | Bác sĩ tự sửa 1 phần hồ sơ giới thiệu: giới thiệu ngắn, tiểu sử, ngôn ngữ khám, giải thưởng, nghiên cứu (VI + EN, kèm `phienBan`) và ảnh làm việc (ảnh chứng chỉ -> 403). Phải gửi token dù `GET /api/catalog/bac-si/**` là công khai. Chi tiết: `docs/BAN-GIAO-FRONTEND-05-10.md` mục "Hồ sơ bác sĩ: bác sĩ tự sửa" |
 | `GET /api/booking/khung-gio/ngay-som-nhat?idChuyenKhoa=` | Công khai | Ngày sớm nhất còn chỗ của từng bác sĩ trong chuyên khoa (cho thẻ bác sĩ) |
 | `GET /api/booking/khung-gio/nhieu-ngay?idBacSi=&tuNgay=&denNgay=` | Công khai | Các ca và khung giờ của 1 bác sĩ, tối đa 7 ngày (mặc định từ hôm nay) |
 | `GET /api/booking/khung-gio/gop?idChuyenKhoa=&ngay=` | Công khai | Khung giờ gộp các bác sĩ của chuyên khoa (`tongSoCho`, `soChoConLai`, `soBacSi`), dùng cho "bác sĩ bất kỳ" |
 | `GET /api/booking/khung-gio/ngay-con-cho?tuNgay=&denNgay=&idBacSi=&idChuyenKhoa=` | Công khai | Các ngày có ca đặt được và số chỗ còn lại |
 | `GET /api/booking/khung-gio?ngay=&idBacSi=&idChuyenKhoa=` | Công khai | Các ca trong ngày, mỗi ca kèm bác sĩ, phòng và các khung 1 tiếng (`tongSoCho`, `soChoConLai`, `hetCho`) |
 | `POST /api/booking/lich-hen` | Công khai; có token `BENH_NHAN` thì lưu vào tài khoản | Body: `idLichLamViec` **hoặc** `idChuyenKhoa` (đúng 1 trong 2), `gioBatDauKhung`, `benhNhan` {`hoTen`, `ngaySinh`, `gioiTinh`, `soDienThoai`, `cccd` (bỏ trống được khi dưới 18 tuổi), `email`?, `soBaoHiemYTe`?, `diaChi`?}, `nguoiGiamHo` {`hoTen`, `quanHe`, `soDienThoai`, `cccd`, `ngaySinh`?}, `lyDoKham`, `datChoBanThan`?, `luuNguoiThan`?. 201: `maPhieuKham`, `maTraCuu`, `linkPhieuKham`, `soThuTu`, `gioKhamDuKien`, `bacSi`, `bacSiDoPhongKhamXep`, `luuVaoTaiKhoan`... |
-| `GET /api/booking/phieu-kham/{maPhieuKham}` | Công khai (ai có mã cũng xem được) | Phiếu khám; CCCD và số điện thoại đã che; trẻ dưới 18 tuổi có người giám hộ và `canNguoiGiamHoDiCung`. `lyDoHuy` = lý do bác sĩ từ chối khi `trangThai` là `BI_TU_CHOI` (null ở trạng thái khác); phiếu của lịch bị từ chối vẫn mở được |
+| `GET /api/booking/phieu-kham/{maPhieuKham}` | Công khai (ai có mã cũng xem được) | Phiếu khám; CCCD và số điện thoại đã che; trẻ dưới 18 tuổi có người giám hộ và `canNguoiGiamHoDiCung`. `lyDoHuy` = lý do bác sĩ hủy khi `trangThai` là `BI_TU_CHOI`, hoặc lý do bệnh nhân hủy (null ở trạng thái khác); phiếu của lịch đã hủy vẫn mở được |
 | `GET /api/booking/phieu-kham/{maPhieuKham}/qr?kichThuoc=&taiVe=` | Công khai | Ảnh PNG mã QR của link phiếu khám (100–1000 px, mặc định 300; `taiVe=true` để tải về) |
 | `GET /api/booking/lich-hen/cua-toi?loc=TAT_CA\|SAP_TOI\|LICH_SU&cuaAi=TAT_CA\|BAN_THAN\|NGUOI_KHAC&trang=&kichThuoc=` | `BENH_NHAN` | Lịch tài khoản đã đặt (cho bản thân hoặc người thân), lịch của hồ sơ bệnh nhân đã liên kết (kể cả lịch đặt như khách) và lịch của người khám có người giám hộ khai số CCCD của hồ sơ đó; kèm `maTraCuu`, link phiếu khám. `cuaAi`: `BAN_THAN` = người khám là chủ tài khoản (bất kể ai đặt), `NGUOI_KHAC` = còn lại. Mỗi dòng có `laBanThan`, `nguoiDat` (`TOI` / `KHACH` / `TAI_KHOAN_KHAC`) và `thongTinKhacHoSo` (lịch của tôi mà người đặt nhập họ tên / ngày sinh khác hồ sơ của tôi) |
 | `GET /api/booking/lich-hen/cua-toi/lich?tuNgay=&denNgay=&cuaAi=` | `BENH_NHAN` | Lịch hẹn của tài khoản theo khoảng ngày cho màn hình lịch: mọi trạng thái, theo giờ khám, không phân trang, tối đa 42 ngày (lưới tháng 6 tuần); dòng như "lịch hẹn của tôi" |
 | `GET /api/booking/bac-si/toi/lich-hen/lich?tuNgay=&denNgay=` | `BAC_SI` | Lịch hẹn của chính bác sĩ theo khoảng ngày cho màn hình lịch (tối đa 42 ngày), dòng như danh sách trong ngày |
-| `GET /api/booking/lich-hen/cua-toi/{maPhieuKham}` | `BENH_NHAN` | Chi tiết 1 lịch hẹn tài khoản được xem: `lichHen` (như dòng danh sách), `ngaySinhBenhNhan`, `gioiTinhBenhNhan`, `soDienThoaiLienHe`, `emailLienHe` (2 trường liên hệ chỉ có khi chính tài khoản này đặt). `lichHen.lyDoHuy` = lý do bác sĩ từ chối (có ở cả dòng danh sách). Lịch không thuộc tài khoản -> 404 |
+| `GET /api/booking/lich-hen/cua-toi/{maPhieuKham}` | `BENH_NHAN` | Chi tiết 1 lịch hẹn tài khoản được xem: `lichHen` (như dòng danh sách), `ngaySinhBenhNhan`, `gioiTinhBenhNhan`, `soDienThoaiLienHe`, `emailLienHe` (2 trường liên hệ chỉ có khi chính tài khoản này đặt). `lichHen.lyDoHuy` = lý do bác sĩ hủy hoặc lý do bệnh nhân hủy (có ở cả dòng danh sách). Lịch không thuộc tài khoản -> 404 |
 | `GET /api/booking/trang-ca-nhan/cua-toi` | `BENH_NHAN` | Trang cá nhân trong 1 lần gọi: `hoSo`, `emailTaiKhoan`, `nguoiThan[]`, `lichSapToi` {`cuaToi[]`, `cuaNguoiKhac[]`} (5 lịch gần nhất mỗi bên), `lanKhamGanDay[]` (5 lượt đã khám gần nhất kèm kết quả), `soLich` {`sapToiCuaToi`, `sapToiCuaNguoiKhac`, `lichSu`, `daKham`} |
-| `POST /api/booking/lich-hen/cua-toi/{maPhieuKham}/huy`, `POST .../cua-toi/{maPhieuKham}/doi-lich` | `BENH_NHAN` | Hủy `{ lyDo? }` (trả phiếu khám `DA_HUY`) hoặc đổi lịch `{ idLichLamViec | idChuyenKhoa, gioBatDauKhung }` (201, trả lịch mới `CHO_XAC_NHAN` với mã phiếu khám mới; lịch cũ thành `DA_HUY_DO_DOI_LICH`, thông tin người khám lấy từ lịch cũ). Chỉ tài khoản đã đặt lịch hoặc người khám (`laBanThan`); tài khoản chỉ là người giám hộ theo CCCD -> 403. Chỉ lịch `CHO_XAC_NHAN` / `DA_XAC_NHAN`, trước giờ khám ít nhất `BOOKING_CHANGE_LEAD` (2 giờ), đổi tối đa `BOOKING_MAX_RESCHEDULES` (2) lần cho 1 lần đặt. Lượt khám cũ được mở lại. Dòng "lịch hẹn của tôi" và phiếu khám có `duocHuyDoi`, `hanHuyDoi` |
+| `POST /api/booking/lich-hen/cua-toi/{maPhieuKham}/huy`, `POST .../cua-toi/{maPhieuKham}/doi-lich` | `BENH_NHAN` | Hủy `{ lyDo? }` (trả phiếu khám `DA_HUY`) hoặc đổi lịch `{ idLichLamViec | idChuyenKhoa, gioBatDauKhung }` (201, trả lịch mới `DA_XAC_NHAN` với mã phiếu khám mới; lịch cũ thành `DA_HUY_DO_DOI_LICH`, thông tin người khám lấy từ lịch cũ). Chỉ tài khoản đã đặt lịch hoặc người khám (`laBanThan`); tài khoản chỉ là người giám hộ theo CCCD -> 403. Chỉ lịch `DA_XAC_NHAN`, trước giờ khám ít nhất `BOOKING_CHANGE_LEAD` (2 giờ), đổi tối đa `BOOKING_MAX_RESCHEDULES` (2) lần cho 1 lần đặt. Lượt khám cũ được mở lại. Dòng "lịch hẹn của tôi" và phiếu khám có `duocHuyDoi`, `hanHuyDoi` |
 | `POST /api/booking/phieu-kham/{maPhieuKham}/huy`, `POST .../phieu-kham/{maPhieuKham}/doi-lich` | Công khai (cần đúng SĐT) | Hủy / đổi lịch bằng link phiếu khám cho khách không có tài khoản: body như trên kèm `soDienThoai` = SĐT liên hệ đã nhập lúc đặt lịch (thiếu / sai dạng -> 400, không khớp -> 403 `SO_DIEN_THOAI_KHONG_KHOP`). Số lần gọi từ 1 địa chỉ IP bị giới hạn như đặt lịch |
-| `GET /api/booking/lich-su-kham/cua-toi?cuaAi=TAT_CA\|BAN_THAN\|NGUOI_KHAC&trang=&kichThuoc=` | `BENH_NHAN` | Lịch sử khám: các lượt đã khám xong mà tài khoản được xem kết quả, mới nhất trước. Mỗi dòng: `lichHen` (như dòng "lịch hẹn của tôi") và `ketQua` {`chanDoan`, `ghiChu`, `ngayTaiKhamDeXuat`, `donThuoc[]`}. Được xem kết quả khi người khám là chủ tài khoản (bất kể ai đặt) hoặc chính tài khoản đã đặt lịch; lịch chỉ thấy vì là người giám hộ theo CCCD thì không có kết quả. `GET .../lich-hen/cua-toi/{maPhieuKham}` cũng trả `ketQua` theo cùng quy tắc |
+| `GET /api/booking/lich-su-kham/cua-toi?cuaAi=TAT_CA\|BAN_THAN\|NGUOI_KHAC&trang=&kichThuoc=` | `BENH_NHAN` | Lịch sử khám: các lượt đã khám xong mà tài khoản được xem kết quả, mới nhất trước. Mỗi dòng: `lichHen` (như dòng "lịch hẹn của tôi") và `ketQua` {`lyDoKham`, `sinhHieu` (null khi không đo), `khamLamSang`, `chanDoan`, `icdChinh` {`ma`, `ten`, `manTinh`} (null khi không chọn mã), `chanDoanKemTheo`, `ghiChu`, `ngayTaiKhamDeXuat`, `donThuoc[]` (kèm `idThuoc`, `hoatChat`, `hamLuong`, `duongDung`, `soLuong`), `ngaySuaCuoi` (khác null: bác sĩ đã sửa kết quả, hiện "Đã chỉnh sửa lúc …")}. Được xem kết quả khi người khám là chủ tài khoản (bất kể ai đặt) hoặc chính tài khoản đã đặt lịch; lịch chỉ thấy vì là người giám hộ theo CCCD thì không có kết quả. `GET .../lich-hen/cua-toi/{maPhieuKham}` cũng trả `ketQua` theo cùng quy tắc |
 | `GET /api/booking/ho-so-benh-nhan/cua-toi`, `PUT /api/booking/ho-so-benh-nhan/cua-toi` | `BENH_NHAN` | Xem, tạo, sửa hồ sơ bệnh nhân của tài khoản; số CCCD không đổi được sau khi đã có hồ sơ. Số CCCD đã có hồ sơ chưa gắn tài khoản: khớp thì liên kết, không khớp trả `trangThaiLienKet: CHO_XAC_MINH` |
 | `GET /api/booking/thong-tin-dat-lich/cua-toi`, `PUT .../cua-toi/nguoi-than/{id}`, `DELETE .../cua-toi/nguoi-than/{id}` | `BENH_NHAN` | Điền sẵn form: `banThan`, `emailTaiKhoan`, `nguoiThan[]` đã lưu, `lanDatGanNhat`; sửa bản lưu của 1 người thân (các trường của `benhNhan` trừ `cccd`, kèm `nguoiGiamHo`?; không sửa hồ sơ bệnh nhân); bỏ 1 người thân đã lưu |
 | `GET /api/booking/bac-si/toi/lich-lam-viec?tuNgay=&denNgay=`, `GET /api/booking/bac-si/toi/lich-hen?ngay=`, `GET /api/booking/bac-si/toi/lich-hen/tra-cuu?ma=` | `BAC_SI` | Ca làm việc của chính bác sĩ (tối đa 42 ngày, kèm số lượt đã đặt), bệnh nhân trong ngày, tra 1 lịch hẹn theo mã tra cứu, mã phiếu khám hoặc cả link phiếu khám (quét QR). Danh sách trong ngày: `ngay` bỏ trống = hôm nay; lọc `idLichLamViec`, `soThuTu`, `tuKhoa` (họ tên, không xét dấu / hoa thường) |
 | `GET /api/booking/bac-si/toi/lich-hen/{id}/ho-so-kham`, `GET /api/booking/bac-si/toi/lich-hen/tra-cuu/ho-so-kham?ma=` | `BAC_SI` | Hồ sơ khám của bệnh nhân từ 1 lịch hẹn của chính bác sĩ (theo id, hoặc theo mã / link phiếu khám quét từ QR): `lichHen`, `hoSoBenhNhan` (số CCCD không che, `tienSuBenhLy`), `lanKhamTruoc[]` (các lần khám trước với mọi bác sĩ, kèm `ketQua` nếu đã có bệnh án). Lịch hẹn của bác sĩ khác -> 404 |
-| `POST` / `PUT` / `GET /api/medical/bac-si/toi/lich-hen/{idLichHen}/benh-an`, `GET /api/medical/bac-si/toi/thuoc?tuKhoa=` | `BAC_SI` | Khám bệnh (medical-service): ghi kết quả khám `{ chanDoan, ghiChu?, ngayTaiKhamDeXuat?, donThuoc[]? }` cho lịch hẹn của chính bác sĩ, từ ngày khám trở đi; lịch hẹn chuyển sang `DA_HOAN_THANH` trong cùng transaction. `PUT` sửa kết quả đã ghi (thay toàn bộ đơn thuốc), `GET` xem lại; gợi ý tên thuốc trong danh mục. Hồ sơ khám ở booking-service hiện `ketQua` và `lanKhamTruoc[].ketQua` kèm `donThuoc[]` |
-| `GET /api/booking/bac-si/toi/lich-hen/yeu-cau?trang=&kichThuoc=`, `POST .../lich-hen/{id}/xac-nhan`, `POST .../lich-hen/{id}/tu-choi` | `BAC_SI` | Yêu cầu đặt lịch: lịch `CHO_XAC_NHAN` của chính bác sĩ mà lượt khám chưa bắt đầu (phân trang, giờ khám sớm nhất trước; `tongSoPhanTu` = số yêu cầu đang chờ). Xác nhận -> `DA_XAC_NHAN`; từ chối `{ lyDo }` (bắt buộc, tối đa 500 ký tự) -> `BI_TU_CHOI` và lượt khám được mở lại cho người khác đặt. Cả hai chỉ làm được trước giờ khám và trả lại dòng lịch hẹn. Lịch chưa kịp xác nhận vẫn khám được vào ngày khám |
+| `POST` / `PUT` / `GET /api/medical/bac-si/toi/lich-hen/{idLichHen}/benh-an`, `GET /api/medical/bac-si/toi/thuoc?tuKhoa=` | `BAC_SI` | Khám bệnh (medical-service): ghi kết quả khám `{ lyDoKham?, sinhHieu?, khamLamSang?, chanDoan, maIcdChinh?, chanDoanKemTheo?, ghiChu?, ngayTaiKhamDeXuat?, donThuoc[]? }` cho lịch hẹn `DA_XAC_NHAN` của chính bác sĩ, từ ngày khám trở đi; lịch hẹn chuyển sang `DA_HOAN_THANH` trong cùng transaction. `sinhHieu` `{ mach?, nhietDo?, huyetApTamThu?, huyetApTamTruong?, nhipTho?, canNang?, chieuCao? }` (huyết áp gửi cả 2 số; trẻ dưới 72 tháng có kê thuốc thì bắt buộc cân nặng); `maIcdChinh` lấy từ gợi ý ICD-10. Dòng thuốc `{ idThuoc, lieuDung?, soLanMoiNgay?, soNgayDung, soLuong, ghiChuSuDung? }`: `soNgayDung` tối đa 30 ngày, 90 khi mã ICD-10 chính là bệnh mạn tính (Thông tư 26/2025), `soLuong` = tổng số lượng cấp; chỉ thuốc trong danh mục, đang dùng và đã xác minh (bác sĩ không thêm thuốc mới). Khoảng giá trị và lỗi: `docs/BAN-GIAO-FRONTEND-05-10.md` mục 3. `PUT` sửa kết quả đã ghi (thay toàn bộ đơn thuốc), bắt buộc thêm `lyDoSua` và `phienBan`, chỉ trong `RECORD_EDIT_DAYS` ngày kể từ lần lưu đầu; `GET` xem lại; gợi ý thuốc theo tên hoặc hoạt chất. Hồ sơ khám ở booking-service hiện `ketQua` và `lanKhamTruoc[].ketQua` kèm `donThuoc[]` |
+| `GET /api/medical/bac-si/toi/lich-hen/{idLichHen}/benh-an/lich-su`, `GET /api/medical/quan-tri/lich-hen/{idLichHen}/benh-an/lich-su` | `BAC_SI`, `QUAN_TRI_VIEN` | Lịch sử sửa hồ sơ bệnh án (ai sửa, lúc nào, lý do, phần đã đổi, nội dung trước / sau). Bác sĩ: lượt khám của mình hoặc của bệnh nhân mà mình có lịch hẹn từ giờ khám đó trở đi; quản trị viên: mọi lượt khám. Bệnh nhân chỉ thấy `ngaySuaCuoi` |
+| `GET /api/booking/bac-si/toi/hang-doi?ngay=`, `POST .../hang-doi/goi-tiep?idLichLamViec=`, `POST .../lich-hen/{id}/goi-kham`, `POST .../lich-hen/{id}/vang-mat` | `BAC_SI` | Hàng đợi khám trong ngày theo ca (sáng / chiều / tối): gọi bệnh nhân tiếp theo hoặc 1 người, đánh dấu vắng mặt (gọi lại được); ghi kết quả khám là xong lượt. Chỉ 1 người đang khám mỗi lúc (409 `DANG_KHAM_BENH_NHAN_KHAC`); chỉ thao tác trong ngày khám. Mỗi thao tác trả lại hàng đợi hôm nay |
+| `GET /api/medical/bac-si/toi/icd10?tuKhoa=` | `BAC_SI` | Gợi ý mã ICD-10 cho chẩn đoán chính: tối đa 20 `{ ma, ten, manTinh }` theo mã, khớp đầu mã hoặc một phần tên tiếng Việt (không xét dấu) / tiếng Anh; từ khoá trống -> `[]`. `manTinh` = bệnh thuộc Phụ lục VII Thông tư 26/2025 (thuốc kê tới 90 ngày). Danh mục 191 mã do migration V30 tạo, chỉ đọc |
+| `POST /api/booking/bac-si/toi/lich-hen/{id}/huy` | `BAC_SI` | Bác sĩ hủy 1 lịch `DA_XAC_NHAN` của mình trước giờ khám: `{ lyDo }` bắt buộc (tối đa 500 ký tự) -> `BI_TU_CHOI`, lượt khám được mở lại cho người khác đặt, bệnh nhân nhận thông báo + email và đọc được lý do trên phiếu khám. Trả lại dòng lịch hẹn. Màn hình Upcoming Appointments liệt kê lịch sắp tới bằng `GET .../lich-hen/lich` (thay 3 route xác nhận / từ chối đã bỏ từ 15/10/2026) |
 | `PUT /api/booking/bac-si/toi/lich-hen/{id}/benh-nhan`, `POST .../lich-hen/{id}/da-doi-chieu` | `BAC_SI` | Sửa hồ sơ bệnh nhân của 1 lịch hẹn của mình sau khi đối chiếu giấy tờ (body như của quản trị viên); bỏ đánh dấu `canDoiChieu` |
 | `GET /api/booking/quan-tri/lich-lam-viec?tuNgay=&denNgay=&idChuyenKhoa=&idBacSi=&idPhongKham=`, `GET .../lich-lam-viec/{id}/lich-hen`, `GET /api/booking/quan-tri/lich-hen/tra-cuu?ma=` | `QUAN_TRI_VIEN` | Lịch làm việc toàn viện (chỉ xem, tối đa 42 ngày), lịch hẹn của 1 ca, tra lịch hẹn theo mã. Mỗi lịch hẹn (cả ở danh sách của bác sĩ) có `idHoSoBenhNhan`, `benhNhan` (dữ liệu của hồ sơ) và `doiChieu` {`canDoiChieu`, `hoTenDaNhap`, `ngaySinhDaNhap`, `gioiTinhDaNhap`, `hoTenGiamHoDaNhap`} |
 | `POST /api/booking/quan-tri/lich-hen/{id}/da-doi-chieu` | `QUAN_TRI_VIEN` | Đã đối chiếu giấy tờ: bỏ đánh dấu `canDoiChieu` của lịch hẹn |
@@ -362,10 +382,11 @@ Mã lỗi (`maLoi`) khi đặt lịch:
 | 409 | `CCCD_DA_CO_HO_SO`, `HO_SO_CHO_XAC_MINH` | Đặt cho bản thân bằng số CCCD đã có hồ sơ chưa gắn với tài khoản; hồ sơ của tài khoản đang chờ xác minh; tạo hồ sơ bằng số CCCD thuộc tài khoản khác hoặc đã bị quản trị viên từ chối liên kết |
 | 403 | `KHONG_CO_QUYEN`, `TAI_KHOAN_BI_VO_HIEU_HOA`, `TAI_KHOAN_CHUA_XAC_THUC` | Token bác sĩ / quản trị viên; tài khoản bị vô hiệu hoá hoặc chưa xác thực email |
 | 429 | `GUI_LAI_QUA_NHANH` | Quá nhiều lần đặt từ một địa chỉ IP |
-| 409 | `LICH_HEN_KHONG_CHO_XAC_NHAN`, `LICH_HEN_DA_QUA_GIO` | (Bác sĩ xác nhận / từ chối) Lịch hẹn đã được xác nhận, bị từ chối, đã khám hoặc đã huỷ (kể cả khi bấm lần thứ hai); lượt khám đã bắt đầu |
-| 409 | `LICH_HEN_KHONG_HUY_DOI_DUOC`, `QUA_HAN_HUY_DOI_LICH`, `VUOT_SO_LAN_DOI_LICH` | (Bệnh nhân hủy / đổi lịch) Lịch hẹn đã khám, đã hủy, đã đổi hoặc bị từ chối; còn cách giờ khám ít hơn hạn hủy / đổi; lần đặt này đã đổi đủ số lần |
+| 409 | `LICH_HEN_KHONG_HUY_DOI_DUOC`, `LICH_HEN_CAN_DOI_LICH`, `LICH_HEN_DA_QUA_GIO` | (Bác sĩ hủy lịch) Lịch hẹn đã khám hoặc đã hủy (kể cả khi bấm lần thứ hai); ca đã bị hủy, lịch chờ bệnh nhân đổi; lượt khám đã bắt đầu. `LICH_HEN_KHONG_CHO_XAC_NHAN` không còn được trả từ 15/10/2026 |
+| 409 | `LICH_HEN_KHONG_HUY_DOI_DUOC`, `QUA_HAN_HUY_DOI_LICH`, `VUOT_SO_LAN_DOI_LICH` | (Bệnh nhân hủy / đổi lịch) Lịch hẹn đã khám, đã hủy, đã đổi, bác sĩ đã hủy hoặc không đến (`KHONG_DEN`); còn cách giờ khám ít hơn hạn hủy / đổi; lần đặt này đã đổi đủ số lần |
+| 400 | `DU_LIEU_KHONG_HOP_LE` | (Khám bệnh, `thongDiep` không có `chiTiet`) Mã ICD-10 không có trong danh mục; huyết áp thiếu 1 số hoặc tâm trương không thấp hơn tâm thu; thuốc quá 30 ngày (90 với mã mạn tính); trẻ dưới 72 tháng có kê thuốc mà thiếu cân nặng |
 | 403 | `SO_DIEN_THOAI_KHONG_KHOP` | (Hủy / đổi bằng link phiếu khám) SĐT nhập vào không phải SĐT liên hệ của lượt khám |
-| 409 | `CHUA_DEN_NGAY_KHAM`, `LICH_HEN_KHONG_KHAM_DUOC` | (Khám bệnh) Bác sĩ ghi kết quả khám trước ngày khám; lịch hẹn đã khám xong, đã huỷ hoặc bị từ chối |
+| 409 | `CHUA_DEN_NGAY_KHAM`, `LICH_HEN_KHONG_KHAM_DUOC` | (Khám bệnh) Bác sĩ ghi kết quả khám trước ngày khám; lịch hẹn đã khám xong, đã huỷ, bác sĩ đã hủy hoặc không đến |
 | 404 | `KHONG_TIM_THAY` | Ca khám không tồn tại; mã phiếu khám sai |
 
 Cấu hình (đều có giá trị mặc định, xem `.env.example`): `BOOKING_MIN_LEAD` (30m), `BOOKING_MAX_DAYS` (30),
@@ -449,10 +470,10 @@ nhìn trên trình duyệt). Chuẩn bị: chạy gateway, identity-service, boo
 | `GET /api/catalog/phong-kham?idChuyenKhoa=` | `QUAN_TRI_VIEN`, `BAC_SI` | Phòng khám đang hoạt động: `{ id, tenPhong, tang, idChuyenKhoa, tenChuyenKhoa }`. Chỉ đọc |
 
 **Lịch hẹn của ca bị hủy (`canDoiLich`).** Phiếu khám, dòng "lịch hẹn của tôi" và dòng lịch hẹn của bác sĩ / quản trị viên có
-`canDoiLich`. Khi `true`: lịch hẹn vẫn `CHO_XAC_NHAN` / `DA_XAC_NHAN` nhưng ca đã hủy, bệnh nhân phải đổi sang khung giờ khác
+`canDoiLich`. Khi `true`: lịch hẹn vẫn `DA_XAC_NHAN` nhưng ca đã hủy, bệnh nhân phải đổi sang khung giờ khác
 hoặc hủy. Với lịch này `duocHuyDoi` đúng tới giờ khám cũ (`hanHuyDoi` = giờ khám, không trừ 2 giờ) và lần đổi không tính vào
-giới hạn 2 lần; lịch mới sau khi đổi không còn cờ. Bác sĩ không thấy lịch này trong Appointment Requests và không xác nhận /
-từ chối được (409 `LICH_HEN_CAN_DOI_LICH`).
+giới hạn 2 lần; lịch mới sau khi đổi không còn cờ. Bác sĩ không thấy lịch này trong Upcoming Appointments và không hủy được
+(409 `LICH_HEN_CAN_DOI_LICH`); lịch này cũng không bị chuyển thành `KHONG_DEN`.
 
 **Số thứ tự khám** là thứ hạng của lượt khám trong các lượt của phòng trong ngày, nên khi phòng có thêm ca đứng trước, ca được
 kéo dài hoặc ca đổi phòng thì số thứ tự của các lịch hẹn còn hiệu lực của phòng trong ngày đó được tính lại. Luôn hiển thị
@@ -466,7 +487,7 @@ Lỗi mới (đều 409): `CA_KHONG_SUA_DUOC`, `CA_CON_LICH_HEN`, `CA_DA_CO_YEU_
 | API | Ai gọi | Ghi chú |
 |---|---|---|
 | `GET /api/catalog/quan-tri/bac-si?tuKhoa=&idChuyenKhoa=&trangThai=&trang=&kichThuoc=` | `QUAN_TRI_VIEN` | Danh bạ bác sĩ, bác sĩ mới thêm đứng trước, **cả bác sĩ ngừng công tác**. `tuKhoa` so với họ tên, email, số điện thoại, số giấy phép. Mỗi dòng: `id`, `maBacSi`, `hoTen`, `email`, `soDienThoai`, `anhDaiDien`, `hocVi`, `soGiayPhep`, `idChuyenKhoa`, `tenChuyenKhoa`, `soLuotDaKham`, `trangThai` (`DANG_CONG_TAC` / `NGUNG_CONG_TAC`), `trangThaiTaiKhoan`, `phaiDoiMatKhau` |
-| `POST /api/catalog/quan-tri/bac-si` | `QUAN_TRI_VIEN` | "Add New Doctor": `{ hoTen, email, soDienThoai?, idChuyenKhoa, soGiayPhep?, hocVi?, chucVu?, soNamKinhNghiem? }` → 201, trả hồ sơ quản trị của bác sĩ. Tạo tài khoản đăng nhập và hồ sơ bác sĩ trong 1 bước |
+| `POST /api/catalog/quan-tri/bac-si` | `QUAN_TRI_VIEN` | "Add New Doctor": `{ hoTen, email, soDienThoai?, idChuyenKhoa, soGiayPhep?, hocVi?, chucVu?, namBatDauHanhNghe? }` → 201, trả hồ sơ quản trị của bác sĩ. Tạo tài khoản đăng nhập và hồ sơ bác sĩ trong 1 bước. `namBatDauHanhNghe` từ 1950, không sau năm nay; số năm kinh nghiệm suy ra từ đây |
 | `PUT /api/catalog/quan-tri/bac-si/{id}` | `QUAN_TRI_VIEN` | Thông tin cơ bản, ghi đè cả 4 trường: `{ hoTen, soDienThoai?, idChuyenKhoa, soGiayPhep? }`. Email không sửa ở đây. Hồ sơ giới thiệu vẫn sửa bằng `PUT .../{id}/ho-so` |
 | `GET /api/catalog/quan-tri/bac-si/{id}/anh-huong-ngung-cong-tac` | `QUAN_TRI_VIEN` | `{ soCaSapToi, soLichHenBiAnhHuong }`: hiện cho quản trị viên trước khi xác nhận |
 | `POST /api/catalog/quan-tri/bac-si/{id}/ngung-cong-tac` | `QUAN_TRI_VIEN` | `{ lyDo }` (bắt buộc) → `{ bacSi, soCaDaHuy, soLichHenCanDoi }` |
@@ -495,7 +516,7 @@ Lỗi mới (đều 409): `CA_KHONG_SUA_DUOC`, `CA_CON_LICH_HEN`, `CA_DA_CO_YEU_
   tới và không đụng tới trạng thái bác sĩ. Với bác sĩ hãy dùng 2 API ngừng công tác / công tác lại ở trên.
 - catalog-service là nơi nhận mọi request của màn hình này. Tài khoản do identity-service ghi, ca làm việc do booking-service
   ghi: catalog-service gọi API nội bộ `/noi-bo/tai-khoan/**` và `/noi-bo/bac-si/{id}/huy-ca-sap-toi` của 2 service đó
-  (không qua gateway, header `X-Khoa-Noi-Bo`). Chạy IntelliJ: đặt `IDENTITY_URL`, `BOOKING_URL` nếu không dùng cổng mặc định.
+  (không qua gateway, header `X-Khoa-Noi-Bo`). Chạy IntelliJ: đặt `IDENTITY_URL`, `BOOKING_URL` trong `.env` nếu không dùng cổng mặc định.
 
 ## Quản lý bệnh nhân và danh mục phòng khám, thuốc
 
@@ -506,9 +527,9 @@ Lỗi mới (đều 409): `CA_KHONG_SUA_DUOC`, `CA_CON_LICH_HEN`, `CA_DA_CO_YEU_
 | `GET /api/catalog/quan-tri/phong-kham?tuKhoa=&idChuyenKhoa=&trangThai=&trang=&kichThuoc=` | `QUAN_TRI_VIEN` | Medical Catalog: mọi phòng khám theo tên, **cả phòng ngừng hoạt động**: `id`, `tenPhong`, `tang`, `idChuyenKhoa`, `tenChuyenKhoa`, `trangThai` (`HOAT_DONG` / `NGUNG_HOAT_DONG`), `soCaSapToi` |
 | `POST /api/catalog/quan-tri/phong-kham`, `PUT .../{id}` | `QUAN_TRI_VIEN` | `{ tenPhong, tang?, idChuyenKhoa }`; thêm → 201. Trùng tên: 409 `TEN_PHONG_DA_TON_TAI` |
 | `POST /api/catalog/quan-tri/phong-kham/{id}/ngung-hoat-dong`, `POST .../{id}/hoat-dong-lai` | `QUAN_TRI_VIEN` | Phòng ngừng hoạt động không còn trong `GET /api/catalog/phong-kham` và không xếp ca mới vào được |
-| `GET /api/medical/quan-tri/thuoc?tuKhoa=&daXacMinh=&trangThai=&trang=&kichThuoc=` | `QUAN_TRI_VIEN` | Medical Catalog: danh mục thuốc, chưa xác minh trước rồi theo tên: `id`, `tenThuoc`, `donVi`, `moTa`, `daXacMinh`, `trangThai` (`DANG_DUNG` / `NGUNG_DUNG`), `tenBacSiTao`, `soLanKe` |
-| `POST /api/medical/quan-tri/thuoc`, `PUT .../{id}` | `QUAN_TRI_VIEN` | `{ tenThuoc, donVi?, moTa? }`; thêm → 201, thuốc đã xác minh. Trùng tên (không phân biệt hoa thường / khoảng trắng): 409 `TEN_THUOC_DA_TON_TAI` |
-| `POST /api/medical/quan-tri/thuoc/{id}/xac-minh`, `POST .../{id}/ngung-dung`, `POST .../{id}/dung-lai` | `QUAN_TRI_VIEN` | Xác minh thuốc bác sĩ tự thêm khi kê đơn; cho ngừng dùng / dùng lại. Gọi lại nhiều lần không sao |
+| `GET /api/medical/quan-tri/thuoc?tuKhoa=&daXacMinh=&trangThai=&trang=&kichThuoc=` | `QUAN_TRI_VIEN` | Medical Catalog: danh mục thuốc, chưa xác minh trước rồi theo tên: `id`, `tenThuoc`, `hoatChat`, `hamLuong`, `dangBaoChe(En)`, `duongDung`, `donVi(En)`, `moTa(En)`, `daXacMinh`, `trangThai` (`DANG_DUNG` / `NGUNG_DUNG`), `tenBacSiTao`, `soLanKe` |
+| `POST /api/medical/quan-tri/thuoc`, `PUT .../{id}` | `QUAN_TRI_VIEN` | `{ tenThuoc, hoatChat, hamLuong, dangBaoChe?, dangBaoCheEn?, duongDung?, donVi?, donViEn?, moTa?, moTaEn? }` (hoạt chất, hàm lượng bắt buộc; `duongDung` là mã `UONG`, `TIEM`, `BOI_NGOAI_DA`...); thêm → 201, thuốc đã xác minh. Trùng **tên + hàm lượng** (không phân biệt hoa thường / khoảng trắng): 409 `TEN_THUOC_DA_TON_TAI` |
+| `POST /api/medical/quan-tri/thuoc/{id}/xac-minh`, `POST .../{id}/ngung-dung`, `POST .../{id}/dung-lai` | `QUAN_TRI_VIEN` | Xác minh thuốc bác sĩ đã tự thêm trước đây (thiếu hoạt chất / hàm lượng → 409 `THUOC_THIEU_THONG_TIN`); cho ngừng dùng / dùng lại. Gọi lại nhiều lần không sao |
 
 - **Tìm hồ sơ bệnh nhân.** `tuKhoa` so với họ tên, số điện thoại, số bảo hiểm y tế (chứa từ khoá). Số CCCD chỉ tra được khi
   gõ **đủ 12 số** (khớp hoàn toàn); gõ 1 phần số CCCD không ra kết quả. Danh sách chỉ trả 4 số cuối của CCCD, số đầy đủ có
@@ -516,12 +537,19 @@ Lỗi mới (đều 409): `CA_KHONG_SUA_DUOC`, `CA_CON_LICH_HEN`, `CA_DA_CO_YEU_
 - **Phòng khám không xoá được**, chỉ ngừng hoạt động. Phòng còn ca sắp tới (`soCaSapToi > 0`) thì ngừng hoạt động và đổi
   chuyên khoa đều trả 409 `PHONG_CON_CA_LAM_VIEC` (thông điệp có số ca): chuyển các ca đó sang phòng khác bằng
   `PUT /api/booking/quan-tri/lich-lam-viec/{id}` trước. Tên phòng và tầng sửa được bất cứ lúc nào.
-- **Thuốc không xoá và không gộp được.** Thuốc đã có trong đơn thuốc (`soLanKe > 0`) chỉ sửa được cách viết hoa / khoảng
-  trắng của tên; đổi sang tên khác trả 409 `THUOC_DA_DUOC_KE` (dòng đơn thuốc chỉ lưu id thuốc, đổi tên là sửa luôn đơn
-  cũ). Đơn vị và mô tả sửa được bất cứ lúc nào.
+- **Bác sĩ chỉ kê thuốc trong danh mục này** (đang dùng, đã xác minh), chọn theo `idThuoc`; bác sĩ không thêm được thuốc
+  mới. Dữ liệu mẫu có 16 thuốc thường dùng.
+- **Thuốc không xoá và không gộp được.** Thuốc đã có trong đơn thuốc (`soLanKe > 0`) không đổi được tên, hoạt chất, hàm
+  lượng, dạng bào chế, đường dùng (chỉ sửa được cách viết hoa / khoảng trắng của tên); đổi → 409 `THUOC_DA_DUOC_KE` (dòng
+  đơn thuốc chỉ lưu id thuốc, đổi là sửa luôn đơn cũ). Đơn vị và mô tả sửa được bất cứ lúc nào.
 - **Thuốc ngừng dùng** không còn trong gợi ý `GET /api/medical/bac-si/toi/thuoc`, và bác sĩ kê thuốc đó ở đơn mới nhận 409
   `THUOC_NGUNG_DUNG` (thông điệp có tên thuốc). Hồ sơ bệnh án đã có thuốc đó vẫn sửa / lưu lại được với dòng thuốc cũ, và
   bệnh nhân vẫn thấy thuốc trong kết quả khám cũ.
+- **Hồ sơ bệnh án** bác sĩ sửa được trong `RECORD_EDIT_DAYS` ngày (mặc định 7) kể từ lần lưu đầu, mỗi lần sửa cần lý do và
+  thêm 1 dòng lịch sử không sửa / xoá được; sau đó chỉ xem (409 `HET_HAN_SUA_BENH_AN`). Biến này đọc ở medical-service (chặn
+  sửa) và booking-service (trả `hanSua` cho màn hình bác sĩ): đặt trong `.env` thì cả 2 cùng nhận, chạy IntelliJ lẫn docker
+  compose. Quản trị viên xem lịch sử sửa bằng `GET /api/medical/quan-tri/lich-hen/{id}/benh-an/lich-su`. Việc mở
+  xem hồ sơ bệnh án không được ghi lại.
 
 ## Đánh giá lượt khám
 
@@ -549,18 +577,19 @@ Lỗi mới (đều 409): `CA_KHONG_SUA_DUOC`, `CA_CON_LICH_HEN`, `CA_DA_CO_YEU_
 
 | API | Ai gọi | Ghi chú |
 |---|---|---|
-| `GET /api/booking/bac-si/toi/tong-quan` | `BAC_SI` | Dashboard của bác sĩ, 1 lần gọi cho cả 4 ô: `{ lichHenHomNay, dangCho, daKham, diemDanhGia, soDanhGia, yeuCauChoXacNhan, tinhLuc }` |
+| `GET /api/booking/bac-si/toi/tong-quan` | `BAC_SI` | Dashboard của bác sĩ, 1 lần gọi cho cả 4 ô: `{ lichHenHomNay, dangCho, daKham, diemDanhGia, soDanhGia, lichHenSapToi, tinhLuc }` |
 | `GET /api/booking/quan-tri/tong-quan` | `QUAN_TRI_VIEN` | Dashboard của quản trị viên, 1 lần gọi cho cả 3 ô: `{ bacSiDangCongTac, benhNhanDaDangKy, luotDatTrongThang, tinhLuc }` |
+| `GET /api/booking/bac-si/toi/hang-doi?ngay=` (+ `goi-tiep`, `goi-kham`, `vang-mat`) | `BAC_SI` | Hàng đợi khám hôm nay theo ca, đặt ở đầu Dashboard của bác sĩ (bảng route "Đặt lịch khám"; chi tiết ở `docs/BAN-GIAO-FRONTEND-05-10.md` mục "Hàng đợi khám"). Không có đẩy realtime: gọi lại khoảng 15 giây 1 lần |
 
 Định nghĩa từng số (frontend không tự đếm lại từ các danh sách: danh sách có phân trang và bộ lọc riêng):
 
 | Ô trên UI | Trường | Cách tính |
 |---|---|---|
 | Today's Appointments | `lichHenHomNay` | Lịch hẹn của bác sĩ có giờ khám hôm nay, **không tính** `DA_HUY`, `DA_HUY_DO_DOI_LICH`, `BI_TU_CHOI` |
-| Waiting | `dangCho` | Trong số đó: `CHO_XAC_NHAN` hoặc `DA_XAC_NHAN` và không có `canDoiLich` (chưa khám) |
+| Waiting | `dangCho` | Trong số đó: `DA_XAC_NHAN` và không có `canDoiLich` (chưa khám) |
 | Completed | `daKham` | Trong số đó: `DA_HOAN_THANH` |
 | Average Rating | `diemDanhGia`, `soDanhGia` | Trung bình mọi đánh giá của bác sĩ, 1 chữ số thập phân; `null` và `0` khi chưa có. Hiển thị kèm số lượt |
-| (nhãn Appointment Requests) | `yeuCauChoXacNhan` | Số lịch `CHO_XAC_NHAN` từ bây giờ trở đi của bác sĩ = `tongSoPhanTu` của danh sách yêu cầu |
+| (nhãn Upcoming Appointments) | `lichHenSapToi` | Số lịch `DA_XAC_NHAN` của bác sĩ, không có `canDoiLich`, mà lượt khám bắt đầu sau `tinhLuc` = số dòng của màn hình Upcoming Appointments |
 | Active Doctors | `bacSiDangCongTac` | Bác sĩ `DANG_CONG_TAC` có tài khoản `DA_KICH_HOAT`: đúng tập bác sĩ của danh sách công khai |
 | Registered Patients | `benhNhanDaDangKy` | Tài khoản vai trò `BENH_NHAN` đã kích hoạt. Khách chỉ đặt lịch (không có tài khoản) không tính |
 | Bookings This Month | `luotDatTrongThang` | Lịch hẹn **được tạo** từ 00:00 ngày 1 tháng này, mọi trạng thái trừ `DA_HUY_DO_DOI_LICH` (1 lần đổi lịch chỉ tính 1) |
@@ -586,8 +615,8 @@ email lịch hẹn (mục "Email lịch hẹn" bên dưới).
 | Sự kiện | `loai` | Người nhận |
 |---|---|---|
 | Có lịch hẹn mới (kể cả khách đặt) | `LICH_HEN_MOI` | Bác sĩ của lịch hẹn |
-| Bác sĩ xác nhận | `LICH_HEN_DA_XAC_NHAN` | Tài khoản đã đặt và tài khoản của hồ sơ bệnh nhân (mỗi tài khoản 1 thông báo) |
-| Bác sĩ từ chối (câu thông báo có lý do) | `LICH_HEN_BI_TU_CHOI` | Như trên |
+| Bác sĩ hủy lịch đã xác nhận (câu thông báo có lý do) | `LICH_HEN_BI_TU_CHOI` | Tài khoản đã đặt và tài khoản của hồ sơ bệnh nhân (mỗi tài khoản 1 thông báo); kèm email tới địa chỉ liên hệ |
+| (đã bỏ từ 15/10/2026) Bác sĩ xác nhận | `LICH_HEN_DA_XAC_NHAN` | Không còn được tạo; chỉ có ở thông báo cũ |
 | Bệnh nhân hủy | `LICH_HEN_DA_HUY` | Bác sĩ của lịch hẹn |
 | Bệnh nhân đổi lịch, cùng bác sĩ | `LICH_HEN_DA_DOI` (gắn với lịch mới) | Bác sĩ đó, 1 thông báo |
 | Bệnh nhân đổi lịch sang bác sĩ khác | `LICH_HEN_DA_HUY` cho bác sĩ cũ, `LICH_HEN_MOI` cho bác sĩ mới | Cả 2 bác sĩ |
@@ -599,7 +628,7 @@ email lịch hẹn (mục "Email lịch hẹn" bên dưới).
 
 Người làm thao tác không nhận thông báo về thao tác của chính mình. Khách đặt không đăng nhập và người giám hộ chỉ khớp theo
 CCCD không nhận thông báo. Nhắc lịch khám (`NHAC_LICH_KHAM`, bệnh nhân): trước giờ khám 3 ngày và 1 ngày (cấu hình
-`BOOKING_REMINDER_*`), kèm 1 email cho người đặt; lịch đã hủy / bị từ chối / đang chờ đổi không được nhắc. Nhắc tái khám
+`BOOKING_REMINDER_*`), kèm 1 email cho người đặt; lịch đã hủy / bác sĩ đã hủy / đang chờ đổi không được nhắc. Nhắc tái khám
 (`NHAC_TAI_KHAM`, bệnh nhân): bác sĩ ghi hoặc đổi `ngayTaiKhamDeXuat` thì sau nhiều nhất 1 chu kỳ nhắc (5 phút) bệnh nhân
 nhận thông báo + email nêu bác sĩ và ngày tái khám, rồi được nhắc lại 1 lần trước ngày đó 7 ngày
 (`FOLLOWUP_REMINDER_DAYS`). Không có lịch hẹn nào được tạo; xoá ngày tái khám thì không nhắc; bệnh nhân đã có lịch hẹn
@@ -629,7 +658,8 @@ email nằm chờ, không mất và không gửi 2 lần).
 
 | Email | Khi nào |
 |---|---|
-| Đã nhận yêu cầu đặt lịch (chờ bác sĩ xác nhận) | Ngay sau khi đặt lịch (khách hoặc tài khoản); sau khi đổi lịch: 1 email cho lịch mới |
+| Đặt lịch khám thành công (lịch đã được xác nhận) | Ngay sau khi đặt lịch (khách hoặc tài khoản); sau khi đổi lịch: 1 email cho lịch mới |
+| Bác sĩ hủy lịch | Ngay khi bác sĩ hủy 1 lịch đã xác nhận, kèm lý do; gửi tới cùng địa chỉ liên hệ như email đặt lịch, nút mở phiếu khám |
 | Nhắc lịch khám | Trước giờ khám 3 ngày và 1 ngày (`BOOKING_REMINDER_BEFORE`), chỉ trong `BOOKING_REMINDER_FROM` đến `BOOKING_REMINDER_TO` (07:00 - 21:00); kèm thông báo `NHAC_LICH_KHAM` trên chuông |
 | Bác sĩ hẹn / đổi ngày tái khám, nhắc tái khám | Sau khi bác sĩ ghi `ngayTaiKhamDeXuat` (chậm nhất `BOOKING_REMINDER_INTERVAL`), và trước ngày đó `FOLLOWUP_REMINDER_DAYS` ngày; kèm thông báo `NHAC_TAI_KHAM`. Không tạo lịch hẹn |
 

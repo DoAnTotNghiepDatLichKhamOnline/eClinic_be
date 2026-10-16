@@ -30,7 +30,7 @@ public interface LichHenChiDocRepository extends Repository<LichHen, Long> {
     List<SoLuotTheoBacSi> demDaKham(Collection<Long> idCacBacSi);
 
     /**
-     * Số lịch hẹn còn hiệu lực (chờ xác nhận, đã xác nhận; chưa bị đánh dấu cần đổi lịch) nằm trên các ca còn hoạt động
+     * Số lịch hẹn còn hiệu lực (đã xác nhận; chưa bị đánh dấu cần đổi lịch) nằm trên các ca còn hoạt động
      * chưa bắt đầu của bác sĩ: những lịch hẹn sẽ phải đổi lịch nếu bác sĩ ngừng công tác.
      */
     @Query("""
@@ -40,8 +40,7 @@ public interface LichHenChiDocRepository extends Repository<LichHen, Long> {
             where c.bacSi.id = :idBacSi
               and c.trangThai = iuh.fit.se.eclinic.common.enums.TrangThaiLichLamViec.HOAT_DONG
               and (c.ngayLamViec > :homNay or (c.ngayLamViec = :homNay and c.gioBatDau > :gioHienTai))
-              and l.trangThai in (iuh.fit.se.eclinic.common.enums.TrangThaiLichHen.CHO_XAC_NHAN,
-                                  iuh.fit.se.eclinic.common.enums.TrangThaiLichHen.DA_XAC_NHAN)
+              and l.trangThai in (iuh.fit.se.eclinic.common.enums.TrangThaiLichHen.DA_XAC_NHAN)
               and l.canDoiLich = false
             """)
     long demBiAnhHuongNeuNgungCongTac(Long idBacSi, LocalDate homNay, LocalTime gioHienTai);

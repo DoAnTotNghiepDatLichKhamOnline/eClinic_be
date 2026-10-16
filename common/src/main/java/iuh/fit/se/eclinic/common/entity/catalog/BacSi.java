@@ -1,5 +1,8 @@
 package iuh.fit.se.eclinic.common.entity.catalog;
 
+import java.time.LocalDate;
+import java.time.Year;
+
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -22,7 +25,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * Hồ sơ bác sĩ (ERD: BacSi). Chỉ Admin được sửa (DOC-01, ADM-02).
+ * Hồ sơ bác sĩ (ERD: BacSi). Quản trị viên sửa mọi mục (DOC-01, ADM-02); bác sĩ tự sửa giới thiệu ngắn, tiểu sử, ngôn
+ * ngữ khám, giải thưởng, công trình nghiên cứu (DOANTOTNGH-10 B7). Chuyên khoa, giấy phép, học vị, chức vụ, quá trình đào
+ * tạo / công tác, lĩnh vực khám chữa, năm bắt đầu hành nghề, trạng thái: chỉ quản trị viên.
  * <p>
  * Khác ERD: bỏ {@code phiKham} (Q1 — không thanh toán ở MVP); thêm {@code hocVi} (DOC-01/DOC-03)
  * và {@code trangThai} "Đang/Ngừng công tác" (ADM-02).
@@ -91,8 +96,49 @@ public class BacSi extends BaseEntity {
     @Column(name = "linh_vuc_kham_chua_en", columnDefinition = "TEXT")
     private String linhVucKhamChuaEn;
 
-    @Column(name = "so_nam_kinh_nghiem")
-    private Integer soNamKinhNghiem;
+    /** Giấy phép hành nghề (cạnh {@link #soGiayPhep}): chỉ quản trị viên sửa, hiện công khai. */
+    @Column(name = "ngay_cap_giay_phep")
+    private LocalDate ngayCapGiayPhep;
+
+    @Column(name = "noi_cap_giay_phep", length = 200)
+    private String noiCapGiayPhep;
+
+    @Column(name = "noi_cap_giay_phep_en", length = 200)
+    private String noiCapGiayPhepEn;
+
+    @Column(name = "pham_vi_hanh_nghe", length = 500)
+    private String phamViHanhNghe;
+
+    @Column(name = "pham_vi_hanh_nghe_en", length = 500)
+    private String phamViHanhNgheEn;
+
+    /** Số năm kinh nghiệm suy ra từ đây ({@link #soNamKinhNghiem()}), không lưu riêng. */
+    @Column(name = "nam_bat_dau_hanh_nghe")
+    private Integer namBatDauHanhNghe;
+
+    /** Mã ngôn ngữ ISO 639 viết thường, cách nhau dấu phẩy (vd "vi,en"); API trả về / nhận vào dạng mảng. */
+    @Column(name = "ngon_ngu_kham", length = 50)
+    private String ngonNguKham;
+
+    /** Mỗi dòng 1 ý như {@link #quaTrinhDaoTao}. */
+    @Column(name = "giai_thuong", columnDefinition = "TEXT")
+    private String giaiThuong;
+
+    @Column(name = "giai_thuong_en", columnDefinition = "TEXT")
+    private String giaiThuongEn;
+
+    @Column(name = "cong_trinh_nghien_cuu", columnDefinition = "TEXT")
+    private String congTrinhNghienCuu;
+
+    @Column(name = "cong_trinh_nghien_cuu_en", columnDefinition = "TEXT")
+    private String congTrinhNghienCuuEn;
+
+    /**
+     * Tăng 1 mỗi lần lưu hồ sơ giới thiệu (quản trị viên hoặc bác sĩ); lần lưu gửi phiên bản cũ bị từ chối. Không dùng
+     * {@code @Version}: đổi trạng thái / chuyên khoa không được làm hỏng lần lưu hồ sơ đang mở.
+     */
+    @Column(name = "phien_ban_ho_so", nullable = false)
+    private int phienBanHoSo = 1;
 
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.VARCHAR)
@@ -122,5 +168,26 @@ public class BacSi extends BaseEntity {
 
     public String linhVucKhamChua(NgonNgu ngonNgu) {
         return ngonNgu.chon(linhVucKhamChua, linhVucKhamChuaEn);
+    }
+
+    public String noiCapGiayPhep(NgonNgu ngonNgu) {
+        return ngonNgu.chon(noiCapGiayPhep, noiCapGiayPhepEn);
+    }
+
+    public String phamViHanhNghe(NgonNgu ngonNgu) {
+        return ngonNgu.chon(phamViHanhNghe, phamViHanhNgheEn);
+    }
+
+    public String giaiThuong(NgonNgu ngonNgu) {
+        return ngonNgu.chon(giaiThuong, giaiThuongEn);
+    }
+
+    public String congTrinhNghienCuu(NgonNgu ngonNgu) {
+        return ngonNgu.chon(congTrinhNghienCuu, congTrinhNghienCuuEn);
+    }
+
+    /** Số năm kinh nghiệm tính tới năm nay; null khi chưa nhập năm bắt đầu hành nghề. */
+    public Integer soNamKinhNghiem() {
+        return namBatDauHanhNghe == null ? null : Math.max(0, Year.now().getValue() - namBatDauHanhNghe);
     }
 }

@@ -32,8 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 public class NhacLichServiceImpl implements NhacLichService {
 
-    private static final List<TrangThaiLichHen> CON_HIEU_LUC = List.of(TrangThaiLichHen.CHO_XAC_NHAN,
-            TrangThaiLichHen.DA_XAC_NHAN);
+    private static final List<TrangThaiLichHen> CON_HIEU_LUC = List.of(TrangThaiLichHen.DA_XAC_NHAN);
 
     private final LichHenRepository lichHenRepository;
     private final NhacLichHenRepository nhacLichHenRepository;

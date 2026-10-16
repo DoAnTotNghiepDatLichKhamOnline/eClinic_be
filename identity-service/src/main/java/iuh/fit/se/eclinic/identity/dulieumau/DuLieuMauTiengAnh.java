@@ -235,4 +235,44 @@ public final class DuLieuMauTiengAnh {
                             "Pediatric dentistry",
                             "Orthodontic advice"))));
 
+    /** Bản tiếng Anh của nơi cấp giấy phép hành nghề mẫu. */
+    public static final String NOI_CAP_GIAY_PHEP = "Ho Chi Minh City Department of Health";
+
+    /** Bản tiếng Anh của {@link HoSoBacSiMau#GIAI_THUONG}, cùng số thứ tự. */
+    public static final Map<Integer, HoSoBacSiMau.GiaiThuongMau> GIAI_THUONG = Map.of(
+            1, new HoSoBacSiMau.GiaiThuongMau(
+                    List.of("2019: Certificate of merit from the Ho Chi Minh City Department of Health"),
+                    List.of("2016: Clinical features of Helicobacter pylori peptic ulcer in adults")),
+            3, new HoSoBacSiMau.GiaiThuongMau(
+                    List.of("2018: Outstanding paediatric physician of the city"),
+                    List.of("2015: Nebulisation in the treatment of bronchiolitis in children under 2",
+                            "2020: Malnutrition in children under 5 in the inner city")),
+            9, new HoSoBacSiMau.GiaiThuongMau(
+                    List.of("2017: Title of Meritorious Physician", "2021: Research award of the Cardiology Association"),
+                    List.of("2011: Uncontrolled hypertension in people over 60",
+                            "2019: Outcomes of percutaneous coronary intervention in diabetic patients")));
+
+    /** Bản tiếng Anh của dạng bào chế, đơn vị, mô tả trong {@link DuLieuMau#THUOC}. */
+    public record ThuocEn(String dangBaoChe, String donVi, String moTa) {
+    }
+
+    /** Theo tên thuốc mẫu (tên không dịch). */
+    public static final Map<String, ThuocEn> THUOC = Map.ofEntries(
+            Map.entry("Paracetamol", new ThuocEn("Tablet", "tablet", "Pain relief, fever reducer")),
+            Map.entry("Hapacol 250", new ThuocEn("Effervescent powder", "sachet", "Fever and pain relief for children")),
+            Map.entry("Amoxicillin", new ThuocEn("Capsule", "capsule", "Penicillin antibiotic")),
+            Map.entry("Cefuroxim", new ThuocEn("Film-coated tablet", "tablet", "Cephalosporin antibiotic")),
+            Map.entry("Ibuprofen", new ThuocEn("Film-coated tablet", "tablet", "Anti-inflammatory, pain and fever relief")),
+            Map.entry("Loratadin", new ThuocEn("Tablet", "tablet", "Allergy relief (antihistamine)")),
+            Map.entry("Cetirizin", new ThuocEn("Film-coated tablet", "tablet", "Allergy relief (antihistamine)")),
+            Map.entry("Omeprazol", new ThuocEn("Gastro-resistant capsule", "capsule", "Reduces stomach acid")),
+            Map.entry("Domperidon", new ThuocEn("Tablet", "tablet", "Relieves nausea and vomiting")),
+            Map.entry("Salbutamol", new ThuocEn("Metered-dose inhaler", "inhaler", "Asthma reliever, bronchodilator")),
+            Map.entry("Amlodipin", new ThuocEn("Tablet", "tablet", "Lowers blood pressure")),
+            Map.entry("Metformin", new ThuocEn("Film-coated tablet", "tablet", "Type 2 diabetes treatment")),
+            Map.entry("Vitamin C", new ThuocEn("Tablet", "tablet", "Vitamin C supplement")),
+            Map.entry("Oresol", new ThuocEn("Powder for oral solution", "sachet", "Rehydration and electrolytes")),
+            Map.entry("Povidon iod", new ThuocEn("Topical solution", "bottle", "Antiseptic for skin and wounds")),
+            Map.entry("Cloramphenicol", new ThuocEn("Eye drops", "bottle", "Antibiotic eye drops")));
+
 }

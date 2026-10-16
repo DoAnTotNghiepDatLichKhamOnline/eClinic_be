@@ -75,14 +75,12 @@ public enum MaLoi {
     NGUOI_GIAM_HO_KHONG_HOP_LE(HttpStatus.BAD_REQUEST),
     VUOT_GIOI_HAN_DAT_LICH(HttpStatus.CONFLICT),
 
-    // Bác sĩ xác nhận / từ chối lịch hẹn
-    /** Lịch hẹn đã được xác nhận, bị từ chối, đã khám xong hoặc đã hủy. */
-    LICH_HEN_KHONG_CHO_XAC_NHAN(HttpStatus.CONFLICT),
-    /** Lượt khám của lịch hẹn đã bắt đầu: không xác nhận / từ chối được nữa. */
+    // Bác sĩ hủy lịch hẹn
+    /** Lượt khám của lịch hẹn đã bắt đầu: bác sĩ không hủy được nữa. */
     LICH_HEN_DA_QUA_GIO(HttpStatus.CONFLICT),
 
     // Bệnh nhân hủy / đổi lịch hẹn
-    /** Lịch hẹn đã khám xong, đã hủy, đã đổi sang lịch khác hoặc bị từ chối. */
+    /** Lịch hẹn đã khám xong, đã hủy, đã đổi sang lịch khác hoặc bác sĩ đã hủy. */
     LICH_HEN_KHONG_HUY_DOI_DUOC(HttpStatus.CONFLICT),
     /** Còn cách giờ khám ít hơn app.dat-lich.huy-doi-truoc-toi-thieu. */
     QUA_HAN_HUY_DOI_LICH(HttpStatus.CONFLICT),
@@ -98,8 +96,17 @@ public enum MaLoi {
     // Khám bệnh
     /** Bác sĩ chỉ ghi nhận kết quả khám từ ngày khám của lịch hẹn trở đi. */
     CHUA_DEN_NGAY_KHAM(HttpStatus.CONFLICT),
+    HET_HAN_SUA_BENH_AN(HttpStatus.CONFLICT),
     /** Lịch hẹn đã khám xong, đã hủy hoặc bị từ chối. */
     LICH_HEN_KHONG_KHAM_DUOC(HttpStatus.CONFLICT),
+
+    // Hàng đợi khám của bác sĩ
+    /** Bác sĩ đang khám 1 bệnh nhân khác chưa ghi nhận kết quả: chỉ 1 bệnh nhân đang khám mỗi lúc. */
+    DANG_KHAM_BENH_NHAN_KHAC(HttpStatus.CONFLICT),
+    /** Ca không còn bệnh nhân nào chờ gọi. */
+    HANG_DOI_TRONG(HttpStatus.CONFLICT),
+    /** Chỉ gọi / đánh dấu vắng mặt được trong ngày khám của lịch hẹn. */
+    KHONG_PHAI_NGAY_KHAM(HttpStatus.CONFLICT),
 
     // Ca làm việc, yêu cầu đổi ca / xin nghỉ
     CA_KHONG_SUA_DUOC(HttpStatus.CONFLICT),
@@ -121,6 +128,8 @@ public enum MaLoi {
     TEN_THUOC_DA_TON_TAI(HttpStatus.CONFLICT),
     THUOC_DA_DUOC_KE(HttpStatus.CONFLICT),
     THUOC_NGUNG_DUNG(HttpStatus.CONFLICT),
+    THUOC_CHUA_XAC_MINH(HttpStatus.CONFLICT),
+    THUOC_THIEU_THONG_TIN(HttpStatus.CONFLICT),
 
     // Đánh giá lượt khám
     LICH_HEN_CHUA_KHAM_XONG(HttpStatus.CONFLICT),

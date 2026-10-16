@@ -8,7 +8,8 @@ import iuh.fit.se.eclinic.common.enums.LoaiAnhBacSi;
 import iuh.fit.se.eclinic.common.exception.LoiNghiepVu;
 
 /**
- * Quản trị viên quản lý ảnh giới thiệu của bác sĩ (ảnh làm việc, chứng chỉ). Mọi thao tác ném KHONG_TIM_THAY nếu
+ * Quản trị viên quản lý ảnh giới thiệu của bác sĩ (ảnh làm việc, chứng chỉ); bác sĩ tự quản lý ảnh làm việc của mình
+ * (thêm bằng {@link #them} với loại ANH_CONG_VIEC). Mọi thao tác ném KHONG_TIM_THAY nếu
  * không có bác sĩ, hoặc ảnh không phải của bác sĩ đó.
  */
 public interface AnhBacSiService {
@@ -37,5 +38,19 @@ public interface AnhBacSiService {
 
     /** Xoá ảnh khỏi danh sách và khỏi kho ảnh (kho ảnh lỗi thì chỉ ghi log, ảnh vẫn bị xoá khỏi danh sách). */
     void xoa(Long idBacSi, Long idAnh);
+
+    /**
+     * Bác sĩ tự sửa chú thích ảnh làm việc của mình (không đổi loại ảnh).
+     *
+     * @throws LoiNghiepVu KHONG_CO_QUYEN (403) nếu là ảnh chứng chỉ: chỉ quản trị viên sửa
+     */
+    AnhBacSiQuanTriResponse capNhatChuThichAnhCongViec(Long idBacSi, Long idAnh, String chuThich, String chuThichEn);
+
+    /**
+     * Bác sĩ tự xoá ảnh làm việc của mình, như {@link #xoa}.
+     *
+     * @throws LoiNghiepVu KHONG_CO_QUYEN (403) nếu là ảnh chứng chỉ: chỉ quản trị viên xoá
+     */
+    void xoaAnhCongViec(Long idBacSi, Long idAnh);
 
 }

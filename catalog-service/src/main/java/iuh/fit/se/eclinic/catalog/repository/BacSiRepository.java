@@ -107,4 +107,12 @@ public interface BacSiRepository extends JpaRepository<BacSi, Long> {
             """)
     Optional<BacSi> timKemTaiKhoanVaChuyenKhoa(Long id);
 
+    /** Bác sĩ của 1 tài khoản (bác sĩ đang đăng nhập), lấy sẵn tài khoản để kiểm tra trạng thái. */
+    @Query("""
+            select b from BacSi b
+              join fetch b.taiKhoan t
+            where t.id = :idTaiKhoan
+            """)
+    Optional<BacSi> timTheoTaiKhoanKemTaiKhoan(Long idTaiKhoan);
+
 }

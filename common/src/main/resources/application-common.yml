@@ -2,6 +2,11 @@
 # Mỗi service nạp file này bằng:  spring.config.import: classpath:application-common.yml
 # Biến môi trường: xem .env.example ở thư mục gốc.
 spring:
+  # Chạy bằng IntelliJ: đọc thêm file .env ở thư mục làm việc (run config đặt là thư mục gốc dự án), không có file thì bỏ qua.
+  # Biến môi trường (docker-compose, run config) vẫn được ưu tiên hơn giá trị trong .env.
+  config:
+    import: "optional:file:.env[.properties]"
+
   datasource:
     # Không set serverTimezone/hibernate.jdbc.time_zone: DATETIME lưu đúng giờ "tường" (LocalDateTime),
     # JVM được set mặc định Asia/Ho_Chi_Minh trong hàm main của mỗi service (AppTimeZone.apply()).
@@ -43,6 +48,10 @@ management:
         include: health,info
 
 app:
+  benh-an:
+    # Bác sĩ sửa được hồ sơ bệnh án trong số ngày này kể từ lúc ghi nhận, sau đó chỉ xem. Đặt ở đây vì medical-service
+    # chặn sửa còn booking-service trả hạn sửa cho màn hình của bác sĩ (BenhAnProperties).
+    so-ngay-duoc-sua: ${RECORD_EDIT_DAYS:7}
   # Kho ảnh Cloudinary (gói miễn phí, không cần thẻ): xem .env.example. Chỉ service đặt app.cloudinary.bat: true mới tạo
   # kho ảnh (identity-service: ảnh đại diện; catalog-service: ảnh giới thiệu bác sĩ). Thiếu 1 trong 3 giá trị đầu:
   # các API tải ảnh lên trả 503, service vẫn khởi động bình thường.

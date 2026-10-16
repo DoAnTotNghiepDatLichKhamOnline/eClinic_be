@@ -3,6 +3,7 @@
     <option name="MAIN_CLASS_NAME" value="iuh.fit.se.eclinic.ApiGatewayApplication" />
     <module name="api-gateway" />
     <option name="VM_PARAMETERS" value="-Xmx512m -XX:TieredStopAtLevel=1" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
     <shortenClasspath name="ARGS_FILE" />
     <method v="2">
       <option name="Make" enabled="true" />

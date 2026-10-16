@@ -33,7 +33,9 @@ public class KhoiTaoDuLieuMauRunner implements ApplicationRunner {
             duLieuMauService.taoDuLieuNen();
             duLieuMauService.boSungHoSoBacSi();
             duLieuMauService.boSungTiengAnh();
+            duLieuMauService.boSungGiayPhepVaNgonNgu();
             duLieuMauService.boSungTrieuChung();
+            log.info("Đã bổ sung {} thuốc mẫu vào danh mục", duLieuMauService.boSungThuoc());
             int soCa = duLieuMauService.boSungLichLamViec(LocalDate.now());
             log.info("Đã bổ sung {} ca làm việc mẫu", soCa);
         } catch (RuntimeException e) {

@@ -438,7 +438,7 @@ class QuanLyTaiKhoanServiceTest {
     @Test
     void bacSiConLichHenSapToiKhongVoHieuHoaDuocChoToiKhiLichHenBiHuy() {
         TaiKhoan taiKhoan = taoTaiKhoan(VaiTro.BAC_SI, TrangThaiTaiKhoan.DA_KICH_HOAT, "BS " + hauTo());
-        Long idLichHen = taoLichHen(taoBacSi(taiKhoan), LocalDate.now().plusDays(1), TrangThaiLichHen.CHO_XAC_NHAN);
+        Long idLichHen = taoLichHen(taoBacSi(taiKhoan), LocalDate.now().plusDays(1), TrangThaiLichHen.DA_XAC_NHAN);
 
         assertThatThrownBy(() -> quanLyTaiKhoanService.capNhatTrangThai(idAdmin, taiKhoan.getId(), voHieuHoa("Nghỉ việc")))
                 .isInstanceOf(LoiNghiepVu.class)

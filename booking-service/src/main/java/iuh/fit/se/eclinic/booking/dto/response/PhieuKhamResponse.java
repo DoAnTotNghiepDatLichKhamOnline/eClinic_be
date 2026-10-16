@@ -15,8 +15,8 @@ import iuh.fit.se.eclinic.common.enums.TrangThaiLichHen;
  * @param ngayDat              thời điểm đặt lịch
  * @param nguoiGiamHo          null nếu lượt khám không có người giám hộ
  * @param canNguoiGiamHoDiCung true: hiển thị ghi chú "người giám hộ phải đi cùng" (BOOK-11)
- * @param lyDoHuy              lý do bác sĩ từ chối (BI_TU_CHOI) hoặc lý do hủy; null ở các trạng thái khác
- * @param duocHuyDoi           true nếu lịch còn hủy / đổi được: CHO_XAC_NHAN / DA_XAC_NHAN và chưa quá {@code hanHuyDoi}
+ * @param lyDoHuy              lý do bác sĩ hủy (BI_TU_CHOI) hoặc lý do hủy; null ở các trạng thái khác
+ * @param duocHuyDoi           true nếu lịch còn hủy / đổi được: DA_XAC_NHAN và chưa quá {@code hanHuyDoi}
  * @param hanHuyDoi            hạn chót hủy / đổi lịch trên hệ thống (giờ khám trừ khoảng tối thiểu)
  * @param canDoiLich           true: ca khám đã bị hủy, lịch hẹn còn hiệu lực và đang chờ đổi sang khung giờ khác (hoặc hủy);
  *                             khi đó hủy / đổi được tới giờ khám cũ và không tính vào số lần đổi lịch

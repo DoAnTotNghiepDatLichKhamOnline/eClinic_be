@@ -289,8 +289,7 @@ public class TraCuuPhongKham {
             mot.put("floor", tang);
             mot.put("status", lich.canDoiLich()
                     ? "the doctor's shift was cancelled: the user must reschedule or cancel this appointment"
-                    : "DA_XAC_NHAN".equals(lich.trangThai()) ? "confirmed by the doctor"
-                            : "waiting for the doctor's confirmation");
+                    : "confirmed");
             mot.put("forWhom", lich.laBanThan() ? "the user" : "another person the user booked for");
             choMoHinhCacLich.add(mot);
         }

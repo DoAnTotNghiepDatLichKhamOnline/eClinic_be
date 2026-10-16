@@ -94,7 +94,7 @@ public class HoSoKhamServiceImpl implements HoSoKhamService {
                 new HoSoKhamResponse.HoSoBenhNhan(hoSo.getId(), hoSo.getCccd(), hoSo.getHoTen(), ngaySinh, tuoi,
                         hoSo.getGioiTinh(), hoSo.getSoDienThoai(), hoSo.getDiaChi(), hoSo.getSoBaoHiemYTe(),
                         hoSo.getTienSuBenhLy(), hoSo.getTaiKhoan() != null),
-                ketQuaKhamMapper.toResponse(benhAnTheoLichHen.get(lichHen.getId())),
+                ketQuaKhamMapper.toResponseChoBacSi(benhAnTheoLichHen.get(lichHen.getId())),
                 truoc.stream().map(lan -> toLanKham(lan, benhAnTheoLichHen.get(lan.getId()))).toList());
     }
 
@@ -103,7 +103,7 @@ public class HoSoKhamServiceImpl implements HoSoKhamService {
         return new HoSoKhamResponse.LanKham(lichHen.getId(), lichHen.getMaTraCuu(), gioKham.toLocalDate(), gioKham,
                 caKhamMapper.toBacSiTomTat(lichHen.getBacSi()),
                 lichHen.getBacSi().getChuyenKhoa().ten(NgonNgu.hienTai()),
-                lichHen.getTrangThai(), lichHen.getLyDoKham(), ketQuaKhamMapper.toResponse(benhAn));
+                lichHen.getTrangThai(), lichHen.getLyDoKham(), ketQuaKhamMapper.toResponseChoBacSi(benhAn));
     }
 
 }

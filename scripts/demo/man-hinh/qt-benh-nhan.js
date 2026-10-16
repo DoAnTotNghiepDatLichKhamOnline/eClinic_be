@@ -7,6 +7,8 @@
 //        tuKhoa so với họ tên / số điện thoại / số bảo hiểm y tế, hoặc đủ 12 số CCCD
 //   GET  /api/booking/quan-tri/ho-so-benh-nhan/{id}/lich-hen?trang=&kichThuoc=   lịch hẹn của hồ sơ, mọi trạng thái, muộn nhất trước
 //        (không có chẩn đoán / đơn thuốc)
+//   GET  /api/medical/quan-tri/lich-hen/{id}/benh-an/lich-su   lịch sử sửa hồ sơ bệnh án của 1 lượt khám đã hoàn thành (ai sửa,
+//        lúc nào, lý do, nội dung trước / sau)
 //   GET  /api/booking/quan-tri/ho-so-benh-nhan/cho-xac-minh?trang=&kichThuoc=   hồ sơ đang chờ xác minh liên kết với tài khoản
 //        (tài khoản khai đúng số CCCD nhưng họ tên / số điện thoại không khớp hồ sơ), cũ nhất trước
 //   POST /api/booking/quan-tri/ho-so-benh-nhan/{id}/duyet        hồ sơ thuộc về tài khoản đang chờ
@@ -63,10 +65,20 @@
             khung.replaceChildren(ghiChu(t('Hồ sơ này chưa có lịch hẹn nào.', 'This profile has no appointments yet.')));
             return;
         }
-        khung.replaceChildren(bang([t('Mã tra cứu', 'Lookup code'), t('Giờ khám', 'Visit time'), t('Bác sĩ', 'Doctor'), t('Phòng', 'Room'), t('Lý do khám', 'Reason for visit'), t('Trạng thái', 'Status')], duLieu.noiDung.map((lh) => dong([
+        const lichSu = the('div');
+        khung.replaceChildren(bang([t('Mã tra cứu', 'Lookup code'), t('Giờ khám', 'Visit time'), t('Bác sĩ', 'Doctor'), t('Phòng', 'Room'), t('Lý do khám', 'Reason for visit'), t('Trạng thái', 'Status'), t('Thao tác', 'Actions')], duLieu.noiDung.map((lh) => dong([
             lh.maTraCuu, ngayGioVn(lh.gioKhamDuKien), tenBacSi(lh.bacSi), lh.phongKham ? lh.phongKham.tenPhong : '', lh.lyDoKham,
             (TRANG_THAI[lh.trangThai] || lh.trangThai) + (lh.canDoiLich ? t(' · cần đổi lịch', ' · needs a reschedule') : '') + (lh.lyDoHuy ? ` · ${lh.lyDoHuy}` : ''),
-        ]))));
+            lh.trangThai === 'DA_HOAN_THANH' ? nut(t('Lịch sử sửa bệnh án', 'Record edit history'), () => xemLichSuSua(lichSu, lh)) : null,
+        ]))), lichSu);
+    }
+
+    // Lịch sử sửa hồ sơ bệnh án của 1 lượt khám, hiện dưới bảng lịch hẹn
+    async function xemLichSuSua(khung, lh) {
+        const { status, json } = await lay(`/api/medical/quan-tri/lich-hen/${lh.id}/benh-an/lich-su`);
+        khung.replaceChildren(the('h4', t(`Lịch sử sửa hồ sơ bệnh án · ${lh.maTraCuu}`, `Medical record edit history · ${lh.maTraCuu}`)),
+            status === 200 ? lichSuSuaBenhAn(json.duLieu)
+                : the('p', thongDiepLoi(json, t('Không tải được lịch sử sửa.', 'Could not load the edit history.')), 'ghi-chu loi'));
     }
 
     async function taiChoXacMinh(imLang = false) {
