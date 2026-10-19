@@ -107,8 +107,9 @@ public class HuyDoiLichServiceImpl implements HuyDoiLichService {
         LocalDateTime bayGio = LocalDateTime.now();
         kiemTraConHuyDoiDuoc(lichHen, bayGio);
         int toiDa = datLichProperties.soLanDoiLichToiDa();
-        // Lịch đang chờ đổi vì ca khám bị hủy: không phải bệnh nhân muốn đổi, nên không tính vào giới hạn
-        if (!lichHen.isCanDoiLich() && soLanDaDoi(lichHen) >= toiDa) {
+        // Lịch đang chờ đổi vì ca khám bị hủy, hoặc ca vừa được nhường cho bác sĩ khác: không phải bệnh nhân muốn đổi,
+        // nên không tính vào giới hạn
+        if (!lichHen.isCanDoiLich() && !lichHen.isDoiBacSi() && soLanDaDoi(lichHen) >= toiDa) {
             throw new LoiNghiepVu(MaLoi.VUOT_SO_LAN_DOI_LICH,
                     "loi.VUOT_SO_LAN_DOI_LICH.soLan", String.valueOf(toiDa));
         }

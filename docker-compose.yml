@@ -208,6 +208,8 @@ services:
       # Ca làm việc: hạn gửi yêu cầu đổi ca / xin nghỉ trước giờ bắt đầu ca, số ngày tới được xếp ca
       SHIFT_REQUEST_LEAD: ${SHIFT_REQUEST_LEAD:-24h}
       SHIFT_MAX_DAYS: ${SHIFT_MAX_DAYS:-90}
+      SHIFT_MAX_WEEKLY_HOURS: ${SHIFT_MAX_WEEKLY_HOURS:-48}
+      DOCTOR_SCHEDULE_PATH: ${DOCTOR_SCHEDULE_PATH:-/doctor/work-schedule}
       # Hạn sửa hồ sơ bệnh án (xem .env.example): booking-service trả hạn sửa cho màn hình của bác sĩ
       RECORD_EDIT_DAYS: ${RECORD_EDIT_DAYS:-7}
       # Thông báo trong ứng dụng: job của booking-service gửi sự kiện sang notification-service (gọi thẳng, không qua

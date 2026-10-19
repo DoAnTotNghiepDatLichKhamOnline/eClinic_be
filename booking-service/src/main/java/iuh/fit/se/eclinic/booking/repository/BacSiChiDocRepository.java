@@ -1,5 +1,7 @@
 package iuh.fit.se.eclinic.booking.repository;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.Lock;
@@ -33,5 +35,21 @@ public interface BacSiChiDocRepository extends Repository<BacSi, Long> {
               and b.taiKhoan.trangThai = iuh.fit.se.eclinic.common.enums.TrangThaiTaiKhoan.DA_KICH_HOAT
             """)
     long demDangCongTacCoTaiKhoanHoatDong();
+
+    /** Bác sĩ đang công tác (lọc theo chuyên khoa / bác sĩ, null = không lọc), lấy sẵn tài khoản và chuyên khoa. */
+    @Query("""
+            select b from BacSi b
+              join fetch b.taiKhoan t
+              join fetch b.chuyenKhoa c
+            where b.trangThai = iuh.fit.se.eclinic.common.enums.TrangThaiBacSi.DANG_CONG_TAC
+              and (:idChuyenKhoa is null or c.id = :idChuyenKhoa)
+              and (:idBacSi is null or b.id = :idBacSi)
+            order by t.hoTen, b.id
+            """)
+    List<BacSi> timDangCongTac(Long idChuyenKhoa, Long idBacSi);
+
+    /** Các bác sĩ theo id (kể cả đã ngừng công tác), lấy sẵn tài khoản và chuyên khoa. */
+    @Query("select b from BacSi b join fetch b.taiKhoan join fetch b.chuyenKhoa where b.id in :cacId")
+    List<BacSi> timTheoCacId(Collection<Long> cacId);
 
 }

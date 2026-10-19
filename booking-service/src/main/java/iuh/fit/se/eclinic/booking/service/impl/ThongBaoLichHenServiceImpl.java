@@ -92,6 +92,11 @@ public class ThongBaoLichHenServiceImpl implements ThongBaoLichHenService {
     }
 
     @Override
+    public void emailDoiBacSi(LichHen lichHen) {
+        ghiEmail(lichHen, "email.doiBacSi");
+    }
+
+    @Override
     public void nhacLich(LichHen lichHen) {
         PhongKham phong = lichHen.getPhongKham();
         ThamSoThongBao thamSo = ThamSoThongBao.tao().chu(tenBenhNhan(lichHen)).gioNgay(gioKham(lichHen))

@@ -164,6 +164,14 @@ public class LichHen extends AuditableEntity {
     @Column(name = "can_doi_lich", nullable = false)
     private boolean canDoiLich;
 
+    /**
+     * Ca khám được nhường cho bác sĩ khác (duyệt yêu cầu NHUONG_CA): lịch hẹn vẫn khám bình thường với bác sĩ mới, nhưng
+     * bệnh nhân được hủy / đổi tới đúng giờ khám và lần đổi đó không tính vào giới hạn số lần đổi. Lịch mới tạo ra khi
+     * đổi lịch không mang cờ này.
+     */
+    @Column(name = "doi_bac_si", nullable = false)
+    private boolean doiBacSi;
+
     /** Trạng thái trong hàng đợi khám của bác sĩ (chỉ booking-service ghi); không bao giờ lưu DA_KHAM. */
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.VARCHAR)

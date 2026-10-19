@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import iuh.fit.se.eclinic.booking.dto.request.XuLyYeuCauRequest;
+import iuh.fit.se.eclinic.booking.dto.response.KetQuaXuLyNhomResponse;
 import iuh.fit.se.eclinic.booking.dto.response.YeuCauDoiLichResponse;
 import iuh.fit.se.eclinic.booking.service.YeuCauDoiLichService;
 import iuh.fit.se.eclinic.common.dto.PhanHoiApi;
@@ -47,13 +48,32 @@ public class QuanTriYeuCauDoiLichController {
         return PhanHoiApi.ok(yeuCauDoiLichService.danhSach(tatCa ? null : trangThai, trang, kichThuoc));
     }
 
-    @Operation(summary = "Duyệt: xin nghỉ thì hủy ca; đổi ca thì đổi phòng tại chỗ hoặc hủy ca cũ và xếp ca mới. Ca mới trùng"
-            + " giờ -> 409 TRUNG_LICH_LAM_VIEC, yêu cầu vẫn chờ duyệt")
+    @Operation(summary = "Duyệt: xin nghỉ thì hủy ca; đổi ca thì đổi phòng tại chỗ hoặc hủy ca cũ và xếp ca mới; nhường ca thì"
+            + " chuyển ca và lịch hẹn sang bác sĩ nhận. Ca mới / bác sĩ nhận trùng giờ, vượt giờ làm tuần -> 409"
+            + " TRUNG_LICH_LAM_VIEC / VUOT_GIO_LAM_TUAN, yêu cầu vẫn chờ duyệt. Nhường ca chưa được đồng ý -> 409"
+            + " YEU_CAU_CHO_DONG_NGHIEP")
     @PostMapping("/{id}/duyet")
     public PhanHoiApi<YeuCauDoiLichResponse> duyet(@PathVariable Long id,
             @Valid @RequestBody(required = false) XuLyYeuCauRequest request) {
         return PhanHoiApi.ok(yeuCauDoiLichService.duyet(NguoiDungHienTai.layIdTaiKhoan(), id,
                 request == null ? null : request.ghiChu()), "thanhCong.duyetYeuCau");
+    }
+
+    @Operation(summary = "Duyệt cả nhóm xin nghỉ nhiều ca: hủy các ca của mọi yêu cầu còn chờ duyệt; ca đã bắt đầu thì bỏ qua"
+            + " (liệt kê trong boQua). Bác sĩ được báo 1 lần")
+    @PostMapping("/nhom/{maNhom}/duyet")
+    public PhanHoiApi<KetQuaXuLyNhomResponse> duyetNhom(@PathVariable String maNhom,
+            @Valid @RequestBody(required = false) XuLyYeuCauRequest request) {
+        return PhanHoiApi.ok(yeuCauDoiLichService.duyetNhom(NguoiDungHienTai.layIdTaiKhoan(), maNhom,
+                request == null ? null : request.ghiChu()), "thanhCong.duyetNhom");
+    }
+
+    @Operation(summary = "Từ chối cả nhóm xin nghỉ nhiều ca (mọi yêu cầu còn chờ duyệt), bắt buộc có ghi chú")
+    @PostMapping("/nhom/{maNhom}/tu-choi")
+    public PhanHoiApi<KetQuaXuLyNhomResponse> tuChoiNhom(@PathVariable String maNhom,
+            @Valid @RequestBody(required = false) XuLyYeuCauRequest request) {
+        return PhanHoiApi.ok(yeuCauDoiLichService.tuChoiNhom(NguoiDungHienTai.layIdTaiKhoan(), maNhom,
+                request == null ? null : request.ghiChu()), "thanhCong.tuChoiNhom");
     }
 
     @Operation(summary = "Từ chối, bắt buộc có ghi chú")

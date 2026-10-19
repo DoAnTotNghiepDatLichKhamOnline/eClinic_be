@@ -114,7 +114,11 @@ public enum MaLoi {
     CA_DA_CO_YEU_CAU_CHO_DUYET(HttpStatus.CONFLICT),
     QUA_HAN_GUI_YEU_CAU(HttpStatus.CONFLICT),
     YEU_CAU_DA_XU_LY(HttpStatus.CONFLICT),
+    /** Yêu cầu nhường ca còn chờ bác sĩ nhận đồng ý: quản trị viên chưa duyệt / từ chối được. */
+    YEU_CAU_CHO_DONG_NGHIEP(HttpStatus.CONFLICT),
     LICH_HEN_CAN_DOI_LICH(HttpStatus.CONFLICT),
+    /** Tổng giờ các ca của bác sĩ trong 1 tuần (thứ Hai - Chủ nhật) vượt app.lich-lam-viec.so-gio-toi-da-moi-tuan (SCHED-05). */
+    VUOT_GIO_LAM_TUAN(HttpStatus.CONFLICT),
 
     // Quản lý bác sĩ
     PHAI_DOI_MAT_KHAU(HttpStatus.FORBIDDEN),

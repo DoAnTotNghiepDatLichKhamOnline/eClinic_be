@@ -58,10 +58,14 @@ const HANG_DOI = nhan({
 // Dùng như chuỗi: the('p', CAN_DOI_LICH) và `${CAN_DOI_LICH}` đều ra chữ của ngôn ngữ đang chọn
 const CAN_DOI_LICH = cap('Ca khám của lịch hẹn này đã bị hủy. Hãy đổi sang khung giờ khác (hoặc hủy lịch hẹn).',
     'The shift of this appointment was cancelled. Please move it to another time slot (or cancel the appointment).');
-const LOAI_YEU_CAU = nhan({ XIN_NGHI: cap('Xin nghỉ', 'Leave'), DOI_CA: cap('Đổi ca', 'Shift change') });
+const DA_DOI_BAC_SI = cap('Ca khám đã chuyển sang bác sĩ khác (giờ, phòng không đổi). Bạn được đổi hoặc hủy lịch hẹn tới giờ khám, không tính vào số lần đổi.',
+    'The session was handed to another doctor (same time and room). You may reschedule or cancel up to the appointment time; it does not count toward your reschedule limit.');
+const LOAI_YEU_CAU = nhan({ XIN_NGHI: cap('Xin nghỉ', 'Leave'), DOI_CA: cap('Đổi ca', 'Shift change'), NHUONG_CA: cap('Nhường ca', 'Hand over') });
 const TRANG_THAI_YEU_CAU = nhan({
+    CHO_DONG_Y: cap('Chờ đồng nghiệp đồng ý', 'Waiting for the colleague'),
     CHO_DUYET: cap('Chờ duyệt', 'Pending'), DA_DUYET: cap('Đã duyệt', 'Approved'),
     TU_CHOI: cap('Bị từ chối', 'Rejected'), DA_RUT: cap('Đã rút', 'Withdrawn'),
+    DONG_NGHIEP_TU_CHOI: cap('Đồng nghiệp không nhận', 'Declined by the colleague'),
 });
 const GIOI_TINH = nhan({ NAM: cap('Nam', 'Male'), NU: cap('Nữ', 'Female'), KHAC: cap('Khác', 'Other') });
 const QUAN_HE = nhan({
@@ -166,6 +170,40 @@ async function goi(duongDan, body, phuongThuc = 'POST', imLang = false, duocThuL
     return { status, json };
 }
 const lay = (duongDan, imLang = false) => goi(duongDan, undefined, 'GET', imLang);
+
+// Tải 1 tệp (Excel, PDF...) bằng GET kèm token / ngôn ngữ như goi, rồi lưu qua 1 thẻ <a download>. Tên tệp lấy từ header
+// Content-Disposition, không có thì dùng tenTep. Lỗi (không phải 2xx) trả { status, json } để nơi gọi hiện thongDiep.
+async function taiTep(duongDan, tenTep, duocThuLai = true) {
+    const guiToken = coGuiToken(duongDan, 'GET');
+    const headers = { 'Accept-Language': ngonNgu };
+    if (guiToken) headers['Authorization'] = 'Bearer ' + accessToken;
+    let res;
+    try {
+        res = await fetch(API_URL + duongDan, { credentials: 'include', headers });
+    } catch (e) {
+        return { status: 0, json: { thongDiep: t('Không gọi được API: ', 'Could not call the API: ') + String(e) } };
+    }
+    if (guiToken && res.status === 401) {
+        if (duocThuLai && await lamMoiPhien()) return taiTep(duongDan, tenTep, false);
+        xoaPhien(t('Phiên đăng nhập đã hết hạn: hãy đăng nhập lại.', 'Your session has expired: please sign in again.'));
+    }
+    $('ket-qua').textContent = `GET ${duongDan} -> ${res.status}`;
+    if (!res.ok) {
+        const json = await res.json().catch(() => null);
+        $('ket-qua').textContent += '\n' + JSON.stringify(json, null, 2);
+        return { status: res.status, json };
+    }
+    const tenTrongHeader = /filename="?([^";]+)"?/.exec(res.headers.get('Content-Disposition') || '');
+    const url = URL.createObjectURL(await res.blob());
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = tenTrongHeader ? tenTrongHeader[1] : tenTep;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    return { status: res.status, json: null };
+}
 
 // Thông điệp lỗi của API: thongDiep + từng trường sai (chiTiet)
 function thongDiepLoi(json, macDinh) {
@@ -554,6 +592,8 @@ function khoiHuyDoi({ lich, canSoDienThoai, gui, khiXong }) {
     khung.append(the('h3', t('Hủy / đổi lịch', 'Cancel / reschedule')));
     // canDoiLich: ca khám đã bị hủy; hủy / đổi được tới giờ khám cũ và không tính vào số lần đổi lịch
     if (lich.canDoiLich) khung.append(the('p', CAN_DOI_LICH, 'canh-bao'));
+    // daDoiBacSi: ca khám được nhường cho bác sĩ khác; hủy / đổi tự do tới giờ khám
+    if (lich.daDoiBacSi) khung.append(the('p', DA_DOI_BAC_SI, 'canh-bao'));
     if (!lich.duocHuyDoi) {
         khung.append(ghiChu(lich.trangThai === 'DA_XAC_NHAN'
             ? t(`Không hủy / đổi được trên hệ thống (hạn chót: ${ngayGioVn(lich.hanHuyDoi)}, hoặc tài khoản này không phải người đặt / người khám). Vui lòng liên hệ phòng khám.`,
@@ -632,6 +672,7 @@ function hienPhieu(khung, phieu) {
     them(t('Số thứ tự', 'Queue number'), phieu.soThuTu, 'so-thu-tu');
     them(t('Trạng thái', 'Status'), TRANG_THAI[phieu.trangThai] || phieu.trangThai);
     if (phieu.canDoiLich) them(t('Cần đổi lịch', 'Needs rescheduling'), CAN_DOI_LICH);
+    if (phieu.daDoiBacSi) them(t('Đã đổi bác sĩ', 'Doctor changed'), DA_DOI_BAC_SI);
     if (phieu.lyDoHuy) them(t('Lý do hủy', 'Cancellation reason'), phieu.lyDoHuy);
     them(t('Ngày khám', 'Visit date'), `${thuCuaNgay(phieu.ngay)} ${ngayVn(phieu.ngay)}`);
     them(t('Giờ khám dự kiến', 'Expected time'), gio(phieu.gioKhamDuKien));

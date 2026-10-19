@@ -1,5 +1,7 @@
 package iuh.fit.se.eclinic.booking.repository;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -23,6 +25,8 @@ public interface YeuCauDoiLichRepository extends JpaRepository<YeuCauDoiLich, Lo
             join fetch y.lichLamViec l
             join fetch l.phongKham
             left join fetch y.phongKhamMongMuon
+            left join fetch y.bacSiNhan bn
+            left join fetch bn.taiKhoan
             """;
 
     /** Khoá dòng yêu cầu (SELECT ... FOR UPDATE, không join) trước khi duyệt / từ chối / rút. */
@@ -37,9 +41,37 @@ public interface YeuCauDoiLichRepository extends JpaRepository<YeuCauDoiLich, Lo
     @Query("select y.lichLamViec.id from YeuCauDoiLich y where y.id = :id")
     Optional<Long> timIdLichLamViec(Long id);
 
-    boolean existsByLichLamViecIdAndTrangThai(Long lichLamViecId, TrangThaiYeuCau trangThai);
+    /** Gọi với {@link TrangThaiYeuCau#DANG_CHO}: ca đã có yêu cầu còn chờ (đồng nghiệp hoặc quản trị viên). */
+    boolean existsByLichLamViecIdAndTrangThaiIn(Long lichLamViecId, Collection<TrangThaiYeuCau> trangThai);
 
-    Optional<YeuCauDoiLich> findByLichLamViecIdAndTrangThai(Long lichLamViecId, TrangThaiYeuCau trangThai);
+    /** Gọi với {@link TrangThaiYeuCau#DANG_CHO}: yêu cầu còn chờ của ca (tối đa 1, UNIQUE trong DB). */
+    Optional<YeuCauDoiLich> findByLichLamViecIdAndTrangThaiIn(Long lichLamViecId, Collection<TrangThaiYeuCau> trangThai);
+
+    /** Yêu cầu nhường ca gửi cho 1 bác sĩ (bác sĩ nhận), mới gửi nhất trước; {@code trangThai} null = mọi trạng thái. */
+    @Query(value = KEM_CHI_TIET + """
+            where bn.id = :idBacSiNhan and (:trangThai is null or y.trangThai = :trangThai)
+            order by y.ngayGui desc, y.id desc
+            """, countQuery = """
+            select count(y) from YeuCauDoiLich y
+            where y.bacSiNhan.id = :idBacSiNhan and (:trangThai is null or y.trangThai = :trangThai)
+            """)
+    Page<YeuCauDoiLich> timGuiChoBacSi(Long idBacSiNhan, TrangThaiYeuCau trangThai, Pageable pageable);
+
+    /** 1 yêu cầu của nhóm: id, id ca, id bác sĩ gửi. Đọc không khoá, để nơi gọi khoá ca rồi yêu cầu theo thứ tự id. */
+    interface ThanhVienNhom {
+        Long getIdYeuCau();
+
+        Long getIdLichLamViec();
+
+        Long getIdBacSi();
+    }
+
+    /** Mọi yêu cầu của 1 nhóm xin nghỉ nhiều ca, theo id ca tăng dần (thứ tự khoá). */
+    @Query("""
+            select y.id as idYeuCau, y.lichLamViec.id as idLichLamViec, y.bacSi.id as idBacSi
+            from YeuCauDoiLich y where y.maNhom = :maNhom order by y.lichLamViec.id
+            """)
+    List<ThanhVienNhom> timTheoNhom(String maNhom);
 
     /** Yêu cầu của 1 bác sĩ, mới gửi nhất trước; {@code trangThai} null = mọi trạng thái. */
     @Query(value = KEM_CHI_TIET + """

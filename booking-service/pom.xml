@@ -30,6 +30,16 @@
             <groupId>com.google.zxing</groupId>
             <artifactId>core</artifactId>
         </dependency>
+        <!-- Apache POI: xuất lịch làm việc, tệp mẫu và nhập lịch từ tệp .xlsx -->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+        </dependency>
+        <!-- OpenPDF: bản in lịch làm việc của bác sĩ và lưới tuần toàn viện (font Noto Sans nhúng, có tiếng Việt) -->
+        <dependency>
+            <groupId>com.github.librepdf</groupId>
+            <artifactId>openpdf</artifactId>
+        </dependency>
 
         <!-- Test -->
         <dependency>

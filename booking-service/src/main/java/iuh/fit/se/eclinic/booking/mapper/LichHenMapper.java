@@ -43,11 +43,13 @@ public class LichHenMapper {
 
     /**
      * Hạn chót bệnh nhân hủy / đổi lịch trên hệ thống: giờ khám trừ {@code app.dat-lich.huy-doi-truoc-toi-thieu}. Lịch
-     * hẹn đang chờ đổi vì ca khám bị hủy ({@code canDoiLich}) thì được hủy / đổi tới đúng giờ khám cũ.
+     * hẹn đang chờ đổi vì ca khám bị hủy ({@code canDoiLich}) hoặc của ca vừa được nhường cho bác sĩ khác
+     * ({@code doiBacSi}) thì được hủy / đổi tới đúng giờ khám.
      */
     public LocalDateTime hanHuyDoi(LichHen lichHen) {
         LocalDateTime gioKham = lichHen.getKhungGio().getGioBatDau();
-        return lichHen.isCanDoiLich() ? gioKham : gioKham.minus(datLichProperties.huyDoiTruocToiThieu());
+        return lichHen.isCanDoiLich() || lichHen.isDoiBacSi() ? gioKham
+                : gioKham.minus(datLichProperties.huyDoiTruocToiThieu());
     }
 
     /** Lịch còn hiệu lực và chưa quá hạn hủy / đổi (chưa xét ai được làm). */
@@ -100,7 +102,7 @@ public class LichHenMapper {
                 lichHen.getLyDoKham(), lichHen.getNgayTao(), nguoiDat,
                 laBanThan && lichHen.isCanDoiChieu(), lichHen.getLyDoHuy(),
                 conHuyDoiDuoc(lichHen) && (laBanThan || nguoiDat == NguoiDatLich.TOI), hanHuyDoi(lichHen),
-                canDoiLich(lichHen));
+                canDoiLich(lichHen), daDoiBacSi(lichHen));
     }
 
     /**
@@ -159,7 +161,7 @@ public class LichHenMapper {
                 caKhamMapper.toPhongKhamTomTat(lichHen.getPhongKham()), lichHen.getLyDoKham(), lichHen.getNgayTao(),
                 benhNhan, nguoiGiamHo == null ? null : toNguoiGiamHoPhieuKham(lichHen, nguoiGiamHo),
                 nguoiGiamHo != null, lichHen.getLyDoHuy(), conHuyDoiDuoc(lichHen), hanHuyDoi(lichHen),
-                canDoiLich(lichHen));
+                canDoiLich(lichHen), daDoiBacSi(lichHen));
     }
 
     /**
@@ -220,6 +222,11 @@ public class LichHenMapper {
     /** Ca khám đã bị hủy và lịch hẹn còn hiệu lực: bệnh nhân phải đổi sang khung giờ khác (hoặc hủy). */
     private static boolean canDoiLich(LichHen lichHen) {
         return lichHen.isCanDoiLich() && lichHen.getTrangThai().chiemKhungGio();
+    }
+
+    /** Ca khám được nhường cho bác sĩ khác và lịch hẹn còn giữ lượt khám. */
+    private static boolean daDoiBacSi(LichHen lichHen) {
+        return lichHen.isDoiBacSi() && lichHen.getTrangThai().chiemKhungGio();
     }
 
     /** SĐT liên hệ của lượt khám có người giám hộ là SĐT người giám hộ vừa nhập; lịch hẹn cũ chưa có thì lấy dòng đã lưu. */

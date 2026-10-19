@@ -47,7 +47,7 @@ CONTROLLER = (
 )
 TIEN_TO = ("/api/booking/", "/api/medical/")
 THU_MUC_RESPONSE = [GOC / check.GOI_JAVA.format(s) / "dto" / "response" for s in ("booking", "medical")]
-DAY_DU = True  # tài liệu phải có đủ 22 route của 5 controller
+DAY_DU = True  # tài liệu phải có đủ 23 route của 5 controller
 # Record lồng của tài liệu này chỉ dẫn TK thay vì có bảng: (record cha, record lồng) ở đây = (record cha, record lồng) ở TK
 GIONG_TK = (
     (("BenhAnResponse", "SinhHieu"), ("KetQuaKhamResponse", "SinhHieu")),

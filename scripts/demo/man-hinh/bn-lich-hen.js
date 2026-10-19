@@ -118,6 +118,7 @@
         cacPhan.push(thongTin([
             [t('Mã tra cứu', 'Lookup code'), lich.maTraCuu], [t('Trạng thái', 'Status'), TRANG_THAI[lich.trangThai] || lich.trangThai],
             [t('Cần đổi lịch', 'Needs rescheduling'), lich.canDoiLich ? CAN_DOI_LICH : null], [t('Lý do hủy', 'Cancellation reason'), lich.lyDoHuy],
+            [t('Đã đổi bác sĩ', 'Doctor changed'), lich.daDoiBacSi ? DA_DOI_BAC_SI : null],
             [t('Số thứ tự', 'Queue number'), lich.soThuTu],
             [t('Giờ khám dự kiến', 'Expected time'), ngayGioVn(lich.gioKhamDuKien)], [t('Bác sĩ', 'Doctor'), tenBacSi(lich.bacSi)],
             [t('Chuyên khoa', 'Specialty'), lich.tenChuyenKhoa], [t('Phòng khám', 'Room'), tenPhong(lich.phongKham)],

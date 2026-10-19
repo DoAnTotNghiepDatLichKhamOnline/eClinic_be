@@ -45,6 +45,9 @@ public interface ThongBaoLichHenService {
     /** Email "đã đổi lịch" kèm mã tra cứu và link phiếu khám của lịch mới. */
     void emailDaDoiLich(LichHen lichMoi);
 
+    /** Email "lịch khám đổi bác sĩ" (ca khám được nhường; lịch hẹn đã mang bác sĩ mới) kèm link phiếu khám. */
+    void emailDoiBacSi(LichHen lichHen);
+
     /**
      * Nhắc lịch khám sắp tới: 1 thông báo cho mỗi tài khoản phía bệnh nhân và 1 email cho người đặt (cùng quy tắc người
      * nhận với email xác nhận). Câu chữ ghi giờ khám thật, không ghi "còn N ngày", nên nhắc trễ vẫn đúng.

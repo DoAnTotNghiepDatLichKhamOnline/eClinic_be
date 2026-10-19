@@ -4,6 +4,8 @@ import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -24,13 +26,16 @@ import iuh.fit.se.eclinic.booking.dto.response.LichHenTrongCaResponse;
 import iuh.fit.se.eclinic.booking.service.BacSiHuyLichHenService;
 import iuh.fit.se.eclinic.booking.service.HoSoKhamService;
 import iuh.fit.se.eclinic.booking.service.LichLamViecService;
+import iuh.fit.se.eclinic.booking.service.PdfLichLamViecService;
+import iuh.fit.se.eclinic.booking.service.PdfLichLamViecService.TepPdf;
+import iuh.fit.se.eclinic.booking.util.TepTaiVe;
 import iuh.fit.se.eclinic.common.dto.PhanHoiApi;
 import iuh.fit.se.eclinic.common.security.NguoiDungHienTai;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 /**
- * SCHED-04: bác sĩ xem lịch làm việc và lịch hẹn của CHÍNH MÌNH, mở hồ sơ khám của bệnh nhân từ 1 lịch hẹn của mình, và
+ * SCHED-04: bác sĩ xem (và tải bản in PDF) lịch làm việc và lịch hẹn của CHÍNH MÌNH, mở hồ sơ khám của bệnh nhân từ 1 lịch hẹn của mình, và
  * sửa hồ sơ bệnh nhân / ghi nhận đã đối chiếu giấy tờ cho lịch hẹn đó. Không nhận id bác sĩ: bác sĩ lấy từ tài khoản
  * đang đăng nhập; lịch hẹn của bác sĩ khác coi như không có (404). Ngày theo dạng yyyy-MM-dd.
  */
@@ -44,6 +49,7 @@ public class LichCuaBacSiController {
     private final LichLamViecService lichLamViecService;
     private final HoSoKhamService hoSoKhamService;
     private final BacSiHuyLichHenService bacSiHuyLichHenService;
+    private final PdfLichLamViecService pdfLichLamViecService;
 
     @Operation(summary = "Các ca làm việc của tôi trong khoảng ngày (tối đa 42 ngày, kể cả ca đã huỷ) kèm số lượt đã đặt")
     @GetMapping("/lich-lam-viec")
@@ -51,6 +57,17 @@ public class LichCuaBacSiController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate tuNgay,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate denNgay) {
         return PhanHoiApi.ok(lichLamViecService.lichCuaBacSi(NguoiDungHienTai.layIdTaiKhoan(), tuNgay, denNgay));
+    }
+
+    // Không khai báo produces: lỗi (khoảng ngày sai...) vẫn trả JSON như các API khác
+    @Operation(summary = "Tải bản in PDF lịch làm việc của tôi trong khoảng ngày (tối đa 42 ngày, chỉ ca còn hoạt động),"
+            + " chữ theo ngôn ngữ của request")
+    @GetMapping("/lich-lam-viec/pdf")
+    public ResponseEntity<byte[]> pdfLichLamViec(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate tuNgay,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate denNgay) {
+        TepPdf tep = pdfLichLamViecService.cuaToi(NguoiDungHienTai.layIdTaiKhoan(), tuNgay, denNgay);
+        return TepTaiVe.taiVe(tep.noiDung(), tep.tenTep(), MediaType.APPLICATION_PDF);
     }
 
     @Operation(summary = "Tra 1 lịch hẹn của tôi theo mã tra cứu ngắn (ECL-...), mã phiếu khám hoặc link phiếu khám (quét QR)")

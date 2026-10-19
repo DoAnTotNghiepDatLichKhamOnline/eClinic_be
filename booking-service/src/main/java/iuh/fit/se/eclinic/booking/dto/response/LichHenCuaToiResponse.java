@@ -25,11 +25,14 @@ import iuh.fit.se.eclinic.common.enums.TrangThaiLichHen;
  * @param hanHuyDoi        hạn chót hủy / đổi lịch trên hệ thống (giờ khám trừ khoảng tối thiểu)
  * @param canDoiLich           true: ca khám đã bị hủy, lịch hẹn còn hiệu lực và đang chờ đổi sang khung giờ khác (hoặc hủy);
  *                             khi đó hủy / đổi được tới giờ khám cũ và không tính vào số lần đổi lịch
+ * @param daDoiBacSi           true: ca khám được nhường cho bác sĩ khác ({@code bacSi} là bác sĩ mới), lịch hẹn vẫn khám
+ *                             bình thường; hủy / đổi được tới giờ khám và không tính vào số lần đổi lịch
  */
 public record LichHenCuaToiResponse(String maPhieuKham, String maTraCuu, String linkPhieuKham, TrangThaiLichHen trangThai,
         Integer soThuTu, LocalDate ngay, LocalDateTime gioKhamDuKien, LocalDateTime gioBatDauKhung,
         LocalDateTime gioKetThucKhung, BacSiTomTatResponse bacSi, String tenChuyenKhoa,
         PhongKhamTomTatResponse phongKham, String hoTenBenhNhan, boolean laBanThan, String hoTenNguoiGiamHo,
         String lyDoKham, LocalDateTime ngayDat, NguoiDatLich nguoiDat, boolean thongTinKhacHoSo,
-        String lyDoHuy, boolean duocHuyDoi, LocalDateTime hanHuyDoi, boolean canDoiLich) {
+        String lyDoHuy, boolean duocHuyDoi, LocalDateTime hanHuyDoi, boolean canDoiLich,
+        boolean daDoiBacSi) {
 }

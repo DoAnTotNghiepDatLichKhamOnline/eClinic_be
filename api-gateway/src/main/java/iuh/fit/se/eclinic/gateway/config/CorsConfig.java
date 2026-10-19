@@ -28,6 +28,8 @@ public class CorsConfig {
         cauHinh.setAllowedOrigins(corsProperties.nguonDuocPhep());
         cauHinh.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         cauHinh.setAllowedHeaders(List.of("*"));
+        // Frontend đọc được tên tệp của các API tải tệp (Excel / PDF lịch làm việc, ảnh QR)
+        cauHinh.setExposedHeaders(List.of("Content-Disposition"));
         // Cho phép gửi cookie (refresh token eclinic_rt của /api/auth); yêu cầu origin cụ thể, không dùng "*"
         cauHinh.setAllowCredentials(true);
         cauHinh.setMaxAge(3600L);

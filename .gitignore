@@ -141,9 +141,20 @@ seop-providers.json
 # ==========================================
 /*.docx
 /yeu-cau-toan-dien-dat-lich-kham-benh.md
+# Tệp tải về / dựng ra khi thử (lịch làm việc xuất Excel, bản in PDF, tài liệu API chuyển PDF)
+/*.pdf
+/*.xlsx
 # File khóa khi tài liệu đang mở trong Word / LibreOffice
 ~$*
 .~lock.*#
 
-# Python bytecode cache (scripts/api-doc)
+# Python bytecode cache, môi trường ảo (scripts/api-doc)
 __pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# Claude Code: cấu hình / ghi chú riêng của máy, worktree tạm
+CLAUDE.local.md
+/.claude/worktrees/

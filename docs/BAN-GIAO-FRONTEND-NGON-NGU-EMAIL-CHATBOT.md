@@ -74,16 +74,19 @@ Tên tiếng Anh của chuyên khoa và phòng khám cũng không được trùn
 lại danh sách là câu đổi theo), không còn là câu tiếng Việt cố định. Tên người, mã tra cứu và lý do người dùng gõ nằm
 trong câu vẫn giữ nguyên văn. Thông báo tạo trước khi có tính năng này chỉ có câu tiếng Việt.
 
-2 loại (`loai`) mới của bệnh nhân:
+Các loại (`loai`) mới của bệnh nhân:
 
 | `loai` | Khi nào | Bấm vào thì mở |
 |---|---|---|
 | `NHAC_LICH_KHAM` | Trước giờ khám 3 ngày và 1 ngày (mục 2) | Chi tiết lịch hẹn / phiếu khám của `maPhieuKham` |
 | `NHAC_TAI_KHAM` | Bác sĩ hẹn hoặc đổi ngày tái khám; và 7 ngày trước ngày đó | **Trang đặt lịch**. `idLichHen` / `maPhieuKham` của thông báo là của lượt khám ĐÃ XONG, chưa có lịch hẹn mới nào |
+| `LICH_HEN_DOI_BAC_SI` (từ 19/10/2026) | Ca khám được nhường cho bác sĩ khác (quản trị viên duyệt); giờ, phòng không đổi | Chi tiết lịch hẹn / phiếu khám của `maPhieuKham` (có `daDoiBacSi: true`) |
+
+Phía bác sĩ có thêm `YEU_CAU_NHUONG_CA` (từ 19/10/2026): đồng nghiệp nhường ca cho mình, yêu cầu đó bị rút, được duyệt / từ chối, hoặc ca bị hủy; bấm vào mở Work Schedule. Danh sách đủ các loại: [BAN-GIAO-FRONTEND-05-10.md](BAN-GIAO-FRONTEND-05-10.md), mục "Chuông thông báo".
 
 ## 2. Email lịch hẹn
 
-Frontend không gọi API nào để gửi email; phần này để biết người dùng nhận gì và liên kết trong email mở trang nào.
+Frontend không gọi API nào để gửi email (trừ "Gửi lịch cho bác sĩ" của quản trị viên, `POST /api/booking/quan-tri/lich-lam-viec/gui-lich`); phần này để biết người dùng nhận gì và liên kết trong email mở trang nào.
 
 | Email | Khi nào gửi | Nút trong email mở |
 |---|---|---|
@@ -93,6 +96,8 @@ Frontend không gọi API nào để gửi email; phần này để biết ngư�
 | Nhắc lịch khám | Trước giờ khám 3 ngày và 1 ngày, chỉ gửi trong 07:00 đến 21:00. Lịch đã hủy, bác sĩ đã hủy, đang chờ đổi (`canDoiLich`) không nhắc; đặt sát giờ thì bỏ mốc đã qua | Phiếu khám |
 | Bác sĩ hẹn tái khám / đổi ngày tái khám | Trong vòng 5 phút sau khi bác sĩ ghi hoặc sửa `ngayTaiKhamDeXuat` (xoá ngày thì không gửi gì) | Trang đặt lịch |
 | Nhắc tái khám | 7 ngày trước ngày tái khám; bỏ qua khi bệnh nhân đã có lịch hẹn sắp tới cùng chuyên khoa | Trang đặt lịch |
+| Đổi bác sĩ khám (`email.doiBacSi`) | Ngay khi quản trị viên duyệt cho bác sĩ nhường ca cho đồng nghiệp: 1 email cho mỗi lịch hẹn còn hiệu lực của ca, nêu bác sĩ mới; giờ, phòng không đổi; bệnh nhân hủy / đổi được tới giờ khám mà không tính lần đổi. Cùng người nhận như email đặt lịch. Có từ 19/10/2026 | Phiếu khám |
+| Lịch làm việc (`email.lichLamViec`, **gửi bác sĩ**) | Khi quản trị viên bấm "Gửi lịch cho bác sĩ" cho 1 khoảng ngày: tới email tài khoản của bác sĩ, theo `ngonNgu` của tài khoản; bảng các ca (tối đa 100 dòng). Có từ 19/10/2026 | `FRONTEND_URL` + `DOCTOR_SCHEDULE_PATH` (mặc định `/doctor/work-schedule`) + `?tuNgay=&denNgay=` |
 
 - **Gửi cho ai**: email liên hệ nhập lúc đặt lịch (`benhNhan.email`); không nhập thì email của tài khoản đã đặt. Khách không
   nhập email thì không nhận gì: form đặt lịch nên nói rõ điều này cạnh ô email.
@@ -207,5 +212,8 @@ trừ khi người dùng viết rõ bằng ngôn ngữ kia. Cấu hình phía se
    ghi chú rõ, hay bắt buộc với khách?
 4. **Thông báo `NHAC_TAI_KHAM`** nên mở trang đặt lịch trống, hay chọn sẵn bác sĩ của lượt khám cũ (đọc được từ
    `GET /api/booking/lich-hen/cua-toi/{maPhieuKham}`)?
-5. **Ngày giờ ở giao diện tiếng Anh**: trang demo, email và câu thông báo giữ `dd/MM/yyyy` và giờ 24h ở cả 2 ngôn ngữ (trang demo chỉ đổi tên thứ).
+5. **Trang Lịch làm việc của bác sĩ**: email gửi lịch mở `FRONTEND_URL` + `DOCTOR_SCHEDULE_PATH` (đang là
+   `/doctor/work-schedule`) kèm `?tuNgay=&denNgay=`. Trang thật có đường dẫn khác thì báo lại để đặt biến này; trang nên
+   đọc 2 tham số đó để điền sẵn khoảng ngày của nút tải bản in PDF (trang demo làm vậy).
+6. **Ngày giờ ở giao diện tiếng Anh**: trang demo, email và câu thông báo giữ `dd/MM/yyyy` và giờ 24h ở cả 2 ngôn ngữ (trang demo chỉ đổi tên thứ).
    Frontend muốn định dạng khác thì tự định dạng từ giá trị ISO của API.

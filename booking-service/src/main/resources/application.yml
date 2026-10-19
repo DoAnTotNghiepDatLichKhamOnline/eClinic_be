@@ -1,11 +1,22 @@
 server:
   port: 8084
+  tomcat:
+    # Upload vượt giới hạn multipart: Tomcat chỉ đọc bỏ phần body còn lại tối đa chừng này (mặc định 2MB), quá thì ngắt
+    # kết nối trước khi trả xong response -> gateway báo 502 thay vì 413 TEP_QUA_LON. Phải LỚN HƠN giới hạn request
+    # của gateway (app.gioi-han.kich-thuoc-request-toi-da = 5MB) để mọi request gateway cho qua đều được đọc hết.
+    max-swallow-size: 10MB
 
 spring:
   application:
     name: booking-service
   config:
     import: classpath:application-common.yml
+  servlet:
+    multipart:
+      # Tệp Excel nhập lịch làm việc (POST /api/booking/quan-tri/lich-lam-viec/nhap-excel): tối đa 2MB (1000 dòng ca chỉ
+      # vài chục KB). Vượt -> 413 TEP_QUA_LON (XuLyLoiHandler).
+      max-file-size: 2MB
+      max-request-size: 3MB
   data:
     redis:
       # Redis chỉ dùng để giới hạn số lần đặt lịch theo IP; chậm hoặc mất kết nối thì bỏ qua giới hạn, không treo request
@@ -28,6 +39,10 @@ app:
     gui-yeu-cau-truoc-toi-thieu: ${SHIFT_REQUEST_LEAD:24h}
     # Quản trị viên chỉ xếp được ca trong số ngày tới này (tính từ hôm nay)
     so-ngay-xep-truoc-toi-da: ${SHIFT_MAX_DAYS:90}
+    # Tổng giờ các ca của 1 bác sĩ trong 1 tuần (thứ Hai - Chủ nhật) không vượt số giờ này (SCHED-05)
+    so-gio-toi-da-moi-tuan: ${SHIFT_MAX_WEEKLY_HOURS:48}
+    # Trang Lịch làm việc của bác sĩ trên frontend: link trong email gửi lịch = phieu-kham.frontend-url + đường dẫn này
+    duong-dan-lich-bac-si: ${DOCTOR_SCHEDULE_PATH:/doctor/work-schedule}
   thong-bao:
     # Thông báo trong ứng dụng: booking-service ghi sự kiện vào bảng su_kien_thong_bao, job gửi sang notification-service
     url: ${NOTIFICATION_URL:http://localhost:8086}

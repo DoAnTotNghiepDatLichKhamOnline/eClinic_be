@@ -37,6 +37,10 @@ import lombok.Setter;
  * <p>
  * Khác ERD: thêm {@code loaiYeuCau}, {@code phongKhamMongMuon}, {@code ghiChuXuLy} (.md mục 15.4);
  * {@code thoiGianMongMuon} được tách thành ngày + giờ bắt đầu + giờ kết thúc mong muốn (ca mới cần cả giờ kết thúc).
+ * <p>
+ * NHUONG_CA (nhường ca cho {@code bacSiNhan}): CHO_DONG_Y -> bác sĩ nhận đồng ý (CHO_DUYET) hoặc từ chối
+ * (DONG_NGHIEP_TU_CHOI) -> quản trị viên duyệt (ca chuyển sang bác sĩ nhận) hoặc từ chối. "1 yêu cầu chờ mỗi ca" tính
+ * cả CHO_DONG_Y. Xin nghỉ nhiều ca: các yêu cầu XIN_NGHI gửi cùng lần mang chung {@code maNhom}.
  */
 @Getter
 @Setter
@@ -54,6 +58,11 @@ public class YeuCauDoiLich extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_lich_lam_viec", nullable = false)
     private LichLamViec lichLamViec;
+
+    /** NHUONG_CA: bác sĩ nhận ca (DB CHECK); NULL với loại khác. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_bac_si_nhan")
+    private BacSi bacSiNhan;
 
     /** Admin đã duyệt/từ chối; NULL khi còn CHO_DUYET. */
     @ManyToOne(fetch = FetchType.LAZY)
@@ -83,6 +92,10 @@ public class YeuCauDoiLich extends BaseEntity {
     @JoinColumn(name = "id_phong_kham_mong_muon")
     private PhongKham phongKhamMongMuon;
 
+    /** UUID chung của các yêu cầu xin nghỉ gửi cùng 1 lần; NULL với yêu cầu gửi lẻ. */
+    @Column(name = "ma_nhom", length = 36)
+    private String maNhom;
+
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.VARCHAR)
     @Column(name = "trang_thai", nullable = false, length = 20)
@@ -92,11 +105,19 @@ public class YeuCauDoiLich extends BaseEntity {
     @Column(name = "ghi_chu_xu_ly", columnDefinition = "TEXT")
     private String ghiChuXuLy;
 
+    /** NHUONG_CA: ghi chú của bác sĩ nhận khi từ chối (tùy chọn). */
+    @Column(name = "ghi_chu_bac_si_nhan", columnDefinition = "TEXT")
+    private String ghiChuBacSiNhan;
+
     @CreatedDate
     @Column(name = "ngay_gui", nullable = false, updatable = false)
     private LocalDateTime ngayGui;
 
     @Column(name = "ngay_xu_ly")
     private LocalDateTime ngayXuLy;
+
+    /** NHUONG_CA: lúc bác sĩ nhận đồng ý / từ chối. */
+    @Column(name = "ngay_bac_si_nhan_phan_hoi")
+    private LocalDateTime ngayBacSiNhanPhanHoi;
 
 }
