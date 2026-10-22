@@ -16,7 +16,6 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import iuh.fit.se.eclinic.booking.config.DatLichProperties;
 import iuh.fit.se.eclinic.booking.dto.response.CaKhamResponse;
 import iuh.fit.se.eclinic.booking.dto.response.KhungGioGopResponse;
 import iuh.fit.se.eclinic.booking.dto.response.KhungGioResponse;
@@ -26,6 +25,7 @@ import iuh.fit.se.eclinic.booking.mapper.CaKhamMapper;
 import iuh.fit.se.eclinic.booking.repository.KhungGioKhamRepository;
 import iuh.fit.se.eclinic.booking.repository.LichLamViecRepository;
 import iuh.fit.se.eclinic.booking.repository.LichLamViecRepository.SoChoCuaBacSiTheoNgay;
+import iuh.fit.se.eclinic.booking.service.CauHinhService;
 import iuh.fit.se.eclinic.booking.service.TraCuuLichKhamService;
 import iuh.fit.se.eclinic.common.entity.scheduling.KhungGioKham;
 import iuh.fit.se.eclinic.common.entity.scheduling.LichLamViec;
@@ -43,7 +43,7 @@ public class TraCuuLichKhamServiceImpl implements TraCuuLichKhamService {
     private final LichLamViecRepository lichLamViecRepository;
     private final KhungGioKhamRepository khungGioKhamRepository;
     private final CaKhamMapper caKhamMapper;
-    private final DatLichProperties datLichProperties;
+    private final CauHinhService cauHinhService;
 
     /** Số ngày tối đa của 1 lần xem khung giờ nhiều ngày. */
     private static final int SO_NGAY_TOI_DA_MOI_LAN = 7;
@@ -221,11 +221,11 @@ public class TraCuuLichKhamServiceImpl implements TraCuuLichKhamService {
 
     /** Lượt khám bắt đầu từ thời điểm này trở đi mới còn kịp đặt. */
     private LocalDateTime mocDatDuoc(LocalDateTime bayGio) {
-        return bayGio.plus(datLichProperties.datTruocToiThieu());
+        return bayGio.plus(cauHinhService.hienTai().datTruocToiThieu());
     }
 
     private LocalDate ngayXaNhat(LocalDate homNay) {
-        return homNay.plusDays(datLichProperties.soNgayDatTruocToiDa());
+        return homNay.plusDays(cauHinhService.hienTai().soNgayDatTruocToiDa());
     }
 
 }

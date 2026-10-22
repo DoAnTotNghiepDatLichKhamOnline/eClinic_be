@@ -1,11 +1,14 @@
 package iuh.fit.se.eclinic.catalog.service.impl;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import iuh.fit.se.eclinic.catalog.config.CacheConfig;
 import iuh.fit.se.eclinic.catalog.dto.request.ChuyenKhoaRequest;
 import iuh.fit.se.eclinic.catalog.dto.response.ChuyenKhoaQuanTriResponse;
 import iuh.fit.se.eclinic.catalog.dto.response.ChuyenKhoaResponse;
@@ -33,7 +36,10 @@ public class ChuyenKhoaServiceImpl implements ChuyenKhoaService {
     private final BacSiRepository bacSiRepository;
     private final ChuyenKhoaMapper chuyenKhoaMapper;
 
+    /** Chỉ cache khi không có từ khoá: số từ khoá là vô hạn, còn danh sách đầy đủ thì trang chủ nào cũng gọi. */
     @Override
+    @Cacheable(cacheNames = CacheConfig.CHUYEN_KHOA, condition = "#tuKhoa == null || #tuKhoa.isBlank()",
+            key = "T(iuh.fit.se.eclinic.common.enums.NgonNgu).hienTai() + ':' + #trang + ':' + #kichThuoc")
     public TrangDuLieu<ChuyenKhoaResponse> timKiem(String tuKhoa, int trang, int kichThuoc) {
         Pageable pageable = PageRequest.of(trang, kichThuoc);
         String mau = MauTimKiem.chua(tuKhoa);
@@ -50,12 +56,15 @@ public class ChuyenKhoaServiceImpl implements ChuyenKhoaService {
     }
 
     @Override
+    @Cacheable(cacheNames = CacheConfig.CHUYEN_KHOA_CHI_TIET,
+            key = "T(iuh.fit.se.eclinic.common.enums.NgonNgu).hienTai() + ':' + #id")
     public ChuyenKhoaResponse layTheoId(Long id) {
         return chuyenKhoaMapper.toResponse(timEntity(id));
     }
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = {CacheConfig.CHUYEN_KHOA, CacheConfig.CHUYEN_KHOA_CHI_TIET}, allEntries = true)
     public ChuyenKhoaQuanTriResponse tao(ChuyenKhoaRequest request) {
         ChuyenKhoa chuyenKhoa = chuyenKhoaMapper.toEntity(request);
         if (chuyenKhoaRepository.existsByTenChuyenKhoa(chuyenKhoa.getTenChuyenKhoa())) {
@@ -70,6 +79,7 @@ public class ChuyenKhoaServiceImpl implements ChuyenKhoaService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = {CacheConfig.CHUYEN_KHOA, CacheConfig.CHUYEN_KHOA_CHI_TIET}, allEntries = true)
     public ChuyenKhoaQuanTriResponse capNhat(Long id, ChuyenKhoaRequest request) {
         ChuyenKhoa chuyenKhoa = timEntity(id);
         // Kiểm tra TRƯỚC khi sửa entity: entity đang được quản lý, query sau khi sửa sẽ làm Hibernate
@@ -87,6 +97,7 @@ public class ChuyenKhoaServiceImpl implements ChuyenKhoaService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = {CacheConfig.CHUYEN_KHOA, CacheConfig.CHUYEN_KHOA_CHI_TIET}, allEntries = true)
     public void xoa(Long id) {
         ChuyenKhoa chuyenKhoa = timEntity(id);
         long soPhongKham = phongKhamRepository.countByChuyenKhoaId(id);

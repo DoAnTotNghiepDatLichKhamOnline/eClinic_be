@@ -23,6 +23,10 @@ public enum LoaiThongBao {
     NHAC_LICH_KHAM,
     /** Bác sĩ hẹn / đổi ngày tái khám, và lời nhắc trước ngày đó. Chỉ là lời nhắc, không có lịch hẹn mới. */
     NHAC_TAI_KHAM,
+    /** Quản trị viên hủy lịch hẹn, kèm lý do. */
+    LICH_HEN_QUAN_TRI_HUY,
+    /** Quản trị viên đổi lịch hẹn sang khung giờ khác thay bệnh nhân. */
+    LICH_HEN_QUAN_TRI_DOI,
     // Admin
     YEU_CAU_DOI_LICH_MOI,
     // Chung

@@ -25,6 +25,8 @@ import lombok.RequiredArgsConstructor;
  * Tham số (service nguồn ghi bằng {@code ThamSoThongBao}, đúng thứ tự): 0 họ tên bệnh nhân, 1 giờ khám, 2 họ tên bác sĩ,
  * 3 tên phòng, 4 tầng (rỗng nếu phòng không ghi tầng), 5 mã tra cứu, 6 link phiếu khám. Email không có lý do khám,
  * chuyên khoa, số điện thoại, CCCD. Lời chào không nêu tên: người nhận là người đặt, có thể không phải bệnh nhân.
+ * Email cấp lại liên kết ({@code email.capLaiLienKet}, PAT-03) có thêm tham số 7: link sổ khám bệnh, rỗng khi chưa khám;
+ * có link thì thêm 1 câu và 1 nút mở sổ khám.
  * <p>
  * Email tái khám ({@code email.taiKham}, {@code email.taiKhamDoiNgay}, {@code email.nhacTaiKham}) có 4 tham số: 0 họ tên
  * bệnh nhân, 1 ngày tái khám, 2 họ tên bác sĩ, 3 link trang đặt lịch. Tiêu đề không có tham số; không có chẩn đoán, ghi
@@ -44,8 +46,10 @@ public class MauEmail {
 
     /** email.nhacLichChoXacNhan giữ cho email đã xếp hàng trước DOANTOTNGH-11 (không còn lịch hẹn chờ xác nhận). */
     private static final Set<String> CAC_MAU = Set.of("email.datLich", "email.doiLich", "email.nhacLich",
-            "email.nhacLichChoXacNhan", "email.bacSiHuy", "email.doiBacSi");
+            "email.nhacLichChoXacNhan", "email.bacSiHuy", "email.doiBacSi", "email.canDoiLich",
+            "email.quanTriHuy");
     private static final int SO_THAM_SO = 7;
+    private static final String MAU_CAP_LAI = "email.capLaiLienKet";
     private static final Set<String> CAC_MAU_TAI_KHAM = Set.of("email.taiKham", "email.taiKhamDoiNgay",
             "email.nhacTaiKham");
     private static final int SO_THAM_SO_TAI_KHAM = 4;
@@ -68,12 +72,14 @@ public class MauEmail {
         if (MAU_LICH_LAM_VIEC.equals(khoaMau)) {
             return soanLichLamViec(thamSoJson, ngonNgu);
         }
-        if (!CAC_MAU.contains(khoaMau)) {
+        boolean capLai = MAU_CAP_LAI.equals(khoaMau);
+        if (!capLai && !CAC_MAU.contains(khoaMau)) {
             throw new IllegalArgumentException("Không có mẫu email này");
         }
         String[] thamSo = soanThongBao.thamSo(thamSoJson, ngonNgu);
-        if (thamSo.length != SO_THAM_SO) {
-            throw new IllegalArgumentException("Mẫu email cần " + SO_THAM_SO + " tham số");
+        int soThamSo = capLai ? SO_THAM_SO + 1 : SO_THAM_SO;
+        if (thamSo.length != soThamSo) {
+            throw new IllegalArgumentException("Mẫu email cần " + soThamSo + " tham số");
         }
         Locale locale = ngonNgu.locale();
         String maTraCuu = thamSo[5];
@@ -89,12 +95,17 @@ public class MauEmail {
             khung.dong("email.lichHen.phong.coTang", thamSo[3], thamSo[4]);
         }
         khung.dong("email.lichHen.maTraCuu", maTraCuu)
-                .nut("email.lichHen.nut", lienKet)
-                .doan("email.lichHen.ketThuc")
+                .nut("email.lichHen.nut", lienKet);
+        String lienKetSoKham = capLai ? thamSo[SO_THAM_SO] : "";
+        if (!lienKetSoKham.isBlank()) {
+            khung.doan(MAU_CAP_LAI + ".soKham")
+                    .nut(MAU_CAP_LAI + ".nutSoKham", lienKetSoKham);
+        }
+        khung.doan("email.lichHen.ketThuc")
                 .doan("email.lichHen.khongPhaiBan");
         // Tiêu đề là chữ thường, không phải HTML: không escape
         String tieuDe = messageSource.getMessage(khoaMau, new Object[] {maTraCuu}, khoaMau, locale);
-        return new Thu(tieuDe, khung.xong(), lienKet);
+        return new Thu(tieuDe, khung.xong(), lienKetSoKham.isBlank() ? lienKet : lienKet + " " + lienKetSoKham);
     }
 
     private Thu soanTaiKham(String khoaMau, String thamSoJson, NgonNgu ngonNgu) {

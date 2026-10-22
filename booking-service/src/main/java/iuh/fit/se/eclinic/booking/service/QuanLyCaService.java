@@ -23,11 +23,17 @@ import iuh.fit.se.eclinic.common.entity.scheduling.LichLamViec;
  * <p>
  * Mọi lần xếp / sửa / hủy (kể cả khi duyệt yêu cầu, khi bác sĩ ngừng công tác) đi qua các phương thức ở đây, nên đều:
  * <ul>
- *   <li>kiểm tra giới hạn giờ làm của bác sĩ trong tuần thứ Hai - Chủ nhật (SCHED-05, app.lich-lam-viec.so-gio-toi-da-moi-tuan):
+ *   <li>kiểm tra giới hạn giờ làm của bác sĩ trong tuần thứ Hai - Chủ nhật (SCHED-05, cấu hình soGioToiDaMoiTuan):
  *       xếp ca mới vượt giới hạn thì VUOT_GIO_LAM_TUAN (xếp lặp lại thì bỏ qua ngày đó); sửa ca chỉ bị chặn khi ca dài
  *       thêm và tuần vượt giới hạn;</li>
  *   <li>ghi 1 dòng lịch sử ca (lich_su_ca_lam_viec) với nguồn thay đổi ({@link NguonThayDoi}).</li>
  * </ul>
+ * <p>
+ * Ngày bệnh viện nghỉ (ngay_nghi_benh_vien, xem {@code NgayNghiService}): không tạo ca vào được, dù xếp 1 ca, xếp lặp
+ * lại, sao chép, nhập Excel hay duyệt yêu cầu đổi ca (NGAY_BENH_VIEN_NGHI, kèm ngày và lý do; xếp lặp lại / sao chép /
+ * nhập thì bỏ qua ngày đó kèm lý do). Mọi thao tác tạo ca giữ khoá xếp ca toàn viện ({@link #giuKhoaXepCa}) trước mọi
+ * khoá khác; khai báo ngày nghỉ giữ khoá ghi của cùng dòng, nên ca không thể được tạo xen vào lúc 1 ngày vừa thành ngày
+ * nghỉ. Sửa ca giữ nguyên ngày nên không cần khoá này.
  * <p>
  * Quy tắc với ca đã có người đặt:
  * <ul>
@@ -41,9 +47,10 @@ import iuh.fit.se.eclinic.common.entity.scheduling.LichLamViec;
 public interface QuanLyCaService {
 
     /**
-     * Xếp 1 ca, hoặc nhiều ca cùng giờ khi có {@code lapLai}. Không lặp lại: trùng giờ với ca khác của bác sĩ / phòng
-     * khám thì ném TRUNG_LICH_LAM_VIEC, vượt giờ làm trong tuần thì VUOT_GIO_LAM_TUAN. Có lặp lại: ngày trùng / vượt giờ bị
-     * bỏ qua và liệt kê trong kết quả; không tạo được ca nào thì ném TRUNG_LICH_LAM_VIEC.
+     * Xếp 1 ca, hoặc nhiều ca cùng giờ khi có {@code lapLai}. Không lặp lại: ngày bệnh viện nghỉ thì ném
+     * NGAY_BENH_VIEN_NGHI, trùng giờ với ca khác của bác sĩ / phòng khám thì TRUNG_LICH_LAM_VIEC, vượt giờ làm trong tuần
+     * thì VUOT_GIO_LAM_TUAN. Có lặp lại: ngày nghỉ / trùng / vượt giờ bị bỏ qua và liệt kê trong kết quả; không tạo được ca
+     * nào thì ném TRUNG_LICH_LAM_VIEC.
      */
     KetQuaTaoCaResponse tao(Long idTaiKhoanQuanTri, TaoCaRequest request);
 
@@ -88,8 +95,9 @@ public interface QuanLyCaService {
             LocalTime gioKetThuc, int soLuotToiDaMoiGio, int thoiLuongLuotPhut, NguonThayDoi nguon);
 
     /**
-     * Xếp 1 ca mới cho bác sĩ. Ném TRUNG_LICH_LAM_VIEC nếu trùng giờ, VUOT_GIO_LAM_TUAN nếu vượt giờ làm trong tuần. Không
-     * báo bác sĩ: nơi gọi tự báo.
+     * Xếp 1 ca mới cho bác sĩ. Ném NGAY_BENH_VIEN_NGHI nếu bệnh viện nghỉ ngày đó, TRUNG_LICH_LAM_VIEC nếu trùng giờ,
+     * VUOT_GIO_LAM_TUAN nếu vượt giờ làm trong tuần. Nơi gọi phải đã giữ {@link #giuKhoaXepCa}. Không báo bác sĩ: nơi gọi
+     * tự báo.
      */
     LichLamViec taoCaMoi(Long idBacSi, Long idPhongKham, QuanTriVien quanTri, LocalDate ngay, LocalTime gioBatDau,
             LocalTime gioKetThuc, int soLuotToiDaMoiGio, int thoiLuongLuotPhut, NguonThayDoi nguon);
@@ -112,12 +120,23 @@ public interface QuanLyCaService {
      */
     void kiemTraNhanCa(Long idBacSiNhan, LichLamViec ca);
 
+    /** Ném NGAY_BENH_VIEN_NGHI (kèm ngày và lý do) nếu bệnh viện nghỉ ngày {@code ngay}. Không khoá. */
+    void kiemTraNgayKhongNghi(LocalDate ngay);
+
+    /**
+     * Khoá xếp ca toàn viện, chế độ chia sẻ: khoá chia sẻ dòng cấu hình hệ thống tới hết transaction. Các thao tác tạo ca
+     * giữ cùng lúc được, còn khai báo ngày nghỉ (khoá ghi) phải chờ, và ngược lại. Gọi trước mọi khoá khác của
+     * transaction (thứ tự khoá ở QuanLyCaServiceImpl). Không dùng khoá theo ngày được: ở READ_COMMITTED, InnoDB không
+     * khoá khoảng trống nên khoá 1 ngày chưa có dòng nào không chặn được ai.
+     */
+    void giuKhoaXepCa();
+
     /**
      * Sao chép các ca còn hoạt động của khoảng nguồn (lọc theo chuyên khoa, bác sĩ) sang {@code ngayDich}, dán
      * {@code soLan} lần; lần sau cách lần trước số tuần đủ phủ khoảng nguồn, nên thứ trong tuần được giữ nguyên. Phòng,
-     * giờ, N, t giữ như ca nguồn. Bản sao vào ngày đã qua / quá số ngày được xếp trước, của bác sĩ ngừng công tác, vào
-     * phòng ngừng hoạt động / khác chuyên khoa, trùng giờ hoặc làm tuần vượt giới hạn giờ làm thì bị bỏ qua kèm lý do.
-     * Khi lưu: mỗi bác sĩ được báo 1 lần, mỗi ca mới có dòng lịch sử nguồn SAO_CHEP.
+     * giờ, N, t giữ như ca nguồn. Bản sao vào ngày đã qua / quá số ngày được xếp trước / bệnh viện nghỉ, của bác sĩ ngừng
+     * công tác, vào phòng ngừng hoạt động / khác chuyên khoa, trùng giờ hoặc làm tuần vượt giới hạn giờ làm thì bị bỏ qua
+     * kèm lý do. Khi lưu: mỗi bác sĩ được báo 1 lần, mỗi ca mới có dòng lịch sử nguồn SAO_CHEP.
      *
      * @param luu false = xem trước: chạy y như khi lưu rồi rollback, không báo ai
      */
@@ -125,9 +144,10 @@ public interface QuanLyCaService {
 
     /**
      * Kiểm tra rồi lưu các dòng ca đã đọc từ tệp Excel, theo thứ tự dòng: bác sĩ / phòng phải có trong DB, rồi các quy
-     * tắc của xếp ca (sức chứa, ngày, bác sĩ / phòng còn hoạt động, cùng chuyên khoa, trùng giờ, giờ làm trong tuần);
-     * dòng trước trong tệp được tính khi xét dòng sau. Mỗi dòng báo lỗi đầu tiên của nó. Tất cả hoặc không: còn lỗi thì
-     * không lưu dòng nào. Khi lưu: mỗi bác sĩ được báo 1 lần, mỗi ca mới có dòng lịch sử nguồn NHAP_EXCEL.
+     * tắc của xếp ca (sức chứa, ngày, ngày bệnh viện nghỉ, bác sĩ / phòng còn hoạt động, cùng chuyên khoa, trùng giờ,
+     * giờ làm trong tuần); dòng trước trong tệp được tính khi xét dòng sau. Mỗi dòng báo lỗi đầu tiên của nó. Tất cả hoặc
+     * không: còn lỗi thì không lưu dòng nào. Khi lưu: mỗi bác sĩ được báo 1 lần, mỗi ca mới có dòng lịch sử nguồn
+     * NHAP_EXCEL.
      *
      * @param luu false = xem trước: chạy y như khi lưu rồi rollback, không báo ai. true mà còn lỗi -> 400
      *            DU_LIEU_KHONG_HOP_LE (nhapExcelCoLoi), không lưu gì

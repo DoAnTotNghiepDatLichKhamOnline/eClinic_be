@@ -19,6 +19,10 @@
 //                                                                                   buộc soNgayDung, soLuong)
 //   PUT  /api/medical/bac-si/toi/lich-hen/{id}/benh-an                              sửa kết quả khám đã ghi: kèm lyDoSua và phienBan
 //                                                                                   đang xem; chỉ sửa được trước ketQua.hanSua
+//   GET  /api/medical/bac-si/toi/lich-hen/{id}/benh-an                              bệnh án của lượt khám đang mở: lấy maSoKham /
+//                                                                                   linkSoKham (POST / PUT cũng trả 2 trường này) để
+//                                                                                   hiện link sổ khám bệnh + mã QR cho bệnh nhân
+//                                                                                   (GET /api/booking/so-kham/{ma}/qr)
 //   GET  /api/medical/bac-si/toi/lich-hen/{id}/benh-an/lich-su                      lịch sử sửa của 1 lượt khám (của mình, hoặc lần
 //                                                                                   khám trước của bệnh nhân đang mở)
 //   GET  /api/medical/bac-si/toi/thuoc?tuKhoa=                                      gợi ý thuốc kê được theo tên hoặc hoạt chất:
@@ -113,6 +117,7 @@
                 <div class="hai-cot"><button type="button" id="nut-them-thuoc" class="phu">${t('Thêm dòng thuốc', 'Add a medicine row')}</button><button id="nut-luu-ket-qua">${t('Lưu kết quả khám', 'Save visit result')}</button></div>
             </form>
             <p id="bs-ket-qua-trang-thai" class="ghi-chu"></p>
+            <div id="bs-so-kham"></div>
             <div id="bs-lich-su-sua"></div>
             <h3>${t('Các lần khám trước', 'Previous visits')}</h3>
             <div id="bs-lan-kham-truoc"></div>
@@ -248,6 +253,8 @@
         }
         const lichSu = (idLichHen) => `/api/medical/bac-si/toi/lich-hen/${idLichHen}/benh-an/lich-su`;
         $('bs-lich-su-sua').replaceChildren(...(kq ? [nut(t('Lịch sử sửa', 'Edit history'), (e) => batTatLichSuSua(e.currentTarget, lichSu(lich.id)))] : []));
+        $('bs-so-kham').replaceChildren();
+        if (kq) hienSoKham(lich.id);
 
         const truoc = hs.lanKhamTruoc.map((lan) => {
             const khoi = the('div', null, 'lan-kham');
@@ -259,6 +266,16 @@
         });
         $('bs-lan-kham-truoc').replaceChildren(...(truoc.length ? truoc
             : [ghiChu(t('Bệnh nhân chưa có lần khám nào trước lượt này.', 'The patient has no visits before this one.'))]));
+    }
+
+    // Link + mã QR sổ khám bệnh của lượt khám đang mở: hồ sơ khám (ho-so-kham) không có maSoKham, BenhAnResponse thì có
+    async function hienSoKham(idLichHen) {
+        const { status, json } = await lay(`/api/medical/bac-si/toi/lich-hen/${idLichHen}/benh-an`, true);
+        const khung = $('bs-so-kham');
+        if (!khung || !hoSoKham || hoSoKham.lichHen.id !== idLichHen || status !== 200 || !json.duLieu.maSoKham) return;
+        khung.replaceChildren(ghiChu(t('Đưa link (hoặc mã QR) này cho bệnh nhân: xem kết quả khám cần 4 số cuối SĐT liên hệ.',
+            'Give this link (or the QR code) to the patient: viewing the result needs the last 4 digits of the contact phone.')),
+        khoiSoKham(json.duLieu.maSoKham, json.duLieu.linkSoKham));
     }
 
     // ===== Đơn thuốc =====

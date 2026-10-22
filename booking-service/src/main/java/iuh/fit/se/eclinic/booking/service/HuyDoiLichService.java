@@ -14,7 +14,7 @@ import iuh.fit.se.eclinic.booking.dto.response.PhieuKhamResponse;
  * DU_LIEU_KHONG_HOP_LE; không khớp: SO_DIEN_THOAI_KHONG_KHOP. Mã phiếu khám không có: KHONG_TIM_THAY.</li>
  * </ul>
  * Chung cho cả hai: chỉ lịch DA_XAC_NHAN (khác: LICH_HEN_KHONG_HUY_DOI_DUOC) và còn cách giờ khám ít nhất
- * {@code app.dat-lich.huy-doi-truoc-toi-thieu} (khác: QUA_HAN_HUY_DOI_LICH). Lượt khám cũ được mở lại cho người khác đặt.
+ * cấu hình {@code huyDoiTruocToiThieuPhut} (khác: QUA_HAN_HUY_DOI_LICH). Lượt khám cũ được mở lại cho người khác đặt.
  */
 public interface HuyDoiLichService {
 

@@ -9,7 +9,7 @@ import iuh.fit.se.eclinic.common.entity.medical.HoSoBenhAn;
  * notification-service sau (xem {@link GuiThongBaoService}).
  * <p>
  * Ai nhận: người làm thao tác không nhận thông báo về thao tác của chính mình. Bác sĩ nhận lịch mới, lịch bị bệnh nhân
- * hủy / đổi; phía bệnh nhân nhận tin bác sĩ hủy lịch, gửi cho tài khoản đã đặt và tài khoản của hồ sơ bệnh nhân (mỗi tài
+ * hoặc quản trị viên hủy / đổi; phía bệnh nhân nhận tin bác sĩ / quản trị viên hủy lịch, quản trị viên đổi lịch, gửi cho tài khoản đã đặt và tài khoản của hồ sơ bệnh nhân (mỗi tài
  * khoản 1 thông báo). Khách đặt không đăng nhập và người giám hộ chỉ khớp theo CCCD không nhận (khi bác sĩ hủy,
  * người đặt vẫn nhận email theo địa chỉ liên hệ).
  * <p>
@@ -30,6 +30,19 @@ public interface ThongBaoLichHenService {
      */
     void bacSiHuy(LichHen lichHen);
 
+    /**
+     * Quản trị viên đã hủy lịch hẹn (lý do đã nằm trong {@code lichHen.lyDoHuy}): báo trong ứng dụng cho phía bệnh nhân
+     * và bác sĩ, email cho người đặt (không chép lý do, như {@link #bacSiHuy}).
+     */
+    void quanTriHuy(LichHen lichHen);
+
+    /**
+     * Quản trị viên đã đổi lịch thay bệnh nhân: báo trong ứng dụng cho phía bệnh nhân (giờ cũ, giờ mới, mã mới); bác sĩ
+     * nhận như {@link #benhNhanDaDoi} nhưng câu ghi là bệnh viện đổi. Email đổi lịch do
+     * {@code DatLichService#datLaiTuLichCu} ghi.
+     */
+    void quanTriDoi(LichHen lichCu, LichHen lichMoi);
+
     /** Bệnh nhân đã hủy: báo bác sĩ. */
     void benhNhanDaHuy(LichHen lichHen);
 
@@ -47,6 +60,21 @@ public interface ThongBaoLichHenService {
 
     /** Email "lịch khám đổi bác sĩ" (ca khám được nhường; lịch hẹn đã mang bác sĩ mới) kèm link phiếu khám. */
     void emailDoiBacSi(LichHen lichHen);
+
+    /**
+     * Email "ca khám bị hủy, cần đổi lịch" (lịch hẹn vừa được đánh dấu {@code canDoiLich}) kèm link phiếu khám: khách
+     * không có tài khoản chỉ biết qua email này.
+     */
+    void emailCanDoiLich(LichHen lichHen);
+
+    /**
+     * Email "cấp lại liên kết" (PAT-03): như email đặt lịch (link phiếu khám cũ, không tạo mã mới), thêm link sổ khám
+     * bệnh khi lịch hẹn đã khám. Cùng quy tắc địa chỉ nhận và ngôn ngữ với các email lịch hẹn khác.
+     *
+     * @param lienKetSoKham link sổ khám bệnh, null nếu chưa khám
+     * @return địa chỉ đã ghi email chờ gửi; null nếu lịch hẹn không có địa chỉ nào (không ghi gì)
+     */
+    String emailCapLaiLienKet(LichHen lichHen, String lienKetSoKham);
 
     /**
      * Nhắc lịch khám sắp tới: 1 thông báo cho mỗi tài khoản phía bệnh nhân và 1 email cho người đặt (cùng quy tắc người

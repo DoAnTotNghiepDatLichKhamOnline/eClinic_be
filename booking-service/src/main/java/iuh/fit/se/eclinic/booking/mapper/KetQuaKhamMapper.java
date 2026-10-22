@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 
 import iuh.fit.se.eclinic.booking.dto.response.KetQuaKhamResponse;
 import iuh.fit.se.eclinic.common.config.BenhAnProperties;
+import iuh.fit.se.eclinic.common.config.SoKhamProperties;
 import iuh.fit.se.eclinic.common.entity.medical.HoSoBenhAn;
 import iuh.fit.se.eclinic.common.entity.medical.Icd10;
 import iuh.fit.se.eclinic.common.entity.medical.Thuoc;
@@ -21,13 +22,17 @@ import lombok.RequiredArgsConstructor;
 public class KetQuaKhamMapper {
 
     private final BenhAnProperties benhAnProperties;
+    private final SoKhamProperties soKhamProperties;
 
-    /** Cho bệnh nhân: chỉ biết hồ sơ đã sửa lúc nào, không có phiên bản / hạn sửa. @return null nếu chưa có hồ sơ bệnh án */
+    /**
+     * Cho bệnh nhân: chỉ biết hồ sơ đã sửa lúc nào, không có phiên bản / hạn sửa; kèm mã và link sổ khám bệnh (EXAM-04).
+     * @return null nếu chưa có hồ sơ bệnh án
+     */
     public KetQuaKhamResponse toResponse(HoSoBenhAn benhAn) {
         return toResponse(benhAn, false);
     }
 
-    /** Cho bác sĩ (hồ sơ khám): kèm phiên bản và hạn sửa. @return null nếu chưa có hồ sơ bệnh án */
+    /** Cho bác sĩ (hồ sơ khám): kèm phiên bản và hạn sửa, không có link sổ khám. @return null nếu chưa có hồ sơ bệnh án */
     public KetQuaKhamResponse toResponseChoBacSi(HoSoBenhAn benhAn) {
         return toResponse(benhAn, true);
     }
@@ -53,7 +58,9 @@ public class KetQuaKhamMapper {
                         .toList(),
                 benhAn.getNgaySuaCuoi(),
                 choBacSi ? benhAn.getPhienBan() : null,
-                choBacSi ? benhAnProperties.hanSua(benhAn.getNgayTao()) : null);
+                choBacSi ? benhAnProperties.hanSua(benhAn.getNgayTao()) : null,
+                choBacSi ? null : benhAn.getMaTokenSoKham(),
+                choBacSi ? null : soKhamProperties.lienKet(benhAn.getMaTokenSoKham()));
     }
 
     /** @return null nếu hồ sơ chưa có chỉ số nào */

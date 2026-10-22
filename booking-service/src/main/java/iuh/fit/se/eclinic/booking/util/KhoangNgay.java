@@ -19,12 +19,17 @@ public final class KhoangNgay {
 
     /** Ném DU_LIEU_KHONG_HOP_LE nếu denNgay trước tuNgay hoặc khoảng dài hơn {@link #SO_NGAY_TOI_DA} ngày. */
     public static void kiemTra(LocalDate tuNgay, LocalDate denNgay) {
+        kiemTra(tuNgay, denNgay, SO_NGAY_TOI_DA);
+    }
+
+    /** Như {@link #kiemTra(LocalDate, LocalDate)} với số ngày tối đa khác (vd danh sách ngày nghỉ cả năm). */
+    public static void kiemTra(LocalDate tuNgay, LocalDate denNgay, int soNgayToiDa) {
         if (denNgay.isBefore(tuNgay)) {
             throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE, "loi.DU_LIEU_KHONG_HOP_LE.khoangNgay");
         }
-        if (ChronoUnit.DAYS.between(tuNgay, denNgay) >= SO_NGAY_TOI_DA) {
+        if (ChronoUnit.DAYS.between(tuNgay, denNgay) >= soNgayToiDa) {
             throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE,
-                    "loi.DU_LIEU_KHONG_HOP_LE.khoangNgayToiDa", String.valueOf(SO_NGAY_TOI_DA));
+                    "loi.DU_LIEU_KHONG_HOP_LE.khoangNgayToiDa", String.valueOf(soNgayToiDa));
         }
     }
 

@@ -76,6 +76,10 @@ public class SuKienThongBao extends CreatableEntity {
     @Column(name = "tham_so", columnDefinition = "TEXT")
     private String thamSo;
 
+    /** Kênh EMAIL: nội dung tệp .ics đính kèm email (RFC 5545); null = không đính kèm. */
+    @Column(name = "tep_lich", columnDefinition = "TEXT")
+    private String tepLich;
+
     /** Câu soạn sẵn của sự kiện ghi trước V18; sự kiện mới để null và dùng {@code khoaMau}. */
     @Column(name = "noi_dung", columnDefinition = "TEXT")
     private String noiDung;

@@ -13,6 +13,7 @@ public record NguonThayDoi(NguonThayDoiCa nguon, Long idYeuCau) {
     public static final NguonThayDoi NGUNG_CONG_TAC = new NguonThayDoi(NguonThayDoiCa.NGUNG_CONG_TAC, null);
     public static final NguonThayDoi SAO_CHEP = new NguonThayDoi(NguonThayDoiCa.SAO_CHEP, null);
     public static final NguonThayDoi NHAP_EXCEL = new NguonThayDoi(NguonThayDoiCa.NHAP_EXCEL, null);
+    public static final NguonThayDoi NGAY_NGHI = new NguonThayDoi(NguonThayDoiCa.NGAY_NGHI, null);
 
     public static NguonThayDoi duyetYeuCau(Long idYeuCau) {
         return new NguonThayDoi(NguonThayDoiCa.DUYET_YEU_CAU, idYeuCau);

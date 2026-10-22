@@ -31,7 +31,9 @@ x-kiem-tra-suc-khoe: &kiem-tra
   start_period: 120s
 
 x-java: &java-tool-options
-  # Heap theo giới hạn bộ nhớ container, GC nhỏ gọn, khởi động nhanh hơn
+  # Heap theo giới hạn bộ nhớ container, Serial GC tốn ít bộ nhớ nhất (hợp heap nhỏ 512MB).
+  # TieredStopAtLevel=1 (chỉ trình biên dịch C1, tắt C2): đã đo khi kiểm tra tải (DOANTOTNGH-15), bật C2 làm
+  # booking-service vượt 512MB và phải dùng swap, chậm hơn chứ không nhanh hơn. Chỉ bỏ cờ này khi nâng mem_limit.
   JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=70 -XX:+UseSerialGC -XX:TieredStopAtLevel=1
 
 x-moi-truong-chung: &moi-truong-chung
@@ -176,6 +178,9 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
+      # service_started, không chờ healthy: Redis chỉ làm cache, lỗi thì đọc thẳng DB
+      redis:
+        condition: service_started
 
   booking-service:
     <<: *dich-vu
@@ -196,6 +201,10 @@ services:
       BOOKING_IP_WINDOW: ${BOOKING_IP_WINDOW:-10m}
       BOOKING_CHANGE_LEAD: ${BOOKING_CHANGE_LEAD:-2h}
       BOOKING_MAX_RESCHEDULES: ${BOOKING_MAX_RESCHEDULES:-2}
+      # Khách tự xin cấp lại liên kết phiếu khám (xem .env.example): số lần theo mã tra cứu / IP trong 1 cửa sổ
+      RELINK_CODE_LIMIT: ${RELINK_CODE_LIMIT:-3}
+      RELINK_IP_LIMIT: ${RELINK_IP_LIMIT:-10}
+      RELINK_WINDOW: ${RELINK_WINDOW:-1h}
       # Nhắc lịch khám (xem .env.example): các mốc trước giờ khám, chu kỳ job, khoảng giờ được gửi, khoảng cách tối thiểu
       BOOKING_REMINDER_BEFORE: ${BOOKING_REMINDER_BEFORE:-3d,1d}
       BOOKING_REMINDER_INTERVAL: ${BOOKING_REMINDER_INTERVAL:-5m}
@@ -235,6 +244,8 @@ services:
       <<: *moi-truong-chung
       # Hạn sửa hồ sơ bệnh án (xem .env.example): medical-service chặn sửa sau hạn này
       RECORD_EDIT_DAYS: ${RECORD_EDIT_DAYS:-7}
+      # Link sổ khám trả cho bác sĩ: FRONTEND_URL/so-kham/<mã>
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
     healthcheck:
       <<: *kiem-tra
       test: ["CMD", "curl", "-fsS", "http://localhost:8085/actuator/health"]
@@ -340,6 +351,16 @@ services:
       GATEWAY_MAX_REQUEST_SIZE: ${GATEWAY_MAX_REQUEST_SIZE:-5MB}
       # Regex các proxy đứng trước gateway được tin khi ghi X-Forwarded-For (booking-service giới hạn đặt lịch theo IP)
       GATEWAY_TRUSTED_PROXIES: "${GATEWAY_TRUSTED_PROXIES:-.*}"
+      # Giới hạn tần suất: số request tối đa của 1 IP trong 1 phút, đếm trên Redis (xem .env.example)
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      GATEWAY_RATE_LIMIT: ${GATEWAY_RATE_LIMIT:-300}
+      GATEWAY_AUTH_RATE_LIMIT: ${GATEWAY_AUTH_RATE_LIMIT:-20}
+      GATEWAY_CHATBOT_RATE_LIMIT: ${GATEWAY_CHATBOT_RATE_LIMIT:-30}
+    # service_started, không chờ healthy: Redis lỗi thì gateway bỏ qua giới hạn tần suất và vẫn chạy
+    depends_on:
+      redis:
+        condition: service_started
     healthcheck:
       <<: *kiem-tra
       test: ["CMD", "curl", "-fsS", "http://localhost:8080/actuator/health"]

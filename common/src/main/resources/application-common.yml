@@ -29,11 +29,15 @@ spring:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
+      # Mọi chỗ dùng Redis (đếm giới hạn, cache) đều có đường lui khi Redis lỗi, nên chờ ngắn rồi bỏ qua, không treo
+      # request. Đặt ở đây chứ không ở application.yml của service: file import đè lên file của service.
+      timeout: 500ms
+      connect-timeout: 500ms
 
   # Thông điệp 2 ngôn ngữ (common/src/main/resources/thong-diep): <ten>.properties là tiếng Việt, <ten>_en.properties là
   # tiếng Anh. Request chọn ngôn ngữ bằng header Accept-Language (xem NgonNgu, docs/QUY-UOC-CODE.md mục 4).
   messages:
-    basename: thong-diep/chung,thong-diep/identity,thong-diep/catalog,thong-diep/booking,thong-diep/medical,thong-diep/notification,thong-diep/chatbot
+    basename: thong-diep/chung,thong-diep/identity,thong-diep/catalog,thong-diep/booking,thong-diep/medical,thong-diep/notification,thong-diep/chatbot,thong-diep/report
     # Ngôn ngữ không có file riêng (vd "fr") dùng file tiếng Việt, không dùng ngôn ngữ của JVM
     fallback-to-system-locale: false
   web:
@@ -52,6 +56,16 @@ app:
     # Bác sĩ sửa được hồ sơ bệnh án trong số ngày này kể từ lúc ghi nhận, sau đó chỉ xem. Đặt ở đây vì medical-service
     # chặn sửa còn booking-service trả hạn sửa cho màn hình của bác sĩ (BenhAnProperties).
     so-ngay-duoc-sua: ${RECORD_EDIT_DAYS:7}
+  so-kham:
+    # Sổ khám bệnh (SoKhamProperties): booking-service mở trang công khai, medical-service trả link cho bác sĩ.
+    # Link (cũng là nội dung mã QR) = frontend-url + duong-dan + mã sổ khám
+    frontend-url: ${FRONTEND_URL:http://localhost:5173}
+    duong-dan: /so-kham/
+    # Cạnh ảnh QR (pixel) khi request không gửi kichThuoc
+    kich-thuoc-qr: 300
+    # Nhập sai 4 số cuối SĐT đủ số lần này trong khoa-sau thì sổ khám bị khoá xem tới hết khoảng đó
+    so-lan-sai-toi-da: 5
+    khoa-sau: 15m
   # Kho ảnh Cloudinary (gói miễn phí, không cần thẻ): xem .env.example. Chỉ service đặt app.cloudinary.bat: true mới tạo
   # kho ảnh (identity-service: ảnh đại diện; catalog-service: ảnh giới thiệu bác sĩ). Thiếu 1 trong 3 giá trị đầu:
   # các API tải ảnh lên trả 503, service vẫn khởi động bình thường.

@@ -1,5 +1,7 @@
 # Bàn giao cho frontend — đổi ngôn ngữ EN / VI, email lịch hẹn, chatbot
 
+> **Tài liệu cũ, chỉ để tra lịch sử thay đổi, không còn cập nhật.** Tài liệu API hiện hành: [api/](api/) — [bệnh nhân / khách](api/API-BENH-NHAN-KHACH.md), [bác sĩ](api/API-BAC-SI.md), [quản trị viên](api/API-QUAN-TRI.md).
+
 Tài liệu này bổ sung cho [BAN-GIAO-FRONTEND-05-10.md](BAN-GIAO-FRONTEND-05-10.md): chỉ nói về 3 phần mới. Bản chạy được để
 đối chiếu là trang demo (`node scripts/demo/server.js`, xem README mục "Email, đăng nhập Google và trang demo"): nút
 **EN | VI** ở thanh trên và nút **Hỏi trợ lý** ở góc dưới phải có ở mọi màn hình. Mã nguồn tham khảo:
@@ -81,6 +83,11 @@ Các loại (`loai`) mới của bệnh nhân:
 | `NHAC_LICH_KHAM` | Trước giờ khám 3 ngày và 1 ngày (mục 2) | Chi tiết lịch hẹn / phiếu khám của `maPhieuKham` |
 | `NHAC_TAI_KHAM` | Bác sĩ hẹn hoặc đổi ngày tái khám; và 7 ngày trước ngày đó | **Trang đặt lịch**. `idLichHen` / `maPhieuKham` của thông báo là của lượt khám ĐÃ XONG, chưa có lịch hẹn mới nào |
 | `LICH_HEN_DOI_BAC_SI` (từ 19/10/2026) | Ca khám được nhường cho bác sĩ khác (quản trị viên duyệt); giờ, phòng không đổi | Chi tiết lịch hẹn / phiếu khám của `maPhieuKham` (có `daDoiBacSi: true`) |
+| `LICH_HEN_QUAN_TRI_HUY` (từ 20/10/2026) | Quản trị viên hủy lịch hẹn; câu thông báo có lý do (lịch thành `QUAN_TRI_HUY`, lý do ở `lyDoHuy`) | Chi tiết lịch hẹn / phiếu khám của `maPhieuKham` |
+| `LICH_HEN_QUAN_TRI_DOI` (từ 20/10/2026) | Quản trị viên đổi lịch thay bệnh nhân; thông báo gắn với lịch **mới** | Chi tiết lịch hẹn / phiếu khám mới (`maPhieuKham` của thông báo) |
+
+Ngày bệnh viện nghỉ hủy ca dùng loại có sẵn: bệnh nhân nhận `LICH_HEN_CAN_DOI`, mỗi bác sĩ nhận 1 `CA_LAM_VIEC_THAY_DOI`
+cho mọi ca bị hủy.
 
 Phía bác sĩ có thêm `YEU_CAU_NHUONG_CA` (từ 19/10/2026): đồng nghiệp nhường ca cho mình, yêu cầu đó bị rút, được duyệt / từ chối, hoặc ca bị hủy; bấm vào mở Work Schedule. Danh sách đủ các loại: [BAN-GIAO-FRONTEND-05-10.md](BAN-GIAO-FRONTEND-05-10.md), mục "Chuông thông báo".
 
@@ -98,6 +105,15 @@ Frontend không gọi API nào để gửi email (trừ "Gửi lịch cho bác s
 | Nhắc tái khám | 7 ngày trước ngày tái khám; bỏ qua khi bệnh nhân đã có lịch hẹn sắp tới cùng chuyên khoa | Trang đặt lịch |
 | Đổi bác sĩ khám (`email.doiBacSi`) | Ngay khi quản trị viên duyệt cho bác sĩ nhường ca cho đồng nghiệp: 1 email cho mỗi lịch hẹn còn hiệu lực của ca, nêu bác sĩ mới; giờ, phòng không đổi; bệnh nhân hủy / đổi được tới giờ khám mà không tính lần đổi. Cùng người nhận như email đặt lịch. Có từ 19/10/2026 | Phiếu khám |
 | Lịch làm việc (`email.lichLamViec`, **gửi bác sĩ**) | Khi quản trị viên bấm "Gửi lịch cho bác sĩ" cho 1 khoảng ngày: tới email tài khoản của bác sĩ, theo `ngonNgu` của tài khoản; bảng các ca (tối đa 100 dòng). Có từ 19/10/2026 | `FRONTEND_URL` + `DOCTOR_SCHEDULE_PATH` (mặc định `/doctor/work-schedule`) + `?tuNgay=&denNgay=` |
+| Ca khám bị hủy, cần đổi lịch (`email.canDoiLich`) | Mỗi lần ca bị hủy mà lịch hẹn vẫn giữ (quản trị viên hủy ca, duyệt xin nghỉ / đổi ca, khai báo ngày bệnh viện nghỉ): 1 email cho mỗi lịch hẹn có địa chỉ nhận, **kể cả khách đặt** (trước đây khách không được báo). Có từ 20/10/2026 | Phiếu khám, để đổi sang giờ khác hoặc hủy |
+| Phòng khám hủy lịch (`email.quanTriHuy`) | Quản trị viên hủy 1 lịch hẹn, kèm lý do; theo ngôn ngữ của lịch hẹn. Quản trị viên đổi lịch thay bệnh nhân thì gửi email "Đã đổi lịch" cho lịch mới. Có từ 20/10/2026 | Phiếu khám |
+| Cấp lại link (`email.capLaiLienKet`) | Quản trị viên / bác sĩ cấp lại link qua email sau khi xem CCCD, hoặc khách tự xin bằng mã tra cứu + SĐT (`POST /api/booking/cap-lai-lien-ket`). Luôn là lịch hiện hành của chuỗi đổi lịch. Có từ 20/10/2026 | Phiếu khám; nút thứ 2 mở sổ khám bệnh (`FRONTEND_URL` + `/so-kham/<mã>`) khi lượt khám đã có kết quả |
+
+- **Tệp lịch** (từ 20/10/2026): email đặt lịch, đổi lịch, đổi bác sĩ, cần đổi lịch, bác sĩ hủy, phòng khám hủy và cấp lại
+  link kèm tệp `lich-kham.ics` (cùng nội dung `GET /api/booking/phieu-kham/{ma}/lich.ics`); mở tệp thì ứng dụng lịch thêm /
+  dời / hủy cùng 1 sự kiện cho cả chuỗi đổi lịch. Email nhắc lịch, tái khám và lịch làm việc không kèm.
+- **Lịch đặt qua tổng đài**: ngôn ngữ email là `ngonNgu` quản trị viên chọn cho người gọi; không nhập email thì không có
+  email nào, nhân viên cấp lại link trên màn hình (`cachGui: MAN_HINH`).
 
 - **Gửi cho ai**: email liên hệ nhập lúc đặt lịch (`benhNhan.email`); không nhập thì email của tài khoản đã đặt. Khách không
   nhập email thì không nhận gì: form đặt lịch nên nói rõ điều này cạnh ô email.
@@ -217,3 +233,7 @@ trừ khi người dùng viết rõ bằng ngôn ngữ kia. Cấu hình phía se
    đọc 2 tham số đó để điền sẵn khoảng ngày của nút tải bản in PDF (trang demo làm vậy).
 6. **Ngày giờ ở giao diện tiếng Anh**: trang demo, email và câu thông báo giữ `dd/MM/yyyy` và giờ 24h ở cả 2 ngôn ngữ (trang demo chỉ đổi tên thứ).
    Frontend muốn định dạng khác thì tự định dạng từ giá trị ISO của API.
+7. **Trang sổ khám bệnh** (từ 20/10/2026): link và mã QR của sổ khám là `FRONTEND_URL` + `app.so-kham.duong-dan` (đang là
+   `/so-kham/`) + mã. Trang thật có đường dẫn khác thì báo lại để đổi `app.so-kham.duong-dan` (`application-common.yml`); trang
+   đọc mã trên URL, gọi `GET /api/booking/so-kham/{ma}` rồi hỏi 4 số cuối SĐT cho `POST .../xem` (trang demo:
+   `scripts/demo/man-hinh/so-kham.js`).

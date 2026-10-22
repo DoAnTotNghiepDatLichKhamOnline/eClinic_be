@@ -9,7 +9,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import iuh.fit.se.eclinic.booking.config.DanhGiaProperties;
 import iuh.fit.se.eclinic.booking.dto.request.DanhGiaRequest;
 import iuh.fit.se.eclinic.booking.dto.response.DanhGiaCuaBacSiResponse;
 import iuh.fit.se.eclinic.booking.dto.response.DanhGiaCuaToiResponse;
@@ -19,6 +18,7 @@ import iuh.fit.se.eclinic.booking.mapper.DanhGiaMapper;
 import iuh.fit.se.eclinic.booking.repository.DanhGiaRepository;
 import iuh.fit.se.eclinic.booking.repository.DanhGiaRepository.SoDanhGiaTheoSao;
 import iuh.fit.se.eclinic.booking.repository.LichHenRepository;
+import iuh.fit.se.eclinic.booking.service.CauHinhService;
 import iuh.fit.se.eclinic.booking.service.DanhGiaService;
 import iuh.fit.se.eclinic.booking.service.HoSoBenhNhanService;
 import iuh.fit.se.eclinic.booking.service.TaiKhoanService;
@@ -45,7 +45,7 @@ public class DanhGiaServiceImpl implements DanhGiaService {
     private final HoSoBenhNhanService hoSoBenhNhanService;
     private final TaiKhoanService taiKhoanService;
     private final DanhGiaMapper danhGiaMapper;
-    private final DanhGiaProperties danhGiaProperties;
+    private final CauHinhService cauHinhService;
 
     @Override
     @Transactional
@@ -81,7 +81,8 @@ public class DanhGiaServiceImpl implements DanhGiaService {
         LichHen lichHen = lichHenDuocDanhGia(idTaiKhoan, maPhieuKham);
         DanhGia danhGia = danhGiaRepository.findByLichHenId(lichHen.getId())
                 .orElseThrow(() -> new LoiNghiepVu(MaLoi.KHONG_TIM_THAY, "loi.KHONG_TIM_THAY.danhGia"));
-        if (LocalDateTime.now().isAfter(danhGia.getNgayTao().plusDays(danhGiaProperties.soNgayDuocSua()))) {
+        int soNgayDuocSua = cauHinhService.hienTai().soNgayDuocSuaDanhGia();
+        if (LocalDateTime.now().isAfter(danhGia.getNgayTao().plusDays(soNgayDuocSua))) {
             throw new LoiNghiepVu(MaLoi.HET_HAN_SUA_DANH_GIA);
         }
         danhGia.setSoSao(request.soSao());

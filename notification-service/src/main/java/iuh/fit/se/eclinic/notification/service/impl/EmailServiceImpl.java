@@ -75,6 +75,7 @@ public class EmailServiceImpl implements EmailService {
             email.setKhoaMau(request.khoaMau());
             email.setThamSo(request.thamSo());
             email.setIdLichHen(request.idLichHen());
+            email.setTepLich(request.tepLich());
             email.setLanThuKeTiep(bayGio);
             emailGuiRepository.save(email);
             daTao++;
@@ -104,7 +105,7 @@ public class EmailServiceImpl implements EmailService {
                 continue;
             }
             try {
-                mayGuiEmail.gui(email.getNguoiNhan(), email.getNgonNgu(), thu);
+                mayGuiEmail.gui(email.getNguoiNhan(), email.getNgonNgu(), thu, email.getTepLich());
             } catch (MailException ex) {
                 ghiLoiGui(email, ex);
                 continue;

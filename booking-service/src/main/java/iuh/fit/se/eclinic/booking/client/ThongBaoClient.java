@@ -47,9 +47,10 @@ public class ThongBaoClient {
      * 1 email cần gửi: notification-service giữ trong hàng chờ của nó và tự gửi (thử lại khi máy chủ mail lỗi).
      *
      * @param khoaMau mẫu email (vd {@code email.datLich}); {@code thamSo} theo thứ tự mẫu đó quy định
+     * @param tepLich nội dung tệp .ics gửi kèm email, null = không kèm
      */
     public record EmailCanGui(String maNguon, String nguoiNhan, NgonNgu ngonNgu, String khoaMau, String thamSo,
-            Long idLichHen) {
+            Long idLichHen, String tepLich) {
     }
 
     /** Trả về bình thường = notification-service đã nhận cả danh sách (kể cả dòng nó bỏ qua vì đã có). */

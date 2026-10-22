@@ -6,7 +6,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.bind.DefaultValue;
 
 /**
- * Xếp ca làm việc và yêu cầu đổi ca / xin nghỉ, prefix {@code app.lich-lam-viec} trong application.yml.
+ * Xếp ca làm việc và yêu cầu đổi ca / xin nghỉ, prefix {@code app.lich-lam-viec} trong application.yml. Trừ
+ * {@code duongDanLichBacSi}, các giá trị ở đây chỉ dùng để ghi dòng {@code cau_hinh_he_thong} đầu tiên; sau đó đọc bằng
+ * {@code CauHinhService#hienTai()}.
  *
  * @param guiYeuCauTruocToiThieu bác sĩ chỉ gửi được yêu cầu khi ca còn cách giờ bắt đầu ít nhất khoảng này; giờ mong
  *                               muốn của yêu cầu đổi ca cũng phải cách hiện tại ít nhất khoảng này

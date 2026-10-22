@@ -15,6 +15,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 import iuh.fit.se.eclinic.common.entity.booking.LichHen;
+import iuh.fit.se.eclinic.common.enums.KenhDatLich;
 import iuh.fit.se.eclinic.common.enums.TrangThaiHangDoi;
 import iuh.fit.se.eclinic.common.enums.TrangThaiLichHen;
 import jakarta.persistence.LockModeType;
@@ -149,6 +150,66 @@ public interface LichHenRepository extends JpaRepository<LichHen, Long> {
             group by l.hoSoBenhNhan.id
             """)
     List<SoLichHenTheoHoSo> demTheoHoSo(Collection<Long> idCacHoSo);
+
+    /** Bộ lọc của {@link #timChoQuanTri}; {@code h} là hồ sơ bệnh nhân, {@code g} người giám hộ (left join). */
+    String LOC_QUAN_TRI = """
+            where k.gioBatDau >= :tu and k.gioBatDau < :den
+              and (:idChuyenKhoa is null or b.chuyenKhoa.id = :idChuyenKhoa)
+              and (:idBacSi is null or b.id = :idBacSi)
+              and (:idPhongKham is null or l.phongKham.id = :idPhongKham)
+              and (:trangThai is null or l.trangThai = :trangThai)
+              and (:kenhDat is null or l.kenhDat = :kenhDat)
+              and (:canDoiLich is null or l.canDoiLich = :canDoiLich)
+              and (:canDoiChieu is null or l.canDoiChieu = :canDoiChieu)
+              and (:ma is null or l.maTraCuu = :ma)
+              and (:cccd is null or h.cccd = :cccd or g.cccd = :cccd)
+              and (:mau is null or l.hoTenDaNhap like :mau escape '!' or h.hoTen like :mau escape '!'
+                   or l.soDienThoaiLienHe like :mau escape '!' or g.soDienThoai like :mau escape '!'
+                   or l.emailLienHe like :mau escape '!')
+            """;
+
+    /**
+     * ADM-04: lịch hẹn toàn viện cho quản trị viên, giờ khám dự kiến trong [tu, den), sớm nhất trước. Mọi tham số lọc
+     * null = không lọc.
+     *
+     * @param ma   mã tra cứu đầy đủ (ECL-...)
+     * @param cccd số CCCD đầy đủ của người khám hoặc người giám hộ
+     * @param mau  mẫu LIKE (escape '!') so với họ tên, SĐT, email liên hệ
+     */
+    @Query(value = """
+            select l from LichHen l
+            join fetch l.hoSoBenhNhan h
+            left join fetch l.nguoiGiamHo g
+            join fetch l.bacSi b
+            join fetch b.taiKhoan
+            join fetch b.chuyenKhoa
+            join fetch l.phongKham
+            join fetch l.khungGio k
+            join fetch k.lichLamViec
+            """ + LOC_QUAN_TRI + " order by k.gioBatDau asc, l.id asc", countQuery = """
+            select count(l) from LichHen l
+            join l.hoSoBenhNhan h
+            left join l.nguoiGiamHo g
+            join l.bacSi b
+            join l.khungGio k
+            """ + LOC_QUAN_TRI)
+    Page<LichHen> timChoQuanTri(LocalDateTime tu, LocalDateTime den, Long idChuyenKhoa, Long idBacSi,
+            Long idPhongKham, TrangThaiLichHen trangThai, KenhDatLich kenhDat, Boolean canDoiLich,
+            Boolean canDoiChieu, String ma, String cccd, String mau, Pageable pageable);
+
+    /**
+     * Lịch hẹn (mọi trạng thái) của 1 bác sĩ mà người khám hoặc người giám hộ có số CCCD này, giờ khám muộn nhất trước:
+     * bác sĩ tìm lịch hẹn của người đến quầy xin cấp lại liên kết (PAT-03).
+     */
+    @Query(LICH_HEN_KEM_CHI_TIET + """
+            where b.id = :idBacSi
+              and (l.hoSoBenhNhan.cccd = :cccd or g.cccd = :cccd)
+            order by k.gioBatDau desc, l.id desc
+            """)
+    List<LichHen> timCuaBacSiTheoCccd(Long idBacSi, String cccd, Limit limit);
+
+    /** Lịch hẹn tạo ra khi đổi lịch hẹn này (mỗi lịch cũ nhiều nhất 1 lịch mới). */
+    Optional<LichHen> findByLichHenCuId(Long idLichHenCu);
 
     /** Lịch hẹn (mọi trạng thái) của 1 hồ sơ bệnh nhân cho quản trị viên, giờ khám muộn nhất trước. */
     @Query(value = LICH_HEN_KEM_CHI_TIET + "where l.hoSoBenhNhan.id = :idHoSoBenhNhan"

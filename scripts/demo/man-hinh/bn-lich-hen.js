@@ -5,7 +5,9 @@
 //   GET /api/booking/lich-hen/cua-toi/lich?tuNgay=&denNgay=&cuaAi=TAT_CA|BAN_THAN|NGUOI_KHAC   lịch hẹn trong khoảng ngày (vẽ lịch)
 //   GET /api/booking/lich-hen/cua-toi?loc=TAT_CA|SAP_TOI|LICH_SU&trang=&kichThuoc=             danh sách phân trang
 //   GET /api/booking/lich-hen/cua-toi/{maPhieuKham}                                            chi tiết + kết quả khám (nếu được xem)
-// Kết quả khám chỉ trả về cho người khám hoặc người đã đặt lịch. Lịch bị bác sĩ hủy (BI_TU_CHOI) có lyDoHuy, hiện ở phần chi tiết.
+// Kết quả khám chỉ trả về cho người khám hoặc người đã đặt lịch. Lịch bị bác sĩ hủy (BI_TU_CHOI) hoặc phòng khám hủy
+// (QUAN_TRI_HUY) có lyDoHuy, hiện ở phần chi tiết. Kết quả khám có maSoKham / linkSoKham: link trang sổ khám bệnh
+// /so-kham/<mã> và mã QR (GET /api/booking/so-kham/{ma}/qr), vẽ ở ketQuaKham() của chung.js.
 //   POST /api/booking/lich-hen/cua-toi/{maPhieuKham}/huy       { lyDo? }  hủy (tôi đặt, hoặc tôi là người khám) -> phiếu khám DA_HUY
 //   POST /api/booking/lich-hen/cua-toi/{maPhieuKham}/doi-lich  { idLichLamViec | idChuyenKhoa, gioBatDauKhung } -> 201, lịch mới
 //        (DA_XAC_NHAN, mã phiếu khám mới); lịch cũ thành DA_HUY_DO_DOI_LICH. Tối đa 2 lần đổi cho 1 lần đặt.

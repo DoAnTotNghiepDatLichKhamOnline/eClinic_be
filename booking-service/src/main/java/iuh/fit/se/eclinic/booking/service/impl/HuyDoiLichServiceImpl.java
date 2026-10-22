@@ -10,22 +10,27 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
-import iuh.fit.se.eclinic.booking.config.DatLichProperties;
 import iuh.fit.se.eclinic.booking.dto.request.DoiLichRequest;
 import iuh.fit.se.eclinic.booking.dto.request.HuyLichRequest;
 import iuh.fit.se.eclinic.booking.dto.response.DatLichResponse;
 import iuh.fit.se.eclinic.booking.dto.response.PhieuKhamResponse;
 import iuh.fit.se.eclinic.booking.mapper.LichHenMapper;
 import iuh.fit.se.eclinic.booking.repository.LichHenRepository;
+import iuh.fit.se.eclinic.booking.service.CauHinhService;
 import iuh.fit.se.eclinic.booking.service.DatLichService;
 import iuh.fit.se.eclinic.booking.service.HoSoBenhNhanService;
 import iuh.fit.se.eclinic.booking.service.HuyDoiLichService;
+import iuh.fit.se.eclinic.booking.service.LichSuLichHenService;
 import iuh.fit.se.eclinic.booking.service.LuotKhamService;
+import iuh.fit.se.eclinic.booking.service.NguoiThucHien;
 import iuh.fit.se.eclinic.booking.service.TaiKhoanService;
 import iuh.fit.se.eclinic.booking.service.ThongBaoLichHenService;
 import iuh.fit.se.eclinic.common.entity.booking.HoSoBenhNhan;
 import iuh.fit.se.eclinic.common.entity.booking.LichHen;
 import iuh.fit.se.eclinic.common.entity.booking.NguoiGiamHo;
+import iuh.fit.se.eclinic.common.entity.identity.TaiKhoan;
+import iuh.fit.se.eclinic.common.enums.NgonNgu;
+import iuh.fit.se.eclinic.common.enums.SuKienLichHen;
 import iuh.fit.se.eclinic.common.enums.TrangThaiLichHen;
 import iuh.fit.se.eclinic.common.exception.LoiNghiepVu;
 import iuh.fit.se.eclinic.common.exception.MaLoi;
@@ -55,24 +60,25 @@ public class HuyDoiLichServiceImpl implements HuyDoiLichService {
     private final TaiKhoanService taiKhoanService;
     private final HoSoBenhNhanService hoSoBenhNhanService;
     private final DatLichService datLichService;
-    private final DatLichProperties datLichProperties;
+    private final CauHinhService cauHinhService;
     private final LichHenMapper lichHenMapper;
     private final ThongBaoLichHenService thongBaoLichHenService;
+    private final LichSuLichHenService lichSuLichHenService;
 
     @Override
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public PhieuKhamResponse huyCuaToi(Long idTaiKhoan, String maPhieuKham, String lyDo) {
         LichHen lichHen = khoa(maPhieuKham);
-        kiemTraQuyenCuaTaiKhoan(lichHen, idTaiKhoan);
-        return huy(lichHen, lyDo, "tài khoản id=" + idTaiKhoan);
+        TaiKhoan taiKhoan = kiemTraQuyenCuaTaiKhoan(lichHen, idTaiKhoan);
+        return huy(lichHen, lyDo, NguoiThucHien.taiKhoan(taiKhoan), "tài khoản id=" + idTaiKhoan);
     }
 
     @Override
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public DatLichResponse doiCuaToi(Long idTaiKhoan, String maPhieuKham, DoiLichRequest request) {
         LichHen lichHen = khoa(maPhieuKham);
-        kiemTraQuyenCuaTaiKhoan(lichHen, idTaiKhoan);
-        return doi(lichHen, request, "tài khoản id=" + idTaiKhoan);
+        TaiKhoan taiKhoan = kiemTraQuyenCuaTaiKhoan(lichHen, idTaiKhoan);
+        return doi(lichHen, request, NguoiThucHien.taiKhoan(taiKhoan), "tài khoản id=" + idTaiKhoan);
     }
 
     @Override
@@ -80,7 +86,7 @@ public class HuyDoiLichServiceImpl implements HuyDoiLichService {
     public PhieuKhamResponse huyTheoPhieu(String maPhieuKham, HuyLichRequest request) {
         LichHen lichHen = khoa(maPhieuKham);
         kiemTraSoDienThoai(lichHen, request.soDienThoai());
-        return huy(lichHen, request.lyDo(), "link phiếu khám");
+        return huy(lichHen, request.lyDo(), NguoiThucHien.KHACH, "link phiếu khám");
     }
 
     @Override
@@ -88,14 +94,15 @@ public class HuyDoiLichServiceImpl implements HuyDoiLichService {
     public DatLichResponse doiTheoPhieu(String maPhieuKham, DoiLichRequest request) {
         LichHen lichHen = khoa(maPhieuKham);
         kiemTraSoDienThoai(lichHen, request.soDienThoai());
-        return doi(lichHen, request, "link phiếu khám");
+        return doi(lichHen, request, NguoiThucHien.KHACH, "link phiếu khám");
     }
 
-    private PhieuKhamResponse huy(LichHen lichHen, String lyDo, String nguoiLam) {
+    private PhieuKhamResponse huy(LichHen lichHen, String lyDo, NguoiThucHien nguoi, String nguoiLam) {
         kiemTraConHuyDoiDuoc(lichHen, LocalDateTime.now());
         lichHen.setTrangThai(TrangThaiLichHen.DA_HUY);
         lichHen.setLyDoHuy(lyDo == null || lyDo.isBlank() ? null : lyDo.trim());
         traLuotKham(lichHen);
+        lichSuLichHenService.ghi(lichHen, SuKienLichHen.HUY, nguoi, lichHen.getLyDoHuy(), null);
         thongBaoLichHenService.benhNhanDaHuy(lichHen);
         log.info("Hủy lịch hẹn id={} qua {}", lichHen.getId(), nguoiLam);
         // Tải lại kèm chi tiết cho mapper; cùng transaction nên vẫn là dòng vừa đổi trạng thái
@@ -103,10 +110,10 @@ public class HuyDoiLichServiceImpl implements HuyDoiLichService {
                 lichHenRepository.timTheoMaPhieuKham(lichHen.getMaTokenPhieuKham()).orElse(lichHen));
     }
 
-    private DatLichResponse doi(LichHen lichHen, DoiLichRequest request, String nguoiLam) {
+    private DatLichResponse doi(LichHen lichHen, DoiLichRequest request, NguoiThucHien nguoi, String nguoiLam) {
         LocalDateTime bayGio = LocalDateTime.now();
         kiemTraConHuyDoiDuoc(lichHen, bayGio);
-        int toiDa = datLichProperties.soLanDoiLichToiDa();
+        int toiDa = cauHinhService.hienTai().soLanDoiLichToiDa();
         // Lịch đang chờ đổi vì ca khám bị hủy, hoặc ca vừa được nhường cho bác sĩ khác: không phải bệnh nhân muốn đổi,
         // nên không tính vào giới hạn
         if (!lichHen.isCanDoiLich() && !lichHen.isDoiBacSi() && soLanDaDoi(lichHen) >= toiDa) {
@@ -118,8 +125,10 @@ public class HuyDoiLichServiceImpl implements HuyDoiLichService {
         // Ghi xuống trước khi chọn lượt mới: lịch cũ không còn tính vào trùng giờ và giới hạn số lịch đang giữ
         lichHenRepository.flush();
         DatLichResponse moi = datLichService.datLaiTuLichCu(lichHen, request.idLichLamViec(), request.idChuyenKhoa(),
-                request.gioBatDauKhung(), bayGio);
-        thongBaoLichHenService.benhNhanDaDoi(lichHen, lichHenRepository.timTheoMaTraCuu(moi.maTraCuu()).orElseThrow());
+                request.gioBatDauKhung(), bayGio, NgonNgu.hienTai());
+        LichHen lichMoi = lichHenRepository.timTheoMaTraCuu(moi.maTraCuu()).orElseThrow();
+        lichSuLichHenService.ghi(lichHen, SuKienLichHen.DOI_LICH, nguoi, null, lichMoi);
+        thongBaoLichHenService.benhNhanDaDoi(lichHen, lichMoi);
         log.info("Đổi lịch hẹn id={} sang lịch mới {} qua {}", lichHen.getId(), moi.maTraCuu(), nguoiLam);
         return moi;
     }
@@ -142,14 +151,14 @@ public class HuyDoiLichServiceImpl implements HuyDoiLichService {
         return new LoiNghiepVu(MaLoi.KHONG_TIM_THAY, "loi.KHONG_TIM_THAY.lichHen");
     }
 
-    /** Cùng quy tắc với "được xem kết quả khám" (LichHenRepository#DUOC_XEM_KET_QUA). */
-    private void kiemTraQuyenCuaTaiKhoan(LichHen lichHen, Long idTaiKhoan) {
-        taiKhoanService.layBenhNhanDangHoatDong(idTaiKhoan);
+    /** Cùng quy tắc với "được xem kết quả khám" (LichHenRepository#DUOC_XEM_KET_QUA). Trả tài khoản đang đăng nhập. */
+    private TaiKhoan kiemTraQuyenCuaTaiKhoan(LichHen lichHen, Long idTaiKhoan) {
+        TaiKhoan taiKhoan = taiKhoanService.layBenhNhanDangHoatDong(idTaiKhoan);
         HoSoBenhNhan hoSoCuaToi = hoSoBenhNhanService.timDaLienKetCuaTaiKhoan(idTaiKhoan).orElse(null);
         boolean toiDat = lichHen.getTaiKhoanDat() != null && lichHen.getTaiKhoanDat().getId().equals(idTaiKhoan);
         boolean laBanThan = hoSoCuaToi != null && lichHen.getHoSoBenhNhan().getId().equals(hoSoCuaToi.getId());
         if (toiDat || laBanThan) {
-            return;
+            return taiKhoan;
         }
         NguoiGiamHo nguoiGiamHo = lichHen.getNguoiGiamHo();
         boolean laNguoiGiamHo = hoSoCuaToi != null && hoSoCuaToi.getCccd() != null && nguoiGiamHo != null

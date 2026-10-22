@@ -24,7 +24,6 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.interceptor.TransactionAspectSupport;
 
-import iuh.fit.se.eclinic.booking.config.LichLamViecProperties;
 import iuh.fit.se.eclinic.booking.dto.request.DongCaNhap;
 import iuh.fit.se.eclinic.booking.dto.request.SaoChepCaRequest;
 import iuh.fit.se.eclinic.booking.dto.request.SuaCaRequest;
@@ -43,20 +42,26 @@ import iuh.fit.se.eclinic.booking.mapper.CaKhamMapper;
 import iuh.fit.se.eclinic.booking.mapper.LichHenMapper;
 import iuh.fit.se.eclinic.booking.mapper.LichLamViecMapper;
 import iuh.fit.se.eclinic.booking.repository.BacSiChiDocRepository;
+import iuh.fit.se.eclinic.booking.repository.CauHinhHeThongRepository;
 import iuh.fit.se.eclinic.booking.repository.KhungGioKhamRepository;
 import iuh.fit.se.eclinic.booking.repository.LichHenRepository;
 import iuh.fit.se.eclinic.booking.repository.LichLamViecRepository;
 import iuh.fit.se.eclinic.booking.repository.LichSuCaLamViecRepository;
+import iuh.fit.se.eclinic.booking.repository.NgayNghiBenhVienRepository;
 import iuh.fit.se.eclinic.booking.repository.PhongKhamChiDocRepository;
 import iuh.fit.se.eclinic.booking.repository.QuanTriVienChiDocRepository;
 import iuh.fit.se.eclinic.booking.repository.YeuCauDoiLichRepository;
+import iuh.fit.se.eclinic.booking.service.CauHinhService;
+import iuh.fit.se.eclinic.booking.service.LichSuLichHenService;
 import iuh.fit.se.eclinic.booking.service.LuotKhamService;
 import iuh.fit.se.eclinic.booking.service.LyDoHuyCa;
+import iuh.fit.se.eclinic.booking.service.NguoiThucHien;
 import iuh.fit.se.eclinic.booking.service.NguonThayDoi;
 import iuh.fit.se.eclinic.booking.service.QuanLyCaService;
 import iuh.fit.se.eclinic.booking.service.ThongBaoLichLamViecService;
 import iuh.fit.se.eclinic.booking.util.KhoangNgay;
 import iuh.fit.se.eclinic.common.dto.TrangDuLieu;
+import iuh.fit.se.eclinic.common.entity.booking.CauHinhHeThong;
 import iuh.fit.se.eclinic.common.entity.booking.LichHen;
 import iuh.fit.se.eclinic.common.entity.catalog.BacSi;
 import iuh.fit.se.eclinic.common.entity.catalog.PhongKham;
@@ -66,6 +71,7 @@ import iuh.fit.se.eclinic.common.entity.scheduling.LichLamViec;
 import iuh.fit.se.eclinic.common.entity.scheduling.LichSuCaLamViec;
 import iuh.fit.se.eclinic.common.enums.HanhDongCa;
 import iuh.fit.se.eclinic.common.enums.NgonNgu;
+import iuh.fit.se.eclinic.common.enums.SuKienLichHen;
 import iuh.fit.se.eclinic.common.enums.TrangThaiBacSi;
 import iuh.fit.se.eclinic.common.enums.TrangThaiKhungGio;
 import iuh.fit.se.eclinic.common.enums.TrangThaiLichHen;
@@ -85,9 +91,10 @@ import lombok.extern.slf4j.Slf4j;
  * READ_COMMITTED như đặt lịch: sau khi chờ được khoá phải thấy dữ liệu request trước vừa commit (ca vừa xếp, lịch hẹn
  * vừa đặt), không đọc lại snapshot cũ.
  * <p>
- * Thứ tự khoá cố định: dòng ca (khi sửa / hủy) -> dòng bác sĩ -> dòng phòng khám -> các lịch hẹn còn hiệu lực của ca
- * (theo id) -> các lượt khám của ca (theo giờ). "Lịch hẹn trước, lượt khám sau" giống bác sĩ từ chối và bệnh nhân hủy /
- * đổi. Đặt lịch chỉ khoá lượt khám rồi mới thêm lịch hẹn, nên sau khi khoá được các lượt phải đọc lại lịch hẹn của ca.
+ * Thứ tự khoá cố định: khoá xếp ca toàn viện (khi tạo ca, xem {@link #giuKhoaXepCa}) -> dòng ca (khi sửa / hủy) -> dòng
+ * bác sĩ -> dòng phòng khám -> các lịch hẹn còn hiệu lực của ca (theo id) -> các lượt khám của ca (theo giờ). "Lịch hẹn
+ * trước, lượt khám sau" giống bác sĩ từ chối và bệnh nhân hủy / đổi. Đặt lịch chỉ khoá lượt khám rồi mới thêm lịch hẹn,
+ * nên sau khi khoá được các lượt phải đọc lại lịch hẹn của ca.
  */
 @Slf4j
 @Service
@@ -101,12 +108,16 @@ public class QuanLyCaServiceImpl implements QuanLyCaService {
     private final LichHenRepository lichHenRepository;
     private final YeuCauDoiLichRepository yeuCauDoiLichRepository;
     private final LichSuCaLamViecRepository lichSuCaLamViecRepository;
+    private final CauHinhHeThongRepository cauHinhHeThongRepository;
+    /** Đọc thẳng repository: NgayNghiService gọi service này, gọi ngược lại thành vòng phụ thuộc. */
+    private final NgayNghiBenhVienRepository ngayNghiBenhVienRepository;
     private final BacSiChiDocRepository bacSiChiDocRepository;
     private final PhongKhamChiDocRepository phongKhamChiDocRepository;
     private final QuanTriVienChiDocRepository quanTriVienChiDocRepository;
     private final LuotKhamService luotKhamService;
     private final ThongBaoLichLamViecService thongBaoLichLamViecService;
-    private final LichLamViecProperties lichLamViecProperties;
+    private final LichSuLichHenService lichSuLichHenService;
+    private final CauHinhService cauHinhService;
     private final LichLamViecMapper lichLamViecMapper;
     private final LichHenMapper lichHenMapper;
     private final CaKhamMapper caKhamMapper;
@@ -141,6 +152,7 @@ public class QuanLyCaServiceImpl implements QuanLyCaService {
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public KetQuaTaoCaResponse tao(Long idTaiKhoanQuanTri, TaoCaRequest request) {
         QuanTriVien quanTri = layQuanTriVien(idTaiKhoanQuanTri);
+        giuKhoaXepCa();
         BacSi bacSi = khoaBacSi(request.idBacSi(), true);
         PhongKham phongKham = khoaPhongKham(request.idPhongKham(), bacSi, true);
         kiemTraSucChua(request.gioBatDau(), request.gioKetThuc(), request.soLuotToiDaMoiGio(),
@@ -152,11 +164,14 @@ public class QuanLyCaServiceImpl implements QuanLyCaService {
         List<LichLamViec> daTao = new ArrayList<>();
         List<NgayBoQua> boQua = new ArrayList<>();
         for (LocalDate ngay : cacNgay(request, homNay)) {
-            String lyDoTrung = lyDoTrungLich(bacSi.getId(), phongKham.getId(), ngay, request.gioBatDau(),
-                    request.gioKetThuc(), null);
-            // Ca vừa tạo ở vòng trước đã flush nên được cộng vào giờ làm của tuần
-            ViPham viPham = lyDoTrung != null ? new ViPham(MaLoi.TRUNG_LICH_LAM_VIEC, lyDoTrung)
-                    : viPhamGioLamTuan(bacSi.getId(), ngay, request.gioBatDau(), request.gioKetThuc(), null, 0);
+            ViPham viPham = viPhamNgayNghi(ngay);
+            if (viPham == null) {
+                String lyDoTrung = lyDoTrungLich(bacSi.getId(), phongKham.getId(), ngay, request.gioBatDau(),
+                        request.gioKetThuc(), null);
+                // Ca vừa tạo ở vòng trước đã flush nên được cộng vào giờ làm của tuần
+                viPham = lyDoTrung != null ? new ViPham(MaLoi.TRUNG_LICH_LAM_VIEC, lyDoTrung)
+                        : viPhamGioLamTuan(bacSi.getId(), ngay, request.gioBatDau(), request.gioKetThuc(), null, 0);
+            }
             if (viPham != null) {
                 if (!lapLai) {
                     throw viPham.loi();
@@ -247,10 +262,13 @@ public class QuanLyCaServiceImpl implements QuanLyCaService {
         DaKhoa daKhoa = khoaLichHenVaLuot(ca.getId());
         daKhoa.luot().forEach(luot -> luot.setTrangThai(TrangThaiKhungGio.DA_HUY));
         ca.setTrangThai(TrangThaiLichLamViec.DA_HUY);
-        ghiLichSu(ca, HanhDongCa.HUY, nguon, quanTri,
-                lyDo.khoa() == null ? lyDo.chu() : VanBanHeThong.ghi(lyDo.khoa(), null));
+        // Cùng 1 câu cho lịch sử ca và nhật ký của từng lịch hẹn
+        String lyDoLuu = lyDo.khoa() == null ? lyDo.chu() : VanBanHeThong.ghi(lyDo.khoa(), null);
+        ghiLichSu(ca, HanhDongCa.HUY, nguon, quanTri, lyDoLuu);
+        NguoiThucHien nguoi = NguoiThucHien.quanTri(quanTri);
         for (LichHen lichHen : daKhoa.lichHen()) {
             lichHen.setCanDoiLich(true);
+            lichSuLichHenService.ghi(lichHen, SuKienLichHen.CA_BI_HUY, nguoi, lyDoLuu, null);
             thongBaoLichLamViecService.lichHenCanDoi(lichHen, lyDo);
         }
         // Yêu cầu đang chờ duyệt của ca không còn gì để duyệt: đóng lại, bác sĩ được báo
@@ -312,6 +330,8 @@ public class QuanLyCaServiceImpl implements QuanLyCaService {
         }
         luotKhamService.danhLaiSoThuTu(phongMoi.getId(), ngay);
         ghiLichSu(ca, HanhDongCa.SUA, nguon, quanTri, null);
+        NguoiThucHien nguoi = NguoiThucHien.quanTri(quanTri);
+        daKhoa.lichHen().forEach(lichHen -> lichSuLichHenService.ghi(lichHen, SuKienLichHen.CA_THAY_DOI, nguoi));
         return true;
     }
 
@@ -324,6 +344,7 @@ public class QuanLyCaServiceImpl implements QuanLyCaService {
         PhongKham phongKham = khoaPhongKham(idPhongKham, bacSi, true);
         kiemTraSucChua(gioBatDau, gioKetThuc, soLuotToiDaMoiGio, thoiLuongLuotPhut);
         kiemTraNgay(ngay, gioBatDau, LocalDate.now());
+        nemNeuCo(viPhamNgayNghi(ngay));
         kiemTraKhongTrungLich(idBacSi, idPhongKham, ngay, gioBatDau, gioKetThuc, null);
         nemNeuCo(viPhamGioLamTuan(idBacSi, ngay, gioBatDau, gioKetThuc, null, 0));
         LichLamViec ca = luuCa(bacSi, phongKham, quanTri, ngay, gioBatDau, gioKetThuc, soLuotToiDaMoiGio,
@@ -345,9 +366,12 @@ public class QuanLyCaServiceImpl implements QuanLyCaService {
         kiemTraNhanCa(bacSiMoi.getId(), ca);
         DaKhoa daKhoa = khoaLichHenVaLuot(ca.getId());
         ca.setBacSi(bacSiMoi);
+        NguoiThucHien nguoi = NguoiThucHien.quanTri(quanTri);
+        String lyDo = VanBanHeThong.ghi("heThong.lichHenDoiBacSi", bacSiCu.getTaiKhoan().getHoTen());
         for (LichHen lichHen : daKhoa.lichHen()) {
             lichHen.setBacSi(bacSiMoi);
             lichHen.setDoiBacSi(true);
+            lichSuLichHenService.ghi(lichHen, SuKienLichHen.DOI_BAC_SI, nguoi, lyDo, null);
             thongBaoLichLamViecService.lichHenDoiBacSi(lichHen, bacSiCu);
         }
         ghiLichSu(ca, HanhDongCa.SUA, nguon, quanTri, null);
@@ -375,6 +399,7 @@ public class QuanLyCaServiceImpl implements QuanLyCaService {
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public KetQuaSaoChepResponse saoChep(Long idTaiKhoanQuanTri, SaoChepCaRequest request, boolean luu) {
         QuanTriVien quanTri = layQuanTriVien(idTaiKhoanQuanTri);
+        giuKhoaXepCa();
         LocalDate tuNgay = request.tuNgay();
         KhoangNgay.kiemTra(tuNgay, request.denNgay());
         if (!request.ngayDich().isAfter(request.denNgay())) {
@@ -453,6 +478,9 @@ public class QuanLyCaServiceImpl implements QuanLyCaService {
             LocalDate homNay) {
         ViPham viPham = viPhamNgay(ngay, nguon.getGioBatDau(), homNay);
         if (viPham == null) {
+            viPham = viPhamNgayNghi(ngay);
+        }
+        if (viPham == null) {
             viPham = viPhamBacSi(bacSi);
         }
         if (viPham == null) {
@@ -477,6 +505,7 @@ public class QuanLyCaServiceImpl implements QuanLyCaService {
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public KetQuaNhapExcelResponse nhapCa(Long idTaiKhoanQuanTri, List<DongCaNhap> cacDong, boolean luu) {
         QuanTriVien quanTri = layQuanTriVien(idTaiKhoanQuanTri);
+        giuKhoaXepCa();
         // Thứ tự khoá như sao chép: mọi bác sĩ rồi mọi phòng, theo id tăng dần. Mã / id không có trong DB thành lỗi dòng.
         Map<Long, BacSi> bacSiTheoId = new HashMap<>();
         cacDong.stream().map(DongCaNhap::idBacSi).distinct().sorted()
@@ -542,8 +571,8 @@ public class QuanLyCaServiceImpl implements QuanLyCaService {
     }
 
     /**
-     * Lỗi đầu tiên của 1 dòng nhập (bác sĩ, phòng đã khoá); null nếu lưu được. Thứ tự: sức chứa, ngày, bác sĩ, phòng,
-     * trùng giờ, giờ làm trong tuần. Không ném (xem ViPham).
+     * Lỗi đầu tiên của 1 dòng nhập (bác sĩ, phòng đã khoá); null nếu lưu được. Thứ tự: sức chứa, ngày (đã qua / quá xa,
+     * ngày bệnh viện nghỉ), bác sĩ, phòng, trùng giờ, giờ làm trong tuần. Không ném (xem ViPham).
      */
     private LoiDong loiDongNhap(DongCaNhap dong, BacSi bacSi, PhongKham phongKham, LocalDate homNay) {
         String cot = null;
@@ -552,6 +581,9 @@ public class QuanLyCaServiceImpl implements QuanLyCaService {
         if (viPham == null) {
             viPham = viPhamNgay(dong.ngay(), dong.gioBatDau(), homNay);
             cot = "B";
+        }
+        if (viPham == null) {
+            viPham = viPhamNgayNghi(dong.ngay());
         }
         if (viPham == null) {
             viPham = viPhamBacSi(bacSi);
@@ -637,8 +669,9 @@ public class QuanLyCaServiceImpl implements QuanLyCaService {
         if (lapLai.denNgay().isBefore(request.ngay())) {
             throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE, "loi.DU_LIEU_KHONG_HOP_LE.lapLaiDenNgay");
         }
-        if (lapLai.denNgay().isAfter(homNay.plusDays(lichLamViecProperties.soNgayXepTruocToiDa()))) {
-            throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE, "loi.DU_LIEU_KHONG_HOP_LE.caQuaXa", String.valueOf(lichLamViecProperties.soNgayXepTruocToiDa()));
+        int soNgayXepTruocToiDa = cauHinhService.hienTai().soNgayXepTruocToiDa();
+        if (lapLai.denNgay().isAfter(homNay.plusDays(soNgayXepTruocToiDa))) {
+            throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE, "loi.DU_LIEU_KHONG_HOP_LE.caQuaXa", String.valueOf(soNgayXepTruocToiDa));
         }
         Set<Integer> cacThu = new HashSet<>(lapLai.cacThu());
         for (LocalDate ngay = request.ngay().plusDays(1); !ngay.isAfter(lapLai.denNgay()); ngay = ngay.plusDays(1)) {
@@ -658,11 +691,35 @@ public class QuanLyCaServiceImpl implements QuanLyCaService {
         if (!ngay.atTime(gioBatDau).isAfter(LocalDateTime.now())) {
             return new ViPham(MaLoi.DU_LIEU_KHONG_HOP_LE, "loi.DU_LIEU_KHONG_HOP_LE.caTrongQuaKhu");
         }
-        if (ngay.isAfter(homNay.plusDays(lichLamViecProperties.soNgayXepTruocToiDa()))) {
+        int soNgayXepTruocToiDa = cauHinhService.hienTai().soNgayXepTruocToiDa();
+        if (ngay.isAfter(homNay.plusDays(soNgayXepTruocToiDa))) {
             return new ViPham(MaLoi.DU_LIEU_KHONG_HOP_LE, "loi.DU_LIEU_KHONG_HOP_LE.caQuaXa",
-                    String.valueOf(lichLamViecProperties.soNgayXepTruocToiDa()));
+                    String.valueOf(soNgayXepTruocToiDa));
         }
         return null;
+    }
+
+    /** Ngày bệnh viện nghỉ, kèm ngày và lý do theo ngôn ngữ của request; null nếu bệnh viện làm việc. */
+    private ViPham viPhamNgayNghi(LocalDate ngay) {
+        return ngayNghiBenhVienRepository.findByNgay(ngay)
+                .map(ngayNghi -> new ViPham(MaLoi.NGAY_BENH_VIEN_NGHI, "loi.NGAY_BENH_VIEN_NGHI.ngay",
+                        NGAY.format(ngay), ngayNghi.lyDo(NgonNgu.hienTai())))
+                .orElse(null);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public void kiemTraNgayKhongNghi(LocalDate ngay) {
+        nemNeuCo(viPhamNgayNghi(ngay));
+    }
+
+    @Override
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public void giuKhoaXepCa() {
+        // Dòng cấu hình phải có rồi mới khoá được: hienTai() thêm dòng (transaction riêng) nếu chưa có
+        cauHinhService.hienTai();
+        cauHinhHeThongRepository.khoaChiaSe(CauHinhHeThong.ID)
+                .orElseThrow(() -> new IllegalStateException("Không có dòng cau_hinh_he_thong"));
     }
 
     private static void nemNeuCo(ViPham viPham) {
@@ -785,7 +842,7 @@ public class QuanLyCaServiceImpl implements QuanLyCaService {
         long daXep = lichLamViecRepository.timGioCaHoatDong(dauTuan, cuoiTuan, idBacSi, null, idCaDangSua).stream()
                 .mapToLong(gio -> soPhut(gio.getGioBatDau(), gio.getGioKetThuc()))
                 .sum();
-        long gioiHan = lichLamViecProperties.soPhutToiDaMoiTuan();
+        long gioiHan = cauHinhService.hienTai().soPhutToiDaMoiTuan();
         long tong = daXep + soPhutCa;
         if (tong <= gioiHan) {
             return null;

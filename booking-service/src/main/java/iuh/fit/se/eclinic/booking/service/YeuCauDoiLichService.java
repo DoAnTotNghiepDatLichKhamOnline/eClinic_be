@@ -22,10 +22,11 @@ public interface YeuCauDoiLichService {
 
     /**
      * Bác sĩ gửi yêu cầu cho 1 ca còn hoạt động của mình, khi ca còn cách giờ bắt đầu ít nhất
-     * {@code app.lich-lam-viec.gui-yeu-cau-truoc-toi-thieu}. Nhường ca: bác sĩ nhận phải khác mình, cùng chuyên khoa, đang
-     * công tác, và (kiểm tra sớm) không trùng giờ / không vượt giờ làm trong tuần; yêu cầu chờ bác sĩ nhận đồng ý. Ném
-     * KHONG_TIM_THAY (ca không có / của bác sĩ khác), CA_KHONG_SUA_DUOC, QUA_HAN_GUI_YEU_CAU, CA_DA_CO_YEU_CAU_CHO_DUYET,
-     * DU_LIEU_KHONG_HOP_LE, TRUNG_LICH_LAM_VIEC, VUOT_GIO_LAM_TUAN.
+     * cấu hình {@code guiYeuCauTruocToiThieuGio}. Nhường ca: bác sĩ nhận phải khác mình, cùng chuyên khoa, đang
+     * công tác, và (kiểm tra sớm) không trùng giờ / không vượt giờ làm trong tuần; yêu cầu chờ bác sĩ nhận đồng ý. Đổi ca:
+     * ngày mong muốn không được là ngày bệnh viện nghỉ (NGAY_BENH_VIEN_NGHI); ngày thành ngày nghỉ sau khi gửi thì lúc
+     * duyệt mới bị chặn. Ném KHONG_TIM_THAY (ca không có / của bác sĩ khác), CA_KHONG_SUA_DUOC, QUA_HAN_GUI_YEU_CAU,
+     * CA_DA_CO_YEU_CAU_CHO_DUYET, DU_LIEU_KHONG_HOP_LE, NGAY_BENH_VIEN_NGHI, TRUNG_LICH_LAM_VIEC, VUOT_GIO_LAM_TUAN.
      */
     YeuCauDoiLichResponse gui(Long idTaiKhoanBacSi, GuiYeuCauDoiLichRequest request);
 

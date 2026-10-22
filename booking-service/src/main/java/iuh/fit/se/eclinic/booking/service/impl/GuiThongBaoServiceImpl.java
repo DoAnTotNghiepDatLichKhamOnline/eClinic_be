@@ -134,7 +134,7 @@ public class GuiThongBaoServiceImpl implements GuiThongBaoService {
 
     private static EmailCanGui toEmailCanGui(SuKienThongBao suKien) {
         return new EmailCanGui(NGUON + suKien.getId(), suKien.getEmailNhan(), suKien.getNgonNgu(), suKien.getKhoaMau(),
-                suKien.getThamSo(), suKien.getIdLichHen());
+                suKien.getThamSo(), suKien.getIdLichHen(), suKien.getTepLich());
     }
 
     @Override

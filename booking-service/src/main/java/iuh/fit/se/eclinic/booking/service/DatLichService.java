@@ -4,7 +4,9 @@ import java.time.LocalDateTime;
 
 import iuh.fit.se.eclinic.booking.dto.request.DatLichRequest;
 import iuh.fit.se.eclinic.booking.dto.response.DatLichResponse;
+import iuh.fit.se.eclinic.common.enums.NgonNgu;
 import iuh.fit.se.eclinic.common.entity.booking.LichHen;
+import iuh.fit.se.eclinic.common.entity.identity.QuanTriVien;
 
 public interface DatLichService {
 
@@ -30,9 +32,19 @@ public interface DatLichService {
     DatLichResponse datLich(DatLichRequest request, Long idTaiKhoan);
 
     /**
+     * Quản trị viên đặt thay người gọi tổng đài / người đến quầy: đúng như khách đặt ({@link #datLich} với
+     * {@code idTaiKhoan} null: kiểm tra khung giờ, hồ sơ theo CCCD, giới hạn theo hồ sơ và theo SĐT), lịch hẹn có kênh
+     * HOTLINE, nhật ký DAT_LICH ghi quản trị viên. {@code datChoBanThan}, {@code luuNguoiThan} bị bỏ qua. Ném như
+     * {@link #datLich}, trừ các mã về tài khoản đặt.
+     *
+     * @param ngonNgu ngôn ngữ người gọi chọn, lưu vào lịch hẹn (email phiếu khám dùng ngôn ngữ này)
+     */
+    DatLichResponse datQuaHotline(DatLichRequest request, QuanTriVien quanTri, NgonNgu ngonNgu);
+
+    /**
      * Phần "tạo lịch mới" của đổi lịch (quy tắc #10): chọn và khoá lượt khám của khung giờ mới như {@link #datLich}, rồi
      * tạo lịch hẹn DA_XAC_NHAN với phiếu khám mới, {@code lichHenCu} trỏ về {@code cu}. Hồ sơ bệnh nhân, người giám hộ,
-     * tài khoản đặt, lý do khám, liên hệ và thông tin đã nhập lấy nguyên từ {@code cu}. Phải gọi trong transaction
+     * tài khoản đặt, kênh đặt, lý do khám, liên hệ và thông tin đã nhập lấy nguyên từ {@code cu}. Phải gọi trong transaction
      * READ_COMMITTED đã chuyển {@code cu} sang DA_HUY_DO_DOI_LICH và đã flush.
      * <p>
      * Ném: DU_LIEU_KHONG_HOP_LE (thiếu / thừa lựa chọn ca, khung giờ không thuộc ca, hoặc trùng khung giờ đang giữ),
@@ -41,8 +53,10 @@ public interface DatLichService {
      *
      * @param idLichLamViec ca đã chọn; null khi chọn "bác sĩ bất kỳ" bằng {@code idChuyenKhoa}
      * @param bayGio        mốc thời gian của cả thao tác đổi lịch
+     * @param ngonNgu       ngôn ngữ lưu vào lịch mới (email cho khách dùng ngôn ngữ này): bệnh nhân tự đổi thì ngôn ngữ của
+     *                      request, quản trị viên đổi thay thì của lịch cũ
      */
     DatLichResponse datLaiTuLichCu(LichHen cu, Long idLichLamViec, Long idChuyenKhoa, LocalDateTime gioBatDauKhung,
-            LocalDateTime bayGio);
+            LocalDateTime bayGio, NgonNgu ngonNgu);
 
 }

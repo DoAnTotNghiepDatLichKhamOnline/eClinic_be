@@ -202,7 +202,7 @@ và mã lỗi: README mục "Đặt lịch khám".
 
 | Vấn đề | Cách xử lý |
 |--------|------------|
-| Gọi đặt lịch hàng loạt | Mỗi địa chỉ IP tối đa 20 lần / 10 phút (đếm trên Redis, trước mọi thao tác DB) -> 429 `GUI_LAI_QUA_NHANH`; mỗi hồ sơ bệnh nhân tối đa 3 lịch sắp tới còn hiệu lực, mỗi số điện thoại liên hệ tối đa 5, mỗi hồ sơ 1 lịch trong cùng 1 giờ -> 409. Các con số là cấu hình `BOOKING_*` |
+| Gọi đặt lịch hàng loạt | Mỗi địa chỉ IP tối đa 20 lần / 10 phút (đếm trên Redis, trước mọi thao tác DB) -> 429 `GUI_LAI_QUA_NHANH`; mỗi hồ sơ bệnh nhân tối đa 3 lịch sắp tới còn hiệu lực, mỗi số điện thoại liên hệ tối đa 5, mỗi hồ sơ 1 lịch trong cùng 1 giờ -> 409. Giới hạn theo IP là biến môi trường `BOOKING_IP_LIMIT` / `BOOKING_IP_WINDOW`; 2 giới hạn theo hồ sơ / SĐT (từ 20/10/2026) là quy tắc trong bảng `cau_hinh_he_thong` do quản trị viên sửa (`BOOKING_MAX_ACTIVE_*` chỉ là giá trị ban đầu) |
 | Hai người giành lượt khám cuối | Đặt lịch chạy trong 1 transaction, khoá các lượt trống của khung giờ rồi mới chọn; UNIQUE `lich_hen.id_khung_gio_hieu_luc` là chốt cuối trong DB -> chỉ 1 người được, người kia 409 |
 | Dùng số CCCD của người khác để xem / sửa hồ sơ | Số CCCD đã có hồ sơ thì lần đặt sau dùng lại hồ sơ đó dù họ tên / ngày sinh nhập khác (không còn từ chối). Người đặt không đọc lại được dữ liệu đang lưu: kết quả đặt lịch, phiếu khám và "lịch hẹn của tôi" chỉ hiện bản sao những gì chính họ nhập (`lich_hen.*_da_nhap`). Form đặt lịch không sửa hồ sơ hay người giám hộ đã lưu; chỉ khi thông tin nhập khớp hồ sơ mới điền các trường còn trống. Lịch hẹn có thông tin khác hồ sơ được đánh dấu `can_doi_chieu` để phòng khám đối chiếu giấy tờ; hồ sơ chỉ do chủ tài khoản đã liên kết hoặc quản trị viên sửa |
 | Gắn hồ sơ bệnh nhân vào tài khoản | Chỉ khi đặt cho bản thân (`datChoBanThan`) hoặc tự tạo hồ sơ, và chỉ với số CCCD **chưa có** hồ sơ; số CCCD đã có hồ sơ (do khách đặt trước đó) -> 409 `CCCD_DA_CO_HO_SO`, phải xác minh tại phòng khám |
@@ -221,6 +221,19 @@ và mã lỗi: README mục "Đặt lịch khám".
 - Redis lỗi thì bỏ qua giới hạn theo IP (đặt lịch vẫn chạy, mỗi lần chờ tối đa 2 giây, có log WARN); 2 giới hạn theo hồ sơ
   và số điện thoại vẫn còn vì nằm trong DB.
 - Link phiếu khám là bí mật duy nhất của phiếu: ai có link / ảnh QR đều xem được phiếu (đã che), và link không hết hạn.
+- **Sổ khám bệnh** (`/api/booking/so-kham/{ma}`, từ 20/10/2026) dùng mã ngẫu nhiên riêng của hồ sơ bệnh án, khác mã phiếu
+  khám (quy tắc #8). Chỉ có link thì chỉ thấy tóm tắt đã che (họ tên viết tắt, năm sinh, ngày giờ khám, bác sĩ, phòng). Kết
+  quả khám (chẩn đoán, đơn thuốc...) cần thêm 4 số cuối SĐT liên hệ của lượt khám (người giám hộ nếu có); sai 5 lần thì
+  sổ khám bị khoá 15 phút kể cả khi nhập đúng (Redis `so-kham:sai:{id}`; Redis lỗi thì bỏ qua giới hạn, có log WARN). 4 số
+  chỉ có 10 000 khả năng: bảo vệ dựa vào việc mã sổ khám khó đoán và giới hạn số lần, không thay được đăng nhập. Link không
+  hết hạn; người có link + biết SĐT liên hệ đọc được kết quả.
+- **Khách xin cấp lại link** (`POST /api/booking/cap-lai-lien-ket`, từ 20/10/2026): phản hồi luôn 200 cùng 1 câu nên không dò
+  được mã nào có thật, SĐT nào đúng; link chỉ đi tới email đã lưu trên lịch hẹn, không bao giờ trả về trình duyệt. Mỗi mã
+  `RELINK_CODE_LIMIT` (3) và mỗi IP `RELINK_IP_LIMIT` (10) lần trong `RELINK_WINDOW` (1 giờ), đúng hay sai đều tính (Redis lỗi
+  thì bỏ qua). Giới hạn đã biết: thời gian phản hồi không được làm đều (trường hợp khớp có ghi email nên chậm hơn một chút).
+- **Nhân viên cấp lại link** chỉ sau khi nhập CCCD người đến xuất trình (của bệnh nhân hoặc người giám hộ trên lịch hẹn; sai
+  → 403 `CCCD_KHONG_KHOP`); bác sĩ chỉ với lịch của mình. Mỗi lần ghi nhật ký `CAP_LAI_LIEN_KET` (ai, cách gửi). Phản hồi
+  của các route quản trị không có mã phiếu khám, trừ 2 chỗ: đặt lịch qua tổng đài (lúc vừa đặt) và cấp lại `MAN_HINH`.
 
 **Trước khi triển khai thật:**
 - [ ] **Địa chỉ client sau reverse proxy.** booking-service lấy phần tử CUỐI của `X-Forwarded-For` (do gateway ghi, cần
@@ -228,7 +241,9 @@ và mã lỗi: README mục "Đặt lịch khám".
   phần tử cuối là địa chỉ của proxy đó, mọi người dùng bị đếm chung 1 IP: phải giới hạn theo IP ngay tại proxy, hoặc sửa
   `DiaChiIp` cho đúng số lớp proxy, rồi đặt `GATEWAY_TRUSTED_PROXIES` thành địa chỉ proxy thay cho `.*`.
 - [ ] `FRONTEND_URL` là địa chỉ `https://…` thật: link phiếu khám trong mã QR dựng từ biến này.
-- [ ] Xem lại `BOOKING_IP_LIMIT`, `BOOKING_MAX_ACTIVE_PER_PATIENT`, `BOOKING_MAX_ACTIVE_PER_PHONE` theo lượng khách thực tế.
+- [ ] Xem lại `BOOKING_IP_LIMIT`, `RELINK_*` (biến môi trường) và 2 quy tắc số lịch mỗi hồ sơ / mỗi SĐT (sửa ở
+  `/api/booking/quan-tri/cau-hinh`) theo lượng khách thực tế.
+- [ ] `FRONTEND_URL` + `app.so-kham.duong-dan` trỏ đúng trang sổ khám thật (link và mã QR của sổ khám dựng từ đó).
 
 **Hướng dẫn cho frontend:**
 - `POST /api/booking/lich-hen`: chỉ gửi `Authorization` khi đang có phiên bệnh nhân. Token hết hạn làm request nhận 401 dù

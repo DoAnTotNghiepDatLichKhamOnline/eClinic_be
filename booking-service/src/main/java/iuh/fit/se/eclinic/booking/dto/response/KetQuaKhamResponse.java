@@ -25,12 +25,17 @@ import iuh.fit.se.eclinic.common.enums.DuongDungThuoc;
  * @param ngaySuaCuoi       bác sĩ sửa hồ sơ bệnh án lần gần nhất lúc này; null = chưa sửa
  * @param phienBan          CHỈ cho bác sĩ (hồ sơ khám): phiên bản gửi lại khi sửa; không có trong phản hồi cho bệnh nhân
  * @param hanSua            CHỈ cho bác sĩ: sau thời điểm này hồ sơ bệnh án chỉ xem được
+ * @param maSoKham          CHỈ cho bệnh nhân: mã sổ khám bệnh (EXAM-03, khác mã phiếu khám); không có trong hồ sơ khám
+ *                          của bác sĩ
+ * @param linkSoKham        CHỈ cho bệnh nhân: link trang sổ khám bệnh (cũng là nội dung mã QR)
  */
 public record KetQuaKhamResponse(String lyDoKham, SinhHieu sinhHieu, String khamLamSang, String chanDoan,
         IcdChinh icdChinh, String chanDoanKemTheo, String ghiChu, LocalDate ngayTaiKhamDeXuat, List<DonThuoc> donThuoc,
         LocalDateTime ngaySuaCuoi,
         @JsonInclude(JsonInclude.Include.NON_NULL) Integer phienBan,
-        @JsonInclude(JsonInclude.Include.NON_NULL) LocalDateTime hanSua) {
+        @JsonInclude(JsonInclude.Include.NON_NULL) LocalDateTime hanSua,
+        @JsonInclude(JsonInclude.Include.NON_NULL) String maSoKham,
+        @JsonInclude(JsonInclude.Include.NON_NULL) String linkSoKham) {
 
     /** Mạch, nhịp thở lần/phút; nhiệt độ °C; huyết áp mmHg; cân nặng kg; chiều cao cm. Chỉ số không đo là null. */
     public record SinhHieu(Integer mach, BigDecimal nhietDo, Integer huyetApTamThu, Integer huyetApTamTruong,

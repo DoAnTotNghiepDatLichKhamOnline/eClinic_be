@@ -23,6 +23,7 @@ import bsqt_p4_kham_benh
 import bsqt_p5_phu_luc
 import bsqt_p5_quan_tri
 import bsqt_p6_lich_lam_viec_pdf
+import bsqt_p7_quan_tri_lich_hen
 import kit
 
 GOC = Path(__file__).resolve().parents[2]
@@ -33,7 +34,7 @@ DAU_TRANG = "eClinic — Tài liệu API: Lịch hẹn và khám bệnh (bác s�
 TEN_TAI_LIEU = "eClinic — Tài liệu API Lịch hẹn và khám bệnh phía bác sĩ và quản trị viên"
 CAC_GIAI_DOAN = (bsqt_p2_khung.sua, bsqt_p2_quy_uoc.sua, bsqt_p2_mo_hinh.sua, bsqt_p3_lich_hang_doi.sua,
                 bsqt_p4_kham_benh.sua, bsqt_p5_quan_tri.sua, bsqt_p5_phu_luc.sua,
-                bsqt_p6_lich_lam_viec_pdf.sua)
+                bsqt_p6_lich_lam_viec_pdf.sua, bsqt_p7_quan_tri_lich_hen.sua)
 
 
 def khung():

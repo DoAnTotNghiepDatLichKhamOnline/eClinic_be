@@ -21,6 +21,9 @@ import iuh.fit.se.eclinic.common.enums.TrangThaiLichHen;
  * @param phienBan        1 khi ghi nhận, tăng 1 mỗi lần sửa; gửi lại khi sửa
  * @param ngaySuaCuoi     lần sửa gần nhất; null = chưa sửa lần nào
  * @param hanSua          sau thời điểm này hồ sơ chỉ xem được
+ * @param maSoKham        mã sổ khám bệnh của lượt khám (EXAM-03), khác mã phiếu khám
+ * @param linkSoKham      link trang sổ khám bệnh công khai (cũng là nội dung mã QR ở
+ *                        GET /api/booking/so-kham/{maSoKham}/qr); bệnh nhân xem đầy đủ bằng 4 số cuối SĐT liên hệ
  */
 public record BenhAnResponse(
         Long id,
@@ -39,7 +42,9 @@ public record BenhAnResponse(
         LocalDateTime ngayTao,
         int phienBan,
         LocalDateTime ngaySuaCuoi,
-        LocalDateTime hanSua) {
+        LocalDateTime hanSua,
+        String maSoKham,
+        String linkSoKham) {
 
     /**
      * Sinh hiệu: mạch, nhịp thở lần/phút; nhiệt độ °C; huyết áp mmHg; cân nặng kg; chiều cao cm. Chỉ số không đo là null.

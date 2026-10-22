@@ -1,5 +1,7 @@
 package iuh.fit.se.eclinic.catalog.repository;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -50,6 +52,47 @@ public interface BacSiRepository extends JpaRepository<BacSi, Long> {
               and (:mauTen is null or t.hoTen like :mauTen escape '!')
             """)
     Page<BacSi> timCongKhai(Long idChuyenKhoa, String mauTen, Pageable pageable);
+
+    /**
+     * Điều kiện "bác sĩ b còn ít nhất 1 lượt khám đặt được" của {@link #timCongKhaiConCho}: lượt còn trống của ca còn
+     * hoạt động, bắt đầu từ {@code :moc}, ngày trong [{@code :tuNgay}, {@code :denNgay}], giờ bắt đầu của LƯỢT (không phải
+     * của ca) trong [{@code :gioTu}, {@code :gioDen}). Ngày bệnh viện nghỉ không còn ca hoạt động nên không cần lọc riêng.
+     */
+    String CON_LUOT_DAT_DUOC = """
+              and exists (select 1 from KhungGioKham k join k.lichLamViec l
+                          where l.bacSi = b
+                            and l.trangThai = iuh.fit.se.eclinic.common.enums.TrangThaiLichLamViec.HOAT_DONG
+                            and k.trangThai = iuh.fit.se.eclinic.common.enums.TrangThaiKhungGio.CON_TRONG
+                            and k.gioBatDau >= :moc
+                            and l.ngayLamViec between :tuNgay and :denNgay
+                            and extract(hour from k.gioBatDau) >= :gioTu
+                            and extract(hour from k.gioBatDau) < :gioDen)
+            """;
+
+    /**
+     * Như {@link #timCongKhai}, chỉ giữ bác sĩ còn lượt khám đặt được theo {@link #CON_LUOT_DAT_DUOC} (DOC-03: tìm theo
+     * khung giờ rảnh).
+     */
+    @Query(value = """
+            select b from BacSi b
+              join fetch b.taiKhoan t
+              join fetch b.chuyenKhoa c
+            where b.trangThai = iuh.fit.se.eclinic.common.enums.TrangThaiBacSi.DANG_CONG_TAC
+              and t.trangThai = iuh.fit.se.eclinic.common.enums.TrangThaiTaiKhoan.DA_KICH_HOAT
+              and (:idChuyenKhoa is null or c.id = :idChuyenKhoa)
+              and (:mauTen is null or t.hoTen like :mauTen escape '!')
+            """ + CON_LUOT_DAT_DUOC + """
+            order by t.hoTen, b.id
+            """, countQuery = """
+            select count(b) from BacSi b
+              join b.taiKhoan t
+            where b.trangThai = iuh.fit.se.eclinic.common.enums.TrangThaiBacSi.DANG_CONG_TAC
+              and t.trangThai = iuh.fit.se.eclinic.common.enums.TrangThaiTaiKhoan.DA_KICH_HOAT
+              and (:idChuyenKhoa is null or b.chuyenKhoa.id = :idChuyenKhoa)
+              and (:mauTen is null or t.hoTen like :mauTen escape '!')
+            """ + CON_LUOT_DAT_DUOC)
+    Page<BacSi> timCongKhaiConCho(Long idChuyenKhoa, String mauTen, LocalDateTime moc, LocalDate tuNgay,
+            LocalDate denNgay, int gioTu, int gioDen, Pageable pageable);
 
     /** Như {@link #timCongKhai}: bác sĩ ngừng công tác hoặc tài khoản không hoạt động thì coi như không có. */
     @Query("""

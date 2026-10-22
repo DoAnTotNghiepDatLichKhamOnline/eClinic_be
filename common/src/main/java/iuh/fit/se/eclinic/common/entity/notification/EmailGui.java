@@ -76,4 +76,8 @@ public class EmailGui extends CreatableEntity {
     @Column(name = "ngay_gui")
     private LocalDateTime ngayGui;
 
+    /** Nội dung tệp .ics gửi kèm thành lich-kham.ics; null = không đính kèm. */
+    @Column(name = "tep_lich", columnDefinition = "TEXT")
+    private String tepLich;
+
 }

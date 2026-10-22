@@ -17,4 +17,14 @@ public interface PhieuKhamService {
      */
     byte[] taoQr(String maPhieuKham, Integer kichThuoc);
 
+    /**
+     * Tệp lịch .ics của lịch hẹn (thêm vào Google Calendar, Outlook, lịch điện thoại) theo trạng thái hiện tại, chữ theo
+     * ngôn ngữ của request. Phiếu của lịch đã đổi đi chỉ cho biết "đã hủy", không dẫn tới lịch hẹn mới.
+     */
+    TepIcs taoTepLich(String maPhieuKham);
+
+    /** @param tenTep {@code lich-kham-<mã tra cứu>.ics} */
+    record TepIcs(String noiDung, String tenTep) {
+    }
+
 }

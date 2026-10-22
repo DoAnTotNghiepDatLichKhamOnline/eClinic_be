@@ -21,6 +21,9 @@
                 [t('Quản lý lịch làm việc', 'Schedule Management'), '/admin/schedule-management'], [t('Danh mục y tế', 'Medical Catalog'), '/admin/medical-catalog'],
                 [t('Quản lý bác sĩ', 'Doctor Management'), '/admin/doctors'], [t('Quản lý bệnh nhân', 'Patient Management'), '/admin/patients'],
                 [t('Tài khoản', 'Accounts'), '/admin/accounts'],
+                [t('Lịch hẹn toàn viện', 'All Appointments'), '/admin/appointments'], [t('Đặt lịch qua tổng đài', 'Hotline Booking'), '/admin/hotline-booking'],
+                [t('Quy tắc đặt lịch', 'Booking Rules'), '/admin/booking-rules'], [t('Ngày nghỉ bệnh viện', 'Hospital Closures'), '/admin/closures'],
+                [t('Báo cáo thống kê (theo kỳ, xuất Excel)', 'Reports (by period, Excel export)'), '/admin/reports'],
             ].map(([nhan, href]) => {
                 const p = the('p');
                 p.append(lienKet(nhan, href));

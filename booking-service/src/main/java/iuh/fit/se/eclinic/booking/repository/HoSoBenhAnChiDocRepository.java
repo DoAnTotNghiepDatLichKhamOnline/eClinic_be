@@ -30,6 +30,35 @@ public interface HoSoBenhAnChiDocRepository extends Repository<HoSoBenhAn, Long>
     Optional<HoSoBenhAn> findById(Long id);
 
     /**
+     * Sổ khám bệnh theo mã (EXAM-03): hồ sơ bệnh án kèm lịch hẹn và mọi thứ trang sổ khám hiển thị (hồ sơ bệnh nhân,
+     * người giám hộ, bác sĩ + tài khoản + chuyên khoa, phòng khám, lượt khám + ca). Đơn thuốc tải sau bằng
+     * {@link #timTheoLichHenKemDonThuoc}. Cột mã dùng collation không phân biệt hoa thường nên nơi gọi phải so lại chính
+     * xác bằng {@code equals}.
+     */
+    @Query("""
+            select b from HoSoBenhAn b
+            join fetch b.lichHen l
+            join fetch l.hoSoBenhNhan
+            left join fetch l.nguoiGiamHo
+            join fetch l.bacSi bs
+            join fetch bs.taiKhoan
+            join fetch bs.chuyenKhoa
+            join fetch l.phongKham
+            join fetch l.khungGio k
+            join fetch k.lichLamViec
+            where b.maTokenSoKham = :maSoKham
+            """)
+    Optional<HoSoBenhAn> timTheoMaSoKham(String maSoKham);
+
+    /** Mã sổ khám của lượt khám của 1 lịch hẹn (lịch hẹn chưa khám thì không có), để cấp lại link sổ khám. */
+    @Query("select b.maTokenSoKham from HoSoBenhAn b where b.lichHen.id = :idLichHen")
+    Optional<String> timMaSoKhamTheoLichHen(Long idLichHen);
+
+    /** Chỉ mã sổ khám (cho ảnh QR); collation như trên nên nơi gọi so lại bằng {@code equals}. */
+    @Query("select b.maTokenSoKham from HoSoBenhAn b where b.maTokenSoKham = :maSoKham")
+    Optional<String> timMaSoKham(String maSoKham);
+
+    /**
      * Id các hồ sơ bệnh án có ngày tái khám ở sau {@code homNay} mà bệnh nhân chưa được báo đúng ngày đó (chưa có dòng
      * nhac_tai_kham, hoặc ngày đã báo là ngày khác / đã bị xoá).
      */

@@ -85,8 +85,9 @@ public class QuanTriLichLamViecController {
         return PhanHoiApi.ok(lichLamViecService.lichToanVien(tuNgay, denNgay, idChuyenKhoa, idBacSi, idPhongKham));
     }
 
-    @Operation(summary = "Xếp 1 ca làm việc (sinh các lượt khám), có thể lặp lại theo thứ trong tuần tới 1 ngày; ngày trùng"
-            + " giờ với ca khác của bác sĩ / phòng khám bị bỏ qua và liệt kê trong boQua")
+    @Operation(summary = "Xếp 1 ca làm việc (sinh các lượt khám), có thể lặp lại theo thứ trong tuần tới 1 ngày; ngày bệnh"
+            + " viện nghỉ, ngày trùng giờ với ca khác của bác sĩ / phòng khám hoặc vượt giờ làm trong tuần bị bỏ qua và"
+            + " liệt kê trong boQua. Không lặp lại: ngày nghỉ -> 409 NGAY_BENH_VIEN_NGHI")
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public PhanHoiApi<KetQuaTaoCaResponse> tao(@Valid @RequestBody TaoCaRequest request) {
@@ -94,7 +95,8 @@ public class QuanTriLichLamViecController {
     }
 
     @Operation(summary = "Xem trước sao chép ca: chạy đúng như khi sao chép rồi hoàn tác, trả các ca sẽ tạo và các ca bị bỏ"
-            + " qua kèm lý do (ngày đã qua / quá xa, bác sĩ / phòng ngừng hoạt động, trùng giờ, vượt giờ làm trong tuần)")
+            + " qua kèm lý do (ngày đã qua / quá xa / bệnh viện nghỉ, bác sĩ / phòng ngừng hoạt động, trùng giờ, vượt giờ"
+            + " làm trong tuần)")
     @PostMapping("/sao-chep/xem-truoc")
     public PhanHoiApi<KetQuaSaoChepResponse> xemTruocSaoChep(@Valid @RequestBody SaoChepCaRequest request) {
         return PhanHoiApi.ok(quanLyCaService.saoChep(NguoiDungHienTai.layIdTaiKhoan(), request, false));
@@ -132,8 +134,8 @@ public class QuanTriLichLamViecController {
     }
 
     @Operation(summary = "Xem trước nhập lịch từ tệp .xlsx (phần tệp tên tep, tối đa 2MB, 1000 dòng): các dòng hợp lệ và"
-            + " lỗi theo dòng / cột (ô sai dạng, trùng giờ trong tệp, không có bác sĩ / phòng, ngày đã qua / quá xa, trùng"
-            + " giờ, vượt giờ làm trong tuần). Không lưu gì")
+            + " lỗi theo dòng / cột (ô sai dạng, trùng giờ trong tệp, không có bác sĩ / phòng, ngày đã qua / quá xa / bệnh"
+            + " viện nghỉ, trùng giờ, vượt giờ làm trong tuần). Không lưu gì")
     @PostMapping(path = "/nhap-excel/xem-truoc", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public PhanHoiApi<KetQuaNhapExcelResponse> xemTruocNhapExcel(@RequestPart("tep") MultipartFile tep) {
         return PhanHoiApi.ok(excelLichLamViecService.nhap(NguoiDungHienTai.layIdTaiKhoan(), tep, false));

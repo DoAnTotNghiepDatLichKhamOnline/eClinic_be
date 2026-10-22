@@ -5,7 +5,8 @@ import java.time.LocalDateTime;
 /**
  * Số liệu màn hình Dashboard của bác sĩ đang đăng nhập.
  *
- * @param lichHenHomNay    lịch hẹn của tôi có giờ khám hôm nay, không tính lịch đã hủy, đã hủy do đổi lịch, bác sĩ đã hủy
+ * @param lichHenHomNay    lịch hẹn của tôi có giờ khám hôm nay, không tính lịch đã hủy, đã hủy do đổi lịch, bác sĩ /
+ *                         quản trị viên đã hủy
  * @param dangCho          trong số đó: đã xác nhận và không bị đánh dấu cần đổi lịch (chưa khám)
  * @param daKham           trong số đó: đã hoàn thành
  * @param diemDanhGia      điểm đánh giá trung bình của tôi (mọi thời gian), 1 chữ số thập phân; null khi chưa có

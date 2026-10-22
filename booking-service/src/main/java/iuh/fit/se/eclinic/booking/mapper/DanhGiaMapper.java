@@ -2,10 +2,10 @@ package iuh.fit.se.eclinic.booking.mapper;
 
 import org.springframework.stereotype.Component;
 
-import iuh.fit.se.eclinic.booking.config.DanhGiaProperties;
 import iuh.fit.se.eclinic.booking.dto.response.DanhGiaCuaBacSiResponse;
 import iuh.fit.se.eclinic.booking.dto.response.DanhGiaCuaToiResponse;
 import iuh.fit.se.eclinic.booking.dto.response.DanhGiaQuanTriResponse;
+import iuh.fit.se.eclinic.booking.service.CauHinhService;
 import iuh.fit.se.eclinic.common.entity.booking.DanhGia;
 import iuh.fit.se.eclinic.common.entity.booking.LichHen;
 import lombok.RequiredArgsConstructor;
@@ -14,11 +14,11 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class DanhGiaMapper {
 
-    private final DanhGiaProperties danhGiaProperties;
+    private final CauHinhService cauHinhService;
 
     public DanhGiaCuaToiResponse toCuaToi(DanhGia danhGia) {
         return new DanhGiaCuaToiResponse(danhGia.getSoSao(), danhGia.getNhanXet(), danhGia.getNgayTao(),
-                danhGia.getNgayTao().plusDays(danhGiaProperties.soNgayDuocSua()));
+                danhGia.getNgayTao().plusDays(cauHinhService.hienTai().soNgayDuocSuaDanhGia()));
     }
 
     /** Ẩn danh với bác sĩ: không đưa tên bệnh nhân, mã lịch hẹn. */

@@ -16,7 +16,6 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import iuh.fit.se.eclinic.booking.config.LichLamViecProperties;
 import iuh.fit.se.eclinic.booking.dto.response.CaLamViecResponse;
 import iuh.fit.se.eclinic.booking.dto.response.GioLamTheoTuanResponse;
 import iuh.fit.se.eclinic.booking.dto.response.GioLamTheoTuanResponse.GioLamCuaBacSi;
@@ -33,6 +32,7 @@ import iuh.fit.se.eclinic.booking.repository.LichLamViecRepository;
 import iuh.fit.se.eclinic.booking.repository.LichLamViecRepository.GioCuaCa;
 import iuh.fit.se.eclinic.booking.repository.LichLamViecRepository.SoLuotCuaCa;
 import iuh.fit.se.eclinic.booking.repository.LichSuCaLamViecRepository;
+import iuh.fit.se.eclinic.booking.service.CauHinhService;
 import iuh.fit.se.eclinic.booking.service.LichHenService;
 import iuh.fit.se.eclinic.booking.service.LichLamViecService;
 import iuh.fit.se.eclinic.booking.service.TaiKhoanService;
@@ -60,7 +60,7 @@ public class LichLamViecServiceImpl implements LichLamViecService {
     private final LichHenService lichHenService;
     private final BacSiChiDocRepository bacSiChiDocRepository;
     private final LichSuCaLamViecRepository lichSuCaLamViecRepository;
-    private final LichLamViecProperties lichLamViecProperties;
+    private final CauHinhService cauHinhService;
     private final CaKhamMapper caKhamMapper;
     private final LichSuCaMapper lichSuCaMapper;
 
@@ -190,7 +190,7 @@ public class LichLamViecServiceImpl implements LichLamViecService {
             dem[0]++;
             dem[1] += Duration.between(ca.getGioBatDau(), ca.getGioKetThuc()).toMinutes();
         }
-        long gioiHan = lichLamViecProperties.soPhutToiDaMoiTuan();
+        long gioiHan = cauHinhService.hienTai().soPhutToiDaMoiTuan();
         NgonNgu ngonNgu = NgonNgu.hienTai();
         List<GioLamCuaBacSi> ketQua = cacBacSi.stream().map(bacSi -> {
             Map<LocalDate, long[]> theoTuan = tong.getOrDefault(bacSi.getId(), Map.of());

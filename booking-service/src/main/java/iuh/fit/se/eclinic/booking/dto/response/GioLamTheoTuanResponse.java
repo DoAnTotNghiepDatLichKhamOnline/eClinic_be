@@ -6,7 +6,7 @@ import java.util.List;
 /**
  * Giờ làm của các bác sĩ theo từng tuần thứ Hai - Chủ nhật (SCHED-05): chỉ cộng ca còn hoạt động, kể cả ca đã qua.
  *
- * @param gioiHanPhut giới hạn mỗi tuần (phút), theo cấu hình app.lich-lam-viec.so-gio-toi-da-moi-tuan
+ * @param gioiHanPhut giới hạn mỗi tuần (phút), theo cấu hình soGioToiDaMoiTuan
  * @param bacSi       bác sĩ đang công tác khớp bộ lọc (kể cả chưa có ca nào), cộng bác sĩ khác còn ca trong khoảng
  */
 public record GioLamTheoTuanResponse(long gioiHanPhut, List<GioLamCuaBacSi> bacSi) {

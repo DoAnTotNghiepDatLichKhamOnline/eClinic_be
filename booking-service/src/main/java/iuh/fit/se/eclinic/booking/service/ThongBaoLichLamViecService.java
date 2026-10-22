@@ -82,6 +82,13 @@ public interface ThongBaoLichLamViecService {
     void caBiHuy(LichLamViec ca, LyDoHuyCa lyDo);
 
     /**
+     * Các ca của bác sĩ vừa bị hủy cùng lúc (khai báo ngày bệnh viện nghỉ): 1 thông báo; chỉ 1 ca thì như {@link #caBiHuy}.
+     *
+     * @param cacCa theo thứ tự ngày, giờ; ít nhất 1 ca
+     */
+    void caBiHuyHangLoat(BacSi bacSi, List<LichLamViec> cacCa, LyDoHuyCa lyDo);
+
+    /**
      * Quản trị viên gửi lịch làm việc: 1 email cho bác sĩ (bảng các ca, tối đa {@code SO_CA_TOI_DA_TRONG_EMAIL} dòng, kèm
      * link trang Lịch làm việc) và 1 thông báo trong ứng dụng.
      *
@@ -92,7 +99,10 @@ public interface ThongBaoLichLamViecService {
     /** Số dòng ca tối đa trong 1 email lịch làm việc; các ca sau chỉ được đếm ("còn N ca khác"). */
     int SO_CA_TOI_DA_TRONG_EMAIL = 100;
 
-    /** Ca khám của lịch hẹn bị hủy, bệnh nhân phải đổi lịch: báo tài khoản đã đặt và tài khoản của hồ sơ bệnh nhân. */
+    /**
+     * Ca khám của lịch hẹn bị hủy, bệnh nhân phải đổi lịch: báo tài khoản đã đặt và tài khoản của hồ sơ bệnh nhân, và
+     * gửi email kèm link phiếu khám cho người đã đặt (khách không có tài khoản cũng nhận được).
+     */
     void lichHenCanDoi(LichHen lichHen, LyDoHuyCa lyDo);
 
     /** Ca khám đổi phòng (lịch hẹn đã mang phòng mới): báo tài khoản đã đặt và tài khoản của hồ sơ bệnh nhân. */

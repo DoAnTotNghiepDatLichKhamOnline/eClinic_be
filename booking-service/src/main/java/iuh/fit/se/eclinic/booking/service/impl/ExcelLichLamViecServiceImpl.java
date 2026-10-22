@@ -37,13 +37,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import iuh.fit.se.eclinic.booking.config.LichLamViecProperties;
 import iuh.fit.se.eclinic.booking.dto.request.DongCaNhap;
 import iuh.fit.se.eclinic.booking.dto.response.CaLamViecResponse;
 import iuh.fit.se.eclinic.booking.dto.response.KetQuaNhapExcelResponse;
 import iuh.fit.se.eclinic.booking.dto.response.KetQuaNhapExcelResponse.LoiDong;
 import iuh.fit.se.eclinic.booking.repository.BacSiChiDocRepository;
 import iuh.fit.se.eclinic.booking.repository.PhongKhamChiDocRepository;
+import iuh.fit.se.eclinic.booking.service.CauHinhHienTai;
+import iuh.fit.se.eclinic.booking.service.CauHinhService;
 import iuh.fit.se.eclinic.booking.service.ExcelLichLamViecService;
 import iuh.fit.se.eclinic.booking.service.LichLamViecService;
 import iuh.fit.se.eclinic.booking.service.QuanLyCaService;
@@ -88,7 +89,7 @@ public class ExcelLichLamViecServiceImpl implements ExcelLichLamViecService {
     private final QuanLyCaService quanLyCaService;
     private final BacSiChiDocRepository bacSiChiDocRepository;
     private final PhongKhamChiDocRepository phongKhamChiDocRepository;
-    private final LichLamViecProperties lichLamViecProperties;
+    private final CauHinhService cauHinhService;
     private final MessageSource messageSource;
 
     /** Các kiểu ô dùng chung của 1 workbook. */
@@ -499,9 +500,10 @@ public class ExcelLichLamViecServiceImpl implements ExcelLichLamViecService {
         Cell quyTac = trang.createRow(soDong++).createCell(0);
         quyTac.setCellValue(cau("excel.huongDan.quyTac"));
         quyTac.setCellStyle(kieu.tieuDe());
+        CauHinhHienTai cauHinh = cauHinhService.hienTai();
         String[] cacQuyTac = {
-                cau("excel.huongDan.quyTac1", String.valueOf(lichLamViecProperties.soNgayXepTruocToiDa())),
-                cau("excel.huongDan.quyTac2", String.valueOf(lichLamViecProperties.soGioToiDaMoiTuan())),
+                cau("excel.huongDan.quyTac1", String.valueOf(cauHinh.soNgayXepTruocToiDa())),
+                cau("excel.huongDan.quyTac2", String.valueOf(cauHinh.soGioToiDaMoiTuan())),
                 cau("excel.huongDan.quyTac3"),
                 cau("excel.huongDan.quyTac4", String.valueOf(SO_DONG_TOI_DA)),
                 cau("excel.huongDan.quyTac5"),

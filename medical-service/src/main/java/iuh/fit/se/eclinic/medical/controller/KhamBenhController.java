@@ -54,7 +54,8 @@ public class KhamBenhController {
             + " (409 nếu chưa đến ngày khám, hoặc lịch hẹn đã khám xong / đã hủy). Thuốc chọn theo idThuoc trong danh mục: 404"
             + " nếu không có, 409 THUOC_NGUNG_DUNG / THUOC_CHUA_XAC_MINH, 400 nếu 1 thuốc có 2 dòng. 400 nếu mã ICD-10 không"
             + " có trong danh mục, huyết áp thiếu 1 số hoặc tâm trương >= tâm thu, 1 thuốc quá 30 ngày (90 khi chẩn đoán chính"
-            + " mạn tính), hoặc trẻ dưới 72 tháng có kê thuốc mà thiếu cân nặng")
+            + " mạn tính), hoặc trẻ dưới 72 tháng có kê thuốc mà thiếu cân nặng. Phản hồi kèm maSoKham và linkSoKham (sổ khám"
+            + " bệnh của bệnh nhân, EXAM-03) để đưa link hoặc mở mã QR cho bệnh nhân")
     @PostMapping("/lich-hen/{idLichHen}/benh-an")
     @ResponseStatus(HttpStatus.CREATED)
     public PhanHoiApi<BenhAnResponse> ghiNhan(@PathVariable Long idLichHen,
@@ -75,7 +76,8 @@ public class KhamBenhController {
                 "thanhCong.capNhatBenhAn");
     }
 
-    @Operation(summary = "Hồ sơ bệnh án của 1 lịch hẹn của tôi (404 nếu chưa ghi nhận kết quả khám)")
+    @Operation(summary = "Hồ sơ bệnh án của 1 lịch hẹn của tôi, kèm maSoKham và linkSoKham của sổ khám bệnh (404 nếu chưa"
+            + " ghi nhận kết quả khám)")
     @GetMapping("/lich-hen/{idLichHen}/benh-an")
     public PhanHoiApi<BenhAnResponse> xem(@PathVariable Long idLichHen) {
         return PhanHoiApi.ok(khamBenhService.xem(NguoiDungHienTai.layIdTaiKhoan(), idLichHen));

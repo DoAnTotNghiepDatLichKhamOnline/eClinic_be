@@ -218,6 +218,16 @@ public class ThongBaoLichLamViecServiceImpl implements ThongBaoLichLamViecServic
         ghiChoBacSi(ca.getBacSi(), "thongBao.caBiHuy", lyDo.themVao(ca(ThamSoThongBao.tao(), ca)));
     }
 
+    @Override
+    public void caBiHuyHangLoat(BacSi bacSi, List<LichLamViec> cacCa, LyDoHuyCa lyDo) {
+        if (cacCa.size() == 1) {
+            caBiHuy(cacCa.get(0), lyDo);
+            return;
+        }
+        ghiChoBacSi(bacSi, "thongBao.nhieuCaBiHuy", lyDo.themVao(
+                ca(ca(ThamSoThongBao.tao().so(cacCa.size()), cacCa.get(0)), cacCa.get(cacCa.size() - 1))));
+    }
+
     /**
      * Thứ tự tham số của mẫu email.lichLamViec (notification-service: {@code MauEmail}): họ tên bác sĩ, từ ngày, đến
      * ngày, tổng số ca, số ca không liệt kê, link trang Lịch làm việc; rồi mỗi ca 4 tham số: ngày, giờ bắt đầu, giờ kết
@@ -260,6 +270,7 @@ public class ThongBaoLichLamViecServiceImpl implements ThongBaoLichLamViecServic
         for (Long idTaiKhoan : ThongBaoLichHenServiceImpl.taiKhoanPhiaBenhNhan(lichHen)) {
             ghi(LoaiThongBao.LICH_HEN_CAN_DOI, idTaiKhoan, lichHen.getId(), null, "thongBao.lichHenCanDoi", thamSo);
         }
+        thongBaoLichHenService.emailCanDoiLich(lichHen);
     }
 
     @Override

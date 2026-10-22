@@ -261,6 +261,18 @@ public interface LichLamViecRepository extends JpaRepository<LichLamViec, Long> 
     List<GioCuaCa> timGioCaHoatDong(LocalDate tuNgay, LocalDate denNgay, Long idBacSi, Long idChuyenKhoa,
             Long excludeId);
 
+    /**
+     * Id các ca CÒN HOẠT ĐỘNG vào các ngày đã cho, theo id (thứ tự khoá như duyệt nhóm yêu cầu). Chỉ lấy id: nơi gọi khoá
+     * từng ca bằng {@link #findByIdForUpdate} nên đọc được trạng thái mới nhất, không phải bản đã nạp từ trước.
+     */
+    @Query("""
+            select l.id from LichLamViec l
+            where l.ngayLamViec in :cacNgay
+              and l.trangThai = iuh.fit.se.eclinic.common.enums.TrangThaiLichLamViec.HOAT_DONG
+            order by l.id
+            """)
+    List<Long> timIdCaHoatDongTrongCacNgay(Collection<LocalDate> cacNgay);
+
     /** Id các ca còn hoạt động chưa bắt đầu của bác sĩ (ca đang diễn ra không tính), ca sớm nhất trước. */
     @Query("""
             select l.id from LichLamViec l

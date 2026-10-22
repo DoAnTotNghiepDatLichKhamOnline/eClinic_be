@@ -20,7 +20,7 @@ public interface DanhGiaService {
     DanhGiaCuaToiResponse gui(Long idTaiKhoan, String maPhieuKham, DanhGiaRequest request);
 
     /**
-     * Thay số sao và nhận xét trong thời hạn sửa (app.danh-gia.so-ngay-duoc-sua) kể từ lúc gửi.
+     * Thay số sao và nhận xét trong thời hạn sửa (cấu hình soNgayDuocSuaDanhGia) kể từ lúc gửi.
      * <p>
      * Ném KHONG_TIM_THAY (không thấy lịch hẹn, hoặc lịch hẹn chưa có đánh giá), KHONG_CO_QUYEN, HET_HAN_SUA_DANH_GIA.
      */

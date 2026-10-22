@@ -61,6 +61,8 @@ public enum MaLoi {
 
     // Lịch làm việc / đặt lịch
     TRUNG_LICH_LAM_VIEC(HttpStatus.CONFLICT),
+    /** Ngày bệnh viện nghỉ (ngay_nghi_benh_vien): không xếp ca vào được; hoặc mọi ngày khai báo đều đã là ngày nghỉ. */
+    NGAY_BENH_VIEN_NGHI(HttpStatus.CONFLICT),
     /** Khung 1 giờ đã đủ số lượt (BOOK-04, BOOK-12). */
     KHUNG_GIO_KHONG_CON_TRONG(HttpStatus.CONFLICT),
     /** Ca bị hủy, bác sĩ ngừng làm việc, khung giờ đã qua hạn đặt hoặc nằm ngoài số ngày được đặt trước. */
@@ -82,11 +84,17 @@ public enum MaLoi {
     // Bệnh nhân hủy / đổi lịch hẹn
     /** Lịch hẹn đã khám xong, đã hủy, đã đổi sang lịch khác hoặc bác sĩ đã hủy. */
     LICH_HEN_KHONG_HUY_DOI_DUOC(HttpStatus.CONFLICT),
-    /** Còn cách giờ khám ít hơn app.dat-lich.huy-doi-truoc-toi-thieu. */
+    /** Còn cách giờ khám ít hơn cấu hình huyDoiTruocToiThieuPhut (cau_hinh_he_thong). */
     QUA_HAN_HUY_DOI_LICH(HttpStatus.CONFLICT),
     VUOT_SO_LAN_DOI_LICH(HttpStatus.CONFLICT),
     /** Hủy / đổi bằng link phiếu khám: SĐT nhập vào không phải SĐT liên hệ của lượt khám. */
     SO_DIEN_THOAI_KHONG_KHOP(HttpStatus.FORBIDDEN),
+
+    // Cấp lại liên kết phiếu khám (PAT-03)
+    /** Số CCCD nhân viên nhập không phải CCCD của hồ sơ bệnh nhân hay của người giám hộ trên lịch hẹn. */
+    CCCD_KHONG_KHOP(HttpStatus.FORBIDDEN),
+    /** Lịch hẹn không có email liên hệ, người đặt cũng không có tài khoản: chỉ cấp lại trên màn hình được. */
+    KHONG_CO_EMAIL_NHAN(HttpStatus.CONFLICT),
 
     // Hồ sơ bệnh nhân của tài khoản
     /** Tài khoản chưa có hồ sơ mà số CCCD nhập vào đã có hồ sơ: gắn hồ sơ đã có vào tài khoản phải qua xác minh. */
@@ -117,7 +125,7 @@ public enum MaLoi {
     /** Yêu cầu nhường ca còn chờ bác sĩ nhận đồng ý: quản trị viên chưa duyệt / từ chối được. */
     YEU_CAU_CHO_DONG_NGHIEP(HttpStatus.CONFLICT),
     LICH_HEN_CAN_DOI_LICH(HttpStatus.CONFLICT),
-    /** Tổng giờ các ca của bác sĩ trong 1 tuần (thứ Hai - Chủ nhật) vượt app.lich-lam-viec.so-gio-toi-da-moi-tuan (SCHED-05). */
+    /** Tổng giờ các ca của bác sĩ trong 1 tuần (thứ Hai - Chủ nhật) vượt cấu hình soGioToiDaMoiTuan (SCHED-05). */
     VUOT_GIO_LAM_TUAN(HttpStatus.CONFLICT),
 
     // Quản lý bác sĩ

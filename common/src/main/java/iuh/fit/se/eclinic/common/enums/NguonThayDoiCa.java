@@ -14,6 +14,8 @@ public enum NguonThayDoiCa {
     SAO_CHEP,
     /** Quản trị viên nhập các ca từ tệp Excel (.xlsx). */
     NHAP_EXCEL,
+    /** Hủy hàng loạt khi quản trị viên khai báo ngày bệnh viện nghỉ (cột nguon không có CHECK nên không cần migration). */
+    NGAY_NGHI,
     /** Dữ liệu mẫu (SEED_DATA) của identity-service. */
     DU_LIEU_MAU,
     /** Ca có trước khi có bảng lịch sử: ảnh ca là giá trị lúc chạy migration. */

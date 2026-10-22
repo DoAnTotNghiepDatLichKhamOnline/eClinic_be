@@ -12,6 +12,7 @@ import iuh.fit.se.eclinic.common.entity.catalog.PhongKham;
 import iuh.fit.se.eclinic.common.entity.identity.TaiKhoan;
 import iuh.fit.se.eclinic.common.entity.scheduling.KhungGioKham;
 import iuh.fit.se.eclinic.common.enums.GioiTinh;
+import iuh.fit.se.eclinic.common.enums.KenhDatLich;
 import iuh.fit.se.eclinic.common.enums.NgonNgu;
 import iuh.fit.se.eclinic.common.enums.TrangThaiHangDoi;
 import iuh.fit.se.eclinic.common.enums.TrangThaiLichHen;
@@ -39,7 +40,7 @@ import lombok.Setter;
  * Đổi lịch = hủy + tạo mới (quy tắc #10): lịch cũ -> DA_HUY_DO_DOI_LICH, lịch mới có {@code lichHenCu} trỏ về lịch cũ.
  * <p>
  * Khác ERD: thêm {@code lyDoHuy}, {@code canDoiLich} (.md mục 15.4), {@code lichHenCu}, {@code nguoiGiamHo},
- * {@code taiKhoanDat}, {@code soDienThoaiLienHe}, các trường {@code *DaNhap} và {@code canDoiChieu}.
+ * {@code taiKhoanDat}, {@code soDienThoaiLienHe}, các trường {@code *DaNhap}, {@code canDoiChieu} và {@code kenhDat}.
  */
 @Getter
 @Setter
@@ -62,6 +63,12 @@ public class LichHen extends AuditableEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_tai_khoan_dat")
     private TaiKhoan taiKhoanDat;
+
+    /** Kênh đặt lịch (V35); đổi lịch giữ kênh của lịch cũ. */
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
+    @Column(name = "kenh_dat", nullable = false, length = 20)
+    private KenhDatLich kenhDat = KenhDatLich.KHACH;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_bac_si", nullable = false)

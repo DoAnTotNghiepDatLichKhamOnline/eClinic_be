@@ -158,3 +158,6 @@ venv/
 # Claude Code: cấu hình / ghi chú riêng của máy, worktree tạm
 CLAUDE.local.md
 /.claude/worktrees/
+
+# Kết quả kiểm tra tải k6 (scripts/load-test/kiem-tra-tai.js)
+scripts/load-test/ket-qua/

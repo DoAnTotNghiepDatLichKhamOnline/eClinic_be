@@ -7,7 +7,6 @@ import java.time.Period;
 
 import org.springframework.stereotype.Component;
 
-import iuh.fit.se.eclinic.booking.config.DatLichProperties;
 import iuh.fit.se.eclinic.booking.config.PhieuKhamProperties;
 import iuh.fit.se.eclinic.booking.dto.response.BenhNhanPhieuKhamResponse;
 import iuh.fit.se.eclinic.booking.dto.response.DatLichResponse;
@@ -19,6 +18,7 @@ import iuh.fit.se.eclinic.booking.dto.response.LichHenTrongCaResponse;
 import iuh.fit.se.eclinic.booking.dto.response.NguoiDatLich;
 import iuh.fit.se.eclinic.booking.dto.response.NguoiGiamHoPhieuKhamResponse;
 import iuh.fit.se.eclinic.booking.dto.response.PhieuKhamResponse;
+import iuh.fit.se.eclinic.booking.service.CauHinhService;
 import iuh.fit.se.eclinic.booking.util.CheThongTin;
 import iuh.fit.se.eclinic.common.entity.booking.HoSoBenhNhan;
 import iuh.fit.se.eclinic.common.entity.booking.LichHen;
@@ -39,17 +39,17 @@ public class LichHenMapper {
 
     private final CaKhamMapper caKhamMapper;
     private final PhieuKhamProperties phieuKhamProperties;
-    private final DatLichProperties datLichProperties;
+    private final CauHinhService cauHinhService;
 
     /**
-     * Hạn chót bệnh nhân hủy / đổi lịch trên hệ thống: giờ khám trừ {@code app.dat-lich.huy-doi-truoc-toi-thieu}. Lịch
+     * Hạn chót bệnh nhân hủy / đổi lịch trên hệ thống: giờ khám trừ cấu hình {@code huyDoiTruocToiThieuPhut}. Lịch
      * hẹn đang chờ đổi vì ca khám bị hủy ({@code canDoiLich}) hoặc của ca vừa được nhường cho bác sĩ khác
      * ({@code doiBacSi}) thì được hủy / đổi tới đúng giờ khám.
      */
     public LocalDateTime hanHuyDoi(LichHen lichHen) {
         LocalDateTime gioKham = lichHen.getKhungGio().getGioBatDau();
         return lichHen.isCanDoiLich() || lichHen.isDoiBacSi() ? gioKham
-                : gioKham.minus(datLichProperties.huyDoiTruocToiThieu());
+                : gioKham.minus(cauHinhService.hienTai().huyDoiTruocToiThieu());
     }
 
     /** Lịch còn hiệu lực và chưa quá hạn hủy / đổi (chưa xét ai được làm). */
@@ -216,7 +216,9 @@ public class LichHenMapper {
                                 nguoiGiamHo.getSoDienThoai()),
                 new LichHenTrongCaResponse.DoiChieu(lichHen.isCanDoiChieu(), lichHen.getHoTenDaNhap(),
                         lichHen.getNgaySinhDaNhap(), lichHen.getGioiTinhDaNhap(), lichHen.getHoTenGiamHoDaNhap()),
-                lichHen.getLyDoHuy(), canDoiLich(lichHen));
+                lichHen.getLyDoHuy(), canDoiLich(lichHen), lichHen.getKenhDat(),
+                kemBacSi ? new LichHenTrongCaResponse.ChuyenKhoa(lichHen.getBacSi().getChuyenKhoa().getId(),
+                        lichHen.getBacSi().getChuyenKhoa().ten(NgonNgu.hienTai())) : null);
     }
 
     /** Ca khám đã bị hủy và lịch hẹn còn hiệu lực: bệnh nhân phải đổi sang khung giờ khác (hoặc hủy). */
@@ -238,12 +240,12 @@ public class LichHenMapper {
     }
 
     /** Họ tên người khám như người đặt đã nhập; lịch hẹn tạo trước khi có bản sao này thì lấy của hồ sơ. */
-    private static String hoTenBenhNhanDaNhap(LichHen lichHen) {
+    static String hoTenBenhNhanDaNhap(LichHen lichHen) {
         return lichHen.getHoTenDaNhap() != null ? lichHen.getHoTenDaNhap() : lichHen.getHoSoBenhNhan().getHoTen();
     }
 
     /** Họ tên người giám hộ như người đặt đã nhập (null nếu lượt khám không có người giám hộ), cùng quy ước như trên. */
-    private static String hoTenGiamHoDaNhap(LichHen lichHen) {
+    static String hoTenGiamHoDaNhap(LichHen lichHen) {
         NguoiGiamHo nguoiGiamHo = lichHen.getNguoiGiamHo();
         if (nguoiGiamHo == null) {
             return null;
