@@ -12,10 +12,7 @@ import iuh.fit.se.eclinic.catalog.config.DichVuNoiBoProperties;
 import iuh.fit.se.eclinic.common.dto.PhanHoiApi;
 import iuh.fit.se.eclinic.common.security.KhoaNoiBo;
 
-/**
- * Gọi API nội bộ /noi-bo/tai-khoan của identity-service: bảng tai_khoan thuộc identity-service nên catalog-service không
- * tự ghi. Lỗi: xem {@link GoiNoiBo}.
- */
+/** Gọi API nội bộ /noi-bo/tai-khoan của identity-service, vì bảng tai_khoan thuộc identity-service. */
 @Component
 public class TaiKhoanClient {
 

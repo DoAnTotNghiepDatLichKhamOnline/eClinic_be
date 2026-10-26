@@ -22,7 +22,7 @@ import jakarta.persistence.LockModeType;
 
 public interface LichHenRepository extends JpaRepository<LichHen, Long> {
 
-    /** Lịch hẹn kèm mọi thứ phiếu khám / danh sách lịch hẹn hiển thị; các quan hệ đều là *-to-one nên phân trang được. */
+    /** Lịch hẹn kèm mọi thứ phiếu khám hiển thị; quan hệ đều là *-to-one nên phân trang được. */
     String LICH_HEN_KEM_CHI_TIET = """
             select l from LichHen l
             join fetch l.hoSoBenhNhan
@@ -41,44 +41,27 @@ public interface LichHenRepository extends JpaRepository<LichHen, Long> {
 
     boolean existsByKhungGioIdAndTrangThaiIn(Long khungGioId, List<TrangThaiLichHen> trangThais);
 
-    /**
-     * Lịch hẹn theo mã phiếu khám, kèm mọi thứ phiếu khám hiển thị (hồ sơ, người giám hộ, bác sĩ + tài khoản + chuyên
-     * khoa, phòng khám, lượt khám + ca). Cột mã dùng collation không phân biệt hoa thường nên nơi gọi phải so lại
-     * chính xác bằng {@code equals}.
-     */
+    /** Lịch hẹn theo mã phiếu khám, kèm mọi thứ phiếu khám hiển thị. */
     @Query(LICH_HEN_KEM_CHI_TIET + "where l.maTokenPhieuKham = :maPhieuKham")
     Optional<LichHen> timTheoMaPhieuKham(String maPhieuKham);
 
-    /** Điều kiện "lịch hẹn của tài khoản" dùng chung cho 3 truy vấn bên dưới; {@code g} là người giám hộ (left join). */
+    /** Điều kiện "lịch hẹn của tài khoản" dùng chung cho 3 truy vấn bên dưới; {@code g} là người giám hộ. */
     String CUA_TAI_KHOAN = "(l.taiKhoanDat.id = :idTaiKhoan or l.hoSoBenhNhan.id = :idHoSoCuaToi or g.cccd = :cccdCuaToi)";
 
     String DEM_LICH_HEN = "select count(l) from LichHen l left join l.nguoiGiamHo g ";
 
-    /**
-     * Lọc theo người khám, nối sau {@link #CUA_TAI_KHOAN}: {@code chiBanThan} = chỉ lịch của hồ sơ đã liên kết của tài
-     * khoản (tài khoản chưa có hồ sơ thì không có dòng nào); {@code chiNguoiKhac} = chỉ lịch của hồ sơ khác (tài khoản
-     * chưa có hồ sơ thì là mọi lịch). Cả hai false = không lọc.
-     */
+    /** Lọc theo người khám, nối sau {@link #CUA_TAI_KHOAN}: chỉ bản thân hoặc chỉ người khác. */
     String THEO_NGUOI_KHAM = " and (:chiBanThan = false or l.hoSoBenhNhan.id = :idHoSoCuaToi)"
             + " and (:chiNguoiKhac = false or l.hoSoBenhNhan.id <> coalesce(:idHoSoCuaToi, 0L)) ";
 
-    /**
-     * BOOK-07: lịch hẹn của tài khoản, giờ khám muộn nhất trước. Gồm lịch tài khoản đặt khi đã đăng nhập (cho bản thân
-     * hoặc người thân), lịch của hồ sơ bệnh nhân đã liên kết với tài khoản (kể cả lịch đặt như khách trước khi có tài
-     * khoản, quy tắc #3) và lịch của người khám mà người giám hộ khai đúng số CCCD của hồ sơ đó.
-     * {@code idHoSoCuaToi}, {@code cccdCuaToi}: null nếu tài khoản chưa có hồ sơ ở trạng thái DA_LIEN_KET (so sánh với
-     * null không khớp dòng nào). Thứ tự viết trong JPQL nên {@code pageable} không kèm Sort.
-     */
+    /** Lịch hẹn của tài khoản, giờ khám muộn nhất trước. */
     @Query(value = LICH_HEN_KEM_CHI_TIET + "where " + CUA_TAI_KHOAN + THEO_NGUOI_KHAM
             + " order by k.gioBatDau desc, l.id desc",
             countQuery = DEM_LICH_HEN + "where " + CUA_TAI_KHOAN + THEO_NGUOI_KHAM)
     Page<LichHen> timCuaTaiKhoan(Long idTaiKhoan, Long idHoSoCuaToi, String cccdCuaToi, boolean chiBanThan,
             boolean chiNguoiKhac, Pageable pageable);
 
-    /**
-     * Lịch hẹn (mọi trạng thái) của tài khoản có giờ khám dự kiến trong [tu, den), theo giờ khám. Cho màn hình lịch của
-     * bệnh nhân; cùng điều kiện và bộ lọc người khám với {@link #timCuaTaiKhoan}.
-     */
+    /** Lịch hẹn (mọi trạng thái) của tài khoản có giờ khám dự kiến trong [tu, den), theo giờ khám. */
     @Query(LICH_HEN_KEM_CHI_TIET + "where " + CUA_TAI_KHOAN + THEO_NGUOI_KHAM + """
               and k.gioBatDau >= :tu
               and k.gioBatDau < :den
@@ -87,10 +70,7 @@ public interface LichHenRepository extends JpaRepository<LichHen, Long> {
     List<LichHen> timCuaTaiKhoanTrongKhoang(Long idTaiKhoan, Long idHoSoCuaToi, String cccdCuaToi,
             boolean chiBanThan, boolean chiNguoiKhac, LocalDateTime tu, LocalDateTime den);
 
-    /**
-     * 1 lịch hẹn mà tài khoản được xem (cùng điều kiện với {@link #timCuaTaiKhoan}) theo mã phiếu khám. Cột mã dùng
-     * collation không phân biệt hoa thường nên nơi gọi phải so lại chính xác bằng {@code equals}.
-     */
+    /** 1 lịch hẹn mà tài khoản được xem (cùng điều kiện với {@link #timCuaTaiKhoan}) theo mã phiếu khám. */
     @Query(LICH_HEN_KEM_CHI_TIET + "where " + CUA_TAI_KHOAN + " and l.maTokenPhieuKham = :maPhieuKham")
     Optional<LichHen> timCuaTaiKhoanTheoMaPhieuKham(Long idTaiKhoan, Long idHoSoCuaToi, String cccdCuaToi,
             String maPhieuKham);
@@ -107,7 +87,7 @@ public interface LichHenRepository extends JpaRepository<LichHen, Long> {
     Page<LichHen> timSapToiCuaTaiKhoan(Long idTaiKhoan, Long idHoSoCuaToi, String cccdCuaToi, boolean chiBanThan,
             boolean chiNguoiKhac, Collection<TrangThaiLichHen> trangThai, LocalDateTime bayGio, Pageable pageable);
 
-    /** Phần còn lại của {@link #timSapToiCuaTaiKhoan}: lịch đã khám, đã hủy, bị từ chối hoặc đã qua giờ; mới nhất trước. */
+    /** Phần còn lại của {@link #timSapToiCuaTaiKhoan}: lịch đã khám, đã hủy hoặc đã qua; mới nhất trước. */
     @Query(value = LICH_HEN_KEM_CHI_TIET + "where " + CUA_TAI_KHOAN + THEO_NGUOI_KHAM + """
               and (l.trangThai not in :trangThai or k.gioKetThuc <= :bayGio)
             order by k.gioBatDau desc, l.id desc
@@ -117,16 +97,10 @@ public interface LichHenRepository extends JpaRepository<LichHen, Long> {
     Page<LichHen> timLichSuCuaTaiKhoan(Long idTaiKhoan, Long idHoSoCuaToi, String cccdCuaToi, boolean chiBanThan,
             boolean chiNguoiKhac, Collection<TrangThaiLichHen> trangThai, LocalDateTime bayGio, Pageable pageable);
 
-    /**
-     * Điều kiện "tài khoản được xem kết quả khám": người khám là chủ tài khoản (hồ sơ đã liên kết, bất kể ai đặt) hoặc
-     * chính tài khoản này đã đặt lịch. Lịch tài khoản chỉ thấy vì là người giám hộ theo CCCD thì KHÔNG được xem kết quả.
-     */
+    /** Điều kiện "được xem kết quả khám": người khám là chủ tài khoản hoặc tài khoản đã đặt lịch. */
     String DUOC_XEM_KET_QUA = "(l.hoSoBenhNhan.id = :idHoSoCuaToi or l.taiKhoanDat.id = :idTaiKhoan)";
 
-    /**
-     * Các lượt đã khám xong mà tài khoản được xem kết quả, giờ khám muộn nhất trước. {@code idHoSoCuaToi} null nếu tài
-     * khoản chưa có hồ sơ ở trạng thái DA_LIEN_KET. Thứ tự viết trong JPQL nên {@code pageable} không kèm Sort.
-     */
+    /** Các lượt đã khám xong mà tài khoản được xem kết quả, giờ khám muộn nhất trước. */
     @Query(value = LICH_HEN_KEM_CHI_TIET + "where l.trangThai = :daKham and " + DUOC_XEM_KET_QUA + THEO_NGUOI_KHAM
             + " order by k.gioBatDau desc, l.id desc",
             countQuery = "select count(l) from LichHen l where l.trangThai = :daKham and " + DUOC_XEM_KET_QUA
@@ -168,14 +142,7 @@ public interface LichHenRepository extends JpaRepository<LichHen, Long> {
                    or l.emailLienHe like :mau escape '!')
             """;
 
-    /**
-     * ADM-04: lịch hẹn toàn viện cho quản trị viên, giờ khám dự kiến trong [tu, den), sớm nhất trước. Mọi tham số lọc
-     * null = không lọc.
-     *
-     * @param ma   mã tra cứu đầy đủ (ECL-...)
-     * @param cccd số CCCD đầy đủ của người khám hoặc người giám hộ
-     * @param mau  mẫu LIKE (escape '!') so với họ tên, SĐT, email liên hệ
-     */
+    /** Lịch hẹn toàn viện cho quản trị viên, giờ khám trong [tu, den), sớm nhất trước. */
     @Query(value = """
             select l from LichHen l
             join fetch l.hoSoBenhNhan h
@@ -197,10 +164,7 @@ public interface LichHenRepository extends JpaRepository<LichHen, Long> {
             Long idPhongKham, TrangThaiLichHen trangThai, KenhDatLich kenhDat, Boolean canDoiLich,
             Boolean canDoiChieu, String ma, String cccd, String mau, Pageable pageable);
 
-    /**
-     * Lịch hẹn (mọi trạng thái) của 1 bác sĩ mà người khám hoặc người giám hộ có số CCCD này, giờ khám muộn nhất trước:
-     * bác sĩ tìm lịch hẹn của người đến quầy xin cấp lại liên kết (PAT-03).
-     */
+    /** Lịch hẹn của 1 bác sĩ mà người khám hoặc người giám hộ có CCCD này, mới nhất trước. */
     @Query(LICH_HEN_KEM_CHI_TIET + """
             where b.id = :idBacSi
               and (l.hoSoBenhNhan.cccd = :cccd or g.cccd = :cccd)
@@ -217,10 +181,7 @@ public interface LichHenRepository extends JpaRepository<LichHen, Long> {
             countQuery = "select count(l) from LichHen l where l.hoSoBenhNhan.id = :idHoSoBenhNhan")
     Page<LichHen> timCuaHoSo(Long idHoSoBenhNhan, Pageable pageable);
 
-    /**
-     * Lịch hẹn (mọi trạng thái) của 1 bác sĩ có giờ khám dự kiến trong [tu, den), theo giờ khám. Cho bác sĩ xem lịch
-     * hẹn trong ngày của mình.
-     */
+    /** Lịch hẹn (mọi trạng thái) của 1 bác sĩ có giờ khám dự kiến trong [tu, den), theo giờ khám. */
     @Query(LICH_HEN_KEM_CHI_TIET + """
             where b.id = :idBacSi
               and k.gioBatDau >= :tu
@@ -241,10 +202,7 @@ public interface LichHenRepository extends JpaRepository<LichHen, Long> {
     List<Long> timIdChoKhamCuaCa(Long idLichLamViec, TrangThaiHangDoi choKham, Collection<TrangThaiLichHen> trangThai,
             Limit limit);
 
-    /**
-     * Lịch hẹn khác (trừ {@code idTru}) của bác sĩ đang khám mà chưa ghi nhận kết quả, giờ khám trong [tu, den). Đọc
-     * không khoá: nơi gọi giữ khoá dòng bác sĩ.
-     */
+    /** Lịch hẹn khác (trừ {@code idTru}) của bác sĩ đang khám mà chưa ghi nhận kết quả, giờ khám trong [tu, den). */
     @Query("""
             select l from LichHen l
             where l.bacSi.id = :idBacSi
@@ -262,25 +220,19 @@ public interface LichHenRepository extends JpaRepository<LichHen, Long> {
     @Query("select l.id from LichHen l where l.khungGio.lichLamViec.id = :idLichLamViec and l.trangThai in :trangThai")
     List<Long> timIdTheoCaVaTrangThai(Long idLichLamViec, Collection<TrangThaiLichHen> trangThai);
 
-    /**
-     * Khoá (SELECT ... FOR UPDATE) nhiều lịch hẹn theo id tăng dần. Không join: chỉ khoá dòng lich_hen, để giữ thứ tự
-     * "lịch hẹn trước, lượt khám sau" như {@link #findByIdForUpdate}.
-     */
+    /** Khoá (SELECT ... */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select l from LichHen l where l.id in :cacId order by l.id")
     List<LichHen> khoaTheoId(Collection<Long> cacId);
 
-    /**
-     * Lịch hẹn còn hiệu lực đang chờ bệnh nhân đổi lịch vì ca khám bị hủy ({@code canDoiLich}), giờ khám cũ sớm nhất
-     * trước. Cho quản trị viên theo dõi.
-     */
+    /** Lịch hẹn còn hiệu lực đang chờ đổi lịch vì ca bị hủy, giờ khám cũ sớm nhất trước. */
     @Query(value = LICH_HEN_KEM_CHI_TIET + """
             where l.canDoiLich = true and l.trangThai in :trangThai
             order by k.gioBatDau asc, l.id asc
             """, countQuery = "select count(l) from LichHen l where l.canDoiLich = true and l.trangThai in :trangThai")
     Page<LichHen> timCanDoiLich(Collection<TrangThaiLichHen> trangThai, Pageable pageable);
 
-    /** Lịch hẹn ở 1 trong các trạng thái cho trước của 1 phòng khám trong 1 ngày, kèm lượt khám: để đánh lại số thứ tự. */
+    /** Lịch hẹn theo trạng thái của 1 phòng trong 1 ngày, kèm lượt khám, để đánh lại số thứ tự. */
     @Query("""
             select l from LichHen l join fetch l.khungGio k
             where l.phongKham.id = :idPhongKham
@@ -300,10 +252,7 @@ public interface LichHenRepository extends JpaRepository<LichHen, Long> {
     @Query(LICH_HEN_KEM_CHI_TIET + "where l.id = :id")
     Optional<LichHen> timTheoIdKemChiTiet(Long id);
 
-    /**
-     * Khoá dòng lịch hẹn (SELECT ... FOR UPDATE) trước khi đổi trạng thái. Không join: chỉ khoá đúng dòng lich_hen, các
-     * quan hệ tải sau. Phải gọi trong transaction.
-     */
+    /** Khoá dòng lịch hẹn (SELECT ... */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select l from LichHen l where l.id = :id")
     Optional<LichHen> findByIdForUpdate(Long id);
@@ -315,7 +264,7 @@ public interface LichHenRepository extends JpaRepository<LichHen, Long> {
 
     // ----- Dashboard: các câu đếm, định nghĩa từng số ở TongQuanBacSiResponse / TongQuanQuanTriResponse -----
 
-    /** Lịch hẹn của 1 bác sĩ ở 1 trạng thái, không bị đánh dấu cần đổi lịch, mà lượt khám bắt đầu sau {@code bayGio}. */
+    /** Lịch hẹn của bác sĩ ở 1 trạng thái, không cần đổi lịch, lượt khám bắt đầu sau {@code bayGio}. */
     @Query("""
             select count(l) from LichHen l
             where l.bacSi.id = :idBacSi
@@ -363,10 +312,7 @@ public interface LichHenRepository extends JpaRepository<LichHen, Long> {
     @Query("select count(l) from LichHen l where l.ngayTao >= :tu and l.trangThai <> :khongTinh")
     long demDaTaoTu(LocalDateTime tu, TrangThaiLichHen khongTinh);
 
-    /**
-     * Các lịch hẹn (mọi trạng thái, mọi bác sĩ) của 1 hồ sơ bệnh nhân có giờ khám dự kiến trước {@code truoc}, mới nhất
-     * trước. Cho bác sĩ xem các lần khám trước của bệnh nhân.
-     */
+    /** Lịch hẹn của 1 hồ sơ bệnh nhân có giờ khám trước {@code truoc}, mới nhất trước. */
     @Query(LICH_HEN_KEM_CHI_TIET + """
             where l.hoSoBenhNhan.id = :idHoSoBenhNhan
               and k.gioBatDau < :truoc
@@ -384,10 +330,7 @@ public interface LichHenRepository extends JpaRepository<LichHen, Long> {
     @Query("select l.maTokenPhieuKham from LichHen l where l.maTokenPhieuKham = :maPhieuKham")
     Optional<String> timMaPhieuKham(String maPhieuKham);
 
-    /**
-     * Hồ sơ bệnh nhân đã có lịch hẹn (ở 1 trong các trạng thái cho trước, với bác sĩ bất kỳ) mà giờ khám dự kiến nằm
-     * trong [tu, den)? Dùng để chặn 1 bệnh nhân giữ 2 lịch trùng khung giờ (BOOK-04).
-     */
+    /** Hồ sơ bệnh nhân đã có lịch hẹn ở các trạng thái này với giờ khám trong [tu, den)? */
     @Query("""
             select count(l) > 0 from LichHen l
             where l.hoSoBenhNhan.id = :idHoSoBenhNhan
@@ -416,10 +359,7 @@ public interface LichHenRepository extends JpaRepository<LichHen, Long> {
             """)
     long demLichTheoSoDienThoaiTu(String soDienThoai, Collection<TrangThaiLichHen> trangThai, LocalDateTime tu);
 
-    /**
-     * Id các lịch hẹn đến hạn nhắc ở 1 mốc: còn hiệu lực, không chờ đổi vì ca bị hủy, lượt khám bắt đầu trong
-     * ({@code tu}, {@code den}] và mốc đó chưa được ghi nhận (nhac_lich_hen). Giờ khám sớm nhất trước.
-     */
+    /** Id lịch hẹn đến hạn nhắc ở 1 mốc: còn hiệu lực, lượt khám trong ({@code tu}, {@code den}], chưa nhắc. */
     @Query("""
             select l.id from LichHen l join l.khungGio k
             where l.trangThai in :trangThai and l.canDoiLich = false
@@ -430,10 +370,7 @@ public interface LichHenRepository extends JpaRepository<LichHen, Long> {
     List<Long> timIdCanNhac(Collection<TrangThaiLichHen> trangThai, LocalDateTime tu, LocalDateTime den,
             int soPhutTruoc, Limit gioiHan);
 
-    /**
-     * Hồ sơ bệnh nhân có lịch hẹn còn hiệu lực, lượt khám từ {@code tu} trở đi, với bác sĩ thuộc chuyên khoa này không
-     * (đã tự đặt lịch tái khám thì không nhắc đặt nữa).
-     */
+    /** Hồ sơ đã có lịch hẹn còn hiệu lực từ {@code tu} với bác sĩ thuộc chuyên khoa này không. */
     @Query("""
             select count(l) > 0 from LichHen l join l.khungGio k
             where l.hoSoBenhNhan.id = :idHoSoBenhNhan and l.trangThai in :trangThai
@@ -442,12 +379,7 @@ public interface LichHenRepository extends JpaRepository<LichHen, Long> {
     boolean coLichSapToi(Long idHoSoBenhNhan, Collection<TrangThaiLichHen> trangThai, LocalDateTime tu,
             Long idChuyenKhoa);
 
-    /**
-     * Đóng các ngày khám đã qua: lịch {@code conHieuLuc} có lượt khám trước {@code moc}, ca khám không bị hủy và bệnh
-     * nhân không ở {@code dangKham} chuyển sang {@code khongDen}, tăng version. Lệnh UPDATE khoá từng dòng và đọc bản đã
-     * commit mới nhất, nên dòng vừa được ghi nhận kết quả khám cùng lúc không bị đè. Lượt khám đọc qua khoá ngoại trong
-     * subquery (không join trong UPDATE).
-     */
+    /** Lịch còn hiệu lực có lượt khám trước {@code moc} mà bệnh nhân chưa khám chuyển sang {@code khongDen}. */
     @Modifying(clearAutomatically = true)
     @Query("""
             update versioned LichHen l set l.trangThai = :khongDen

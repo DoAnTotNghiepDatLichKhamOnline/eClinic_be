@@ -36,9 +36,7 @@ import iuh.fit.se.eclinic.common.thongbao.VanBanHeThong;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Log không ghi CCCD, SĐT, email hay mã phiếu khám: chỉ id lịch hẹn / mã tra cứu.
- */
+/** Log không ghi CCCD, SĐT, email hay mã phiếu khám: chỉ id lịch hẹn / mã tra cứu. */
 @Slf4j
 @Service
 @RequiredArgsConstructor

@@ -2,10 +2,7 @@ package iuh.fit.se.eclinic.common.util;
 
 import java.util.Optional;
 
-/**
- * Định dạng ảnh được chấp nhận, nhận ra bằng các byte đầu của tệp. Không tin tên tệp hay Content-Type do client gửi:
- * cả hai đều tự khai được.
- */
+/** Định dạng ảnh được chấp nhận, nhận ra bằng các byte đầu của tệp. */
 public enum DinhDangAnh {
 
     JPEG,

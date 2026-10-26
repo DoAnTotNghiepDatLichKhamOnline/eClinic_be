@@ -1,8 +1,6 @@
 package iuh.fit.se.eclinic.common.enums;
 
-/**
- * Kênh của 1 dòng trong bảng chờ gửi su_kien_thong_bao (V19).
- */
+/** Kênh của 1 dòng trong bảng chờ gửi su_kien_thong_bao. */
 public enum KenhThongBao {
 
     /** Thông báo trong ứng dụng, gửi cho 1 tài khoản. */

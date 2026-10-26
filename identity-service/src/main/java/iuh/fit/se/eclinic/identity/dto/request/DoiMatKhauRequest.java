@@ -4,10 +4,7 @@ import iuh.fit.se.eclinic.identity.validation.MatKhauHopLe;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-/**
- * Đổi mật khẩu khi đang đăng nhập. Mật khẩu hiện tại không dùng @MatKhauHopLe (như DangNhapRequest): sai quy tắc
- * cũng chỉ là "mật khẩu hiện tại không đúng".
- */
+/** Đổi mật khẩu khi đang đăng nhập. */
 public record DoiMatKhauRequest(
 
         @NotBlank(message = "{kiemTra.matKhauHienTai.batBuoc}")

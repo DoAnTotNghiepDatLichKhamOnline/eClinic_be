@@ -22,11 +22,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 
-/**
- * Quản trị viên sửa quy tắc đặt lịch / xếp ca (SCHED-05, quy tắc #13): đặt trước tối thiểu / tối đa, số lịch còn hiệu
- * lực, hạn hủy / đổi lịch, số lần đổi lịch, hạn gửi yêu cầu đổi ca, số ngày xếp ca trước, giờ làm tối đa mỗi tuần, hạn
- * sửa đánh giá. Giá trị mới áp dụng ngay cho thao tác mới.
- */
+/** Quản trị viên sửa quy tắc đặt lịch và xếp ca. */
 @Tag(name = "Quản trị cấu hình", description = "Quy tắc đặt lịch / xếp ca do quản trị viên sửa, kèm lịch sử sửa")
 @RestController
 @RequestMapping("/api/booking/quan-tri/cau-hinh")

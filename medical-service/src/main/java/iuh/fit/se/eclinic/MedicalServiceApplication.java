@@ -6,11 +6,7 @@ import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 
 import iuh.fit.se.eclinic.common.config.AppTimeZone;
 
-/**
- * medical-service (cổng 8085): hồ sơ bệnh án, đơn thuốc, danh mục thuốc, sổ khám bệnh — EXAM-01..05, DOC-02.
- * <p>
- * Đặt ở package gốc để scan được cả entity/config trong module common lẫn code trong package {@code medical}.
- */
+/** medical-service (cổng 8085): hồ sơ bệnh án, đơn thuốc, danh mục thuốc, sổ khám bệnh. */
 @SpringBootApplication
 @ConfigurationPropertiesScan
 public class MedicalServiceApplication {

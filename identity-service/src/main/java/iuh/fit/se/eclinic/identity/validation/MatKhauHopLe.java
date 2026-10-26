@@ -9,10 +9,7 @@ import java.lang.annotation.Target;
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
 
-/**
- * Mật khẩu hợp lệ: tối thiểu 6 ký tự (quy tắc tạm khi đang thử nghiệm, phải siết lại trước khi triển khai thật)
- * và tối đa 72 byte UTF-8 (giới hạn của BCrypt: vượt quá thì BCryptPasswordEncoder ném lỗi thay vì cắt bớt).
- */
+/** Mật khẩu hợp lệ: tối thiểu 6 ký tự và tối đa 72 byte UTF-8 (giới hạn của BCrypt). */
 @Documented
 @Constraint(validatedBy = MatKhauHopLeValidator.class)
 @Target({ ElementType.FIELD, ElementType.PARAMETER, ElementType.RECORD_COMPONENT })

@@ -4,10 +4,7 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Chia 1 ca làm việc thành các lượt khám (BOOK-12): ca gồm các khung 1 giờ tính từ giờ bắt đầu ca,
- * mỗi khung có tối đa N lượt, mỗi lượt t phút. Khung cuối có thể ngắn hơn 1 giờ nên ít lượt hơn.
- */
+/** Chia 1 ca thành các lượt khám: khung 1 giờ từ giờ bắt đầu ca, mỗi khung tối đa N lượt t phút. */
 public final class ChiaCaLamViec {
 
     public static final int SO_PHUT_MOI_KHUNG = 60;
@@ -15,12 +12,7 @@ public final class ChiaCaLamViec {
     private ChiaCaLamViec() {
     }
 
-    /**
-     * Giờ bắt đầu của từng lượt khám trong ca, tăng dần. Lượt kết thúc sau giờ kết thúc ca thì bỏ.
-     *
-     * @param soLuotMoiGio  N, số lượt tối đa trong 1 khung 1 giờ
-     * @param soPhutMoiLuot t, số phút của 1 lượt (N x t &lt;= 60)
-     */
+    /** Giờ bắt đầu của từng lượt khám trong ca, tăng dần. */
     public static List<LocalTime> gioBatDauCacLuot(LocalTime gioBatDauCa, LocalTime gioKetThucCa, int soLuotMoiGio,
             int soPhutMoiLuot) {
         if (soLuotMoiGio <= 0 || soPhutMoiLuot <= 0 || soLuotMoiGio * soPhutMoiLuot > SO_PHUT_MOI_KHUNG) {
@@ -41,7 +33,7 @@ public final class ChiaCaLamViec {
         return ketQua;
     }
 
-    /** Giờ bắt đầu của khung 1 giờ chứa lượt khám. Khung tính từ giờ bắt đầu ca, không theo giờ tròn. */
+    /** Giờ bắt đầu của khung 1 giờ chứa lượt khám (tính từ giờ bắt đầu ca, không theo giờ tròn). */
     public static LocalTime gioBatDauKhung(LocalTime gioBatDauCa, LocalTime gioBatDauLuot) {
         int phutCa = gioBatDauCa.toSecondOfDay() / 60;
         int phutLuot = gioBatDauLuot.toSecondOfDay() / 60;
@@ -52,7 +44,7 @@ public final class ChiaCaLamViec {
         return LocalTime.ofSecondOfDay((phutCa + chiSoKhung * SO_PHUT_MOI_KHUNG) * 60L);
     }
 
-    /** Giờ kết thúc của khung: sau giờ bắt đầu khung 1 giờ, nhưng không quá giờ kết thúc ca (khung cuối có thể ngắn hơn). */
+    /** Giờ kết thúc của khung: sau giờ bắt đầu khung 1 giờ, không quá giờ kết thúc ca. */
     public static LocalTime gioKetThucKhung(LocalTime gioBatDauKhung, LocalTime gioKetThucCa) {
         int phutKetThuc = gioBatDauKhung.toSecondOfDay() / 60 + SO_PHUT_MOI_KHUNG;
         int phutKetThucCa = gioKetThucCa.toSecondOfDay() / 60;

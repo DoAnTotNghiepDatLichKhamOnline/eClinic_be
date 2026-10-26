@@ -7,11 +7,7 @@ import iuh.fit.se.eclinic.booking.service.NhacTaiKhamService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Báo và nhắc ngày tái khám sau mỗi {@code app.nhac-lich.chu-ky} (cùng chu kỳ với {@link NhacLichJob}): bác sĩ lưu ngày
- * tái khám thì bệnh nhân được báo sau nhiều nhất 1 chu kỳ. Thông báo và email được ghi vào bảng chờ gửi,
- * {@link GuiThongBaoJob} gửi đi.
- */
+/** Báo và nhắc ngày tái khám theo chu kỳ {@code app.nhac-lich.chu-ky}, cùng chu kỳ với nhắc lịch. */
 @Slf4j
 @Component
 @RequiredArgsConstructor

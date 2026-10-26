@@ -11,10 +11,7 @@ import iuh.fit.se.eclinic.catalog.config.DichVuNoiBoProperties;
 import iuh.fit.se.eclinic.common.dto.PhanHoiApi;
 import iuh.fit.se.eclinic.common.security.KhoaNoiBo;
 
-/**
- * Gọi API nội bộ /noi-bo/bac-si của booking-service: ca làm việc, lượt khám, lịch hẹn thuộc booking-service nên
- * catalog-service không tự ghi. Lỗi: xem {@link GoiNoiBo}.
- */
+/** Gọi API nội bộ /noi-bo/bac-si của booking-service, vì ca và lịch hẹn thuộc booking-service. */
 @Component
 public class LichLamViecClient {
 
@@ -23,10 +20,6 @@ public class LichLamViecClient {
             new ParameterizedTypeReference<>() {
             };
 
-    /**
-     * @param soCaDaHuy       số ca sắp tới vừa bị hủy
-     * @param soLichHenCanDoi số lịch hẹn vừa được đánh dấu cần đổi lịch
-     */
     public record KetQuaHuyCa(int soCaDaHuy, int soLichHenCanDoi) {
     }
 

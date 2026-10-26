@@ -23,11 +23,7 @@ import org.springframework.test.context.DynamicPropertySource;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 
-/**
- * MẪU test gateway: không cần chạy service thật. Một HTTP server giả (có sẵn trong JDK) đóng vai catalog-service,
- * ghi lại request nhận được và trả về status/body mà test yêu cầu. identity-service trỏ vào cổng 1 (không có gì chạy)
- * để giả lập service chưa khởi động.
- */
+/** MẪU test gateway: không cần chạy service thật. */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class ApiGatewayTest {
 
@@ -154,7 +150,7 @@ class ApiGatewayTest {
 
     @Test
     void requestQuaLonBiGatewayTuChoi413KhongChuyenTiepVaVanCoHeaderCors() throws Exception {
-        // Giới hạn trong test là 1MB (xem cauHinh)
+        // Giới hạn trong test là 1MB
         HttpResponse<String> phanHoi = gui(HttpRequest.newBuilder(url("/api/catalog/tai-len"))
                 .header("Content-Type", "application/octet-stream").header("Origin", FRONTEND)
                 .POST(HttpRequest.BodyPublishers.ofByteArray(new byte[1024 * 1024 + 1])));
@@ -246,7 +242,7 @@ class ApiGatewayTest {
         assertThat(phanHoi.body()).contains("\"maLoi\":\"DICH_VU_KHONG_KHA_DUNG\"");
     }
 
-    /** Danh sách tài khoản của quản trị viên là đúng "/api/users", không có phần đuôi: vẫn phải khớp Path=/api/users/**. */
+    /** Danh sách tài khoản là đúng "/api/users" (không có đuôi): vẫn phải khớp Path=/api/users/**. */
     @Test
     void apiUsersKhongCoPhanDuoiCungDiToiIdentityService() throws Exception {
         for (String duongDan : new String[] { "/api/users", "/api/users?trang=0&kichThuoc=5", "/api/users/7/status" }) {

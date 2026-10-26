@@ -3,15 +3,7 @@ package iuh.fit.se.eclinic.catalog.dto.response;
 import java.time.LocalDate;
 import java.util.List;
 
-/**
- * Chi tiết công khai của 1 bác sĩ: như {@link BacSiResponse}, thêm đoạn giới thiệu, 3 mục dạng danh sách (mảng rỗng
- * khi chưa có) và ảnh giới thiệu theo thứ tự hiển thị. Giấy phép hành nghề (số, ngày cấp, nơi cấp, phạm vi) công khai
- * để người bệnh tra cứu.
- *
- * @param ngonNguKham mã ngôn ngữ ISO 639 viết thường (vd "vi", "en"), mảng rỗng khi chưa có
- * @param diemDanhGia điểm đánh giá trung bình của bệnh nhân, 1 chữ số thập phân; null khi chưa có đánh giá nào
- * @param soDanhGia   số lượt đánh giá. Nhận xét của bệnh nhân không công khai
- */
+/** Chi tiết công khai của 1 bác sĩ: như {@link BacSiResponse}, thêm giới thiệu và ảnh giới thiệu. */
 public record BacSiChiTietResponse(
         Long id,
         String hoTen,

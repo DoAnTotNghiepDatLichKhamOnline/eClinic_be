@@ -12,11 +12,7 @@ import com.lowagie.text.DocumentException;
 import com.lowagie.text.Font;
 import com.lowagie.text.pdf.BaseFont;
 
-/**
- * Font nhúng của các bản in PDF: Noto Sans thường + đậm (resources/fonts, giấy phép SIL OFL 1.1 trong OFL.txt), có đủ
- * chữ tiếng Việt dựng sẵn. Nạp 1 lần lúc khởi động (thiếu tệp font thì service không chạy) rồi dùng chung cho mọi tệp
- * PDF; mỗi tệp chỉ nhúng các chữ nó dùng (subset).
- */
+/** Font nhúng của bản in PDF: Noto Sans thường và đậm (SIL OFL 1.1), đủ chữ tiếng Việt. */
 @Component
 public class PhongChuPdf {
 
@@ -53,10 +49,7 @@ public class PhongChuPdf {
         return new Font(dam, co);
     }
 
-    /**
-     * Chữ người dùng gõ (họ tên, tên phòng) có thể ở dạng dấu tách rời (NFD, vd gõ trên macOS): font chỉ đặt dấu đúng
-     * chỗ với chữ dựng sẵn, nên đổi sang NFC trước khi in.
-     */
+    /** Đổi chữ người dùng gõ sang NFC trước khi in, vì font chỉ đặt dấu đúng với chữ dựng sẵn. */
     public static String nfc(String chu) {
         return chu == null ? "" : Normalizer.normalize(chu, Normalizer.Form.NFC);
     }

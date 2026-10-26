@@ -2,13 +2,7 @@ package iuh.fit.se.eclinic.chatbot.client;
 
 import java.util.Map;
 
-/**
- * 1 lượt trong hội thoại gửi cho mô hình.
- *
- * @param noiDung      lời của người dùng / của chatbot, hoặc kết quả tra cứu (JSON)
- * @param tinNhanGoc   chỉ với {@link Loai#XIN_TRA_CUU}: tin nhắn mô hình đã trả, giữ nguyên từng trường để gửi lại
- * @param idGoiCongCu  chỉ với {@link Loai#KET_QUA_TRA_CUU}: id của lời gọi công cụ mà kết quả này trả lời
- */
+/** 1 lượt trong hội thoại gửi cho mô hình. */
 public record LuotChat(Loai loai, String noiDung, Map<String, Object> tinNhanGoc, String idGoiCongCu) {
 
     public enum Loai {

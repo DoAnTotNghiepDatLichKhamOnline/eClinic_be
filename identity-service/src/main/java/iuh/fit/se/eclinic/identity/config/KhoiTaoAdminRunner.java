@@ -18,11 +18,7 @@ import iuh.fit.se.eclinic.identity.util.ChuanHoa;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Khi khởi động, nếu DB chưa có tài khoản QUAN_TRI_VIEN nào thì tạo 1 admin toàn quyền từ
- * {@link AdminMacDinhProperties}. Cần có admin vì tài khoản bác sĩ chỉ do admin cấp (AUTH-04).
- * Chạy lại nhiều lần không tạo thêm. Chạy trước KhoiTaoDuLieuMauRunner (ca làm việc mẫu cần có admin).
- */
+/** Khi khởi động, nếu DB chưa có QUAN_TRI_VIEN nào thì tạo 1 admin toàn quyền từ {@link AdminMacDinhProperties}. */
 @Slf4j
 @Component
 @Order(1)

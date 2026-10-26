@@ -30,10 +30,7 @@ import iuh.fit.se.eclinic.common.testsupport.TestFixtures.CaLamViec;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceException;
 
-/**
- * Kiểm tra các ràng buộc toàn vẹn dữ liệu đặt ở mức DB (V1__init_schema.sql).
- * Context load thành công cũng có nghĩa là Flyway chạy được V1 và Hibernate validate khớp mọi entity.
- */
+/** Kiểm tra các ràng buộc toàn vẹn dữ liệu đặt ở mức DB. */
 @SpringBootTest
 @Import(MySqlTestcontainersConfiguration.class)
 class SchemaConstraintsTest {
@@ -113,7 +110,6 @@ class SchemaConstraintsTest {
         assertThatCode(() -> fixtures.persist(doiCa)).doesNotThrowAnyException();
     }
 
-    // ---------------------------------------------------------------- helpers
 
     private static LichHen newLichHen(CaLamViec ca, HoSoBenhNhan hoSo, int soThuTu) {
         LichHen lichHen = new LichHen();

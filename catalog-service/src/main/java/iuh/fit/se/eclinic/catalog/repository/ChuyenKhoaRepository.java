@@ -7,10 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 
 import iuh.fit.se.eclinic.common.entity.catalog.ChuyenKhoa;
 
-/**
- * So sánh tên theo collation của cột (utf8mb4_unicode_ci): không phân biệt hoa/thường và dấu,
- * nên "noi tiet" trùng / tìm thấy "Nội tiết".
- */
+/** So tên theo collation utf8mb4_unicode_ci: không phân biệt hoa thường và dấu. */
 public interface ChuyenKhoaRepository extends JpaRepository<ChuyenKhoa, Long> {
 
     boolean existsByTenChuyenKhoa(String tenChuyenKhoa);
@@ -21,11 +18,7 @@ public interface ChuyenKhoaRepository extends JpaRepository<ChuyenKhoa, Long> {
 
     boolean existsByTenChuyenKhoaEnAndIdNot(String tenChuyenKhoaEn, Long id);
 
-    /**
-     * Sắp xếp theo tên tiếng Việt. Từ khoá so với tên của cả 2 ngôn ngữ, dù request đang ở ngôn ngữ nào.
-     *
-     * @param mau mẫu LIKE (escape '!'); null = không lọc
-     */
+    /** Sắp xếp theo tên tiếng Việt. */
     @Query(value = """
             select c from ChuyenKhoa c
             where (:mau is null or c.tenChuyenKhoa like :mau escape '!' or c.tenChuyenKhoaEn like :mau escape '!')
@@ -36,7 +29,7 @@ public interface ChuyenKhoaRepository extends JpaRepository<ChuyenKhoa, Long> {
             """)
     Page<ChuyenKhoa> timXepTheoTen(String mau, Pageable pageable);
 
-    /** Như {@link #timXepTheoTen} nhưng sắp xếp theo tên hiện cho người xem tiếng Anh (chưa có tên tiếng Anh: tên Việt). */
+    /** Như {@link #timXepTheoTen} nhưng sắp theo tên tiếng Anh (chưa có thì tên Việt). */
     @Query(value = """
             select c from ChuyenKhoa c
             where (:mau is null or c.tenChuyenKhoa like :mau escape '!' or c.tenChuyenKhoaEn like :mau escape '!')

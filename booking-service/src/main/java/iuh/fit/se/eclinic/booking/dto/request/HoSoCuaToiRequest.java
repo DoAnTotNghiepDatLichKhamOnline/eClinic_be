@@ -9,12 +9,7 @@ import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
-/**
- * Bệnh nhân tạo / sửa hồ sơ bệnh nhân của tài khoản mình (PAT-01). Các trường tuỳ chọn gửi trống thì bị xoá trắng.
- *
- * @param cccd bắt buộc khi tài khoản chưa có hồ sơ (tạo mới); đã có hồ sơ thì bỏ trống hoặc gửi đúng số đang lưu, vì số
- *             CCCD không đổi được
- */
+/** Bệnh nhân tạo, sửa hồ sơ bệnh nhân của tài khoản mình. */
 public record HoSoCuaToiRequest(
         @NotBlank(message = "{kiemTra.hoTen.batBuoc}")
         @Size(max = 150, message = "{kiemTra.hoTen.toiDa}")

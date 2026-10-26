@@ -27,10 +27,7 @@ import iuh.fit.se.eclinic.common.exception.LoiNghiepVu;
 import iuh.fit.se.eclinic.common.exception.MaLoi;
 import iuh.fit.se.eclinic.identity.config.GoogleProperties;
 
-/**
- * Kiểm tra ID token Google mà không gọi Google: token ký bằng khoá RSA tự tạo, decoder dùng khoá công khai tương ứng
- * cùng bộ kiểm tra {@link XacMinhTokenGoogle#boKiemTra(String)} như lúc chạy thật.
- */
+/** Kiểm tra ID token Google không gọi Google: token ký bằng khoá RSA tự tạo. */
 class XacMinhTokenGoogleTest {
 
     private static final String CLIENT_ID = "eclinic-test.apps.googleusercontent.com";

@@ -17,10 +17,6 @@ public class ThongBaoMapper {
 
     private final SoanThongBao soanThongBao;
 
-    /**
-     * @param kemMaPhieuKham true khi người đọc là bệnh nhân. Mã phiếu khám mở được phiếu khám mà không cần đăng nhập, nên
-     *                       không trả cho bác sĩ / quản trị viên (họ mở lịch hẹn bằng id).
-     */
     public ThongBaoResponse toResponse(ThongBao thongBao, boolean kemMaPhieuKham) {
         LichHen lichHen = thongBao.getLichHen();
         return new ThongBaoResponse(thongBao.getId(), thongBao.getLoai(), noiDung(thongBao), thongBao.isDaDoc(),

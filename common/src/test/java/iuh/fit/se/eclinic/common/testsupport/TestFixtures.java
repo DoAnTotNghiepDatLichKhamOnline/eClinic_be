@@ -18,9 +18,7 @@ import iuh.fit.se.eclinic.common.entity.scheduling.LichLamViec;
 import iuh.fit.se.eclinic.common.enums.VaiTro;
 import jakarta.persistence.EntityManager;
 
-/**
- * Dựng dữ liệu mẫu cho test tích hợp. Mỗi service chỉ có repository của mình nên fixture dùng EntityManager trực tiếp.
- */
+/** Dựng dữ liệu mẫu cho test tích hợp. */
 public class TestFixtures {
 
     public static final LocalDate NGAY_LAM_VIEC = LocalDate.of(2030, 1, 15);
@@ -37,10 +35,7 @@ public class TestFixtures {
             KhungGioKham khungGio) {
     }
 
-    /**
-     * Bác sĩ + phòng khám cùng chuyên khoa + 1 ca 08:00–11:00 ngày {@link #NGAY_LAM_VIEC} (6 BN)
-     * + 1 khung giờ 08:00–08:30.
-     */
+    /** Bác sĩ + phòng khám cùng chuyên khoa + 1 ca 08:00–11:00 ngày NGAY_LAM_VIEC (6 BN) + 1 khung giờ 08:00–08:30. */
     public CaLamViec taoCaLamViec() {
         return transactionTemplate.execute(status -> {
             String suffix = UUID.randomUUID().toString();

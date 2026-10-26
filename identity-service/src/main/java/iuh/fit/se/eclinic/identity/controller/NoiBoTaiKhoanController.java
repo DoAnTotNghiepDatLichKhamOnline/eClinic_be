@@ -22,10 +22,7 @@ import iuh.fit.se.eclinic.identity.service.TaiKhoanNoiBoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
-/**
- * API nội bộ cho catalog-service quản lý tài khoản của bác sĩ (phase 6). Không đi qua gateway, không cần JWT: mọi method
- * kiểm tra khoá nội bộ ({@link KhoaNoiBo}).
- */
+/** API nội bộ cho catalog-service quản lý tài khoản của bác sĩ. */
 @Hidden
 @RestController
 @RequestMapping("/noi-bo/tai-khoan")

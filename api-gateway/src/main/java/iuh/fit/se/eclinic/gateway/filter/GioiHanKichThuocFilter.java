@@ -15,20 +15,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Từ chối request có body quá lớn (theo header Content-Length) ngay tại gateway, không chuyển tiếp tới service.
- * <p>
- * Gateway không tự đọc multipart mà chuyển nguyên body cho service (Spring Cloud Gateway MVC tắt việc đọc multipart),
- * nên nếu không có filter này thì gateway không có giới hạn dung lượng nào. Mỗi service vẫn có giới hạn riêng nhỏ hơn
- * (vd ảnh đại diện 2MB ở identity-service).
- * <p>
- * Request không có Content-Length (chunked) không bị chặn ở đây; service phía sau vẫn tự chặn.
- * <p>
- * Trước khi trả 413, filter ĐỌC BỎ body (tới {@value #HE_SO_DOC_BO} lần giới hạn). Nếu trả lời rồi đóng kết nối khi
- * client còn đang gửi, TCP báo reset và client có thể không nhận được response: thấy rõ nhất với client gửi
- * "Expect: 100-continue" (curl với body > 1MB), khi đó Tomcat không tự đọc bỏ phần còn lại. Body lớn hơn mức đọc bỏ
- * thì chấp nhận rủi ro đó, đổi lại không phải nhận hết 1 upload khổng lồ.
- */
+/** Từ chối request có Content-Length quá lớn ngay tại gateway, không chuyển tiếp tới service. */
 @Slf4j
 public class GioiHanKichThuocFilter extends OncePerRequestFilter {
 

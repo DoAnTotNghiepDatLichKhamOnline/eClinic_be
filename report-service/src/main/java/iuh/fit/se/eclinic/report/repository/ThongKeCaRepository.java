@@ -9,10 +9,7 @@ import org.springframework.data.repository.Repository;
 import iuh.fit.se.eclinic.common.entity.scheduling.LichLamViec;
 import iuh.fit.se.eclinic.common.enums.TrangThaiKhungGio;
 
-/**
- * Chỉ đọc: ca làm việc và lượt khám thuộc booking-service. Chỉ tính ca HOAT_DONG: ca bị hủy (xin nghỉ, ngày bệnh viện
- * nghỉ...) không còn lượt nào đặt được nên không thuộc sức chứa.
- */
+/** Chỉ đọc: ca làm việc và lượt khám thuộc booking-service. */
 public interface ThongKeCaRepository extends Repository<LichLamViec, Long> {
 
     interface SoLuotTheoBacSi {

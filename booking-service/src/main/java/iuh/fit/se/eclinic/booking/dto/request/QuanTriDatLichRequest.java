@@ -8,12 +8,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
-/**
- * Quản trị viên đặt lịch thay người gọi tổng đài / người đến quầy: cùng form và quy tắc với khách đặt
- * ({@link DatLichRequest}), không có các lựa chọn của tài khoản bệnh nhân.
- *
- * @param ngonNgu ngôn ngữ người gọi chọn cho email phiếu khám; bỏ trống = VI
- */
+/** Quản trị viên đặt lịch thay người gọi tổng đài hoặc đến quầy, cùng quy tắc với khách đặt. */
 public record QuanTriDatLichRequest(
         Long idLichLamViec,
 

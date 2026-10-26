@@ -8,9 +8,7 @@ import iuh.fit.se.eclinic.catalog.dto.response.ChuyenKhoaResponse;
 import iuh.fit.se.eclinic.common.entity.catalog.ChuyenKhoa;
 import iuh.fit.se.eclinic.common.enums.NgonNgu;
 
-/**
- * Chuyển đổi entity <-> DTO của chuyên khoa. Viết tay (không dùng MapStruct) cho dễ đọc, dễ debug.
- */
+/** Chuyển đổi entity <-> DTO của chuyên khoa. */
 @Component
 public class ChuyenKhoaMapper {
 

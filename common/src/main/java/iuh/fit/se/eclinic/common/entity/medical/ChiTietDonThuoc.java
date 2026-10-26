@@ -12,9 +12,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * 1 dòng thuốc trong đơn (ERD: ChiTietDonThuoc). Thêm qua {@link HoSoBenhAn#addChiTietDonThuoc(ChiTietDonThuoc)}.
- */
+/** 1 dòng thuốc trong đơn. */
 @Getter
 @Setter
 @NoArgsConstructor
@@ -38,11 +36,11 @@ public class ChiTietDonThuoc extends BaseEntity {
     @Column(name = "so_lan_moi_ngay")
     private Integer soLanMoiNgay;
 
-    /** Tối đa 30, hoặc 90 khi chẩn đoán chính mạn tính (kiểm tra trong medical-service). Null ở dòng cũ chưa sửa. */
+    /** Tối đa 30, hoặc 90 khi chẩn đoán chính mạn tính; null ở dòng cũ chưa sửa. */
     @Column(name = "so_ngay_dung")
     private Integer soNgayDung;
 
-    /** Tổng số lượng cấp, theo đơn vị của thuốc. Null ở dòng ghi trước DOANTOTNGH-11 chưa sửa. */
+    /** Tổng số lượng cấp, theo đơn vị của thuốc; null ở dòng cũ chưa sửa. */
     @Column(name = "so_luong")
     private Integer soLuong;
 

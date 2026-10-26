@@ -5,15 +5,10 @@ import iuh.fit.se.eclinic.catalog.dto.response.ChuyenKhoaQuanTriResponse;
 import iuh.fit.se.eclinic.catalog.dto.response.ChuyenKhoaResponse;
 import iuh.fit.se.eclinic.common.dto.TrangDuLieu;
 
-/**
- * Quản lý chuyên khoa (ADM-01). Trả về DTO, controller không làm việc trực tiếp với entity.
- */
+/** Quản lý chuyên khoa. */
 public interface ChuyenKhoaService {
 
-    /**
-     * Tìm theo tên ở cả 2 ngôn ngữ (không phân biệt hoa/thường, dấu); tuKhoa rỗng = lấy tất cả. Tên, mô tả trả về và thứ
-     * tự sắp xếp theo ngôn ngữ của request.
-     */
+    /** Tìm theo tên ở cả 2 ngôn ngữ (không phân biệt hoa/thường, dấu); tuKhoa rỗng = lấy tất cả. */
     TrangDuLieu<ChuyenKhoaResponse> timKiem(String tuKhoa, int trang, int kichThuoc);
 
     /** Cho quản trị viên: như {@link #timKiem} nhưng trả chữ đã lưu của cả 2 ngôn ngữ, sắp xếp theo tên tiếng Việt. */

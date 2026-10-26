@@ -1,8 +1,6 @@
 package iuh.fit.se.eclinic.common.enums;
 
-/**
- * Thay đổi ca làm việc đến từ đâu (lich_su_ca_lam_viec.nguon).
- */
+/** Thay đổi ca làm việc đến từ đâu (lich_su_ca_lam_viec.nguon). */
 public enum NguonThayDoiCa {
     /** Quản trị viên xếp / sửa / hủy trực tiếp. */
     QUAN_TRI,
@@ -14,7 +12,7 @@ public enum NguonThayDoiCa {
     SAO_CHEP,
     /** Quản trị viên nhập các ca từ tệp Excel (.xlsx). */
     NHAP_EXCEL,
-    /** Hủy hàng loạt khi quản trị viên khai báo ngày bệnh viện nghỉ (cột nguon không có CHECK nên không cần migration). */
+    /** Hủy hàng loạt khi quản trị viên khai báo ngày bệnh viện nghỉ. */
     NGAY_NGHI,
     /** Dữ liệu mẫu (SEED_DATA) của identity-service. */
     DU_LIEU_MAU,

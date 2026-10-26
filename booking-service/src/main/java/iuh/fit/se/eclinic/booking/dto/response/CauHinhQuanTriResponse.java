@@ -2,13 +2,7 @@ package iuh.fit.se.eclinic.booking.dto.response;
 
 import java.time.LocalDateTime;
 
-/**
- * Quy tắc đặt lịch / xếp ca đang dùng, cho form của quản trị viên. Ý nghĩa từng trường: xem {@code CauHinhHienTai}.
- *
- * @param phienBan   gửi lại khi lưu; tăng 1 mỗi lần lưu có thay đổi
- * @param ngaySua    lần lưu gần nhất; null = chưa ai sửa (giá trị lấy từ biến môi trường lúc khởi tạo)
- * @param quanTriSua quản trị viên lưu gần nhất; null nếu chưa ai sửa
- */
+/** Quy tắc đặt lịch / xếp ca đang dùng, cho form của quản trị viên. */
 public record CauHinhQuanTriResponse(
         int datTruocToiThieuPhut,
         int soNgayDatTruocToiDa,

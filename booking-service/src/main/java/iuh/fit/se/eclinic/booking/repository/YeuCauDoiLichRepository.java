@@ -34,10 +34,7 @@ public interface YeuCauDoiLichRepository extends JpaRepository<YeuCauDoiLich, Lo
     @Query("select y from YeuCauDoiLich y where y.id = :id")
     Optional<YeuCauDoiLich> findByIdForUpdate(Long id);
 
-    /**
-     * Id ca của 1 yêu cầu, không tải entity: nơi gọi khoá ca trước rồi mới khoá yêu cầu, và entity đã nằm trong
-     * persistence context thì câu khoá sau đó không đọc lại trạng thái mới.
-     */
+    /** Id ca của 1 yêu cầu, không tải entity, để nơi gọi khoá ca trước rồi mới khoá yêu cầu. */
     @Query("select y.lichLamViec.id from YeuCauDoiLich y where y.id = :id")
     Optional<Long> timIdLichLamViec(Long id);
 
@@ -47,7 +44,7 @@ public interface YeuCauDoiLichRepository extends JpaRepository<YeuCauDoiLich, Lo
     /** Gọi với {@link TrangThaiYeuCau#DANG_CHO}: yêu cầu còn chờ của ca (tối đa 1, UNIQUE trong DB). */
     Optional<YeuCauDoiLich> findByLichLamViecIdAndTrangThaiIn(Long lichLamViecId, Collection<TrangThaiYeuCau> trangThai);
 
-    /** Yêu cầu nhường ca gửi cho 1 bác sĩ (bác sĩ nhận), mới gửi nhất trước; {@code trangThai} null = mọi trạng thái. */
+    /** Yêu cầu nhường ca gửi cho 1 bác sĩ, mới nhất trước; {@code trangThai} null là mọi trạng thái. */
     @Query(value = KEM_CHI_TIET + """
             where bn.id = :idBacSiNhan and (:trangThai is null or y.trangThai = :trangThai)
             order by y.ngayGui desc, y.id desc

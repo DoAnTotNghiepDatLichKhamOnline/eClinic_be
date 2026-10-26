@@ -17,12 +17,7 @@ import iuh.fit.se.eclinic.common.exception.LoiNghiepVu;
 import iuh.fit.se.eclinic.common.exception.MaLoi;
 import lombok.RequiredArgsConstructor;
 
-/**
- * Tìm bác sĩ của tài khoản đang đăng nhập rồi chuyển cho {@link HoSoBacSiService} / {@link AnhBacSiService}.
- * <p>
- * CỐ Ý không có @Transactional ở class: thêm ảnh gọi kho ảnh (tới 20 giây), không được giữ transaction trong lúc đó
- * (xem AnhBacSiServiceImpl). Mỗi service được gọi tự mở transaction của mình.
- */
+/** Tìm bác sĩ của tài khoản đang đăng nhập rồi chuyển cho {@link HoSoBacSiService} / {@link AnhBacSiService}. */
 @Service
 @RequiredArgsConstructor
 public class HoSoCuaBacSiServiceImpl implements HoSoCuaBacSiService {

@@ -37,12 +37,7 @@ public interface DanhGiaRepository extends JpaRepository<DanhGia, Long> {
             """, countQuery = "select count(d) from DanhGia d where d.bacSi.id = :idBacSi")
     Page<DanhGia> timCuaBacSi(Long idBacSi, Pageable pageable);
 
-    /**
-     * Đánh giá cho quản trị viên, mới nhất trước, kèm lịch hẹn, hồ sơ bệnh nhân, bác sĩ.
-     *
-     * @param idBacSi    null = mọi bác sĩ
-     * @param soSaoToiDa null = mọi mức sao; có giá trị thì chỉ lấy đánh giá từ mức này trở xuống
-     */
+    /** Đánh giá cho quản trị viên, mới nhất trước, kèm lịch hẹn, hồ sơ bệnh nhân, bác sĩ. */
     @Query(value = """
             select d from DanhGia d
               join fetch d.lichHen l

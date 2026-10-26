@@ -7,11 +7,7 @@ import org.springframework.data.repository.Repository;
 
 import iuh.fit.se.eclinic.common.entity.booking.CauHinhHeThong;
 
-/**
- * Chỉ đọc: quy tắc đặt lịch thuộc booking-service (bảng 1 dòng {@code cau_hinh_he_thong}). Dùng cho bộ lọc "còn chỗ" của
- * danh sách bác sĩ công khai. Đọc thẳng từ DB mỗi lần: booking-service giữ bản đệm của riêng nó, quản trị viên sửa
- * thì có hiệu lực ngay ở đây.
- */
+/** Chỉ đọc: quy tắc đặt lịch thuộc booking-service (bảng 1 dòng {@code cau_hinh_he_thong}). */
 public interface CauHinhChiDocRepository extends Repository<CauHinhHeThong, Integer> {
 
     interface QuyTacDatLich {

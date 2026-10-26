@@ -6,19 +6,7 @@ import java.util.List;
 import iuh.fit.se.eclinic.common.enums.TrangThaiBacSi;
 import iuh.fit.se.eclinic.common.enums.TrangThaiTaiKhoan;
 
-/**
- * Hồ sơ giới thiệu của bác sĩ cho quản trị viên: như {@link BacSiChiTietResponse}, thêm số giấy phép và trạng thái.
- * Trả về cả bác sĩ không hiển thị công khai (ngừng công tác, tài khoản bị vô hiệu hoá).
- * <p>
- * Các mục giới thiệu là chữ đã lưu của cả 2 ngôn ngữ (trường {@code ...En} là bản tiếng Anh, null / mảng rỗng khi chưa
- * nhập), không đổi theo ngôn ngữ của request; riêng tên chuyên khoa theo ngôn ngữ của request.
- * <p>
- * Bác sĩ xem hồ sơ của chính mình cũng nhận bản này (GET /api/catalog/bac-si/toi/ho-so).
- *
- * @param phienBanHoSo    gửi lại khi lưu hồ sơ ({@code phienBan}); tăng 1 mỗi lần lưu
- * @param soNamKinhNghiem suy ra từ {@code namBatDauHanhNghe}; null khi chưa có năm
- * @param ngonNguKham     mã ngôn ngữ ISO 639 viết thường (vd "vi", "en"), mảng rỗng khi chưa có
- */
+/** Hồ sơ giới thiệu của bác sĩ cho quản trị viên: như {@link BacSiChiTietResponse}, thêm số giấy phép và trạng thái. */
 public record HoSoBacSiQuanTriResponse(
         Long id,
         String maBacSi,

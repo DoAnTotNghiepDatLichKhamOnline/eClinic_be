@@ -34,10 +34,7 @@ import iuh.fit.se.eclinic.identity.repository.TaiKhoanRepository;
 import iuh.fit.se.eclinic.identity.service.HoSoCaNhanService;
 import jakarta.persistence.EntityManager;
 
-/**
- * Hồ sơ cá nhân với MySQL thật: đọc hồ sơ bác sĩ / hồ sơ bệnh nhân của miền khác, quy tắc sửa họ tên và số điện thoại.
- * Dữ liệu mỗi test có hậu tố ngẫu nhiên để không đụng nhau trong container dùng chung.
- */
+/** Hồ sơ cá nhân với MySQL thật: đọc hồ sơ của miền khác, quy tắc sửa họ tên và số điện thoại. */
 @SpringBootTest
 @Import({ MySqlTestcontainersConfiguration.class, RedisTestcontainersConfiguration.class })
 class HoSoCaNhanServiceTest {
@@ -94,7 +91,7 @@ class HoSoCaNhanServiceTest {
     @Test
     void benhNhanChuaCoHoSoVaQuanTriVienKhongCoKhoiVaiTro() {
         HoSoCaNhanResponse benhNhan = hoSoCaNhanService.layHoSo(taoTaiKhoan(VaiTro.BENH_NHAN).getId());
-        // Dùng admin mặc định (KhoiTaoAdminRunner): tạo thêm admin sẽ làm hỏng KhoiTaoAdminTest chạy chung DB
+        // Dùng admin mặc định: tạo thêm admin sẽ làm hỏng KhoiTaoAdminTest chạy chung DB
         HoSoCaNhanResponse quanTriVien = hoSoCaNhanService
                 .layHoSo(taiKhoanRepository.findByEmail("admin@eclinic.local").orElseThrow().getId());
 

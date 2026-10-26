@@ -24,11 +24,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 
-/**
- * EXAM-03: sổ khám bệnh xem bằng mã ngẫu nhiên của hồ sơ bệnh án (khác mã phiếu khám, quy tắc #8). Công khai
- * (app.bao-mat.duong-dan-cong-khai) theo 2 bước: ai có link xem được phần tóm tắt đã che; kết quả khám chỉ trả khi nhập
- * đúng 4 số cuối SĐT liên hệ, sai nhiều lần thì bị khoá một lúc.
- */
+/** Sổ khám bệnh xem bằng mã ngẫu nhiên của hồ sơ bệnh án. */
 @Tag(name = "Sổ khám bệnh", description = "EXAM-03: tóm tắt, kết quả khám (kèm 4 số cuối SĐT) và mã QR bằng mã sổ khám")
 @RestController
 @RequestMapping("/api/booking/so-kham")
@@ -55,9 +51,7 @@ public class SoKhamController {
         return PhanHoiApi.ok(soKhamService.xem(maSoKham, request.bonSoCuoi()));
     }
 
-    /**
-     * Không khai báo {@code produces = image/png}: khi mã không tồn tại, lỗi vẫn phải trả về dạng JSON của PhanHoiApi.
-     */
+    /** Không khai báo {@code produces = image/png} để lỗi vẫn trả về JSON của PhanHoiApi. */
     @Operation(summary = "Ảnh PNG mã QR chứa link sổ khám; taiVe=true để trình duyệt lưu thành tệp")
     @GetMapping("/{maSoKham}/qr")
     public ResponseEntity<byte[]> qr(@PathVariable String maSoKham,

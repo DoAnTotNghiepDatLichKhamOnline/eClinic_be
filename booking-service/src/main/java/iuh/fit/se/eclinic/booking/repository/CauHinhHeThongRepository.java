@@ -10,10 +10,7 @@ import org.springframework.data.repository.Repository;
 import iuh.fit.se.eclinic.common.entity.booking.CauHinhHeThong;
 import jakarta.persistence.LockModeType;
 
-/**
- * Dòng cấu hình duy nhất (id = {@link CauHinhHeThong#ID}). Không có save / delete: dòng chỉ được thêm bằng
- * {@link #themNeuChuaCo}, sau đó chỉ sửa qua entity đã khoá.
- */
+/** Dòng cấu hình duy nhất (id = {@link CauHinhHeThong#ID}). */
 public interface CauHinhHeThongRepository extends Repository<CauHinhHeThong, Integer> {
 
     Optional<CauHinhHeThong> findById(Integer id);
@@ -22,11 +19,7 @@ public interface CauHinhHeThongRepository extends Repository<CauHinhHeThong, Int
     @Query("select c from CauHinhHeThong c where c.id = :id")
     Optional<CauHinhHeThong> findByIdForUpdate(Integer id);
 
-    /**
-     * Khoá chia sẻ (MySQL {@code FOR SHARE}) dòng cấu hình: dùng làm khoá xếp ca toàn viện. Mọi thao tác tạo ca giữ khoá
-     * này, khai báo ngày nghỉ giữ khoá ghi ({@link #findByIdForUpdate}), nên 2 việc không chạy xen nhau (xem
-     * {@code QuanLyCaService#giuKhoaXepCa}).
-     */
+    /** Khoá chia sẻ (MySQL {@code FOR SHARE}) dòng cấu hình: dùng làm khoá xếp ca toàn viện. */
     @Lock(LockModeType.PESSIMISTIC_READ)
     @Query("select c from CauHinhHeThong c where c.id = :id")
     Optional<CauHinhHeThong> khoaChiaSe(Integer id);
@@ -40,11 +33,7 @@ public interface CauHinhHeThongRepository extends Repository<CauHinhHeThong, Int
             """)
     Optional<CauHinhHeThong> timKemQuanTriSua(Integer id);
 
-    /**
-     * Thêm dòng id 1 nếu chưa có; đã có thì không đổi gì (không ghi đè giá trị quản trị viên đã sửa). 2 lần gọi cùng lúc
-     * vẫn an toàn vì khoá chính quyết định, không phải 1 lần đọc trước. Dùng ON DUPLICATE KEY thay cho INSERT IGNORE để
-     * lỗi khác (NULL, sai kiểu) vẫn báo ra.
-     */
+    /** Thêm dòng id 1 nếu chưa có, không ghi đè; gọi cùng lúc vẫn an toàn nhờ khoá chính. */
     @Modifying
     @Query(value = """
             insert into cau_hinh_he_thong (id_cau_hinh, dat_truoc_toi_thieu_phut, so_ngay_dat_truoc_toi_da,

@@ -16,10 +16,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * 1 ngày bệnh viện nghỉ (Tết, lễ, nghỉ đột xuất): không có ca làm việc nào còn hoạt động, không xếp ca vào được. Mỗi
- * ngày 1 dòng ({@code ngay} UNIQUE). Không sửa: muốn đổi lý do thì xoá rồi khai báo lại.
- */
+/** 1 ngày bệnh viện nghỉ (Tết, lễ, nghỉ đột xuất): không có ca làm việc nào còn hoạt động, không xếp ca vào được. */
 @Getter
 @Setter
 @NoArgsConstructor

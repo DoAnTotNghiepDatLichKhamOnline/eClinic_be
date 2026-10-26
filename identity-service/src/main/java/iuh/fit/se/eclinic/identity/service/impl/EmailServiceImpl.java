@@ -32,11 +32,7 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Email gửi theo ngôn ngữ của tài khoản (event mang {@code ngonNgu}; lúc gửi không còn request nào). Câu chữ nằm trong
- * thong-diep/identity*.properties, khoá {@code email.<ten>.<phan>}; khung HTML là {@link KhungEmail}. Giá trị chèn vào câu
- * (họ tên, email, lý do quản trị viên gõ) được escape trước; câu trong file thông điệp được phép chứa thẻ {@code <b>}.
- */
+/** Email gửi theo ngôn ngữ của tài khoản (event mang {@code ngonNgu}). */
 @Slf4j
 @Service
 public class EmailServiceImpl implements EmailService {
@@ -49,10 +45,7 @@ public class EmailServiceImpl implements EmailService {
     private final MessageSource messageSource;
     private final String nguoiGui;
 
-    /**
-     * Kiểm tra cấu hình ngay khi khởi động: chế độ SMTP mà thiếu tài khoản Gmail thì không cho chạy
-     * (tránh chạy "bình thường" nhưng không email nào đi).
-     */
+    /** Chế độ SMTP mà thiếu tài khoản Gmail thì không cho khởi động. */
     public EmailServiceImpl(JavaMailSender mailSender, EmailProperties emailProperties, LienKetProperties lienKetProperties,
             MessageSource messageSource, @Value("${spring.mail.username:}") String nguoiGui,
             @Value("${spring.mail.password:}") String matKhau) {
@@ -106,7 +99,7 @@ public class EmailServiceImpl implements EmailService {
         gui(event.email(), "email.doiMatKhau.tieuDe", thu, null);
     }
 
-    /** Gửi tới địa chỉ mới, có thể là người lạ (gõ nhầm): không nêu họ tên hay email đang dùng của chủ tài khoản. */
+    /** Gửi tới địa chỉ mới, có thể là người lạ: không nêu họ tên hay email đang dùng. */
     @Override
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
@@ -139,7 +132,7 @@ public class EmailServiceImpl implements EmailService {
         gui(event.emailCu(), "email.daDoiEmail.tieuDe", thu, null);
     }
 
-    /** Lý do do quản trị viên nhập tự do: chép nguyên văn ở mọi ngôn ngữ, escape như mọi giá trị khác. */
+    /** Lý do quản trị viên nhập tự do: chép nguyên văn ở mọi ngôn ngữ, vẫn escape. */
     @Override
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
@@ -171,7 +164,7 @@ public class EmailServiceImpl implements EmailService {
         gui(event.email(), "email.chaoBacSi.tieuDe", thu, lienKet);
     }
 
-    /** @param lienKet chỉ để ghi log ở chế độ console; null nếu email không có liên kết */
+    /** Gửi 1 email; {@code lienKet} chỉ để ghi log ở chế độ console, null nếu không có. */
     private void gui(String nguoiNhan, String khoaTieuDe, Thu thu, String lienKet) {
         String tieuDe = messageSource.getMessage(khoaTieuDe, null, khoaTieuDe, thu.ngonNgu.locale());
         // Dựng nội dung cả ở chế độ console để câu sai mẫu lộ ra ngay khi dev
@@ -201,7 +194,7 @@ public class EmailServiceImpl implements EmailService {
         private final NgonNgu ngonNgu;
         private final KhungEmail khung;
 
-        /** @param hoTen null = lời chào không nêu tên */
+        /** Bắt đầu thư; {@code hoTen} null thì lời chào không nêu tên. */
         Thu(NgonNgu ngonNguCuaThu, String hoTen) {
             this.ngonNgu = ngonNguCuaThu == null ? NgonNgu.VI : ngonNguCuaThu;
             this.khung = new KhungEmail(

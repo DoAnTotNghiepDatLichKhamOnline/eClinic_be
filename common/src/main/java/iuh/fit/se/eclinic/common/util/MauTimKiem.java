@@ -1,9 +1,6 @@
 package iuh.fit.se.eclinic.common.util;
 
-/**
- * Đổi từ khoá người dùng gõ thành mẫu LIKE "chứa từ khoá" / "bắt đầu bằng từ khoá", đã escape {@code %} và {@code _}.
- * Câu truy vấn phải viết {@code like :mau escape '!'}.
- */
+/** Đổi từ khoá thành mẫu LIKE "chứa" / "bắt đầu bằng", đã escape {@code %} và {@code _}. */
 public final class MauTimKiem {
 
     public static final char KY_TU_ESCAPE = '!';
@@ -11,7 +8,7 @@ public final class MauTimKiem {
     private MauTimKiem() {
     }
 
-    /** @return null nếu từ khoá rỗng (= không lọc) */
+    /** Mẫu "chứa từ khoá"; null nếu từ khoá rỗng (= không lọc). */
     public static String chua(String tuKhoa) {
         if (tuKhoa == null || tuKhoa.isBlank()) {
             return null;
@@ -19,7 +16,7 @@ public final class MauTimKiem {
         return "%" + escape(tuKhoa.trim()) + "%";
     }
 
-    /** @return null nếu từ khoá rỗng (= không lọc) */
+    /** Mẫu "bắt đầu bằng từ khoá"; null nếu từ khoá rỗng (= không lọc). */
     public static String batDau(String tuKhoa) {
         if (tuKhoa == null || tuKhoa.isBlank()) {
             return null;

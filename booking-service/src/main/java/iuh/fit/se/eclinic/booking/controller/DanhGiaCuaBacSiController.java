@@ -18,7 +18,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 
-/** Bác sĩ xem đánh giá của CHÍNH MÌNH. Ẩn danh: không có tên bệnh nhân, không có mã lịch hẹn. */
+/** Bác sĩ xem đánh giá ẩn danh của chính mình. */
 @Tag(name = "Đánh giá của bác sĩ", description = "Bác sĩ xem điểm trung bình và các đánh giá mình nhận được")
 @RestController
 @RequestMapping("/api/booking/bac-si/toi/danh-gia")

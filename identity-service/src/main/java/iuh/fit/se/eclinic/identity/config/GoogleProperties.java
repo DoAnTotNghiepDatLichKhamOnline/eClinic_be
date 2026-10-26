@@ -5,13 +5,7 @@ import java.time.Duration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.bind.DefaultValue;
 
-/**
- * Đăng nhập bằng Google, prefix {@code app.google} trong application.yml.
- *
- * @param clientId   OAuth Client ID của frontend (GOOGLE_CLIENT_ID); để trống thì đăng nhập Google trả 503
- * @param jwkSetUri  nơi lấy khoá công khai của Google để kiểm tra chữ ký ID token
- * @param thoiGianCho thời gian chờ tối đa khi kết nối / đọc khoá công khai của Google
- */
+/** Đăng nhập bằng Google, prefix {@code app.google} trong application.yml. */
 @ConfigurationProperties("app.google")
 public record GoogleProperties(
         @DefaultValue("") String clientId,

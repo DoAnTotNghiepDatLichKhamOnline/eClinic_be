@@ -4,9 +4,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-/**
- * Yêu cầu gửi liên kết đặt lại mật khẩu (AUTH-03).
- */
+/** Yêu cầu gửi liên kết đặt lại mật khẩu. */
 public record QuenMatKhauRequest(
 
         @NotBlank(message = "{kiemTra.email.batBuoc}")

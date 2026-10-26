@@ -7,12 +7,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
-/**
- * Thêm bác sĩ: tạo tài khoản đăng nhập (identity-service) và hồ sơ bác sĩ trong 1 bước. Các mục giới thiệu dài (tiểu sử,
- * quá trình đào tạo...) và ảnh sửa sau bằng API hồ sơ.
- * <p>
- * {@code namBatDauHanhNghe}: số năm kinh nghiệm suy ra từ đây; không được sau năm nay (kiểm tra ở service).
- */
+/** Thêm bác sĩ: tạo tài khoản đăng nhập (identity-service) và hồ sơ bác sĩ trong 1 bước. */
 public record ThemBacSiRequest(
 
         @NotBlank(message = "{kiemTra.hoTen.batBuoc}")

@@ -85,11 +85,7 @@ public class BacSiServiceImpl implements BacSiService {
                 danhGiaChiDocRepository.tinhDiem(List.of(id)).stream().findFirst().orElse(null));
     }
 
-    /**
-     * DOC-03 "khung giờ rảnh": bác sĩ còn lượt khám đặt được, cùng điều kiện với khung giờ của booking-service (bắt đầu
-     * sau bây giờ + thời gian đặt trước tối thiểu, trong số ngày đặt trước tối đa). Quy tắc đọc thẳng từ DB nên quản trị
-     * viên sửa là có hiệu lực ngay.
-     */
+    /** Khung giờ rảnh: bác sĩ còn lượt khám đặt được, cùng điều kiện với khung giờ của booking-service. */
     private Page<BacSi> timConCho(Long idChuyenKhoa, String tuKhoa, LocalDate ngay, BuoiKham buoi,
             PageRequest phanTrang) {
         LocalDateTime bayGio = LocalDateTime.now();

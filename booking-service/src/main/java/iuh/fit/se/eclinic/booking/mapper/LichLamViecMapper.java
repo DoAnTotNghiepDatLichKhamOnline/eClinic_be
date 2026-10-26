@@ -8,10 +8,7 @@ import iuh.fit.se.eclinic.common.entity.scheduling.LichLamViec;
 import iuh.fit.se.eclinic.common.enums.NgonNgu;
 import lombok.RequiredArgsConstructor;
 
-/**
- * Chuyển ca làm việc sang dòng lịch làm việc của bác sĩ / quản trị viên. Gọi trong transaction, ca phải lấy sẵn
- * bác sĩ + tài khoản + chuyên khoa và phòng khám.
- */
+/** Chuyển ca làm việc sang dòng lịch làm việc của bác sĩ / quản trị viên. */
 @Component
 @RequiredArgsConstructor
 public class LichLamViecMapper {

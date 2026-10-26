@@ -47,10 +47,7 @@ import iuh.fit.se.eclinic.identity.service.DangNhapGoogleService;
 import iuh.fit.se.eclinic.identity.service.DangNhapService;
 import iuh.fit.se.eclinic.identity.service.XacThucService;
 
-/**
- * Đăng nhập Google với MySQL + Redis thật. Việc kiểm tra ID token được giả lập (XacMinhTokenGoogleTest kiểm tra riêng):
- * mỗi test quy định thông tin Google trả về.
- */
+/** Đăng nhập Google với MySQL + Redis thật. */
 @SpringBootTest
 @Import({ MySqlTestcontainersConfiguration.class, RedisTestcontainersConfiguration.class })
 @RecordApplicationEvents
@@ -281,7 +278,7 @@ class DangNhapGoogleServiceTest {
             executor.shutdownNow();
         }
 
-        // Không khẳng định request nào thắng: request sau hoặc thấy tài khoản đã commit, hoặc vi phạm UNIQUE (409)
+        // Request sau hoặc thấy tài khoản đã commit, hoặc vi phạm UNIQUE (409)
         assertThat(thanhCong).isNotEmpty();
         assertThat(loi).allMatch(DataIntegrityViolationException.class::isInstance);
         Long id = taiKhoanRepository.findByGoogleId(google.sub()).orElseThrow().getId();

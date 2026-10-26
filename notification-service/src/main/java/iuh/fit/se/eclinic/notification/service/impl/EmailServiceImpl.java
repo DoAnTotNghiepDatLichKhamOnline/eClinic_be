@@ -26,11 +26,7 @@ import iuh.fit.se.eclinic.notification.service.EmailService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Log ở đây chỉ ghi id của dòng email_gui và tên loại lỗi, không ghi địa chỉ nhận, tiêu đề hay nội dung.
- * <p>
- * Chỉ 1 thread của scheduler gọi {@link #guiDangCho()} (notification-service chạy 1 bản), nên không cần khoá dòng.
- */
+/** Log ở đây chỉ ghi id của dòng email_gui và tên loại lỗi, không ghi địa chỉ nhận, tiêu đề hay nội dung. */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -47,10 +43,7 @@ public class EmailServiceImpl implements EmailService {
     /** Chỉ ghi log khi chuyển trạng thái, để máy chủ mail ngừng lâu không làm đầy log. */
     private boolean dangLoiGui;
 
-    /**
-     * 2 lô chứa cùng {@code maNguon} đến cùng lúc: lô commit sau vi phạm UNIQUE uk_email_gui_ma_nguon, cả lô đó rollback
-     * và trả lỗi; service nguồn gửi lại, lần đó các dòng đã có được bỏ qua.
-     */
+    /** 2 lô cùng {@code maNguon}: lô sau vi phạm UNIQUE và rollback, service nguồn gửi lại thì dòng cũ được bỏ qua. */
     @Override
     @Transactional
     public KetQuaNhanThongBaoResponse nhan(List<TaoEmailRequest> danhSach) {
@@ -83,11 +76,7 @@ public class EmailServiceImpl implements EmailService {
         return new KetQuaNhanThongBaoResponse(daTao, danhSach.size() - daTao);
     }
 
-    /**
-     * Không có {@code @Transactional}: lời gọi tới máy chủ mail không nằm trong transaction DB. Gửi xong mới đánh dấu
-     * DA_GUI bằng 1 lệnh update ngắn. Máy chủ mail đã nhận mà service tắt trước khi kịp đánh dấu thì lần sau email đó
-     * được gửi lại 1 lần nữa: khe hở này được chấp nhận (muốn đóng phải có máy chủ mail tự bỏ thư trùng, Gmail không có).
-     */
+    /** Không có {@code @Transactional}: lời gọi tới máy chủ mail không nằm trong transaction DB. */
     @Override
     public int guiDangCho() {
         List<EmailGui> denHan = emailGuiRepository.findByTrangThaiAndLanThuKeTiepLessThanEqualOrderByIdAsc(

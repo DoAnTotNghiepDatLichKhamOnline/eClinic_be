@@ -13,14 +13,7 @@ import iuh.fit.se.eclinic.chatbot.config.ChatbotProperties;
 import iuh.fit.se.eclinic.common.dto.PhanHoiApi;
 import iuh.fit.se.eclinic.common.dto.TrangDuLieu;
 
-/**
- * Đọc lịch hẹn sắp tới và các lượt đã khám của CHÍNH người đang chat qua 2 API "của tôi" của booking-service, gửi kèm
- * JWT của người đó. "Của ai" và "được xem những gì" do booking-service quyết định từ token (cùng luật với màn hình của
- * bệnh nhân); ở đây không có tham số nào để chọn người khác.
- * <p>
- * Các record chỉ khai báo những trường chatbot cần: lý do khám, lý do hủy, chẩn đoán, lời dặn, đơn thuốc, số điện thoại
- * có trong phản hồi của API nhưng bị bỏ ngay khi đọc JSON, không vào bộ nhớ của service này. Token không được ghi log.
- */
+/** Đọc lịch hẹn và lượt khám của chính người đang chat qua API "của tôi", gửi kèm JWT của người đó. */
 @Component
 public class DuLieuCuaToiClient {
 
@@ -33,10 +26,6 @@ public class DuLieuCuaToiClient {
             new ParameterizedTypeReference<>() {
             };
 
-    /**
-     * @param hoTenBenhNhan chỉ để vẽ thẻ cho người dùng; KHÔNG gửi cho mô hình (cũng vậy với 3 mã)
-     * @param ngay          yyyy-MM-dd; 2 giờ dạng ISO
-     */
     @JsonIgnoreProperties(ignoreUnknown = true)
     public record LichHenCuaToi(String maPhieuKham, String maTraCuu, String linkPhieuKham, String trangThai, String ngay,
             String gioBatDauKhung, String gioKetThucKhung, BacSi bacSi, String tenChuyenKhoa, PhongKham phongKham,

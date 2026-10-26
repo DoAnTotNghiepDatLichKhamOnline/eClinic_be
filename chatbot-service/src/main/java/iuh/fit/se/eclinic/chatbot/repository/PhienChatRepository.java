@@ -13,13 +13,7 @@ import iuh.fit.se.eclinic.common.entity.chatbot.PhienChat;
 
 public interface PhienChatRepository extends JpaRepository<PhienChat, Long> {
 
-    /**
-     * Chủ của 1 phiên chat, để kiểm tra người gọi có phải chủ phiên không.
-     *
-     * @param idTaiKhoan      null khi phiên do khách mở
-     * @param maDinhDanhKhach SHA-256 (hex) của mã bí mật đã cấp cho khách; null khi phiên của tài khoản
-     * @param dongYDuLieuLuc  lúc chủ phiên đồng ý cho chatbot dùng lịch hẹn của mình; null = chưa
-     */
+    /** Chủ của 1 phiên chat, để kiểm tra người gọi có phải chủ phiên không. */
     record ChuPhien(Long idTaiKhoan, String maDinhDanhKhach, LocalDateTime dongYDuLieuLuc) {
     }
 

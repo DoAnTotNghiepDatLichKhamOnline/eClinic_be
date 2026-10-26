@@ -20,16 +20,7 @@ import iuh.fit.se.eclinic.common.enums.KenhThongBao;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Không có {@code @Transactional}: lời gọi sang notification-service không nằm trong transaction DB. Đọc các dòng chờ
- * gửi, gọi, rồi mới đánh dấu đã gửi bằng 1 lệnh update ngắn. Gọi xong mà chưa kịp đánh dấu (service tắt giữa chừng) thì
- * lần sau gửi lại; notification-service nhận ra nhờ {@code maNguon} nên không tạo thông báo trùng.
- * <p>
- * Dòng kênh EMAIL đi cùng job này sang hàng chờ gửi email của notification-service; "đã gửi" ở đây nghĩa là
- * notification-service đã nhận, việc gửi tới máy chủ mail (và thử lại) là của nó.
- * <p>
- * Chỉ 1 thread của scheduler gọi class này (booking-service chạy 1 bản), nên không cần khoá dòng khi đọc.
- */
+/** Không có {@code @Transactional}: lời gọi sang notification-service không nằm trong transaction DB. */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -75,11 +66,7 @@ public class GuiThongBaoServiceImpl implements GuiThongBaoService {
         return choGui.stream().filter(suKien -> suKien.getKenh() == kenh).toList();
     }
 
-    /**
-     * Gửi 1 lô cùng kênh; dòng đã được nhận thêm vào {@code daGui}.
-     *
-     * @return false = không nối được notification-service (hoặc sai khoá nội bộ): dừng lần chạy này
-     */
+    /** Gửi 1 lô cùng kênh; dòng đã được nhận thêm vào {@code daGui}. */
     private boolean guiLo(List<SuKienThongBao> lo, Consumer<List<SuKienThongBao>> gui, List<Long> daGui) {
         if (lo.isEmpty()) {
             return true;

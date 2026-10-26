@@ -28,11 +28,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 
-/**
- * SCHED-02: bác sĩ xin đổi ca / xin nghỉ / nhường cho đồng nghiệp 1 ca của CHÍNH MÌNH, xin nghỉ nhiều ca 1 lần, xem các
- * yêu cầu đã gửi, rút yêu cầu còn chờ. Bác sĩ lấy từ tài khoản đang đăng nhập; ca và yêu cầu của bác sĩ khác coi như không
- * có (404).
- */
+/** Bác sĩ xin đổi ca, xin nghỉ, nhường ca của chính mình và xem, rút yêu cầu đã gửi. */
 @Tag(name = "Yêu cầu đổi lịch của bác sĩ", description = "SCHED-02: bác sĩ xin đổi ca / xin nghỉ")
 @RestController
 @RequestMapping("/api/booking/bac-si/toi/yeu-cau-doi-lich")

@@ -31,10 +31,7 @@ import iuh.fit.se.eclinic.common.enums.VaiTro;
 import iuh.fit.se.eclinic.common.thongbao.ThamSoThongBao;
 import lombok.RequiredArgsConstructor;
 
-/**
- * Như {@link ThongBaoLichHenServiceImpl}: ghi khoá mẫu + tham số, không soạn câu. Tên phòng, tầng là tham số 2 ngôn ngữ
- * (chụp lại lúc xảy ra sự kiện); 1 ca viết bằng 3 tham số giờ bắt đầu, giờ kết thúc, ngày.
- */
+/** Như {@link ThongBaoLichHenServiceImpl}: ghi khoá mẫu + tham số, không soạn câu. */
 @Service
 @RequiredArgsConstructor
 @Transactional(propagation = Propagation.MANDATORY)
@@ -228,11 +225,7 @@ public class ThongBaoLichLamViecServiceImpl implements ThongBaoLichLamViecServic
                 ca(ca(ThamSoThongBao.tao().so(cacCa.size()), cacCa.get(0)), cacCa.get(cacCa.size() - 1))));
     }
 
-    /**
-     * Thứ tự tham số của mẫu email.lichLamViec (notification-service: {@code MauEmail}): họ tên bác sĩ, từ ngày, đến
-     * ngày, tổng số ca, số ca không liệt kê, link trang Lịch làm việc; rồi mỗi ca 4 tham số: ngày, giờ bắt đầu, giờ kết
-     * thúc, phòng (kèm tầng, 2 ngôn ngữ).
-     */
+    /** Thứ tự tham số của mẫu email.lichLamViec, khớp {@code MauEmail} của notification-service. */
     @Override
     public void guiLich(BacSi bacSi, LocalDate tuNgay, LocalDate denNgay, List<LichLamViec> cacCa) {
         TaiKhoan taiKhoan = bacSi.getTaiKhoan();

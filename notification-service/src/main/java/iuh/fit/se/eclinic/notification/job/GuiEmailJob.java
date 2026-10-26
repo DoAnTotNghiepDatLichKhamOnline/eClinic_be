@@ -7,10 +7,7 @@ import iuh.fit.se.eclinic.notification.service.EmailService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Gửi email đến hạn sau mỗi {@code app.email.chu-ky-gui} (tính từ lúc lần trước chạy xong), và 3 giờ 40 sáng mỗi ngày
- * xoá các email đã gửi / đã bỏ quá hạn giữ.
- */
+/** Gửi email đến hạn theo {@code app.email.chu-ky-gui}, và mỗi sáng xoá email đã gửi quá hạn giữ. */
 @Slf4j
 @Component
 @RequiredArgsConstructor

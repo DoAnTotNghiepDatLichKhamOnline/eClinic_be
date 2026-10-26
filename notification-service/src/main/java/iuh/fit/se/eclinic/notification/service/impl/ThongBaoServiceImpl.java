@@ -75,10 +75,7 @@ public class ThongBaoServiceImpl implements ThongBaoService {
         return new DanhDauDaDocResponse(thongBaoRepository.danhDauDaDocTatCa(idTaiKhoan));
     }
 
-    /**
-     * 2 lô chứa cùng {@code maNguon} đến cùng lúc: lô commit sau vi phạm UNIQUE uk_thong_bao_ma_nguon, cả lô đó rollback
-     * và trả lỗi; service nguồn gửi lại, lần đó các dòng đã có được bỏ qua.
-     */
+    /** 2 lô cùng {@code maNguon}: lô sau vi phạm UNIQUE và rollback, service nguồn gửi lại thì dòng cũ được bỏ qua. */
     @Override
     @Transactional
     public KetQuaNhanThongBaoResponse nhan(List<TaoThongBaoRequest> danhSach) {

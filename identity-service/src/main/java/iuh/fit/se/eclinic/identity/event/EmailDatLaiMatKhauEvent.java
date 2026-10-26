@@ -2,12 +2,7 @@ package iuh.fit.se.eclinic.identity.event;
 
 import iuh.fit.se.eclinic.common.enums.NgonNgu;
 
-/**
- * Phát ra khi cần gửi liên kết đặt lại mật khẩu. EmailService gửi sau khi transaction commit.
- *
- * @param token token gốc, chỉ dùng để dựng liên kết; không ghi ra log
- * @param ngonNgu ngôn ngữ của tài khoản (tai_khoan.ngon_ngu): email được viết bằng ngôn ngữ này
- */
+/** Phát ra khi cần gửi liên kết đặt lại mật khẩu. */
 public record EmailDatLaiMatKhauEvent(String email, String hoTen, String token, NgonNgu ngonNgu) {
 
     /** Không in token (tránh lộ khi event bị log). */

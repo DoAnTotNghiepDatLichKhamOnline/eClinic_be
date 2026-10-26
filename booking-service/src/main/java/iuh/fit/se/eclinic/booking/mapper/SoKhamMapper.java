@@ -14,10 +14,7 @@ import iuh.fit.se.eclinic.common.entity.medical.HoSoBenhAn;
 import iuh.fit.se.eclinic.common.enums.NgonNgu;
 import lombok.RequiredArgsConstructor;
 
-/**
- * Chuyển hồ sơ bệnh án sang sổ khám bệnh (EXAM-03). Họ tên, ngày sinh, giới tính và người giám hộ là những gì người đặt
- * đã nhập, như phiếu khám. Gọi trong transaction, với hồ sơ tải bằng HoSoBenhAnChiDocRepository#timTheoMaSoKham.
- */
+/** Chuyển hồ sơ bệnh án sang sổ khám bệnh. */
 @Component
 @RequiredArgsConstructor
 public class SoKhamMapper {

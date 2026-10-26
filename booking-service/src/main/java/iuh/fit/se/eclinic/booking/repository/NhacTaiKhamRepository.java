@@ -17,11 +17,7 @@ public interface NhacTaiKhamRepository extends JpaRepository<NhacTaiKham, Long> 
     @Query("select n from NhacTaiKham n where n.idHoSoBenhAn = :idHoSoBenhAn")
     Optional<NhacTaiKham> timDeKhoa(Long idHoSoBenhAn);
 
-    /**
-     * Bác sĩ đã xoá ngày tái khám: quên ngày đã báo, để sau này hẹn lại (kể cả đúng ngày cũ) thì báo như lần đầu.
-     *
-     * @return số dòng vừa đổi
-     */
+    /** Bác sĩ đã xoá ngày tái khám: quên ngày đã báo, để sau này hẹn lại (kể cả đúng ngày cũ) thì báo như lần đầu. */
     @Modifying(clearAutomatically = true)
     @Query("""
             update NhacTaiKham n set n.ngayDaBao = null, n.daNhacTruoc = false

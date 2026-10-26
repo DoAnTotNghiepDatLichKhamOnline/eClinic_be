@@ -12,13 +12,10 @@ import iuh.fit.se.eclinic.common.enums.DuongDungThuoc;
 import iuh.fit.se.eclinic.common.enums.GioiTinh;
 import iuh.fit.se.eclinic.common.enums.TrangThaiTaiKhoan;
 
-/**
- * Nội dung dữ liệu mẫu: chuyên khoa + phòng khám, bác sĩ, bệnh nhân và mẫu xếp ca theo thứ trong tuần.
- * Email, số điện thoại, số giấy phép, CCCD sinh từ số thứ tự nên không trùng nhau.
- */
+/** Nội dung dữ liệu mẫu: chuyên khoa + phòng khám, bác sĩ, bệnh nhân và mẫu xếp ca theo thứ trong tuần. */
 public final class DuLieuMau {
 
-    /** N: số lượt khám tối đa trong 1 khung 1 giờ (BOOK-12). */
+    /** N: số lượt khám tối đa trong 1 khung 1 giờ. */
     public static final int SO_LUOT_MOI_GIO = 6;
 
     /** t: số phút của 1 lượt khám. Ca 3,5 giờ = 3 khung đủ 6 lượt + nửa giờ cuối 3 lượt = 21 lượt. */
@@ -49,10 +46,7 @@ public final class DuLieuMau {
         }
     }
 
-    /**
-     * Mẫu xếp ca. 2 bác sĩ cùng chuyên khoa dùng chung 1 phòng nên luôn làm khác buổi: không bao giờ trùng phòng.
-     * Chủ nhật không ai làm. CHINH làm 21 giờ / tuần, PHU làm 17,5 giờ / tuần.
-     */
+    /** Mẫu xếp ca: 2 bác sĩ cùng chuyên khoa dùng chung 1 phòng nên luôn làm khác buổi. */
     public enum NhomCa {
         /** Sáng thứ 2, 4, 6, 7; chiều thứ 3, 5. */
         CHINH(Set.of(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.FRIDAY, DayOfWeek.SATURDAY),
@@ -107,10 +101,6 @@ public final class DuLieuMau {
     public record HoSoMau(LocalDate ngaySinh, GioiTinh gioiTinh, String diaChi) {
     }
 
-    /**
-     * @param hoSo          null: tài khoản chưa có hồ sơ bệnh nhân
-     * @param lyDoVoHieuHoa chỉ có khi trạng thái là VO_HIEU_HOA
-     */
     public record BenhNhanMau(int so, String hoTen, TrangThaiTaiKhoan trangThai, String lyDoVoHieuHoa, HoSoMau hoSo) {
 
         public String email() {
@@ -126,10 +116,7 @@ public final class DuLieuMau {
         }
     }
 
-    /**
-     * Triệu chứng thường gặp của từng chuyên khoa mẫu (theo tên chuyên khoa), viết bằng lời người bệnh hay dùng: chatbot
-     * dựa vào đây để gợi ý chuyên khoa.
-     */
+    /** Triệu chứng thường gặp của từng chuyên khoa mẫu, để chatbot gợi ý chuyên khoa. */
     public static final Map<String, String> TRIEU_CHUNG = Map.of(
             "Nội tổng quát", "sốt, mệt mỏi, ho kéo dài, khó thở nhẹ, đau bụng, đầy hơi, ợ chua, tiêu chảy, táo bón, buồn nôn,"
                     + " đau đầu, chóng mặt, sụt cân, tiểu đường, khát nước nhiều, khám sức khoẻ tổng quát",
@@ -224,7 +211,7 @@ public final class DuLieuMau {
             String donVi, String moTa) {
     }
 
-    /** Thuốc ngoại trú thường dùng, để bác sĩ mẫu kê đơn được. Bản tiếng Anh ở {@link DuLieuMauTiengAnh#THUOC}. */
+    /** Thuốc ngoại trú thường dùng, để bác sĩ mẫu kê đơn được. */
     public static final List<ThuocMau> THUOC = List.of(
             new ThuocMau("Paracetamol", "Paracetamol", "500mg", "Viên nén", DuongDungThuoc.UONG, "viên",
                     "Giảm đau, hạ sốt"),

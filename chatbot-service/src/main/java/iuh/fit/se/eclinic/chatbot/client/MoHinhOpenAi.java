@@ -21,18 +21,7 @@ import iuh.fit.se.eclinic.common.exception.LoiNghiepVu;
 import iuh.fit.se.eclinic.common.exception.MaLoi;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Gọi mô hình qua API kiểu OpenAI ({@code POST <url-goc>/chat/completions}, khoá ở header {@code Authorization: Bearer}).
- * Gemini, OpenAI, Groq, Ollama... đều nhận định dạng này nên đổi nhà cung cấp chỉ là đổi {@code CHATBOT_BASE_URL},
- * {@code CHATBOT_API_KEY}, {@code CHATBOT_MODEL}; không dùng SDK của riêng ai.
- * <p>
- * Tra cứu ("function calling"): gửi {@code tools}; mô hình trả {@code tool_calls} thay cho câu trả lời; lần gọi sau gửi
- * lại NGUYÊN tin nhắn đó của mô hình (kể cả trường lạ: Gemini gắn chữ ký suy luận vào lời gọi công cụ và đòi nhận lại)
- * rồi tới 1 tin {@code role: tool} cho mỗi lời gọi.
- * <p>
- * Log chỉ ghi mã HTTP / loại lỗi: không ghi nội dung tin nhắn, không ghi body lỗi (có thể nhắc lại câu hỏi), không ghi
- * khoá API.
- */
+/** Gọi mô hình qua API kiểu OpenAI ({@code POST <url-goc>/chat/completions}, khoá Bearer). */
 @Slf4j
 @Component
 public class MoHinhOpenAi implements MoHinhNgonNgu {
@@ -113,7 +102,7 @@ public class MoHinhOpenAi implements MoHinhNgonNgu {
                 Map.of("name", congCu.ten(), "description", congCu.moTa(), "parameters", congCu.thamSo()));
     }
 
-    /** {@code choices[0].message}: {@code content} và {@code tool_calls[].{id, function.{name, arguments}}}; null khi response không có dạng đó. */
+    /** {@code choices[0].message} gồm content và tool_calls; null khi response không có dạng đó. */
     @SuppressWarnings("unchecked")
     private static PhanHoiMoHinh doc(Map<String, Object> ketQua) {
         if (ketQua == null || !(ketQua.get("choices") instanceof List<?> luaChon) || luaChon.isEmpty()

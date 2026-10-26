@@ -32,10 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 @Transactional(readOnly = true)
 public class DangNhapServiceImpl implements DangNhapService {
 
-    /**
-     * BCrypt chỉ đọc 72 byte đầu: matches() KHÔNG báo lỗi mà cắt bớt, nên "mật khẩu đúng + ký tự bất kỳ" cũng khớp.
-     * Mật khẩu dài hơn không thể là mật khẩu đã đăng ký (@MatKhauHopLe chặn khi đăng ký).
-     */
+    /** BCrypt chỉ đọc 72 byte đầu: "mật khẩu đúng + ký tự bất kỳ" cũng khớp, nên phải chặn trước. */
     private static final int SO_BYTE_MAT_KHAU_TOI_DA = 72;
     private static final String LOAI_TOKEN = "Bearer";
 
@@ -48,7 +45,7 @@ public class DangNhapServiceImpl implements DangNhapService {
     private final DangNhapProperties dangNhapProperties;
     private final TaiKhoanMapper taiKhoanMapper;
 
-    /** Hash giả để vẫn chạy BCrypt khi email không tồn tại: thời gian phản hồi không lộ email nào đã đăng ký. */
+    /** Hash giả để vẫn chạy BCrypt khi email không tồn tại, không lộ email nào đã đăng ký. */
     private final String hashGia;
 
     public DangNhapServiceImpl(TaiKhoanRepository taiKhoanRepository, RefreshTokenService refreshTokenService,
@@ -95,11 +92,7 @@ public class DangNhapServiceImpl implements DangNhapService {
         log.info("Đặt mật khẩu lần đầu id={}", taiKhoan.getId());
     }
 
-    /**
-     * Kiểm tra email + mật khẩu (có bộ đếm sai) rồi mới báo trạng thái tài khoản.
-     *
-     * @return tài khoản đã kích hoạt, mật khẩu đúng
-     */
+    /** Kiểm tra email + mật khẩu (có bộ đếm sai) rồi mới báo trạng thái tài khoản. */
     private TaiKhoan xacMinhMatKhau(String emailNhap, String matKhau) {
         String email = ChuanHoa.email(emailNhap);
         // Đang bị khoá thì từ chối ngay, không chạy BCrypt (429 không phải bí mật)
@@ -137,12 +130,7 @@ public class DangNhapServiceImpl implements DangNhapService {
         return taiKhoan;
     }
 
-    /**
-     * Không rollback khi ném LoiNghiepVu: mọi thao tác ghi trước khi ném lỗi đều là thu hồi phiên và phải được giữ
-     * (thu hồi phiên khi token cũ của nó bị dùng lại, thu hồi phiên của tài khoản bị vô hiệu hoá).
-     * Chỉ đúng khi LoiNghiepVu được ném ở thân method này: nếu method @Transactional bên trong (RefreshTokenService)
-     * tự ném thì transaction chung bị đánh dấu rollback.
-     */
+    /** Không rollback khi ném LoiNghiepVu: các lần thu hồi phiên trước khi ném lỗi phải được giữ. */
     @Override
     @Transactional(noRollbackFor = LoiNghiepVu.class)
     public DangNhapResponse lamMoi(String refreshToken) {
@@ -161,9 +149,7 @@ public class DangNhapServiceImpl implements DangNhapService {
             throw new LoiNghiepVu(MaLoi.PHIEN_DANG_NHAP_KHONG_HOP_LE);
         }
         if (phien.getNgayThuHoi() != null) {
-            // Quá thời gian ân hạn: token đã xoay vòng bị dùng lại -> có thể đã bị lộ, đăng xuất phiên của token đó
-            // (chỉ phiên đó: thiết bị bị đăng xuất từ xa quay lại với cookie cũ không được làm văng thiết bị khác).
-            // Trong ân hạn: thường là 2 tab làm mới cùng lúc, chỉ từ chối.
+            // Quá ân hạn: token đã xoay vòng bị dùng lại, chỉ đăng xuất phiên đó; trong ân hạn thì chỉ từ chối
             if (phien.getNgayThuHoi().plus(dangNhapProperties.anHanDungLai()).isBefore(bayGio)) {
                 if (refreshTokenService.thuHoiPhien(idTaiKhoan, maPhien)) {
                     log.warn("Refresh token đã thu hồi bị dùng lại: đăng xuất phiên {} của tài khoản id={}", maPhien,
@@ -219,7 +205,7 @@ public class DangNhapServiceImpl implements DangNhapService {
         return taoKetQua(taiKhoan, phien.maPhien(), phien.refreshToken());
     }
 
-    /** Access token mang mã phiên (claim "phien") để các API /api/users/me biết request đến từ phiên nào. */
+    /** Access token mang mã phiên (claim "phien") để các API /api/users/me biết phiên nào. */
     private DangNhapResponse taoKetQua(TaiKhoan taiKhoan, String maPhien, String refreshToken) {
         String accessToken = jwtService.taoAccessToken(taiKhoan.getId(), taiKhoan.getEmail(), taiKhoan.getVaiTro(),
                 maPhien);

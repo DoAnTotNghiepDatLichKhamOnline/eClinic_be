@@ -11,10 +11,7 @@ import org.springframework.stereotype.Component;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Khi khởi động với app.du-lieu-mau.bat = true: tạo dữ liệu mẫu (nếu chưa có bác sĩ nào) rồi bổ sung ca làm việc
- * cho những ngày sắp tới. Chạy sau KhoiTaoAdminRunner vì ca làm việc phải có quản trị viên tạo.
- */
+/** Khi khởi động với app.du-lieu-mau.bat = true: tạo dữ liệu mẫu nếu chưa có, rồi bổ sung ca cho những ngày tới. */
 @Slf4j
 @Component
 @Order(2)
@@ -28,7 +25,7 @@ public class KhoiTaoDuLieuMauRunner implements ApplicationRunner {
     public void run(ApplicationArguments args) {
         log.warn("Dữ liệu mẫu đang BẬT (SEED_DATA=true): có tài khoản bác sĩ / bệnh nhân mẫu dùng chung mật khẩu"
                 + " đã công khai. Chỉ dùng để thử / demo, KHÔNG bật khi triển khai thật.");
-        // Bắt mọi lỗi: dữ liệu mẫu hỏng (vd trùng số điện thoại với tài khoản đã có) không được làm service ngừng khởi động
+        // Bắt mọi lỗi: dữ liệu mẫu hỏng không được làm service ngừng khởi động
         try {
             duLieuMauService.taoDuLieuNen();
             duLieuMauService.boSungHoSoBacSi();

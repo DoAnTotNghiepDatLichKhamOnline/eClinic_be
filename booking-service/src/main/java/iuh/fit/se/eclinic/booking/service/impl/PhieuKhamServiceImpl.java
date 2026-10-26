@@ -22,7 +22,7 @@ import lombok.RequiredArgsConstructor;
 @Transactional(readOnly = true)
 public class PhieuKhamServiceImpl implements PhieuKhamService {
 
-    /** Dạng của TokenNgauNhien.tao(): 256 bit, base64url không đệm = 43 ký tự. Id số hay chuỗi khác không chạm tới DB. */
+    /** Dạng của TokenNgauNhien.tao(): base64url 43 ký tự; chuỗi khác không chạm tới DB. */
     private static final Pattern DANG_MA_PHIEU_KHAM = Pattern.compile("[A-Za-z0-9_-]{43}");
 
     private final LichHenRepository lichHenRepository;

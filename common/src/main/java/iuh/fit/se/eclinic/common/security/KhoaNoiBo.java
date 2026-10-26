@@ -10,14 +10,7 @@ import iuh.fit.se.eclinic.common.exception.LoiNghiepVu;
 import iuh.fit.se.eclinic.common.exception.MaLoi;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Khoá của các API nội bộ {@code /noi-bo/**} (service gọi service, không qua gateway, không có JWT của người dùng).
- * <p>
- * Bên gọi gửi {@link #giaTri()} trong header {@link #TEN_HEADER}; bên nhận khai đường dẫn trong
- * {@code app.bao-mat.duong-dan-cong-khai} rồi gọi {@link #kiemTra(String)} ở đầu controller. Gateway chỉ chuyển tiếp
- * {@code /api/**} nên đường dẫn {@code /noi-bo/**} không ra được bên ngoài; khoá là lớp chặn thứ hai cho ai đã vào được
- * mạng nội bộ.
- */
+/** Khoá của các API nội bộ {@code /noi-bo/**} (service gọi service, không qua gateway). */
 @Slf4j
 @Component
 @EnableConfigurationProperties(NoiBoProperties.class)

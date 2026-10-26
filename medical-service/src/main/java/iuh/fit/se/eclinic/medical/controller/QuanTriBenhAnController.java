@@ -13,10 +13,7 @@ import iuh.fit.se.eclinic.medical.dto.response.LichSuSuaBenhAnResponse;
 import iuh.fit.se.eclinic.medical.service.LichSuSuaBenhAnService;
 import lombok.RequiredArgsConstructor;
 
-/**
- * Quản trị viên xem lịch sử sửa hồ sơ bệnh án (màn hình Patient Management, lịch hẹn đã hoàn thành). Quản trị viên không
- * sửa hồ sơ bệnh án.
- */
+/** Quản trị viên xem lịch sử sửa hồ sơ bệnh án (màn hình Patient Management, lịch hẹn đã hoàn thành). */
 @Tag(name = "Quản trị hồ sơ bệnh án", description = "Lịch sử sửa hồ sơ bệnh án của 1 lượt khám (quản trị viên)")
 @RestController
 @RequestMapping("/api/medical/quan-tri/lich-hen")

@@ -1,8 +1,6 @@
 package iuh.fit.se.eclinic.booking.util;
 
-/**
- * Che CCCD, số điện thoại, họ tên và email trước khi đưa lên phiếu khám công khai (quy tắc #8) hoặc phản hồi cho nhân viên.
- */
+/** Che CCCD, SĐT, họ tên và email trước khi đưa lên trang công khai hoặc phản hồi cho nhân viên. */
 public final class CheThongTin {
 
     private static final int SO_KY_TU_GIU_LAI = 3;
@@ -28,10 +26,7 @@ public final class CheThongTin {
         return "*".repeat(soKyTuChe) + cccd.substring(soKyTuChe);
     }
 
-    /**
-     * Cho phần công khai của sổ khám bệnh: các chữ trước tên chỉ giữ chữ cái đầu, {@code Nguyễn Văn An} ->
-     * {@code N. V. An}. Họ tên 1 chữ giữ nguyên.
-     */
+    /** Họ tên cho sổ khám công khai: {@code Nguyễn Văn An} -> {@code N. V. An}. */
     public static String hoTen(String hoTen) {
         if (hoTen == null) {
             return null;
@@ -57,10 +52,7 @@ public final class CheThongTin {
                 + soDienThoai.substring(doDai - SO_KY_TU_GIU_LAI);
     }
 
-    /**
-     * Cho phản hồi cấp lại liên kết: giữ ký tự đầu của phần trước @ và cả tên miền, {@code buihoang@gmail.com} ->
-     * {@code b***@gmail.com}. Không có @ thì che hết.
-     */
+    /** Email cho phản hồi cấp lại liên kết: {@code buihoang@gmail.com} -> {@code b***@gmail.com}. */
     public static String email(String email) {
         if (email == null) {
             return null;

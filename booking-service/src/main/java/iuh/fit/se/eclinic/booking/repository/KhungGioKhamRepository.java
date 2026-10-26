@@ -37,18 +37,12 @@ public interface KhungGioKhamRepository extends JpaRepository<KhungGioKham, Long
     List<KhungGioKham> findByBacSiAndTrangThaiInRange(Long bacSiId, TrangThaiKhungGio trangThai, LocalDateTime tu,
             LocalDateTime den);
 
-    /**
-     * Khoá khung giờ (SELECT ... FOR UPDATE) trong transaction đặt lịch, để 2 request đặt cùng khung giờ chạy tuần tự.
-     */
+    /** Khoá khung giờ (SELECT ... */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select k from KhungGioKham k where k.id = :id")
     Optional<KhungGioKham> findByIdForUpdate(Long id);
 
-    /**
-     * Khoá (SELECT ... FOR UPDATE) mọi lượt khám của 1 khung 1 giờ: các lượt của ca bắt đầu trong [tu, den), theo giờ
-     * bắt đầu. Mọi request đặt cùng khung đều khoá các dòng này theo cùng thứ tự nên chạy lần lượt, không deadlock.
-     * Phải gọi trong transaction đặt lịch.
-     */
+    /** Khoá (SELECT ... */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""
             select k from KhungGioKham k
@@ -64,10 +58,7 @@ public interface KhungGioKhamRepository extends JpaRepository<KhungGioKham, Long
     @Query("select k from KhungGioKham k where k.lichLamViec.id = :idLichLamViec order by k.gioBatDau")
     List<KhungGioKham> khoaCacLuotCuaCa(Long idLichLamViec);
 
-    /**
-     * Số lượt khám của phòng trong ngày đứng trước 1 lượt (theo giờ bắt đầu, rồi theo id). Đếm mọi dòng kể cả lượt đã
-     * hủy, nên thứ hạng của 1 lượt không đổi theo thời gian: số thứ tự khám = kết quả + 1 (quy tắc #4, #12).
-     */
+    /** Số lượt khám của phòng trong ngày đứng trước 1 lượt (theo giờ bắt đầu, rồi theo id). */
     @Query("""
             select count(k) from KhungGioKham k
             where k.lichLamViec.phongKham.id = :idPhongKham

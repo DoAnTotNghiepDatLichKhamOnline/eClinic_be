@@ -32,10 +32,7 @@ public class NguoiThanDaLuuServiceImpl implements NguoiThanDaLuuService {
     private final TaiKhoanService taiKhoanService;
     private final EntityManager entityManager;
 
-    /**
-     * REQUIRES_NEW: được gọi trong callback sau commit của transaction đặt lịch, lúc đó transaction cũ không còn dùng
-     * được. 2 lần đặt cùng lúc cho cùng 1 người thân: lần sau vi phạm UNIQUE (tài khoản, hồ sơ) và bị bên gọi bỏ qua.
-     */
+    /** REQUIRES_NEW: được gọi sau commit của đặt lịch, khi transaction cũ không còn dùng được. */
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void ghiNho(DaDatLichChoNguoiThanEvent event) {

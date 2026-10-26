@@ -14,10 +14,7 @@ import iuh.fit.se.eclinic.common.enums.NgonNgu;
 import lombok.RequiredArgsConstructor;
 import tools.jackson.databind.json.JsonMapper;
 
-/**
- * Soạn câu thông báo từ khoá mẫu + tham số (xem {@link ThamSoThongBao}) theo 1 ngôn ngữ. Mẫu nằm trong thong-diep/, khoá
- * {@code thongBao.<mau>[.<bienThe>]}.
- */
+/** Soạn câu thông báo từ khoá mẫu + tham số theo 1 ngôn ngữ. */
 @Component
 @RequiredArgsConstructor
 public class SoanThongBao {
@@ -29,21 +26,12 @@ public class SoanThongBao {
 
     private final MessageSource messageSource;
 
-    /**
-     * @param thamSoJson mảng JSON do {@link ThamSoThongBao#toJson()} tạo; null = mẫu không có tham số
-     * @throws IllegalArgumentException tham số không đọc được
-     */
     public String soan(String khoaMau, String thamSoJson, NgonNgu ngonNgu) {
         Object[] thamSo = thamSo(thamSoJson, ngonNgu);
         return messageSource.getMessage(khoaMau, thamSo, khoaMau, ngonNgu.locale());
     }
 
-    /**
-     * Từng tham số đã viết theo ngôn ngữ, chưa ghép vào câu nào. Dùng khi 1 nội dung gồm nhiều câu (email): nơi gọi tự
-     * chèn tham số vào từng câu, và tự escape nếu nội dung là HTML (xem {@link KhungEmail}).
-     *
-     * @throws IllegalArgumentException tham số không đọc được
-     */
+    /** Từng tham số đã viết theo ngôn ngữ, chưa ghép vào câu nào. */
     public String[] thamSo(String thamSoJson, NgonNgu ngonNgu) {
         if (thamSoJson == null || thamSoJson.isBlank()) {
             return new String[0];

@@ -8,11 +8,7 @@ import org.springframework.http.HttpHeaders;
 
 import jakarta.servlet.http.HttpServletRequest;
 
-/**
- * Ngôn ngữ của thông điệp trả về và của email / thông báo. Request chọn ngôn ngữ bằng header Accept-Language:
- * "en..." là tiếng Anh, không gửi hoặc ngôn ngữ khác là tiếng Việt. Tài khoản lưu ngôn ngữ ưa dùng ở
- * tai_khoan.ngon_ngu (dùng khi soạn nội dung không gắn với request nào: email, nhắc lịch).
- */
+/** Ngôn ngữ của thông điệp trả về và của email / thông báo. */
 public enum NgonNgu {
 
     VI(Locale.forLanguageTag("vi")),
@@ -28,10 +24,7 @@ public enum NgonNgu {
         return locale;
     }
 
-    /**
-     * Chọn chữ của nội dung có 2 ngôn ngữ (danh mục: chuyên khoa, phòng khám, hồ sơ bác sĩ, thuốc): bản tiếng Anh khi
-     * đây là tiếng Anh và bản đó đã được nhập, còn lại là bản tiếng Việt.
-     */
+    /** Bản tiếng Anh khi đây là tiếng Anh và bản đó đã được nhập, còn lại là bản tiếng Việt. */
     public String chon(String tiengViet, String tiengAnh) {
         return this == EN && tiengAnh != null && !tiengAnh.isBlank() ? tiengAnh : tiengViet;
     }

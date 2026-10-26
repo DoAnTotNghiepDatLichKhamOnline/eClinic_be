@@ -20,10 +20,7 @@ import iuh.fit.se.eclinic.common.security.NguoiDungHienTai;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
-/**
- * Bệnh nhân đánh giá 1 lượt khám đã hoàn thành của mình (hoặc lượt mình đã đặt cho người khác). Đánh giá đã gửi trả về
- * trong chi tiết lịch hẹn: GET /api/booking/lich-hen/cua-toi/{maPhieuKham} (trường {@code danhGia}, {@code duocDanhGia}).
- */
+/** Bệnh nhân đánh giá lượt khám đã hoàn thành của mình hoặc lượt mình đặt cho người khác. */
 @Tag(name = "Đánh giá lượt khám", description = "Bệnh nhân gửi / sửa đánh giá cho lượt khám đã hoàn thành")
 @RestController
 @RequestMapping("/api/booking/lich-hen/cua-toi/{maPhieuKham}/danh-gia")

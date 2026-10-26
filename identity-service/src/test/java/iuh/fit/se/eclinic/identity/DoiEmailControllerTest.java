@@ -33,10 +33,7 @@ import iuh.fit.se.eclinic.identity.dto.request.DoiEmailRequest;
 import iuh.fit.se.eclinic.identity.dto.response.YeuCauDoiEmailResponse;
 import iuh.fit.se.eclinic.identity.service.DoiEmailService;
 
-/**
- * Tầng web của /api/users/me/change-email: phải đăng nhập, mọi vai trò đều gọi được, id tài khoản lấy từ JWT, validate
- * dữ liệu vào. Service là mock.
- */
+/** Tầng web của /api/users/me/change-email: phải đăng nhập, mọi vai trò, validate dữ liệu vào. */
 @WebMvcTest(DoiEmailController.class)
 @AutoConfigureJson
 @Import(BaoMatConfig.class)
@@ -99,7 +96,7 @@ class DoiEmailControllerTest {
 
     @Test
     void matKhauHienTaiKhongBiKiemTraQuyTacMatKhau() throws Exception {
-        // 25 ký tự nhưng 75 byte: với @MatKhauHopLe sẽ là 400; ở đây phải tới được service (rồi ra "sai mật khẩu")
+        // 25 ký tự nhưng 75 byte: phải tới được service (rồi ra "sai mật khẩu")
         guiYeuCau(NguoiDungGiaLap.benhNhan(12L), "moi@example.com", "ệ".repeat(25)).andExpect(status().isOk());
         verify(doiEmailService).yeuCau(12L, new DoiEmailRequest("moi@example.com", "ệ".repeat(25)));
     }
@@ -151,7 +148,7 @@ class DoiEmailControllerTest {
         verify(doiEmailService).huy(12L);
     }
 
-    /** @param nguoiDung null là không đăng nhập */
+    /** Request với người dùng giả lập; {@code nguoiDung} null là không đăng nhập. */
     private ResultActions guiYeuCau(RequestPostProcessor nguoiDung, String emailMoi, String matKhau) throws Exception {
         String body = """
                 {"emailMoi": "%s", "matKhauHienTai": "%s"}

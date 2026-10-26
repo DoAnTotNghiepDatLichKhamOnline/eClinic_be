@@ -11,13 +11,7 @@ import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
-/**
- * Sửa thông tin đã lưu của 1 người thân: các trường của {@link BenhNhanRequest} trừ số CCCD (số CCCD là thứ nối bản lưu
- * với hồ sơ bệnh nhân nên không đổi được; nhập sai số thì bỏ người thân này và đặt lịch lại). Trường không bắt buộc gửi
- * trống thì bị xoá trắng.
- *
- * @param nguoiGiamHo bỏ trống thì bản lưu không còn người giám hộ
- */
+/** Sửa thông tin đã lưu của 1 người thân, trừ số CCCD (thứ nối bản lưu với hồ sơ bệnh nhân). */
 public record NguoiThanDaLuuRequest(
         @NotBlank(message = "{kiemTra.hoTen.batBuoc}")
         @Size(max = 150, message = "{kiemTra.hoTen.toiDa}")

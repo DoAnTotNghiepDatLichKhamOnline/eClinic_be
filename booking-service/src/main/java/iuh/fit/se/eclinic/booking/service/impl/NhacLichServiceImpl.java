@@ -20,14 +20,7 @@ import iuh.fit.se.eclinic.common.entity.booking.NhacLichHen;
 import iuh.fit.se.eclinic.common.enums.TrangThaiLichHen;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Không đặt {@code @Transactional} ở lớp: mỗi lịch hẹn 1 transaction riêng ({@link TransactionTemplate}), lịch này lỗi
- * không làm mất phần của lịch khác. Trong transaction đó: khoá dòng lịch hẹn, kiểm tra lại (người dùng có thể vừa hủy),
- * ghi mốc đã xử lý và các dòng thông báo / email chờ gửi. Chỉ khoá, không sửa lịch hẹn: {@code version} không đổi.
- * <p>
- * Chỉ 1 thread của scheduler gọi class này (booking-service chạy 1 bản); nếu có 2 bản thì UNIQUE của nhac_lich_hen làm
- * transaction đến sau rollback, vẫn không nhắc trùng.
- */
+/** Không đặt {@code @Transactional} ở lớp: mỗi lịch hẹn 1 transaction riêng, lịch lỗi không ảnh hưởng lịch khác. */
 @Slf4j
 @Service
 public class NhacLichServiceImpl implements NhacLichService {
@@ -87,8 +80,7 @@ public class NhacLichServiceImpl implements NhacLichService {
                 || nhacLichHenRepository.existsByIdLichHenAndSoPhutTruoc(id, soPhut(moc))) {
             return false;
         }
-        // Đặt khi đã ở trong khoảng của mốc: người đặt vừa nhận email xác nhận, không nhắc mốc này
-        // Đã nhắc ở 1 mốc gần giờ khám hơn (chỉ xảy ra khi cấu hình thêm mốc mới): không nhắc lùi lại mốc xa hơn
+        // Đặt khi đã ở trong khoảng của mốc, hoặc đã nhắc ở mốc gần hơn: không nhắc mốc này
         boolean nhac = !lichHen.getNgayTao().isAfter(gioKham.minus(moc))
                 && !nhacLichHenRepository.existsByIdLichHenAndSoPhutTruocLessThanAndDaGuiTrue(id, soPhut(moc));
         nhacLichHenRepository.save(new NhacLichHen(id, soPhut(moc), nhac));

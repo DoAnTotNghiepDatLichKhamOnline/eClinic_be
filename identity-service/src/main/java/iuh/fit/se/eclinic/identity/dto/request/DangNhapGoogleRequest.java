@@ -3,9 +3,7 @@ package iuh.fit.se.eclinic.identity.dto.request;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-/**
- * Đăng nhập bằng Google: ID token (credential) mà Google Identity Services trả cho frontend.
- */
+/** Đăng nhập bằng Google: ID token (credential) mà Google Identity Services trả cho frontend. */
 public record DangNhapGoogleRequest(
 
         @NotBlank(message = "{kiemTra.idTokenGoogle.batBuoc}")

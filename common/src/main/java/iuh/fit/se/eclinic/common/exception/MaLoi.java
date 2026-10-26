@@ -5,12 +5,7 @@ import org.springframework.http.HttpStatus;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
-/**
- * Mã lỗi dùng chung. HTTP status của response lấy từ đây (xem XuLyLoiHandler).
- * Thêm mã mới ở đây khi viết nghiệp vụ / API; tên mã chính là giá trị "maLoi" trả về cho frontend.
- * Thông điệp của mã nằm ở thong-diep/chung.properties (tiếng Việt) và chung_en.properties (tiếng Anh), khoá loi.&lt;MA_LOI&gt;:
- * thêm mã mới thì thêm 1 dòng vào mỗi file.
- */
+/** Mã lỗi dùng chung. */
 @Getter
 @RequiredArgsConstructor
 public enum MaLoi {
@@ -63,15 +58,12 @@ public enum MaLoi {
     TRUNG_LICH_LAM_VIEC(HttpStatus.CONFLICT),
     /** Ngày bệnh viện nghỉ (ngay_nghi_benh_vien): không xếp ca vào được; hoặc mọi ngày khai báo đều đã là ngày nghỉ. */
     NGAY_BENH_VIEN_NGHI(HttpStatus.CONFLICT),
-    /** Khung 1 giờ đã đủ số lượt (BOOK-04, BOOK-12). */
+    /** Khung 1 giờ đã đủ số lượt. */
     KHUNG_GIO_KHONG_CON_TRONG(HttpStatus.CONFLICT),
     /** Ca bị hủy, bác sĩ ngừng làm việc, khung giờ đã qua hạn đặt hoặc nằm ngoài số ngày được đặt trước. */
     KHUNG_GIO_KHONG_KHA_DUNG(HttpStatus.CONFLICT),
     LICH_HEN_TRUNG_GIO(HttpStatus.CONFLICT),
-    /**
-     * Đặt cho bản thân với số CCCD khác hồ sơ bệnh nhân của tài khoản. Họ tên / ngày sinh nhập khác hồ sơ của 1 số CCCD
-     * KHÔNG còn bị từ chối: lịch hẹn được đánh dấu cần đối chiếu.
-     */
+    /** Đặt cho bản thân với số CCCD khác hồ sơ bệnh nhân của tài khoản. */
     THONG_TIN_BENH_NHAN_KHONG_KHOP(HttpStatus.CONFLICT),
     THIEU_NGUOI_GIAM_HO(HttpStatus.BAD_REQUEST),
     NGUOI_GIAM_HO_KHONG_HOP_LE(HttpStatus.BAD_REQUEST),
@@ -90,7 +82,7 @@ public enum MaLoi {
     /** Hủy / đổi bằng link phiếu khám: SĐT nhập vào không phải SĐT liên hệ của lượt khám. */
     SO_DIEN_THOAI_KHONG_KHOP(HttpStatus.FORBIDDEN),
 
-    // Cấp lại liên kết phiếu khám (PAT-03)
+    // Cấp lại liên kết phiếu khám
     /** Số CCCD nhân viên nhập không phải CCCD của hồ sơ bệnh nhân hay của người giám hộ trên lịch hẹn. */
     CCCD_KHONG_KHOP(HttpStatus.FORBIDDEN),
     /** Lịch hẹn không có email liên hệ, người đặt cũng không có tài khoản: chỉ cấp lại trên màn hình được. */
@@ -125,7 +117,7 @@ public enum MaLoi {
     /** Yêu cầu nhường ca còn chờ bác sĩ nhận đồng ý: quản trị viên chưa duyệt / từ chối được. */
     YEU_CAU_CHO_DONG_NGHIEP(HttpStatus.CONFLICT),
     LICH_HEN_CAN_DOI_LICH(HttpStatus.CONFLICT),
-    /** Tổng giờ các ca của bác sĩ trong 1 tuần (thứ Hai - Chủ nhật) vượt cấu hình soGioToiDaMoiTuan (SCHED-05). */
+    /** Tổng giờ các ca của bác sĩ trong 1 tuần vượt cấu hình soGioToiDaMoiTuan. */
     VUOT_GIO_LAM_TUAN(HttpStatus.CONFLICT),
 
     // Quản lý bác sĩ

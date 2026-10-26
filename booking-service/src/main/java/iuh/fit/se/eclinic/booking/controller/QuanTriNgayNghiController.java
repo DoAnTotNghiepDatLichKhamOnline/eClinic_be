@@ -27,10 +27,7 @@ import iuh.fit.se.eclinic.common.security.NguoiDungHienTai;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
-/**
- * Quản trị viên khai báo ngày bệnh viện nghỉ (Tết, lễ, nghỉ đột xuất). Khai báo hủy các ca còn hoạt động của ngày đó
- * theo quy trình "cần đổi lịch"; sau đó không xếp ca vào ngày nghỉ được.
- */
+/** Quản trị viên khai báo ngày bệnh viện nghỉ (Tết, lễ, nghỉ đột xuất). */
 @Tag(name = "Quản trị ngày nghỉ", description = "Ngày bệnh viện nghỉ: khai báo (có xem trước), danh sách, bỏ ngày nghỉ")
 @RestController
 @RequestMapping("/api/booking/quan-tri/ngay-nghi")

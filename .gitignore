@@ -141,6 +141,9 @@ seop-providers.json
 # ==========================================
 /*.docx
 /yeu-cau-toan-dien-dat-lich-kham-benh.md
+# Tài liệu dự án (docs/) chỉ giữ ở máy
+/docs/
+/DEPLOY-GOOGLE-CLOUD.md
 # Tệp tải về / dựng ra khi thử (lịch làm việc xuất Excel, bản in PDF, tài liệu API chuyển PDF)
 /*.pdf
 /*.xlsx

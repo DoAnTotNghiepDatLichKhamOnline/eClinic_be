@@ -59,11 +59,7 @@ import iuh.fit.se.eclinic.common.util.MaBacSi;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Đọc tệp nhập KHÔNG trong transaction: lỗi của POI khi đọc tệp hỏng không thể đánh dấu transaction là rollback-only.
- * Kiểm tra với DB và lưu nằm ở {@link QuanLyCaService#nhapCa} (1 transaction). Độ rộng cột đặt cố định, không dùng
- * autoSizeColumn: hàm đó cần font của AWT, có thể không có trong image JRE không giao diện.
- */
+/** Đọc tệp ngoài transaction: lỗi POI khi đọc tệp hỏng không được làm transaction rollback-only. */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -222,12 +218,7 @@ public class ExcelLichLamViecServiceImpl implements ExcelLichLamViecService {
         }
     }
 
-    /**
-     * Đọc các dòng ca (bỏ dòng 1 và dòng trống ở cả 7 cột A-G): dòng đúng dạng vào {@code cacDong}, ô sai vào
-     * {@code loi}.
-     *
-     * @return số dòng ca
-     */
+    /** Đọc các dòng ca: dòng đúng dạng vào {@code cacDong}, ô sai vào {@code loi}. */
     private int docTrangCa(Sheet trang, List<DongCaNhap> cacDong, List<LoiDong> loi) {
         int soDong = 0;
         for (Row dong : trang) {
@@ -359,12 +350,7 @@ public class ExcelLichLamViecServiceImpl implements ExcelLichLamViecService {
         return so;
     }
 
-    /**
-     * Dòng trùng giờ với 1 dòng trước nó trong tệp (cùng ngày, cùng bác sĩ hoặc cùng phòng) thành lỗi "trùng với dòng
-     * X" và không được xét tiếp với DB.
-     *
-     * @return các dòng còn lại, giữ thứ tự
-     */
+    /** Dòng trùng giờ với dòng trước trong tệp thành lỗi và không được xét tiếp với DB. */
     private List<DongCaNhap> boDongTrungTrongTep(List<DongCaNhap> cacDong, List<LoiDong> loi) {
         List<DongCaNhap> conLai = new ArrayList<>();
         for (int i = 0; i < cacDong.size(); i++) {
@@ -520,10 +506,7 @@ public class ExcelLichLamViecServiceImpl implements ExcelLichLamViecService {
         o.setCellStyle(kieu.chuDai());
     }
 
-    /**
-     * Danh sách chọn cho 1 cột của trang ca (dòng 2 tới dòng ca cuối cùng có thể có), lấy từ cột A của trang danh mục
-     * qua 1 tên vùng. Gõ giá trị ngoài danh sách chỉ bị cảnh báo: khi nhập, mã vẫn được kiểm tra lại với DB.
-     */
+    /** Danh sách chọn cho 1 cột của trang ca, lấy từ cột A của trang danh mục qua 1 tên vùng. */
     private static void danhSachChon(XSSFWorkbook workbook, XSSFSheet trangCa, String tenVung, String tenTrang,
             int soMuc, int cot) {
         if (soMuc == 0) {

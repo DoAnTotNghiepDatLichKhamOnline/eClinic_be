@@ -4,9 +4,7 @@ import java.text.Normalizer;
 import java.util.Locale;
 import java.util.regex.Pattern;
 
-/**
- * Chuẩn hoá họ tên người khám / người giám hộ trước khi lưu và khi đối chiếu với hồ sơ đã có.
- */
+/** Chuẩn hoá họ tên người khám / người giám hộ trước khi lưu và khi đối chiếu với hồ sơ đã có. */
 public final class ChuanHoaTen {
 
     private static final Pattern KHOANG_TRANG = Pattern.compile("\\s+");

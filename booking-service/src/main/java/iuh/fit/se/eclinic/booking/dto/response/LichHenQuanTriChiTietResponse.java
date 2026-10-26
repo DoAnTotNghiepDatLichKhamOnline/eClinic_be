@@ -8,17 +8,7 @@ import iuh.fit.se.eclinic.common.enums.NgonNgu;
 import iuh.fit.se.eclinic.common.enums.SuKienLichHen;
 import iuh.fit.se.eclinic.common.enums.TrangThaiLichHen;
 
-/**
- * ADM-04: chi tiết 1 lịch hẹn cho quản trị viên. Không có mã phiếu khám (link phiếu khám chỉ gửi cho người đặt).
- *
- * @param lichHen           dòng lịch hẹn như danh sách của quản trị viên
- * @param emailLienHe       email người đặt nhập; null nếu để trống
- * @param taiKhoanDat       tài khoản đã đặt; null = khách đặt
- * @param ngonNgu           ngôn ngữ email gửi cho khách đặt; null = lịch hẹn tạo trước khi lưu ngôn ngữ
- * @param quanTriHuyDoiDuoc quản trị viên còn hủy / đổi được lịch này không
- * @param chuoiDoiLich      các lịch hẹn của cùng 1 chuỗi đổi lịch (gồm lịch này), cũ nhất trước; 1 phần tử nếu chưa đổi
- * @param lichSu            nhật ký thao tác của cả chuỗi, cũ nhất trước; chỉ có thao tác từ khi có nhật ký (V35)
- */
+/** Chi tiết 1 lịch hẹn cho quản trị viên. */
 public record LichHenQuanTriChiTietResponse(
         LichHenTrongCaResponse lichHen,
         String emailLienHe,
@@ -36,11 +26,6 @@ public record LichHenQuanTriChiTietResponse(
             boolean laLichNay) {
     }
 
-    /**
-     * @param maTraCuu         lịch hẹn của thao tác (trong chuỗi)
-     * @param lyDo             theo ngôn ngữ của request khi là câu của hệ thống; câu người dùng gõ giữ nguyên
-     * @param maTraCuuLienQuan DOI_LICH: lịch hẹn mới; null ở các thao tác khác
-     */
     public record SuKien(LocalDateTime thoiDiem, String maTraCuu, SuKienLichHen suKien, NguoiLam nguoiThucHien,
             String lyDo, String maTraCuuLienQuan) {
     }

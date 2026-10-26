@@ -27,7 +27,7 @@ public enum BuoiKham {
         };
     }
 
-    /** Xem {@link #gioTu()}; buổi tối kéo tới hết ngày (24). */
+    /** Giờ kết thúc (không gồm) của buổi; buổi tối kéo tới hết ngày (24). */
     public int gioDen() {
         return switch (this) {
             case SANG -> TRUA.getHour();

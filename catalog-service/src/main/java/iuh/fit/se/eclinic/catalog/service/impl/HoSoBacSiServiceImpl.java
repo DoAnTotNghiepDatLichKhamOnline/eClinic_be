@@ -62,10 +62,7 @@ public class HoSoBacSiServiceImpl implements HoSoBacSiService {
         }
     }
 
-    /**
-     * Khoá dòng bác sĩ rồi so phiên bản hồ sơ: quản trị viên và bác sĩ lưu cùng lúc thì chạy lần lượt, lần sau thấy
-     * phiên bản đã tăng và bị từ chối thay vì đè lên lần trước.
-     */
+    /** Khoá dòng bác sĩ rồi so phiên bản: 2 người lưu cùng lúc thì người sau bị từ chối. */
     private BacSi khoaDeSua(Long idBacSi, int phienBan) {
         BacSi bacSi = bacSiRepository.findByIdForUpdate(idBacSi)
                 .orElseThrow(() -> new LoiKhongTimThay("BacSi", idBacSi));

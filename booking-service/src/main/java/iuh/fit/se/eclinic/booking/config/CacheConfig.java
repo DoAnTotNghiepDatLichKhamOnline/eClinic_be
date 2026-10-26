@@ -20,17 +20,7 @@ import iuh.fit.se.eclinic.booking.dto.response.NgayNghiResponse;
 import tools.jackson.databind.JavaType;
 import tools.jackson.databind.json.JsonMapper;
 
-/**
- * Cache trên Redis cho danh sách ngày bệnh viện nghỉ công khai (NgayNghiServiceImpl#congKhai, lịch của trang đặt lịch).
- * Khoá bắt đầu bằng ngôn ngữ của request vì lý do nghỉ theo ngôn ngữ.
- * <ul>
- * <li>Chỉ NgayNghiServiceImpl ghi bảng ngay_nghi_benh_vien: khai báo (khi lưu) và xoá ngày nghỉ xoá hết cache SAU khi
- * commit (transactionAware). Hết hạn sau 10 phút chỉ để phòng hờ.</li>
- * <li>Giá trị lưu dạng JSON thường (không kèm tên class).</li>
- * <li>Redis lỗi: ghi log cảnh báo rồi đọc thẳng DB. Mất kết nối thì Lettuce từ chối lệnh ngay, không chờ timeout (áp
- * dụng cho cả các bộ đếm giới hạn GioiHan*Service, vốn đã bỏ qua giới hạn khi Redis lỗi).</li>
- * </ul>
- */
+/** Cache trên Redis cho danh sách ngày bệnh viện nghỉ công khai. */
 @Configuration
 @EnableCaching
 public class CacheConfig implements CachingConfigurer {

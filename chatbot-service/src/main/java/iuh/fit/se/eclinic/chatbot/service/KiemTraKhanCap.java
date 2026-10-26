@@ -10,15 +10,7 @@ import java.util.List;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
-/**
- * Nhận ra tin nhắn có dấu hiệu cấp cứu bằng danh sách cụm từ ở {@code chatbot/khan-cap.txt} (tiếng Việt và tiếng Anh).
- * Chạy TRƯỚC khi gọi mô hình: trúng thì trả câu "gọi 115" cố định, không phụ thuộc mô hình có trả lời hay không.
- * <p>
- * Mỗi dòng của file là 1 dấu hiệu, gồm 1 hoặc nhiều phần nối bằng {@code +}; tin nhắn trúng khi có đủ mọi phần. Mỗi
- * phần khớp từ đầu 1 từ ("breath" khớp "breathing"). Phần viết không dấu được so với tin nhắn đã bỏ dấu (người dùng gõ
- * có dấu hay không đều trúng); phần viết có dấu chỉ so với tin nhắn giữ nguyên dấu, dùng cho cụm bỏ dấu thì trùng với
- * từ thường gặp ("tự tử" / "từ từ").
- */
+/** Nhận ra tin nhắn có dấu hiệu cấp cứu bằng danh sách cụm từ ở {@code chatbot/khan-cap.txt}. */
 @Component
 public class KiemTraKhanCap {
 
@@ -61,10 +53,7 @@ public class KiemTraKhanCap {
         return phan.chars().allMatch(c -> c < 128);
     }
 
-    /**
-     * Chữ thường, bỏ dấu nháy ("can't" thành "cant"), mọi ký tự không phải chữ / số thành 1 dấu cách, thêm 1 dấu cách ở
-     * đầu để {@code contains} chỉ khớp từ đầu 1 từ.
-     */
+    /** Chữ thường, bỏ dấu nháy, ký tự khác chữ số thành dấu cách, thêm dấu cách đầu để chỉ khớp đầu từ. */
     private static String chuanHoa(String vanBan, boolean giuDau) {
         String chuoi = Normalizer.normalize(vanBan.toLowerCase(), giuDau ? Normalizer.Form.NFC : Normalizer.Form.NFD);
         if (!giuDau) {

@@ -7,9 +7,7 @@ spring:
   config:
     import: classpath:application-common.yml
 
-  # Máy chủ mail của email lịch hẹn, chỉ dùng khi app.email.che-do = smtp. Mặc định là Gmail SMTP như identity-service
-  # (MAIL_APP_PASSWORD là App Password 16 ký tự, không phải mật khẩu Gmail). Khi dev có thể trỏ sang 1 máy chủ nhận thử
-  # (vd Mailpit: MAIL_HOST=mailpit, MAIL_PORT=1025, MAIL_SMTP_AUTH=false, MAIL_SMTP_STARTTLS=false).
+  # Máy chủ mail, chỉ dùng khi app.email.che-do = smtp (MAIL_APP_PASSWORD là App Password của Gmail)
   mail:
     host: ${MAIL_HOST:smtp.gmail.com}
     port: ${MAIL_PORT:587}
@@ -28,24 +26,22 @@ spring:
 management:
   health:
     mail:
-      # Tắt: health check sẽ đăng nhập máy chủ mail mỗi lần docker kiểm tra; lỗi gửi mail đã có log và cột loi_cuoi.
+      # Tắt để health check không đăng nhập máy chủ mail mỗi lần docker kiểm tra
       enabled: false
 
 app:
   email:
-    # console: chỉ ghi người nhận + tiêu đề + liên kết ra log (máy dev, KHÔNG gửi thật). smtp: gửi qua spring.mail ở trên,
-    # thiếu tài khoản thì không khởi động. Mặc định theo MAIL_MODE (chung với identity-service).
+    # console: chỉ ghi log, không gửi thật; smtp: gửi qua spring.mail, thiếu tài khoản thì không khởi động
     che-do: ${NOTIFICATION_MAIL_MODE:${MAIL_MODE:console}}
     smtp-xac-thuc: ${MAIL_SMTP_AUTH:true}
-    # Khoảng nghỉ giữa 2 lần job gửi email đến hạn (cũng là độ trễ tối đa của 1 email khi máy chủ mail bình thường)
+    # Khoảng nghỉ giữa 2 lần job gửi email đến hạn
     chu-ky-gui: ${NOTIFICATION_MAIL_INTERVAL:5s}
-    # Gửi lỗi thì thử lại sau từng khoảng này; thử hết mà vẫn lỗi thì email đó bị bỏ (trang_thai = THAT_BAI)
+    # Gửi lỗi thì thử lại sau từng khoảng này; hết lượt thì email bị bỏ (THAT_BAI)
     cac-lan-cho: ${NOTIFICATION_MAIL_RETRY_WAITS:1m,5m,30m,2h}
     kich-thuoc-lo: 20
     so-ngay-giu: 30
   bao-mat:
-    # API nội bộ: không có JWT của người dùng, NoiBoThongBaoController / NoiBoEmailController tự kiểm tra khoá nội bộ (header X-Khoa-Noi-Bo).
-    # Gateway chỉ chuyển tiếp /api/notification/** nên đường dẫn này không ra được bên ngoài.
+    # API nội bộ tự kiểm tra khoá nội bộ (X-Khoa-Noi-Bo); gateway không chuyển tiếp đường dẫn này
     duong-dan-cong-khai:
       - POST /noi-bo/thong-bao
       - POST /noi-bo/email

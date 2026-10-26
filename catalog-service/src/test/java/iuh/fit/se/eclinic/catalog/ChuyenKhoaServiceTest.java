@@ -23,11 +23,7 @@ import iuh.fit.se.eclinic.common.testsupport.MySqlTestcontainersConfiguration;
 import iuh.fit.se.eclinic.common.testsupport.TestFixtures;
 import jakarta.persistence.EntityManager;
 
-/**
- * MẪU test service: chạy với MySQL thật (Testcontainers) cho các quy tắc do DB quyết định
- * (collation khi so trùng tên / tìm kiếm, đếm dữ liệu liên quan, khoá ngoại).
- * Dữ liệu mỗi test có hậu tố UUID để không đụng nhau trong container dùng chung.
- */
+/** Test service với MySQL thật (Testcontainers) cho các quy tắc do DB quyết định. */
 @SpringBootTest
 @Import(MySqlTestcontainersConfiguration.class)
 class ChuyenKhoaServiceTest {

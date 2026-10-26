@@ -16,23 +16,17 @@ public interface HoSoBenhNhanRepository extends JpaRepository<HoSoBenhNhan, Long
 
     Optional<HoSoBenhNhan> findByTaiKhoanId(Long taiKhoanId);
 
-    /** Tra hồ sơ theo CCCD khi đặt lịch (BOOK-03): có rồi thì dùng lại, chưa có thì tạo mới. */
+    /** Tra hồ sơ theo CCCD khi đặt lịch: có rồi thì dùng lại, chưa có thì tạo mới. */
     Optional<HoSoBenhNhan> findByCccd(String cccd);
 
     boolean existsByCccd(String cccd);
 
-    /**
-     * Như {@link #findByCccd} nhưng khoá dòng hồ sơ (SELECT ... FOR UPDATE) trong transaction đặt lịch, để 2 request
-     * đặt lịch cho cùng 1 bệnh nhân chạy lần lượt: kiểm tra trùng giờ và đếm số lịch còn hiệu lực mới chính xác.
-     */
+    /** Như {@link #findByCccd} nhưng khoá dòng hồ sơ (SELECT ... */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select h from HoSoBenhNhan h where h.cccd = :cccd")
     Optional<HoSoBenhNhan> findByCccdForUpdate(String cccd);
 
-    /**
-     * Hồ sơ tạo khi bệnh nhân dưới 18 tuổi chưa có CCCD, tra theo khoá nhận diện (xem KhoaNhanDien); khoá dòng như
-     * {@link #findByCccdForUpdate}.
-     */
+    /** Hồ sơ của bệnh nhân dưới 18 tuổi chưa có CCCD, tra theo khoá nhận diện và khoá dòng. */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select h from HoSoBenhNhan h where h.khoaNhanDien = :khoaNhanDien")
     Optional<HoSoBenhNhan> findByKhoaNhanDienForUpdate(String khoaNhanDien);
@@ -48,13 +42,7 @@ public interface HoSoBenhNhanRepository extends JpaRepository<HoSoBenhNhan, Long
             countQuery = "select count(h) from HoSoBenhNhan h where h.trangThaiLienKet = :trangThai")
     Page<HoSoBenhNhan> timTheoTrangThaiLienKet(TrangThaiLienKet trangThai, Pageable pageable);
 
-    /**
-     * Danh sách hồ sơ của quản trị viên, hồ sơ mới tạo trước, kèm tài khoản đang gắn (nếu có).
-     *
-     * @param mau       mẫu LIKE (escape '!') so với họ tên, số điện thoại, số bảo hiểm y tế; null = không lọc
-     * @param cccd      số CCCD đầy đủ để so khớp hoàn toàn; null nếu từ khoá không phải 12 chữ số
-     * @param trangThai null = mọi trạng thái liên kết
-     */
+    /** Danh sách hồ sơ của quản trị viên, hồ sơ mới tạo trước, kèm tài khoản đang gắn (nếu có). */
     @Query(value = """
             select h from HoSoBenhNhan h left join fetch h.taiKhoan
             where (:trangThai is null or h.trangThaiLienKet = :trangThai)

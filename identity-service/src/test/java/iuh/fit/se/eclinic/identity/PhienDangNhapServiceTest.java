@@ -28,10 +28,7 @@ import iuh.fit.se.eclinic.identity.repository.TaiKhoanRepository;
 import iuh.fit.se.eclinic.identity.service.DangNhapService;
 import iuh.fit.se.eclinic.identity.service.PhienDangNhapService;
 
-/**
- * Danh sách thiết bị đang đăng nhập và đăng xuất từ xa, với MySQL + Redis thật. Mỗi "thiết bị" là 1 lần đăng nhập;
- * phiên hiện tại được truyền vào bằng mã phiên trong access token của thiết bị đó (claim "phien").
- */
+/** Danh sách thiết bị đang đăng nhập và đăng xuất từ xa, với MySQL + Redis thật. */
 @SpringBootTest
 @Import({ MySqlTestcontainersConfiguration.class, RedisTestcontainersConfiguration.class })
 class PhienDangNhapServiceTest {

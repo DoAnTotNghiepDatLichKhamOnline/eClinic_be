@@ -5,18 +5,7 @@ import java.time.Duration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.bind.DefaultValue;
 
-/**
- * Kho ảnh Cloudinary (gói miễn phí), prefix {@code app.cloudinary} trong application-common.yml.
- *
- * @param bat         true ở service có tải ảnh lên (identity, catalog): chỉ khi đó bean {@link LuuTruAnh} được tạo
- * @param cloudName   CLOUDINARY_CLOUD_NAME
- * @param apiKey      CLOUDINARY_API_KEY
- * @param apiSecret   CLOUDINARY_API_SECRET, dùng để ký request, không bao giờ ghi ra log
- * @param thuMuc      thư mục gốc của ảnh trong kho; 2 DB dùng chung 1 tài khoản Cloudinary thì đặt khác nhau
- *                    để không ghi đè ảnh của nhau (ảnh đặt tên theo id tài khoản)
- * @param urlApi      địa chỉ API của Cloudinary (chỉ đổi khi thử với server giả)
- * @param thoiGianCho thời gian chờ tối đa khi kết nối / chờ Cloudinary trả lời, phải nhỏ hơn read-timeout của gateway
- */
+/** Kho ảnh Cloudinary (gói miễn phí), prefix {@code app.cloudinary} trong application-common.yml. */
 @ConfigurationProperties("app.cloudinary")
 public record CloudinaryProperties(
         @DefaultValue("false") boolean bat,

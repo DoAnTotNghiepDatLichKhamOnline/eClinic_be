@@ -14,26 +14,14 @@ import org.springframework.stereotype.Component;
 import iuh.fit.se.eclinic.common.entity.catalog.ChuyenKhoa;
 import iuh.fit.se.eclinic.common.enums.NgonNgu;
 
-/**
- * Chỉ dẫn hệ thống gửi cho mô hình, lấy từ {@code chatbot/loi-nhac-he-thong.txt}: phạm vi được trả lời, điều cấm, dấu
- * hiệu "ngoài phạm vi", ngôn ngữ trả lời, danh sách chuyên khoa của phòng khám (dữ liệu công khai), ngày hôm nay, và 1
- * trong 2 đoạn về dữ liệu cá nhân (có / không có 2 hàm "của tôi"). Bản thân chỉ dẫn không chứa dữ liệu cá nhân nào của
- * người dùng, kể cả tên; không có bí mật nào trong đó.
- * <p>
- * Chỉ dẫn này KHÔNG phải ranh giới bảo mật: mô hình có thể bị dụ làm trái. Phiên chat của ai, giới hạn số tin nhắn,
- * tình huống cấp cứu, ai được đọc lịch hẹn của ai đều do code kiểm tra; mô hình chỉ nhận dữ liệu của chính người đang
- * chat, sau khi người đó đồng ý.
- */
+/** Chỉ dẫn hệ thống gửi cho mô hình, lấy từ {@code chatbot/loi-nhac-he-thong.txt} kèm dữ liệu hôm nay. */
 @Component
 public class LoiNhacHeThong {
 
     /** Mô hình trả đúng chuỗi này khi câu hỏi ngoài phạm vi; server thay bằng câu từ chối của mình. */
     public static final String DANH_DAU_NGOAI_PHAM_VI = "[NGOAI_PHAM_VI]";
 
-    /**
-     * Mở đầu dòng ghi chú mà server gắn vào 1 câu trả lời cũ khi gửi lại lịch sử cho mô hình: các id đã hiện cho người
-     * dùng cùng câu trả lời đó, để mô hình tra cứu tiếp được. Không lưu, không trả cho người dùng.
-     */
+    /** Mở đầu dòng ghi chú server gắn vào câu trả lời cũ khi gửi lại lịch sử cho mô hình. */
     public static final String GHI_CHU_DA_HIEN = "[DATA SHOWN TO THE USER WITH THIS ANSWER]";
 
     private static final String TEP = "chatbot/loi-nhac-he-thong.txt";
@@ -62,10 +50,6 @@ public class LoiNhacHeThong {
         }
     }
 
-    /**
-     * @param cacChuyenKhoa mọi chuyên khoa của phòng khám; tên, mô tả, triệu chứng lấy theo {@code ngonNgu}
-     * @param coCaNhan      true: người chat được đưa 2 hàm đọc lịch hẹn, lượt khám của chính mình
-     */
     public String soan(NgonNgu ngonNgu, List<ChuyenKhoa> cacChuyenKhoa, LocalDate homNay, boolean coCaNhan) {
         StringBuilder danhSach = new StringBuilder();
         for (ChuyenKhoa chuyenKhoa : cacChuyenKhoa.stream().limit(SO_CHUYEN_KHOA_TOI_DA).toList()) {
@@ -84,10 +68,7 @@ public class LoiNhacHeThong {
                 .replace("{{CHUYEN_KHOA}}", danhSach.toString().stripTrailing());
     }
 
-    /**
-     * Câu trả lời có chép lại 1 phần chỉ dẫn này không. Chỉ dẫn không có bí mật nên đây không phải ranh giới bảo mật, chỉ
-     * để chatbot không đọc chỉ dẫn của mình cho người dùng.
-     */
+    /** Câu trả lời có chép lại 1 phần chỉ dẫn này không. */
     public boolean biLo(String traLoi) {
         return traLoi != null && DAU_HIEU_LO.stream().anyMatch(traLoi::contains);
     }

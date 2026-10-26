@@ -8,9 +8,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
 import lombok.Getter;
 
-/**
- * Entity có cả ngay_tao và ngay_cap_nhat (tự điền nhờ JPA auditing). Theo ERD: TaiKhoan, LichHen.
- */
+/** Entity có cả ngay_tao và ngay_cap_nhat (tự điền nhờ JPA auditing). */
 @Getter
 @MappedSuperclass
 public abstract class AuditableEntity extends CreatableEntity {

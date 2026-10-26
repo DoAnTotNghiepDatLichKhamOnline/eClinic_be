@@ -36,12 +36,7 @@ import iuh.fit.se.eclinic.common.exception.LoiNghiepVu;
 import iuh.fit.se.eclinic.common.exception.MaLoi;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Không đặt {@code @Transactional} ở lớp: {@link #hienTai()} thường đọc từ bộ nhớ đệm, không cần transaction; khi phải
- * ghi dòng đầu tiên thì tự mở transaction riêng (bên gọi có thể đang trong transaction chỉ đọc).
- * <p>
- * Không phụ thuộc service nào khác của booking-service: các service đó đều gọi {@link #hienTai()}.
- */
+/** Không đặt {@code @Transactional} ở lớp: hienTai() thường đọc cache, khi ghi thì tự mở transaction riêng. */
 @Slf4j
 @Service
 public class CauHinhServiceImpl implements CauHinhService {
@@ -207,10 +202,7 @@ public class CauHinhServiceImpl implements CauHinhService {
         }
     }
 
-    /**
-     * Thêm dòng cấu hình từ biến môi trường nếu chưa có, rồi đọc khoá dòng. Đọc có khoá luôn thấy bản đã commit mới nhất,
-     * kể cả khi 1 request khác vừa thêm dòng trước. Phải chạy trong transaction được ghi.
-     */
+    /** Thêm dòng cấu hình từ biến môi trường nếu chưa có, rồi đọc khoá dòng. */
     private CauHinhHeThong taoNeuChuaCo() {
         cauHinhHeThongRepository.themNeuChuaCo(bienMoiTruong.datTruocToiThieuPhut(),
                 bienMoiTruong.soNgayDatTruocToiDa(), bienMoiTruong.soLichHieuLucToiDaMoiHoSo(),

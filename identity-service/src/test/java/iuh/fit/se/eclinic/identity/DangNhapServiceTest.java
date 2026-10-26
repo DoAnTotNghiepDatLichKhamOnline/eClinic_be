@@ -46,11 +46,7 @@ import iuh.fit.se.eclinic.identity.repository.TaiKhoanRepository;
 import iuh.fit.se.eclinic.identity.service.DangNhapService;
 import iuh.fit.se.eclinic.identity.service.RefreshTokenService;
 
-/**
- * Đăng nhập / làm mới phiên / đăng xuất với MySQL + Redis thật. Tài khoản tạo thẳng qua repository.
- * Ân hạn dùng lại refresh token rút còn 5 giây; "quá ân hạn" được giả lập bằng cách lùi ngay_thu_hoi 1 phút.
- * Mỗi lần đăng nhập là 1 phiên có mã riêng (ma_phien), giữ nguyên qua các lần làm mới và nằm trong access token.
- */
+/** Đăng nhập / làm mới phiên / đăng xuất với MySQL + Redis thật. */
 @SpringBootTest
 @ExtendWith(OutputCaptureExtension.class)
 @Import({ MySqlTestcontainersConfiguration.class, RedisTestcontainersConfiguration.class })
@@ -237,7 +233,7 @@ class DangNhapServiceTest {
 
         assertMaLoi(() -> dangNhapService.lamMoi(mayA.refreshToken()), MaLoi.PHIEN_DANG_NHAP_KHONG_HOP_LE);
 
-        // Phiên của token bị dùng lại bị đăng xuất (token mới nhất của nó cũng hết hiệu lực); máy B không bị ảnh hưởng
+        // Phiên của token bị dùng lại bị đăng xuất; máy B không bị ảnh hưởng
         assertMaLoi(() -> dangNhapService.lamMoi(mayAMoi.refreshToken()), MaLoi.PHIEN_DANG_NHAP_KHONG_HOP_LE);
         assertThat(refreshTokenService.layPhienDangHoatDong(taiKhoan.getId()))
                 .extracting(RefreshToken::getMaPhien).containsExactly(maPhien(mayB));
@@ -246,7 +242,7 @@ class DangNhapServiceTest {
 
     @Test
     void dungLaiTokenDaDangXuatSauAnHanKhongDangXuatPhienKhac() {
-        // Thiết bị đã đăng xuất (hoặc bị đăng xuất từ xa) quay lại với cookie cũ: chỉ 401, không làm văng thiết bị khác
+        // Thiết bị đã đăng xuất quay lại với cookie cũ: chỉ 401, không làm văng thiết bị khác
         TaiKhoan taiKhoan = taoTaiKhoan(TrangThaiTaiKhoan.DA_KICH_HOAT, MAT_KHAU);
         DangNhapResponse mayA = dangNhap(taiKhoan.getEmail(), MAT_KHAU);
         DangNhapResponse mayB = dangNhap(taiKhoan.getEmail(), MAT_KHAU);

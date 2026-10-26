@@ -6,7 +6,7 @@ public final class DiemDanhGia {
     private DiemDanhGia() {
     }
 
-    /** @return null nếu chưa có đánh giá nào */
+    /** Làm tròn 1 chữ số thập phân; null nếu chưa có đánh giá nào. */
     public static Double lamTron(Double diemTrungBinh) {
         return diemTrungBinh == null ? null : Math.round(diemTrungBinh * 10) / 10.0;
     }

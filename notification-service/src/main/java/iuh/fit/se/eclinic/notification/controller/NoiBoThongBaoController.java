@@ -19,10 +19,7 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 
-/**
- * API nội bộ: service khác (booking-service) gửi thông báo cần tạo. Không qua gateway (gateway chỉ chuyển tiếp
- * {@code /api/notification/**}), không có JWT của người dùng: người gọi chứng minh bằng khoá nội bộ ({@link KhoaNoiBo}).
- */
+/** API nội bộ: service khác (booking-service) gửi thông báo cần tạo. */
 @Hidden
 @RestController
 @RequestMapping("/noi-bo/thong-bao")

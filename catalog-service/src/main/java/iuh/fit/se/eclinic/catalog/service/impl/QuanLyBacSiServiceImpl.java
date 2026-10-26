@@ -41,10 +41,7 @@ import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Không đặt {@code @Transactional} ở method: mỗi method gọi sang service khác (HTTP) nên phần ghi bảng bac_si chạy trong
- * transaction ngắn của {@link TransactionTemplate}, không giữ khoá dòng trong lúc chờ service kia.
- */
+/** Không đặt {@code @Transactional} ở method: không giữ khoá dòng trong lúc gọi HTTP sang service khác. */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -197,8 +194,7 @@ public class QuanLyBacSiServiceImpl implements QuanLyBacSiService {
     @Override
     public HoSoBacSiQuanTriResponse congTacLai(Long idBacSi) {
         Long idTaiKhoan = timBacSi(idBacSi).getTaiKhoan().getId();
-        // Tài khoản trước: identity-service lỗi thì bác sĩ vẫn ở trạng thái cũ, không có bác sĩ "đang công tác" mà
-        // không đăng nhập được
+        // Tài khoản trước: identity-service lỗi thì bác sĩ vẫn ở trạng thái cũ
         taiKhoanClient.kichHoatLai(idTaiKhoan);
         giaoDich.executeWithoutResult(trangThai -> khoaBacSi(idBacSi).setTrangThai(TrangThaiBacSi.DANG_CONG_TAC));
         log.info("Bác sĩ id={} công tác lại, tài khoản id={} được kích hoạt lại", idBacSi, idTaiKhoan);

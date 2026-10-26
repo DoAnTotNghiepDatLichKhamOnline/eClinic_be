@@ -19,11 +19,7 @@ import iuh.fit.se.eclinic.identity.service.MatKhauService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
-/**
- * Hồ sơ cá nhân của người đang đăng nhập (UC-PROF-01/02, PAT-01, DOC-01) và đổi mật khẩu. Mọi vai trò đều gọi được,
- * luôn thao tác trên tài khoản của chính người gọi (id lấy từ JWT).
- * Đường dẫn theo tài liệu API: /api/users/me
- */
+/** Hồ sơ cá nhân của người đang đăng nhập và đổi mật khẩu. */
 @Tag(name = "Hồ sơ cá nhân", description = "Xem, cập nhật hồ sơ và đổi mật khẩu của người đang đăng nhập")
 @RestController
 @RequestMapping("/api/users/me")

@@ -73,10 +73,7 @@ public class SoKhamServiceImpl implements SoKhamService {
                 .orElseThrow(SoKhamServiceImpl::khongTimThay);
     }
 
-    /**
-     * SĐT liên hệ của lượt khám (lịch hẹn tạo trước khi có cột này: SĐT người giám hộ, rồi SĐT của hồ sơ), như khi hủy /
-     * đổi lịch bằng phiếu khám. So sánh không phụ thuộc vị trí ký tự sai.
-     */
+    /** SĐT liên hệ của lượt khám (lịch cũ: SĐT người giám hộ, rồi SĐT của hồ sơ). */
     private static boolean khopBonSoCuoi(LichHen lichHen, String bonSoCuoi) {
         String daLuu = lichHen.getSoDienThoaiLienHe();
         if (daLuu == null && lichHen.getNguoiGiamHo() != null) {

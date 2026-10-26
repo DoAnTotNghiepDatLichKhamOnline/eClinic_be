@@ -25,9 +25,7 @@ import iuh.fit.se.eclinic.identity.controller.PhienDangNhapController;
 import iuh.fit.se.eclinic.identity.dto.response.PhienDangNhapResponse;
 import iuh.fit.se.eclinic.identity.service.PhienDangNhapService;
 
-/**
- * Tầng web của /api/users/me/sessions: phải đăng nhập, id tài khoản và mã phiên hiện tại lấy từ JWT. Service là mock.
- */
+/** Tầng web của /api/users/me/sessions: phải đăng nhập, id tài khoản và mã phiên hiện tại lấy từ JWT. */
 @WebMvcTest(PhienDangNhapController.class)
 @AutoConfigureJson
 @Import(BaoMatConfig.class)

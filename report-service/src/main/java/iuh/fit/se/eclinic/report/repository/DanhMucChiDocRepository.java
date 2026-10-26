@@ -35,10 +35,7 @@ public interface DanhMucChiDocRepository extends Repository<BacSi, Long> {
     @Query("select ck from ChuyenKhoa ck where ck.id = :id")
     Optional<ChuyenKhoa> timChuyenKhoa(Long id);
 
-    /**
-     * Bác sĩ đang công tác có tài khoản đã kích hoạt (hiện tại, không theo kỳ): cùng nghĩa với ô "bác sĩ đang công tác"
-     * của Dashboard quản trị viên (booking-service).
-     */
+    /** Bác sĩ đang công tác có tài khoản đã kích hoạt, cùng nghĩa với ô trên Dashboard quản trị viên. */
     @Query("""
             select count(b) from BacSi b
             where b.trangThai = iuh.fit.se.eclinic.common.enums.TrangThaiBacSi.DANG_CONG_TAC

@@ -18,12 +18,7 @@ import iuh.fit.se.eclinic.identity.dto.response.HoSoCaNhanResponse;
 import iuh.fit.se.eclinic.identity.service.AnhDaiDienService;
 import lombok.RequiredArgsConstructor;
 
-/**
- * Ảnh đại diện của người đang đăng nhập. Mọi vai trò đều gọi được, luôn thao tác trên tài khoản của chính người gọi.
- * <p>
- * Tải lên bằng multipart/form-data, phần tệp tên {@code anh}: JPEG, PNG hoặc WebP, tối đa 2MB
- * (spring.servlet.multipart.max-file-size). Tên tệp và Content-Type của phần tệp không được dùng để kiểm tra.
- */
+/** Ảnh đại diện của người đang đăng nhập. */
 @Tag(name = "Ảnh đại diện", description = "Đổi và bỏ ảnh đại diện của người đang đăng nhập")
 @RestController
 @RequestMapping("/api/users/me/avatar")

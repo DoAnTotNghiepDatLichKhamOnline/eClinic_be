@@ -31,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 @Transactional(readOnly = true)
 public class TaiKhoanNoiBoServiceImpl implements TaiKhoanNoiBoService {
 
-    /** Cùng giới hạn với @MatKhauHopLe: mật khẩu mặc định phải là mật khẩu mà người dùng tự đặt cũng được chấp nhận. */
+    /** Cùng giới hạn với @MatKhauHopLe: mật khẩu mặc định cũng phải là mật khẩu hợp lệ. */
     private static final int DO_DAI_MAT_KHAU_TOI_THIEU = 6;
     private static final int SO_BYTE_MAT_KHAU_TOI_DA = 72;
 
@@ -42,7 +42,7 @@ public class TaiKhoanNoiBoServiceImpl implements TaiKhoanNoiBoService {
     private final ApplicationEventPublisher eventPublisher;
     private final String matKhauMacDinh;
 
-    /** Kiểm tra cấu hình ngay khi khởi động: mật khẩu mặc định không hợp lệ thì không cho chạy. */
+    /** Mật khẩu mặc định không hợp lệ thì không cho khởi động. */
     public TaiKhoanNoiBoServiceImpl(TaiKhoanRepository taiKhoanRepository, BacSiChiDocRepository bacSiChiDocRepository,
             TrangThaiTaiKhoanService trangThaiTaiKhoanService, PasswordEncoder passwordEncoder,
             ApplicationEventPublisher eventPublisher, BacSiMoiProperties properties) {
@@ -113,7 +113,7 @@ public class TaiKhoanNoiBoServiceImpl implements TaiKhoanNoiBoService {
     public TaiKhoanNoiBoResponse suaThongTin(Long id, SuaThongTinTaiKhoanRequest request) {
         TaiKhoan taiKhoan = layTaiKhoanBacSi(id);
         String soDienThoai = chuanHoaSoDienThoai(request.soDienThoai());
-        // Kiểm tra TRƯỚC khi sửa entity: truy vấn sau khi sửa sẽ flush thay đổi và vấp khoá duy nhất của bảng
+        // Kiểm tra TRƯỚC khi sửa entity: truy vấn sau khi sửa sẽ flush và vấp khoá duy nhất
         if (soDienThoai != null && taiKhoanRepository.existsBySoDienThoaiAndIdNot(soDienThoai, id)) {
             throw new LoiNghiepVu(MaLoi.SO_DIEN_THOAI_DA_TON_TAI);
         }

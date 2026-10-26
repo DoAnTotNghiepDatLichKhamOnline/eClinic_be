@@ -16,10 +16,7 @@ import iuh.fit.se.eclinic.common.security.KhoaNoiBo;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
-/**
- * API nội bộ cho catalog-service khi bác sĩ ngừng công tác (phase 6). Không đi qua gateway, không cần JWT: kiểm tra khoá
- * nội bộ ({@link KhoaNoiBo}).
- */
+/** API nội bộ cho catalog-service khi bác sĩ ngừng công tác. */
 @Hidden
 @RestController
 @RequestMapping("/noi-bo/bac-si")

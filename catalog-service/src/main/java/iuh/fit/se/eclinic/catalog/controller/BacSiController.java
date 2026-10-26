@@ -21,10 +21,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 
-/**
- * DOC-03: tìm bác sĩ theo chuyên khoa, tên và khung giờ rảnh (ngày, buổi còn lượt khám đặt được) khi đặt lịch. Công khai (app.bao-mat.duong-dan-cong-khai).
- * Chỉ trả về bác sĩ đang công tác có tài khoản đã kích hoạt.
- */
+/** Tìm bác sĩ theo chuyên khoa, tên và khung giờ rảnh. */
 @Tag(name = "Bác sĩ", description = "DOC-03: tìm bác sĩ theo chuyên khoa, tên, khung giờ rảnh")
 @RestController
 @RequestMapping("/api/catalog/bac-si")

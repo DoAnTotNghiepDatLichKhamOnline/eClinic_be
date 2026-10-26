@@ -17,13 +17,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
-/**
- * Phần hồ sơ giới thiệu bác sĩ tự sửa (DOANTOTNGH-10 B7): giới thiệu ngắn, tiểu sử, ngôn ngữ khám, giải thưởng, công
- * trình nghiên cứu, cả bản tiếng Anh. Gửi đủ các trường này: bỏ trống / null bị xoá trắng. Mục khác của hồ sơ (học vị,
- * giấy phép, đào tạo...) chỉ quản trị viên sửa; gửi kèm cũng bị bỏ qua. Giới hạn giống {@link CapNhatHoSoBacSiRequest}.
- *
- * @param phienBan như {@link CapNhatHoSoBacSiRequest#phienBan()}
- */
+/** Phần hồ sơ giới thiệu bác sĩ tự sửa, cả bản tiếng Anh. */
 public record CapNhatHoSoCuaToiRequest(
 
         @NotNull(message = "{kiemTra.phienBan.batBuoc}")

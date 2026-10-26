@@ -15,10 +15,7 @@ import iuh.fit.se.eclinic.catalog.service.PhongKhamService;
 import iuh.fit.se.eclinic.common.dto.PhanHoiApi;
 import lombok.RequiredArgsConstructor;
 
-/**
- * Danh sách phòng khám đang hoạt động, chỉ đọc: quản trị viên chọn phòng khi xếp ca, bác sĩ chọn phòng mong muốn khi xin
- * đổi ca. Thêm / sửa / ẩn phòng khám chưa có API.
- */
+/** Danh sách phòng khám đang hoạt động (chỉ đọc), để chọn phòng khi xếp ca hoặc xin đổi ca. */
 @Tag(name = "Phòng khám", description = "Danh sách phòng khám đang hoạt động (chỉ đọc)")
 @RestController
 @RequestMapping("/api/catalog/phong-kham")

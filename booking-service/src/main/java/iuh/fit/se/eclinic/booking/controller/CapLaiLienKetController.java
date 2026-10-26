@@ -15,11 +15,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
-/**
- * PAT-03: khách đã mất link phiếu khám tự xin cấp lại. Công khai (app.bao-mat.duong-dan-cong-khai). Phản hồi luôn như
- * nhau dù mã có thật hay không, SĐT đúng hay sai, lịch hẹn có email hay không (không dò được mã); link chỉ gửi tới
- * email của lịch hẹn. Nhân viên cấp lại ở {@link QuanTriLichHenController} và {@link LichCuaBacSiController}.
- */
+/** Khách đã mất link phiếu khám tự xin cấp lại. */
 @Tag(name = "Cấp lại liên kết", description = "PAT-03: khách mất link tự xin gửi lại liên kết phiếu khám qua email")
 @RestController
 @RequestMapping("/api/booking/cap-lai-lien-ket")

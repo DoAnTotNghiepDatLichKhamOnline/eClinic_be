@@ -7,10 +7,7 @@ import iuh.fit.se.eclinic.booking.service.GuiThongBaoService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Gửi thông báo đang chờ sang notification-service sau mỗi {@code app.thong-bao.chu-ky-gui} (tính từ lúc lần trước chạy
- * xong), và 3 giờ 30 sáng mỗi ngày xoá các sự kiện đã gửi quá 7 ngày.
- */
+/** Gửi thông báo đang chờ sang notification-service theo chu kỳ, và xoá sự kiện đã gửi quá 7 ngày. */
 @Slf4j
 @Component
 @RequiredArgsConstructor

@@ -29,10 +29,7 @@ public interface LichHenChiDocRepository extends Repository<LichHen, Long> {
             """)
     List<SoLuotTheoBacSi> demDaKham(Collection<Long> idCacBacSi);
 
-    /**
-     * Số lịch hẹn còn hiệu lực (đã xác nhận; chưa bị đánh dấu cần đổi lịch) nằm trên các ca còn hoạt động
-     * chưa bắt đầu của bác sĩ: những lịch hẹn sẽ phải đổi lịch nếu bác sĩ ngừng công tác.
-     */
+    /** Số lịch hẹn còn hiệu lực trên các ca chưa bắt đầu của bác sĩ, phải đổi lịch nếu bác sĩ nghỉ. */
     @Query("""
             select count(l) from LichHen l
               join l.khungGio k
