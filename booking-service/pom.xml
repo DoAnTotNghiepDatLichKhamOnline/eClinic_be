@@ -20,15 +20,30 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webmvc</artifactId>
         </dependency>
-        <!-- Redis: đếm số lần gọi API đặt lịch công khai theo địa chỉ IP -->
+        <!-- Redis: đếm số lần gọi API đặt lịch công khai theo địa chỉ IP, cache ngày nghỉ công khai (CacheConfig) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-redis</artifactId>
+        </dependency>
+        <!-- Spring Cache trên Redis -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-cache</artifactId>
         </dependency>
         <!-- ZXing core: mã hoá link phiếu khám thành ma trận QR; ảnh PNG do ImageIO của JDK ghi -->
         <dependency>
             <groupId>com.google.zxing</groupId>
             <artifactId>core</artifactId>
+        </dependency>
+        <!-- Apache POI: xuất lịch làm việc, tệp mẫu và nhập lịch từ tệp .xlsx -->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+        </dependency>
+        <!-- OpenPDF: bản in lịch làm việc của bác sĩ và lưới tuần toàn viện (font Noto Sans nhúng, có tiếng Việt) -->
+        <dependency>
+            <groupId>com.github.librepdf</groupId>
+            <artifactId>openpdf</artifactId>
         </dependency>
 
         <!-- Test -->

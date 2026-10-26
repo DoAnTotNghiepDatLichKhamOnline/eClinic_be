@@ -3,6 +3,7 @@
 // Vai trò:    BENH_NHAN
 // API:
 //   GET    /api/booking/trang-ca-nhan/cua-toi                            hồ sơ, số lịch hẹn, người thân đã lưu, các lần khám gần đây
+//          (kết quả khám có maSoKham / linkSoKham: link sổ khám bệnh + mã QR, vẽ ở ketQuaKham() của chung.js)
 //   GET    /api/booking/ho-so-benh-nhan/cua-toi                          hồ sơ bệnh nhân của tài khoản (404 = chưa có)
 //   PUT    /api/booking/ho-so-benh-nhan/cua-toi                          tạo / sửa hồ sơ (số CCCD chỉ nhập được khi tạo)
 //   PUT    /api/booking/thong-tin-dat-lich/cua-toi/nguoi-than/{id}       sửa bản lưu của 1 người thân

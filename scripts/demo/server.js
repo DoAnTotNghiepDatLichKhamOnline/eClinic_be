@@ -5,7 +5,7 @@
 // rồi mở http://localhost:5173 bằng Chrome/Edge/Firefox (Safari không gửi cookie Secure qua http://localhost).
 //
 // Cổng 5173 trùng FRONTEND_URL mặc định nên liên kết trong email (/verify-email, /reset-password, /confirm-email-change) và
-// link phiếu khám trong mã QR (/phieu-kham/<mã>) mở đúng trang này; cổng này cũng đã nằm trong CORS_ALLOWED_ORIGINS.
+// link phiếu khám trong mã QR (/phieu-kham/<mã>), link sổ khám bệnh (/so-kham/<mã>) mở đúng trang này; cổng này cũng đã nằm trong CORS_ALLOWED_ORIGINS.
 // GOOGLE_CLIENT_ID lấy từ biến môi trường; không có thì chỉ đọc ĐÚNG dòng GOOGLE_CLIENT_ID trong .env ở thư mục gốc
 // (không đọc / in các biến khác). Client ID phải cho phép origin http://localhost:5173 (xem README).
 //
@@ -30,9 +30,14 @@ const CAC_DUONG_DAN = new Set([
     '/doctor/dashboard', '/doctor/work-schedule', '/doctor/upcoming-appointments', '/doctor/consultation', '/doctor/profile',
     '/admin/dashboard', '/admin/schedule-management', '/admin/medical-catalog', '/admin/doctors', '/admin/patients',
     '/admin/accounts',
+    // Ngoài danh sách UI (DOANTOTNGH-14)
+    '/admin/appointments', '/admin/hotline-booking', '/admin/booking-rules', '/admin/closures', '/admin/reports',
+    '/find-ticket',
 ]);
 // /phieu-kham/<đúng 1 đoạn>: mã phiếu khám do màn hình tự đọc từ URL
 const PHIEU_KHAM = /^\/phieu-kham\/[^/]+$/;
+// /so-kham/<đúng 1 đoạn>: trang sổ khám bệnh; phải trùng app.so-kham.duong-dan (link và mã QR của sổ khám mở trang này)
+const SO_KHAM = /^\/so-kham\/[^/]+$/;
 // Đường dẫn của 3 trang demo cũ
 const CHUYEN_HUONG = new Map([['/dat-lich', '/appointment'], ['/lich-hen', '/patient/appointments']]);
 
@@ -90,7 +95,7 @@ http.createServer((req, res) => {
     } else if (TEP_TINH.has(duongDan)) {
         const tep = TEP_TINH.get(duongDan);
         traLoi(200, { 'Content-Type': KIEU[path.extname(tep)] }, fs.readFileSync(tep));
-    } else if (CAC_DUONG_DAN.has(duongDan) || PHIEU_KHAM.test(duongDan)) {
+    } else if (CAC_DUONG_DAN.has(duongDan) || PHIEU_KHAM.test(duongDan) || SO_KHAM.test(duongDan)) {
         traLoi(200, { 'Content-Type': 'text/html; charset=utf-8' }, khungTrang());
     } else {
         traLoi(404, { 'Content-Type': 'text/plain; charset=utf-8' }, 'Không tìm thấy');

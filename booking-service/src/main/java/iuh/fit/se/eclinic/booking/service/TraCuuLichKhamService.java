@@ -15,8 +15,8 @@ import iuh.fit.se.eclinic.booking.dto.response.NgaySomNhatResponse;
  * thiếu cả hai thì ném DU_LIEU_KHONG_HOP_LE. Chỉ tính ca còn hoạt động của bác sĩ đang công tác có tài khoản
  * đã kích hoạt; bác sĩ không tồn tại / không còn làm việc cho kết quả rỗng.
  * <p>
- * 1 lượt khám đặt được khi còn trống, bắt đầu sau hiện tại ít nhất {@code app.dat-lich.dat-truoc-toi-thieu}
- * và nằm trong {@code app.dat-lich.so-ngay-dat-truoc-toi-da} ngày tới.
+ * 1 lượt khám đặt được khi còn trống, bắt đầu sau hiện tại ít nhất cấu hình {@code datTruocToiThieuPhut}
+ * và nằm trong {@code soNgayDatTruocToiDa} ngày tới.
  */
 public interface TraCuuLichKhamService {
 

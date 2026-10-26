@@ -21,6 +21,7 @@ import iuh.fit.se.eclinic.common.entity.catalog.BacSi;
 import iuh.fit.se.eclinic.common.entity.identity.TaiKhoan;
 import iuh.fit.se.eclinic.common.enums.NgonNgu;
 import iuh.fit.se.eclinic.common.util.DiemDanhGia;
+import iuh.fit.se.eclinic.common.util.MaBacSi;
 
 /**
  * Chuyển entity bác sĩ sang DTO. Họ tên, ảnh đại diện lấy từ tài khoản của bác sĩ.
@@ -90,9 +91,9 @@ public class BacSiMapper {
                 bacSi.getTrangThai(), taiKhoan.getTrangThai(), taiKhoan.isPhaiDoiMatKhau());
     }
 
-    /** Mã hiển thị của bác sĩ: "BS" + id đủ 4 chữ số (BS0007). Suy ra từ id, không lưu trong DB. */
+    /** Mã hiển thị của bác sĩ (BS0007), xem {@link MaBacSi}. */
     public static String maBacSi(Long id) {
-        return String.format("BS%04d", id);
+        return MaBacSi.tu(id);
     }
 
     /** Bản công khai: chú thích theo ngôn ngữ đã cho. */

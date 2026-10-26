@@ -66,9 +66,10 @@ def goi(ten, method, duong_dan, body=None, token=None, mong=None, cookie=None, n
     return status, ket_qua
 
 
-def xoa_gioi_han_ip():
-    """Xoá bộ đếm 20 lần / 10 phút / IP trên Redis của stack thử, để script gọi được nhiều hơn 20 lần đặt / đổi / hủy."""
-    quet = subprocess.run(["docker", "exec", "eclinic-redis", "redis-cli", "--scan", "--pattern", "dat-lich:ip:*"],
+def xoa_gioi_han_ip(mau="dat-lich:ip:*"):
+    """Xoá bộ đếm 20 lần / 10 phút / IP trên Redis của stack thử, để script gọi được nhiều hơn 20 lần đặt / đổi / hủy.
+    mau: mẫu khoá khác (cap-lai:*, so-kham:sai:*) để chạy lại script trong cửa sổ đếm."""
+    quet = subprocess.run(["docker", "exec", "eclinic-redis", "redis-cli", "--scan", "--pattern", mau],
                           capture_output=True, text=True, check=True).stdout.split()
     if quet:
         subprocess.run(["docker", "exec", "eclinic-redis", "redis-cli", "DEL", *quet], capture_output=True, check=True)
@@ -283,6 +284,7 @@ def main():
     la_nguoi_giam_ho(token, cccd_toi, id_ca, khung[0])
     tai_khoan(token_ad)
     chatbot(token, token_ad, id_ck, id_bs)
+    dat_lich_toan_vien(token, token_ad, toi_bn, id_ck, ngay, ma1, dat2["duLieu"]["maPhieuKham"], dat1["duLieu"]["maTraCuu"])
 
     # --- Khung giờ đủ lượt: đánh dấu mọi lượt còn trống của 1 khung là đã đặt rồi đặt vào khung đó ---
     xoa_gioi_han_ip()
@@ -622,6 +624,73 @@ def chatbot(token, token_ad, id_ck, id_bs):
     goi("loi-chat-dong-y-admin", "POST", f"{p}/{id_ad}/dong-y", token=token_ad, mong=403)
     goi("loi-chat-phien-nguoi-khac", "GET", f"{p}/{id_ad}/tin-nhan", token=token, mong=404)
     goi("chat-admin-hoi-lich", "POST", f"{p}/{id_ad}/tin-nhan", {"noiDung": "#lichtoi"}, token=token_ad, mong=200)
+
+
+def dat_lich_toan_vien(token, token_ad, toi_bn, id_ck, ngay, ma_cu, ma_moi, ma_tra_cuu_khach):
+    """Mục 20 và 14.5 (DOANTOTNGH-14): quy tắc đặt lịch, ngày nghỉ, sổ khám bệnh, khách xin cấp lại link, tệp lịch .ics,
+    lọc bác sĩ theo ngày / buổi. ma_cu: phiếu đã đổi đi (tệp lịch "đã hủy"); ma_moi: 1 phiếu đang hiệu lực;
+    ma_tra_cuu_khach: mã ECL của lần khách đặt đầu (chuỗi đã đổi rồi hủy: phản hồi vẫn như mọi trường hợp); sổ khám lấy
+    từ lượt khám bác sĩ đã ghi ở cua_toi (SĐT liên hệ = SĐT của toi_bn)."""
+    xoa_gioi_han_ip("cap-lai:*")
+    xoa_gioi_han_ip("so-kham:sai:*")
+
+    # --- 20.1 Quy tắc đặt lịch ---
+    goi("quy-tac-dat-lich", "GET", "/api/booking/quy-tac-dat-lich", mong=200)
+
+    # --- 20.2 Ngày nghỉ: khai báo 1 ngày ngoài 14 ngày ca mẫu (không ca nào bị hủy) bằng route của quản trị viên ---
+    nghi = (date.today() + timedelta(days=30)).isoformat()
+    goi("qt-khai-bao-ngay-nghi", "POST", "/api/booking/quan-tri/ngay-nghi",
+        {"tuNgay": nghi, "denNgay": nghi, "lyDo": "Nghỉ lễ Quốc khánh bù", "lyDoEn": "National Day holiday (in lieu)"},
+        token=token_ad)
+    goi("ngay-nghi", "GET", "/api/booking/ngay-nghi", mong=200)
+    goi("ngay-nghi-en", "GET", f"/api/booking/ngay-nghi?tuNgay={nghi}&denNgay={nghi}", mong=200, ngon_ngu="en")
+    goi("ngay-nghi-rong", "GET", "/api/booking/ngay-nghi?tuNgay=2020-01-01&denNgay=2020-01-31", mong=200)
+    goi("loi-ngay-nghi-nguoc", "GET", "/api/booking/ngay-nghi?tuNgay=2026-12-31&denNgay=2026-12-01", mong=400)
+    goi("loi-ngay-nghi-qua-366", "GET", "/api/booking/ngay-nghi?tuNgay=2026-01-01&denNgay=2027-06-01", mong=400)
+
+    # --- 11.3 Lọc bác sĩ theo ngày / buổi còn chỗ ---
+    goi("bac-si-theo-ngay", "GET", f"/api/catalog/bac-si?idChuyenKhoa={id_ck}&ngay={ngay}", mong=200)
+    goi("bac-si-theo-ngay-buoi", "GET", f"/api/catalog/bac-si?idChuyenKhoa={id_ck}&ngay={ngay}&buoi=SANG", mong=200)
+    goi("bac-si-ngay-ngoai-khoang", "GET", f"/api/catalog/bac-si?ngay={(date.today() + timedelta(days=400)).isoformat()}",
+        mong=200)
+    goi("loi-bac-si-buoi-sai", "GET", f"/api/catalog/bac-si?buoi=DEM", mong=400)
+
+    # --- 14.5 Tệp lịch .ics ---
+    goi("lich-ics", "GET", f"/api/booking/phieu-kham/{ma_moi}/lich.ics", mong=200)
+    goi("lich-ics-phieu-cu", "GET", f"/api/booking/phieu-kham/{ma_cu}/lich.ics", mong=200)
+    goi("loi-lich-ics-khong-co", "GET", f"/api/booking/phieu-kham/{MA_GIA}/lich.ics", mong=404)
+
+    # --- 20.3 - 20.5 Sổ khám bệnh ---
+    _, ls = goi("lich-su-kham-so-kham", "GET", "/api/booking/lich-su-kham/cua-toi", token=token, mong=200)
+    ma_sk = next(d["ketQua"]["maSoKham"] for d in ls["duLieu"]["noiDung"] if d["ketQua"] and d["ketQua"].get("maSoKham"))
+    sk = f"/api/booking/so-kham/{ma_sk}"
+    bon_so = toi_bn["soDienThoai"][-4:]
+    sai = "0000" if bon_so != "0000" else "1111"
+    goi("so-kham-tom-tat", "GET", sk, mong=200)
+    goi("so-kham-tom-tat-en", "GET", sk, mong=200, ngon_ngu="en")
+    goi("loi-so-kham-khong-co", "GET", f"/api/booking/so-kham/{MA_GIA}", mong=404)
+    goi("loi-so-kham-thieu-so", "POST", f"{sk}/xem", {"bonSoCuoi": "12a"}, mong=400)
+    goi("so-kham-xem", "POST", f"{sk}/xem", {"bonSoCuoi": bon_so}, mong=200)
+    goi("so-kham-xem-en", "POST", f"{sk}/xem", {"bonSoCuoi": bon_so}, mong=200, ngon_ngu="en")
+    goi("so-kham-qr", "GET", f"{sk}/qr", mong=200)
+    goi("loi-so-kham-qr-kich-thuoc", "GET", f"{sk}/qr?kichThuoc=50", mong=400)
+    for lan in range(1, 7):
+        status, _ = goi(f"loi-so-kham-sai-lan-{lan}", "POST", f"{sk}/xem", {"bonSoCuoi": sai})
+        if status == 429:
+            break
+    goi("loi-so-kham-dang-khoa", "POST", f"{sk}/xem", {"bonSoCuoi": bon_so}, mong=429)
+    xoa_gioi_han_ip("so-kham:sai:*")
+
+    # --- 20.6 Khách xin cấp lại link: mã tra cứu của lần đặt đầu (đã đổi), gửi cho lịch hiện hành của chuỗi ---
+    cl = "/api/booking/cap-lai-lien-ket"
+    goi("cap-lai-lien-ket", "POST", cl, {"maTraCuu": ma_tra_cuu_khach, "soDienThoai": "0912345601"}, mong=200)
+    goi("cap-lai-lien-ket-sai-sdt", "POST", cl, {"maTraCuu": ma_tra_cuu_khach, "soDienThoai": "0999999999"}, mong=200)
+    goi("cap-lai-lien-ket-ma-khong-co", "POST", cl, {"maTraCuu": "ECL-20200101-0000", "soDienThoai": "0912345601"},
+        mong=200)
+    goi("loi-cap-lai-sai-dang", "POST", cl, {"maTraCuu": "ABC", "soDienThoai": "123"}, mong=400)
+    goi("cap-lai-lien-ket-lan-3", "POST", cl, {"maTraCuu": ma_tra_cuu_khach, "soDienThoai": "0912345601"}, mong=200)
+    goi("loi-cap-lai-qua-so-lan", "POST", cl, {"maTraCuu": ma_tra_cuu_khach, "soDienThoai": "0912345601"}, mong=429)
+    xoa_gioi_han_ip("cap-lai:*")
 
 
 def la_nguoi_giam_ho(token, cccd_toi, id_ca, gio):

@@ -219,6 +219,60 @@ public interface LichLamViecRepository extends JpaRepository<LichLamViec, Long> 
     boolean existsTrungCaCuaPhongKham(Long phongKhamId, LocalDate ngayLamViec, LocalTime gioBatDau,
             LocalTime gioKetThuc, Long excludeId);
 
+    /**
+     * Ca nguồn của 1 lần sao chép: ca CÒN HOẠT ĐỘNG có ngày trong [tuNgay, denNgay], theo ngày, giờ bắt đầu. Không lấy
+     * sẵn bác sĩ / phòng khám: các dòng đó được khoá rồi mới đọc, nên trạng thái đọc được là trạng thái mới nhất.
+     */
+    @Query("""
+            select l from LichLamViec l
+            where l.ngayLamViec between :tuNgay and :denNgay
+              and l.trangThai = iuh.fit.se.eclinic.common.enums.TrangThaiLichLamViec.HOAT_DONG
+              and (:idChuyenKhoa is null or l.bacSi.chuyenKhoa.id = :idChuyenKhoa)
+            order by l.ngayLamViec, l.gioBatDau, l.id
+            """)
+    List<LichLamViec> timCaNguonSaoChep(LocalDate tuNgay, LocalDate denNgay, Long idChuyenKhoa);
+
+    /** Bác sĩ, ngày và giờ của 1 ca: đủ để cộng giờ làm theo tuần (SCHED-05). */
+    interface GioCuaCa {
+
+        Long getIdBacSi();
+
+        LocalDate getNgay();
+
+        LocalTime getGioBatDau();
+
+        LocalTime getGioKetThuc();
+    }
+
+    /**
+     * Giờ các ca CÒN HOẠT ĐỘNG có ngày trong [tuNgay, denNgay] (kể cả ca đã qua). Bộ lọc null = không lọc.
+     *
+     * @param excludeId ca đang sửa (không cộng giờ cũ của nó); null khi xếp ca mới hoặc khi tổng hợp
+     */
+    @Query("""
+            select l.bacSi.id as idBacSi, l.ngayLamViec as ngay, l.gioBatDau as gioBatDau, l.gioKetThuc as gioKetThuc
+            from LichLamViec l
+            where l.ngayLamViec between :tuNgay and :denNgay
+              and l.trangThai = iuh.fit.se.eclinic.common.enums.TrangThaiLichLamViec.HOAT_DONG
+              and (:idBacSi is null or l.bacSi.id = :idBacSi)
+              and (:idChuyenKhoa is null or l.bacSi.chuyenKhoa.id = :idChuyenKhoa)
+              and (:excludeId is null or l.id <> :excludeId)
+            """)
+    List<GioCuaCa> timGioCaHoatDong(LocalDate tuNgay, LocalDate denNgay, Long idBacSi, Long idChuyenKhoa,
+            Long excludeId);
+
+    /**
+     * Id các ca CÒN HOẠT ĐỘNG vào các ngày đã cho, theo id (thứ tự khoá như duyệt nhóm yêu cầu). Chỉ lấy id: nơi gọi khoá
+     * từng ca bằng {@link #findByIdForUpdate} nên đọc được trạng thái mới nhất, không phải bản đã nạp từ trước.
+     */
+    @Query("""
+            select l.id from LichLamViec l
+            where l.ngayLamViec in :cacNgay
+              and l.trangThai = iuh.fit.se.eclinic.common.enums.TrangThaiLichLamViec.HOAT_DONG
+            order by l.id
+            """)
+    List<Long> timIdCaHoatDongTrongCacNgay(Collection<LocalDate> cacNgay);
+
     /** Id các ca còn hoạt động chưa bắt đầu của bác sĩ (ca đang diễn ra không tính), ca sớm nhất trước. */
     @Query("""
             select l.id from LichLamViec l

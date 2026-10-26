@@ -1,5 +1,6 @@
 package iuh.fit.se.eclinic.booking.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.Lock;
@@ -25,5 +26,13 @@ public interface PhongKhamChiDocRepository extends Repository<PhongKham, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select p from PhongKham p join fetch p.chuyenKhoa where p.id = :id")
     Optional<PhongKham> khoaTheoId(Long id);
+
+    /** Phòng đang hoạt động, lấy sẵn chuyên khoa: danh sách phòng của tệp mẫu nhập lịch. */
+    @Query("""
+            select p from PhongKham p join fetch p.chuyenKhoa
+            where p.trangThai = iuh.fit.se.eclinic.common.enums.TrangThaiPhongKham.HOAT_DONG
+            order by p.id
+            """)
+    List<PhongKham> timDangHoatDong();
 
 }

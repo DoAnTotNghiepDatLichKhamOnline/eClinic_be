@@ -18,7 +18,24 @@
 // Chỉ khi đăng nhập bằng tài khoản bệnh nhân:
 //   GET    /api/booking/thong-tin-dat-lich/cua-toi                       hồ sơ của tôi, người thân đã lưu, lần đặt gần nhất
 //   DELETE /api/booking/thong-tin-dat-lich/cua-toi/nguoi-than/{id}       bỏ 1 người thân đã lưu
+//   GET  /api/booking/quy-tac-dat-lich                                   quy tắc đang dùng (quản trị viên sửa được): đặt trước tối
+//                                                                        thiểu (phút) / tối đa (ngày), hạn hủy / đổi, số lần đổi,
+//                                                                        số lịch còn hiệu lực của 1 người khám
+//   GET  /api/booking/ngay-nghi?tuNgay=&denNgay=                         ngày bệnh viện nghỉ kèm lý do (ngày nghỉ không có ca nào)
+//   GET  /api/catalog/bac-si?idChuyenKhoa=&ngay=&buoi=SANG|CHIEU|TOI     2. lọc bác sĩ còn lượt trống đặt được vào ngày / buổi đó
+//                                                                        (buổi theo giờ bắt đầu lượt: sáng < 12h, chiều 12–17h,
+//                                                                        tối từ 17h); ngoài khoảng đặt trước được -> trang rỗng
 // Người khám dưới 18 tuổi (tính theo NGÀY KHÁM) phải có người giám hộ; trang chỉ hiện khối nhập, server mới là nơi quyết định.
+// Mất link phiếu khám: /find-ticket (khách tự xin gửi lại qua email).
+//
+// Màn hình ngoài danh sách UI: Đặt lịch qua tổng đài (quản trị viên đặt thay người gọi điện / người đến quầy, kênh HOTLINE)
+// Đường dẫn:  /admin/hotline-booking
+// Vai trò:    QUAN_TRI_VIEN
+// Cùng form và các bước như trên (không có hồ sơ / người thân của tài khoản), thêm ô ngôn ngữ của người gọi. Gửi:
+//   POST /api/booking/quan-tri/lich-hen   { idLichLamViec | idChuyenKhoa, gioBatDauKhung, benhNhan, nguoiGiamHo?, lyDoKham,
+//        ngonNgu: VI | EN } -> 201 { idLichHen, phieuKham } (phieuKham như kết quả đặt lịch, có maPhieuKham + linkPhieuKham: chỉ
+//        phản hồi này trả mã phiếu cho nhân viên, để in phiếu / mở mã QR). Cùng quy tắc với khách đặt (giới hạn theo hồ sơ và SĐT,
+//        CCCD, người giám hộ) trừ giới hạn theo IP. Có email thì phiếu được gửi tới đó theo ngonNgu.
 (() => {
     const SO_NGAY_XEM = 14;
     const BAT_KY = 'bat-ky';
@@ -35,16 +52,25 @@
     let thanChoGui = null;    // body của POST /api/booking/lich-hen đang chờ xác nhận
     let formDat = null;
     let tuNgayXem = null;     // { bacSi, ngay }: mở từ thẻ lịch khám của chatbot thì xem 7 ngày tính từ ngày của thẻ
+    let hotline = false;      // true ở /admin/hotline-booking: quản trị viên đặt thay người gọi tổng đài
 
     // Hàm (không phải hằng) để chữ được chọn theo ngôn ngữ lúc vẽ màn hình
     const KHUNG = () => `
         <p id="dat-lich-phien" class="canh-bao"></p>
+        <p id="dat-lich-quy-tac" class="ghi-chu"></p>
+        <p id="dat-lich-ngay-nghi" class="canh-bao an"></p>
         <section>
             <h2>${t('1. Chuyên khoa', '1. Specialty')}</h2>
             <select id="chuyen-khoa"><option value="">${t('— Chọn chuyên khoa —', '— Select a specialty —')}</option></select>
         </section>
         <section>
             <h2>${t('2. Bác sĩ', '2. Doctor')}</h2>
+            <div class="hai-cot">
+                <div><label>${t('Chỉ bác sĩ còn lượt trống vào ngày (không bắt buộc)', 'Only doctors with a free place on (optional)')}</label><input id="loc-ngay" type="date"></div>
+                <div><label>${t('Buổi', 'Session')}</label><select id="loc-buoi"><option value="">${t('(cả ngày)', '(whole day)')}</option>
+                    <option value="SANG">${t('Sáng (trước 12h)', 'Morning (before 12:00)')}</option><option value="CHIEU">${t('Chiều (12h–17h)', 'Afternoon (12:00–17:00)')}</option>
+                    <option value="TOI">${t('Tối (từ 17h)', 'Evening (from 17:00)')}</option></select></div>
+            </div>
             <div id="ds-bac-si" class="luoi-the"><p class="ghi-chu">${chonChuyenKhoaTruoc()}</p></div>
         </section>
         <dialog id="hop-bac-si">
@@ -114,9 +140,12 @@
                 </fieldset>
                 <label id="khoi-luu-nguoi-than" class="chon an"><input type="checkbox" id="luu-nguoi-than" checked>${t('Lưu người này để lần sau điền sẵn',
                     'Save this person to prefill next time')}</label>
+                <div id="khoi-ngon-ngu" class="an"><label>${t('Ngôn ngữ của người gọi (email phiếu khám, thông báo sau này)', 'Caller\'s language (ticket email, later notices)')}</label>
+                    <select name="ngonNgu"><option value="VI">${t('Tiếng Việt', 'Vietnamese')}</option><option value="EN">${t('Tiếng Anh', 'English')}</option></select></div>
                 <button id="nut-dat-lich">${t('Xem lại và đặt lịch', 'Review and book')}</button>
             </form>
             <p id="thong-bao-dat" class="ghi-chu"></p>
+            <p id="link-tim-lai" class="ghi-chu"><a href="/find-ticket">${t('Mất link phiếu khám? Xin gửi lại qua email', 'Lost your ticket link? Get it emailed again')}</a></p>
         </section>
         <dialog id="hop-tom-tat">
             <h2>${t('6. Xác nhận đặt lịch', '6. Confirm the booking')}</h2>
@@ -130,6 +159,7 @@
             <h2>${t('Appointment Ticket — phiếu khám vừa đặt', 'Appointment Ticket — the ticket just booked')}</h2>
             <p id="ket-qua-ghi-chu" class="ghi-chu"></p>
             <div id="ket-qua-phieu"></div>
+            <button type="button" id="nut-in-phieu" class="phu an">${t('In phiếu khám', 'Print the ticket')}</button>
         </section>`;
 
     // Các câu dùng ở nhiều chỗ (khung ban đầu và khi vẽ lại từng mục)
@@ -191,8 +221,12 @@
             ds.replaceChildren(ghiChu(chonChuyenKhoaTruoc()));
             return;
         }
+        // Lọc ngày / buổi (DOC-03): chỉ bác sĩ còn lượt trống đặt được lúc đó
+        const loc = new URLSearchParams();
+        if ($('loc-ngay').value) loc.set('ngay', $('loc-ngay').value);
+        if ($('loc-buoi').value) loc.set('buoi', $('loc-buoi').value);
         const [bacSi, somNhat] = await Promise.all([
-            lay(`/api/catalog/bac-si?idChuyenKhoa=${idChuyenKhoa}&kichThuoc=100`),
+            lay(`/api/catalog/bac-si?idChuyenKhoa=${idChuyenKhoa}&kichThuoc=100${loc.size ? '&' + loc : ''}`),
             lay(`/api/booking/khung-gio/ngay-som-nhat?idChuyenKhoa=${idChuyenKhoa}`, true),
         ]);
         if (bacSi.status !== 200) {
@@ -208,6 +242,28 @@
                 'The clinic assigns the doctor with the most places left at the time you choose.'), 'ghi-chu'),
             nut(t('Chọn', 'Select'), () => chonBacSi(BAT_KY)));
         ds.replaceChildren(batKy, ...dsBacSi.map((bs) => theBacSi(bs, theoBacSi.get(bs.id))));
+        if (loc.size && !dsBacSi.length) {
+            ds.append(ghiChu(t('Không bác sĩ nào còn lượt trống đặt được vào lúc đã lọc (hoặc ngày đó ngoài khoảng đặt trước).',
+                'No doctor has a bookable free place at the filtered time (or the date is outside the booking window).')));
+        }
+    }
+
+    // Quy tắc đặt lịch và ngày bệnh viện nghỉ: chỉ để hiện, server vẫn là nơi kiểm tra
+    async function taiQuyTacVaNgayNghi() {
+        const [quyTac, ngayNghi] = await Promise.all([
+            lay('/api/booking/quy-tac-dat-lich', true),
+            lay(`/api/booking/ngay-nghi?tuNgay=${congNgay(0)}&denNgay=${congNgay(90)}`, true),
+        ]);
+        if (!$('dat-lich-quy-tac')) return;
+        if (quyTac.status === 200) {
+            const q = quyTac.json.duLieu;
+            $('dat-lich-quy-tac').textContent = t(`Quy tắc: đặt trước ít nhất ${q.datTruocToiThieuPhut} phút và tối đa ${q.soNgayDatTruocToiDa} ngày; hủy / đổi lịch trước giờ khám ít nhất ${q.huyDoiTruocToiThieuPhut} phút, đổi tối đa ${q.soLanDoiLichToiDa} lần; mỗi người khám có tối đa ${q.soLichHieuLucToiDaMoiHoSo} lịch hẹn chưa khám.`,
+                `Rules: book at least ${q.datTruocToiThieuPhut} minutes and at most ${q.soNgayDatTruocToiDa} days ahead; cancel or reschedule at least ${q.huyDoiTruocToiThieuPhut} minutes before the visit, at most ${q.soLanDoiLichToiDa} reschedules; each patient can hold at most ${q.soLichHieuLucToiDaMoiHoSo} upcoming appointments.`);
+        }
+        const cacNgay = ngayNghi.status === 200 ? ngayNghi.json.duLieu : [];
+        $('dat-lich-ngay-nghi').classList.toggle('an', !cacNgay.length);
+        $('dat-lich-ngay-nghi').textContent = t('Bệnh viện nghỉ (không có lịch khám): ', 'The hospital is closed (no appointments) on: ')
+            + cacNgay.map((n) => `${thuCuaNgay(n.ngay)} ${ngayVn(n.ngay)}${n.lyDo ? ` (${n.lyDo})` : ''}`).join('; ');
     }
 
     function danhSach(tieuDe, cacDong) {
@@ -506,6 +562,7 @@
         }
         if (datChoBanThan()) than.datChoBanThan = true;
         else if (laBenhNhan() && !$('luu-nguoi-than').checked) than.luuNguoiThan = false;
+        if (hotline) than.ngonNgu = v.ngonNgu;
         return than;
     }
 
@@ -531,6 +588,7 @@
                 `${gh.hoTen} (${QUAN_HE[gh.quanHe] || '?'}) · ${gh.soDienThoai} · national ID ${gh.cccd}`));
         }
         them(t('Lý do khám', 'Reason for visit'), than.lyDoKham);
+        if (hotline) them(t('Ngôn ngữ của người gọi', 'Caller\'s language'), than.ngonNgu === 'EN' ? t('Tiếng Anh', 'English') : t('Tiếng Việt', 'Vietnamese'));
         if (laBenhNhan()) {
             them(t('Lưu vào tài khoản', 'Saved to the account'), than.datChoBanThan ? t('Đặt cho bản thân', 'Booked for myself')
                 : than.luuNguoiThan === false ? t('Đặt cho người thân, không lưu người này', 'Booked for a relative, this person is not saved')
@@ -541,7 +599,7 @@
     async function xacNhanDat() {
         const nutXacNhan = $('nut-xac-nhan-dat');
         nutXacNhan.disabled = true;
-        const { status, json } = await goi('/api/booking/lich-hen', thanChoGui);
+        const { status, json } = await goi(hotline ? '/api/booking/quan-tri/lich-hen' : '/api/booking/lich-hen', thanChoGui);
         nutXacNhan.disabled = false;
         $('hop-tom-tat').close();
         if (status !== 201) {
@@ -550,15 +608,24 @@
             if (status === 409) await taiLaiLich();
             return;
         }
-        const kq = json.duLieu;
+        // Tổng đài: { idLichHen, phieuKham }; bệnh nhân / khách: phiếu khám vừa đặt
+        const kq = hotline ? json.duLieu.phieuKham : json.duLieu;
+        $('nut-in-phieu').classList.toggle('an', !hotline);
+        if (hotline) {
+            formDat.reset();
+            capNhatKhoiGiamHo();
+        }
         bao('thong-bao-dat', t(`Đặt lịch thành công: mã ${kq.maTraCuu}, số thứ tự ${kq.soThuTu}, giờ khám dự kiến ${ngayGioVn(kq.gioKhamDuKien)}.`,
             `Booking successful: lookup code ${kq.maTraCuu}, queue number ${kq.soThuTu}, expected time ${ngayGioVn(kq.gioKhamDuKien)}.`), 'tot');
         $('khoi-ket-qua').classList.remove('an');
         $('ket-qua-ghi-chu').textContent = (kq.bacSiDoPhongKhamXep ? t(`Phòng khám đã xếp ${tenBacSi(kq.bacSi)}. `, `The clinic assigned ${tenBacSi(kq.bacSi)}. `) : '')
-            + (kq.luuVaoTaiKhoan
-                ? t('Lịch đã lưu vào tài khoản (xem ở Lịch hẹn của tôi).', 'The appointment is saved to your account (see My Appointments).')
-                : t('Khách đặt: lịch không nằm trong tài khoản nào, hãy lưu link / mã QR dưới đây để xem lại phiếu khám.',
-                    'Guest booking: the appointment is not in any account, keep the link / QR code below to view the ticket again.'));
+            + (hotline
+                ? t(`Lịch hẹn #${json.duLieu.idLichHen} (kênh tổng đài). Đọc mã tra cứu cho người gọi, in phiếu hoặc cho quét mã QR: sau màn hình này nhân viên không xem lại được link phiếu khám (chỉ cấp lại sau khi xem CCCD).`,
+                    `Appointment #${json.duLieu.idLichHen} (hotline channel). Read the lookup code to the caller, print the ticket or let them scan the QR code: after this screen staff cannot see the ticket link again (only reissue it after checking the national ID).`)
+                : kq.luuVaoTaiKhoan
+                    ? t('Lịch đã lưu vào tài khoản (xem ở Lịch hẹn của tôi).', 'The appointment is saved to your account (see My Appointments).')
+                    : t('Khách đặt: lịch không nằm trong tài khoản nào, hãy lưu link / mã QR dưới đây để xem lại phiếu khám.',
+                        'Guest booking: the appointment is not in any account, keep the link / QR code below to view the ticket again.'));
         const phieu = await taiPhieu(kq.maPhieuKham, true);
         if (phieu.status === 200) hienPhieu($('ket-qua-phieu'), phieu.json.duLieu);
         else $('ket-qua-phieu').replaceChildren(loi(phieu.json, t('Không tải được phiếu khám.', 'Could not load the appointment ticket.')));
@@ -598,97 +665,115 @@
         return true;
     }
 
+    // Cùng 1 màn hình cho 2 đường dẫn: /appointment (bệnh nhân / khách) và /admin/hotline-booking (quản trị viên)
+    async function veDatLich(khung, { thamSo, duongDan }) {
+        hotline = duongDan === '/admin/hotline-booking';
+        tuNgayXem = null;
+        hoSoCuaToi = null;
+        thongTinDat = null;
+        dsBacSi = [];
+        bacSiChon = null;
+        caCuaBacSi = [];
+        ngayChon = null;
+        khungChon = null;
+        thanChoGui = null;
+        khuon(khung, KHUNG());
+        formDat = $('form-dat-lich');
+
+        $('dat-lich-phien').textContent = hotline
+            ? t('Đặt thay người gọi tổng đài / người đến quầy: nhập đúng thông tin người khám như khách đặt. Lịch không gắn vào tài khoản nào.',
+                'Booking for a caller or a walk-in: enter the patient\'s details as a guest would. The appointment is not attached to any account.')
+            : !vaiTro()
+            ? t('Chưa đăng nhập: đặt lịch như khách (không cần tài khoản). Đăng nhập bằng tài khoản bệnh nhân thì lịch được lưu vào tài khoản.',
+                'Not signed in: booking as a guest (no account needed). Sign in with a patient account to save appointments to the account.')
+            : laBenhNhan()
+                ? t(`Đã đăng nhập: ${taiKhoan.hoTen}. Lịch đặt sẽ được lưu vào tài khoản.`,
+                    `Signed in: ${taiKhoan.hoTen}. Appointments you book will be saved to the account.`)
+                : t(`Đã đăng nhập bằng tài khoản ${VAI_TRO[vaiTro()]}: vai trò này không đặt lịch được (chỉ bệnh nhân hoặc khách).`,
+                    `Signed in with an account of role ${VAI_TRO[vaiTro()]}: this role cannot book appointments (patients or guests only).`);
+        for (const id of ['chon-nguoi-kham', 'nut-dien-giam-ho']) $(id).classList.toggle('an', !laBenhNhan());
+        $('khoi-ngon-ngu').classList.toggle('an', !hotline);
+        $('link-tim-lai').classList.toggle('an', hotline);
+        $('nut-in-phieu').addEventListener('click', () => window.print());
+        for (const id of ['loc-ngay', 'loc-buoi']) $(id).addEventListener('change', () => { if ($('chuyen-khoa').value) taiBacSi(); });
+        taiQuyTacVaNgayNghi();
+
+        $('chuyen-khoa').addEventListener('change', async () => {
+            bacSiChon = null;
+            ngayChon = null;
+            boChonKhung();
+            $('ds-ngay').replaceChildren(ghiChu(chonBacSiTruoc()));
+            $('ds-ca').replaceChildren(ghiChu(chonNgayTruoc()));
+            await taiBacSi();
+        });
+        $('nut-dong-bac-si').addEventListener('click', () => $('hop-bac-si').close());
+        $('nut-chon-bac-si-nay').addEventListener('click', async (e) => {
+            $('hop-bac-si').close();
+            await chonBacSi(e.target.dataset.bacSi);
+        });
+        formDat.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (!khungChon) {
+                bao('thong-bao-dat', t('Chưa chọn khung giờ (bước 4).', 'No time slot selected (step 4).'), 'loi');
+                return;
+            }
+            thanChoGui = thanDatLich(giaTriForm(formDat));
+            hienTomTat(thanChoGui);
+            $('hop-tom-tat').showModal();
+        });
+        $('nut-sua-lai').addEventListener('click', () => $('hop-tom-tat').close());
+        $('nut-xac-nhan-dat').addEventListener('click', xacNhanDat);
+        formDat.elements.ngaySinh.addEventListener('change', capNhatKhoiGiamHo);
+        for (const luaChon of document.querySelectorAll('input[name=nguoiKham]')) {
+            luaChon.addEventListener('change', apDungNguoiKham);
+        }
+        $('nut-dien-giam-ho').addEventListener('click', () => {
+            if (!hoSoCuaToi || !hoSoCuaToi.cccd) {
+                bao('thong-bao-dat', t('Tài khoản chưa có hồ sơ bệnh nhân để điền: nhập tay, hoặc tạo hồ sơ ở Hồ sơ bệnh nhân của tôi.',
+                    'This account has no patient profile to fill in from: type it in, or create a profile in My Patient Profile.'), 'loi');
+                return;
+            }
+            formDat.elements.ghHoTen.value = hoSoCuaToi.hoTen || '';
+            formDat.elements.ghSoDienThoai.value = hoSoCuaToi.soDienThoai || '';
+            formDat.elements.ghCccd.value = hoSoCuaToi.cccd || '';
+            formDat.elements.ghNgaySinh.value = hoSoCuaToi.ngaySinh || '';
+        });
+        $('nguoi-than-da-luu').addEventListener('change', (e) => {
+            const nt = ((thongTinDat && thongTinDat.nguoiThan) || []).find((n) => String(n.id) === e.target.value);
+            dienNguoiKham(nt || null, nt && nt.nguoiGiamHo);
+        });
+        $('nut-bo-nguoi-than').addEventListener('click', async () => {
+            const id = $('nguoi-than-da-luu').value;
+            if (!id) return;
+            const { status, json } = await goi('/api/booking/thong-tin-dat-lich/cua-toi/nguoi-than/' + id, undefined, 'DELETE');
+            if (status !== 200) {
+                bao('thong-bao-dat', thongDiepLoi(json, t('Không bỏ được người thân.', 'Could not remove the relative.')), 'loi');
+                return;
+            }
+            dienNguoiKham(null);
+            await taiThongTin();
+        });
+
+        await taiChuyenKhoa();
+        if (!formDat.isConnected) return;
+        const daChonTheoThamSo = await chonTheoThamSo(thamSo);
+        if (laBenhNhan() && formDat.isConnected) {
+            await taiThongTin();
+            if (!formDat.isConnected) return;
+            apDungNguoiKham();
+            if (!daChonTheoThamSo) await chonLanDatGanNhat();
+        }
+    }
+
     dangKy({
         duongDan: '/appointment',
         tieuDe: cap('Đặt lịch khám', 'Appointment'),
-        async ve(khung, { thamSo }) {
-            tuNgayXem = null;
-            hoSoCuaToi = null;
-            thongTinDat = null;
-            dsBacSi = [];
-            bacSiChon = null;
-            caCuaBacSi = [];
-            ngayChon = null;
-            khungChon = null;
-            thanChoGui = null;
-            khuon(khung, KHUNG());
-            formDat = $('form-dat-lich');
-
-            $('dat-lich-phien').textContent = !vaiTro()
-                ? t('Chưa đăng nhập: đặt lịch như khách (không cần tài khoản). Đăng nhập bằng tài khoản bệnh nhân thì lịch được lưu vào tài khoản.',
-                    'Not signed in: booking as a guest (no account needed). Sign in with a patient account to save appointments to the account.')
-                : laBenhNhan()
-                    ? t(`Đã đăng nhập: ${taiKhoan.hoTen}. Lịch đặt sẽ được lưu vào tài khoản.`,
-                        `Signed in: ${taiKhoan.hoTen}. Appointments you book will be saved to the account.`)
-                    : t(`Đã đăng nhập bằng tài khoản ${VAI_TRO[vaiTro()]}: vai trò này không đặt lịch được (chỉ bệnh nhân hoặc khách).`,
-                        `Signed in with an account of role ${VAI_TRO[vaiTro()]}: this role cannot book appointments (patients or guests only).`);
-            for (const id of ['chon-nguoi-kham', 'nut-dien-giam-ho']) $(id).classList.toggle('an', !laBenhNhan());
-
-            $('chuyen-khoa').addEventListener('change', async () => {
-                bacSiChon = null;
-                ngayChon = null;
-                boChonKhung();
-                $('ds-ngay').replaceChildren(ghiChu(chonBacSiTruoc()));
-                $('ds-ca').replaceChildren(ghiChu(chonNgayTruoc()));
-                await taiBacSi();
-            });
-            $('nut-dong-bac-si').addEventListener('click', () => $('hop-bac-si').close());
-            $('nut-chon-bac-si-nay').addEventListener('click', async (e) => {
-                $('hop-bac-si').close();
-                await chonBacSi(e.target.dataset.bacSi);
-            });
-            formDat.addEventListener('submit', (e) => {
-                e.preventDefault();
-                if (!khungChon) {
-                    bao('thong-bao-dat', t('Chưa chọn khung giờ (bước 4).', 'No time slot selected (step 4).'), 'loi');
-                    return;
-                }
-                thanChoGui = thanDatLich(giaTriForm(formDat));
-                hienTomTat(thanChoGui);
-                $('hop-tom-tat').showModal();
-            });
-            $('nut-sua-lai').addEventListener('click', () => $('hop-tom-tat').close());
-            $('nut-xac-nhan-dat').addEventListener('click', xacNhanDat);
-            formDat.elements.ngaySinh.addEventListener('change', capNhatKhoiGiamHo);
-            for (const luaChon of document.querySelectorAll('input[name=nguoiKham]')) {
-                luaChon.addEventListener('change', apDungNguoiKham);
-            }
-            $('nut-dien-giam-ho').addEventListener('click', () => {
-                if (!hoSoCuaToi || !hoSoCuaToi.cccd) {
-                    bao('thong-bao-dat', t('Tài khoản chưa có hồ sơ bệnh nhân để điền: nhập tay, hoặc tạo hồ sơ ở Hồ sơ bệnh nhân của tôi.',
-                        'This account has no patient profile to fill in from: type it in, or create a profile in My Patient Profile.'), 'loi');
-                    return;
-                }
-                formDat.elements.ghHoTen.value = hoSoCuaToi.hoTen || '';
-                formDat.elements.ghSoDienThoai.value = hoSoCuaToi.soDienThoai || '';
-                formDat.elements.ghCccd.value = hoSoCuaToi.cccd || '';
-                formDat.elements.ghNgaySinh.value = hoSoCuaToi.ngaySinh || '';
-            });
-            $('nguoi-than-da-luu').addEventListener('change', (e) => {
-                const nt = ((thongTinDat && thongTinDat.nguoiThan) || []).find((n) => String(n.id) === e.target.value);
-                dienNguoiKham(nt || null, nt && nt.nguoiGiamHo);
-            });
-            $('nut-bo-nguoi-than').addEventListener('click', async () => {
-                const id = $('nguoi-than-da-luu').value;
-                if (!id) return;
-                const { status, json } = await goi('/api/booking/thong-tin-dat-lich/cua-toi/nguoi-than/' + id, undefined, 'DELETE');
-                if (status !== 200) {
-                    bao('thong-bao-dat', thongDiepLoi(json, t('Không bỏ được người thân.', 'Could not remove the relative.')), 'loi');
-                    return;
-                }
-                dienNguoiKham(null);
-                await taiThongTin();
-            });
-
-            await taiChuyenKhoa();
-            if (!formDat.isConnected) return;
-            const daChonTheoThamSo = await chonTheoThamSo(thamSo);
-            if (laBenhNhan() && formDat.isConnected) {
-                await taiThongTin();
-                if (!formDat.isConnected) return;
-                apDungNguoiKham();
-                if (!daChonTheoThamSo) await chonLanDatGanNhat();
-            }
-        },
+        ve: veDatLich,
+    });
+    dangKy({
+        duongDan: '/admin/hotline-booking',
+        vaiTro: 'QUAN_TRI_VIEN',
+        tieuDe: cap('Đặt lịch qua tổng đài', 'Hotline Booking'),
+        ve: veDatLich,
     });
 })();

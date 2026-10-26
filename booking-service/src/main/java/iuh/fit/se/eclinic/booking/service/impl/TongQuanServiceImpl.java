@@ -26,9 +26,9 @@ import lombok.RequiredArgsConstructor;
 @Transactional(readOnly = true)
 public class TongQuanServiceImpl implements TongQuanService {
 
-    /** Lịch hẹn không còn là 1 lượt khám của ngày: đã hủy, đã hủy do đổi lịch, bác sĩ đã hủy. */
+    /** Lịch hẹn không còn là 1 lượt khám của ngày: đã hủy, đã hủy do đổi lịch, bác sĩ / quản trị viên đã hủy. */
     private static final List<TrangThaiLichHen> KHONG_TINH = List.of(TrangThaiLichHen.DA_HUY,
-            TrangThaiLichHen.DA_HUY_DO_DOI_LICH, TrangThaiLichHen.BI_TU_CHOI);
+            TrangThaiLichHen.DA_HUY_DO_DOI_LICH, TrangThaiLichHen.BI_TU_CHOI, TrangThaiLichHen.QUAN_TRI_HUY);
     private static final List<TrangThaiLichHen> CHUA_KHAM = List.of(TrangThaiLichHen.DA_XAC_NHAN);
 
     private final LichHenRepository lichHenRepository;

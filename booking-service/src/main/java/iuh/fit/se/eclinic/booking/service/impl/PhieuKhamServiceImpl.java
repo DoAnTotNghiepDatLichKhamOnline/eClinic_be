@@ -9,8 +9,10 @@ import iuh.fit.se.eclinic.booking.config.PhieuKhamProperties;
 import iuh.fit.se.eclinic.booking.dto.response.PhieuKhamResponse;
 import iuh.fit.se.eclinic.booking.mapper.LichHenMapper;
 import iuh.fit.se.eclinic.booking.repository.LichHenRepository;
+import iuh.fit.se.eclinic.booking.service.LichIcsService;
 import iuh.fit.se.eclinic.booking.service.PhieuKhamService;
 import iuh.fit.se.eclinic.booking.util.MaQr;
+import iuh.fit.se.eclinic.common.enums.NgonNgu;
 import iuh.fit.se.eclinic.common.exception.LoiNghiepVu;
 import iuh.fit.se.eclinic.common.exception.MaLoi;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +28,7 @@ public class PhieuKhamServiceImpl implements PhieuKhamService {
     private final LichHenRepository lichHenRepository;
     private final LichHenMapper lichHenMapper;
     private final PhieuKhamProperties phieuKhamProperties;
+    private final LichIcsService lichIcsService;
 
     @Override
     public PhieuKhamResponse xem(String maPhieuKham) {
@@ -44,6 +47,16 @@ public class PhieuKhamServiceImpl implements PhieuKhamService {
                 .orElseThrow(PhieuKhamServiceImpl::khongTimThay);
         return MaQr.taoPng(phieuKhamProperties.lienKet(maPhieuKham),
                 kichThuoc != null ? kichThuoc : phieuKhamProperties.kichThuocQr());
+    }
+
+    @Override
+    public TepIcs taoTepLich(String maPhieuKham) {
+        kiemTraDang(maPhieuKham);
+        return lichHenRepository.timTheoMaPhieuKham(maPhieuKham)
+                .filter(lichHen -> lichHen.getMaTokenPhieuKham().equals(maPhieuKham))
+                .map(lichHen -> new TepIcs(lichIcsService.tao(lichHen, NgonNgu.hienTai()),
+                        "lich-kham-" + lichHen.getMaTraCuu() + ".ics"))
+                .orElseThrow(PhieuKhamServiceImpl::khongTimThay);
     }
 
     private static void kiemTraDang(String maPhieuKham) {

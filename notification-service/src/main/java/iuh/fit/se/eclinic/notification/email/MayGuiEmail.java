@@ -4,6 +4,7 @@ import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.mail.MailException;
 import org.springframework.mail.MailPreparationException;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -24,6 +25,10 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 public class MayGuiEmail {
+
+    /** Tên và kiểu của tệp lịch gửi kèm (RFC 5545, tệp "thêm vào lịch", không phải thư mời). */
+    private static final String TEN_TEP_LICH = "lich-kham.ics";
+    private static final String KIEU_TEP_LICH = "text/calendar; charset=UTF-8; method=PUBLISH";
 
     private final JavaMailSender mailSender;
     private final CheDoEmail cheDo;
@@ -53,21 +58,29 @@ public class MayGuiEmail {
     /**
      * Trả về bình thường = máy chủ mail đã nhận (chế độ CONSOLE: đã ghi log).
      *
+     * @param tepLich nội dung tệp .ics gửi kèm thành {@value #TEN_TEP_LICH}; null / rỗng = không kèm
      * @throws MailException không gửi được; bên gọi quyết định thử lại
      */
-    public void gui(String nguoiNhan, NgonNgu ngonNgu, MauEmail.Thu thu) {
+    public void gui(String nguoiNhan, NgonNgu ngonNgu, MauEmail.Thu thu, String tepLich) {
+        boolean coTepLich = tepLich != null && !tepLich.isBlank();
         if (cheDo == CheDoEmail.CONSOLE) {
-            log.warn("[DEV - không gửi email] Tới: {} | Ngôn ngữ: {} | Tiêu đề: {} | Liên kết: {}", nguoiNhan, ngonNgu,
-                    thu.tieuDe(), thu.lienKet());
+            log.warn("[DEV - không gửi email] Tới: {} | Ngôn ngữ: {} | Tiêu đề: {} | Liên kết: {}{}", nguoiNhan, ngonNgu,
+                    thu.tieuDe(), thu.lienKet(), coTepLich
+                            ? " | Tệp lịch: " + tepLich.getBytes(StandardCharsets.UTF_8).length + " byte" : "");
             return;
         }
         try {
             MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, StandardCharsets.UTF_8.name());
+            // Có tệp đính kèm thì phải là thư nhiều phần (multipart)
+            MimeMessageHelper helper = new MimeMessageHelper(message, coTepLich, StandardCharsets.UTF_8.name());
             helper.setFrom(nguoiGui, "eClinic");
             helper.setTo(nguoiNhan);
             helper.setSubject(thu.tieuDe());
             helper.setText(thu.html(), true);
+            if (coTepLich) {
+                helper.addAttachment(TEN_TEP_LICH, new ByteArrayResource(tepLich.getBytes(StandardCharsets.UTF_8)),
+                        KIEU_TEP_LICH);
+            }
             mailSender.send(message);
         } catch (MessagingException | UnsupportedEncodingException e) {
             throw new MailPreparationException(e);

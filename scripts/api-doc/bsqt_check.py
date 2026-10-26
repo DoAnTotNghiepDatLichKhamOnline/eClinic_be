@@ -37,7 +37,7 @@ import so_mau
 GOC = check.GOC
 TAI_LIEU = "eClinic_API_LichHen_KhamBenh_BacSi_QuanTri.docx"
 TAI_LIEU_TK = GOC / kit.TAI_LIEU
-# Cả 5 controller nằm trọn trong phạm vi: 9 + 4 + 2 route của booking-service, 6 + 1 của medical-service
+# Cả 5 controller nằm trọn trong phạm vi: 12 + 4 + 8 route của booking-service, 6 + 1 của medical-service
 CONTROLLER = (
     ("booking", "LichCuaBacSiController"),
     ("booking", "HangDoiController"),
@@ -47,7 +47,7 @@ CONTROLLER = (
 )
 TIEN_TO = ("/api/booking/", "/api/medical/")
 THU_MUC_RESPONSE = [GOC / check.GOI_JAVA.format(s) / "dto" / "response" for s in ("booking", "medical")]
-DAY_DU = True  # tài liệu phải có đủ 22 route của 5 controller
+DAY_DU = True  # tài liệu phải có đủ 31 route của 5 controller
 # Record lồng của tài liệu này chỉ dẫn TK thay vì có bảng: (record cha, record lồng) ở đây = (record cha, record lồng) ở TK
 GIONG_TK = (
     (("BenhAnResponse", "SinhHieu"), ("KetQuaKhamResponse", "SinhHieu")),

@@ -5,7 +5,9 @@ import java.time.LocalTime;
 import java.util.List;
 
 import iuh.fit.se.eclinic.booking.dto.response.CaLamViecResponse;
+import iuh.fit.se.eclinic.booking.dto.response.GioLamTheoTuanResponse;
 import iuh.fit.se.eclinic.booking.dto.response.LichHenTrongCaResponse;
+import iuh.fit.se.eclinic.booking.dto.response.LichSuCaResponse;
 import iuh.fit.se.eclinic.booking.util.KhoangNgay;
 import iuh.fit.se.eclinic.common.entity.scheduling.LichLamViec;
 
@@ -68,5 +70,14 @@ public interface LichLamViecService {
 
     /** Lịch hẹn (mọi trạng thái) của 1 ca, theo giờ khám, cho quản trị viên. Ném KHONG_TIM_THAY nếu không có ca. */
     List<LichHenTrongCaResponse> lichHenCuaCa(Long idLichLamViec);
+
+    /**
+     * Giờ làm theo tuần thứ Hai - Chủ nhật của các bác sĩ (SCHED-05), cho quản trị viên. Khoảng ngày được nới ra đủ các tuần
+     * chứa tuNgay và denNgay; giới hạn khoảng ngày như {@link #lichToanVien}. Bộ lọc null = không lọc.
+     */
+    GioLamTheoTuanResponse gioLamTheoTuan(LocalDate tuNgay, LocalDate denNgay, Long idChuyenKhoa, Long idBacSi);
+
+    /** Lịch sử xếp / sửa / hủy của 1 ca, cũ nhất trước, cho quản trị viên. Ném KHONG_TIM_THAY nếu không có ca. */
+    List<LichSuCaResponse> lichSuCa(Long idLichLamViec);
 
 }

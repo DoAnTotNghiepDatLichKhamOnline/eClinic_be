@@ -19,6 +19,12 @@ spring:
       max-file-size: 4MB
       max-request-size: 5MB
 
+management:
+  health:
+    redis:
+      # Redis chỉ làm cache (CacheConfig): Redis lỗi thì đọc thẳng DB, nên không được báo catalog-service DOWN
+      enabled: false
+
 app:
   # Dùng kho ảnh Cloudinary cho ảnh giới thiệu bác sĩ (cấu hình kết nối: app.cloudinary trong application-common.yml).
   # Mỗi ảnh 1 mã riêng: <thu-muc>/bac-si/<idBacSi>/<mã ngẫu nhiên>.

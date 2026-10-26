@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import iuh.fit.se.eclinic.common.enums.GioiTinh;
+import iuh.fit.se.eclinic.common.enums.KenhDatLich;
 import iuh.fit.se.eclinic.common.enums.QuanHeGiamHo;
 import iuh.fit.se.eclinic.common.enums.TrangThaiLichHen;
 
@@ -18,6 +19,8 @@ import iuh.fit.se.eclinic.common.enums.TrangThaiLichHen;
  * @param doiChieu       những gì người đặt nhập cho lượt khám này, để đối chiếu với hồ sơ
  * @param lyDoHuy        lý do bác sĩ từ chối (BI_TU_CHOI) hoặc lý do hủy; null ở các trạng thái khác
  * @param canDoiLich     true: ca khám đã bị hủy, lịch hẹn còn hiệu lực và đang chờ bệnh nhân đổi sang khung giờ khác
+ * @param kenhDat        kênh đặt lịch (khách / tài khoản)
+ * @param chuyenKhoa     chuyên khoa của bác sĩ; null khi {@code bacSi} null
  */
 public record LichHenTrongCaResponse(
         Long id,
@@ -37,7 +40,13 @@ public record LichHenTrongCaResponse(
         NguoiGiamHo nguoiGiamHo,
         DoiChieu doiChieu,
         String lyDoHuy,
-        boolean canDoiLich) {
+        boolean canDoiLich,
+        KenhDatLich kenhDat,
+        ChuyenKhoa chuyenKhoa) {
+
+    /** @param ten tên theo ngôn ngữ của request */
+    public record ChuyenKhoa(Long id, String ten) {
+    }
 
     /**
      * @param tuoi         số tuổi tròn vào ngày khám; null nếu hồ sơ chưa có ngày sinh

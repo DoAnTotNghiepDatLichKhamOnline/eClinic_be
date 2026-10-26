@@ -3,6 +3,7 @@ package iuh.fit.se.eclinic.medical.mapper;
 import org.springframework.stereotype.Component;
 
 import iuh.fit.se.eclinic.common.config.BenhAnProperties;
+import iuh.fit.se.eclinic.common.config.SoKhamProperties;
 import iuh.fit.se.eclinic.common.entity.booking.LichHen;
 import iuh.fit.se.eclinic.common.entity.medical.HoSoBenhAn;
 import iuh.fit.se.eclinic.common.entity.medical.Icd10;
@@ -21,6 +22,7 @@ import lombok.RequiredArgsConstructor;
 public class BenhAnMapper {
 
     private final BenhAnProperties benhAnProperties;
+    private final SoKhamProperties soKhamProperties;
 
     public BenhAnResponse toResponse(HoSoBenhAn benhAn, LichHen lichHen) {
         return new BenhAnResponse(benhAn.getId(), lichHen.getId(), lichHen.getMaTraCuu(), lichHen.getTrangThai(),
@@ -37,7 +39,8 @@ public class BenhAnMapper {
                         })
                         .toList(),
                 benhAn.getNgayTao(), benhAn.getPhienBan(), benhAn.getNgaySuaCuoi(),
-                benhAnProperties.hanSua(benhAn.getNgayTao()));
+                benhAnProperties.hanSua(benhAn.getNgayTao()), benhAn.getMaTokenSoKham(),
+                soKhamProperties.lienKet(benhAn.getMaTokenSoKham()));
     }
 
     public ThuocGoiYResponse toGoiY(Thuoc thuoc) {

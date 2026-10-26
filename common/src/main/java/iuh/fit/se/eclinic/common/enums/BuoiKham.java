@@ -17,4 +17,22 @@ public enum BuoiKham {
         }
         return gioBatDau.isBefore(CHIEU_TOI) ? CHIEU : TOI;
     }
+
+    /** Buổi gồm các giờ bắt đầu có phần giờ (0-23) trong [gioTu, gioDen), khớp {@link #cua}. */
+    public int gioTu() {
+        return switch (this) {
+            case SANG -> 0;
+            case CHIEU -> TRUA.getHour();
+            case TOI -> CHIEU_TOI.getHour();
+        };
+    }
+
+    /** Xem {@link #gioTu()}; buổi tối kéo tới hết ngày (24). */
+    public int gioDen() {
+        return switch (this) {
+            case SANG -> TRUA.getHour();
+            case CHIEU -> CHIEU_TOI.getHour();
+            case TOI -> 24;
+        };
+    }
 }

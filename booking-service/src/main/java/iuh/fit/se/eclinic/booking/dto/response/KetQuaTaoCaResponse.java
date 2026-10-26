@@ -7,7 +7,8 @@ import java.util.List;
  * Kết quả xếp ca.
  *
  * @param daTao các ca vừa tạo, theo ngày
- * @param boQua các ngày của phần lặp lại không tạo được ca, kèm lý do (trùng giờ với ca khác của bác sĩ / phòng khám)
+ * @param boQua các ngày của phần lặp lại không tạo được ca, kèm lý do (trùng giờ với ca khác của bác sĩ / phòng khám,
+ *              hoặc vượt giới hạn giờ làm trong tuần của bác sĩ)
  */
 public record KetQuaTaoCaResponse(List<CaLamViecResponse> daTao, List<NgayBoQua> boQua) {
 

@@ -8,6 +8,7 @@ package iuh.fit.se.eclinic.common.enums;
  * DA_HOAN_THANH. Bệnh nhân (đã đăng nhập, hoặc cầm link phiếu khám kèm SĐT liên hệ) hủy (DA_HUY) hoặc đổi lịch
  * (DA_HUY_DO_DOI_LICH + 1 lịch mới DA_XAC_NHAN) trước hạn hủy / đổi, ở booking-service. Sang ngày hôm sau, lịch
  * DA_XAC_NHAN chưa khám mà bệnh nhân chưa được gọi vào khám thành KHONG_DEN (job đóng ngày khám, booking-service).
+ * Quản trị viên hủy (QUAN_TRI_HUY) hoặc đổi lịch thay bệnh nhân, kèm lý do, không theo hạn hủy / đổi của bệnh nhân.
  */
 public enum TrangThaiLichHen {
     DA_XAC_NHAN,
@@ -22,7 +23,12 @@ public enum TrangThaiLichHen {
      * khám, bệnh nhân chưa được gọi vào khám (khác DANG_KHAM) và ca khám không bị hủy (canDoiLich = false). Trạng thái
      * cuối: không khám, không hủy / đổi được nữa.
      */
-    KHONG_DEN;
+    KHONG_DEN,
+    /**
+     * Quản trị viên hủy lịch đã xác nhận, kèm lý do bệnh nhân đọc được (DOANTOTNGH-14 phase 3). Trước phase đó không
+     * có lịch nào bị quản trị viên hủy, nên trạng thái này cho biết đúng mọi lịch do bệnh viện hủy.
+     */
+    QUAN_TRI_HUY;
 
     /**
      * Lịch hẹn ở trạng thái này đang "chiếm" khung giờ. Phải khớp với biểu thức của cột

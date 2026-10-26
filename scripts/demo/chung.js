@@ -44,9 +44,14 @@ const TRANG_THAI = nhan({
     DA_XAC_NHAN: cap('Đã xác nhận', 'Confirmed'),
     BI_TU_CHOI: cap('Bác sĩ đã hủy', 'Cancelled by doctor'), DA_HOAN_THANH: cap('Đã hoàn thành', 'Completed'),
     DA_HUY: cap('Đã hủy', 'Cancelled'), DA_HUY_DO_DOI_LICH: cap('Đã hủy do đổi lịch', 'Cancelled (rescheduled)'),
-    KHONG_DEN: cap('Không đến', 'No-show'),
+    KHONG_DEN: cap('Không đến', 'No-show'), QUAN_TRI_HUY: cap('Phòng khám đã hủy', 'Cancelled by the clinic'),
 });
-const DA_HUY = ['BI_TU_CHOI', 'DA_HUY', 'DA_HUY_DO_DOI_LICH'];
+const DA_HUY = ['BI_TU_CHOI', 'DA_HUY', 'DA_HUY_DO_DOI_LICH', 'QUAN_TRI_HUY'];
+// Kênh đặt của lịch hẹn (kenhDat ở dòng lịch hẹn của bác sĩ / quản trị viên)
+const KENH_DAT = nhan({
+    KHACH: cap('Khách (không đăng nhập)', 'Guest (not signed in)'), TAI_KHOAN: cap('Tài khoản bệnh nhân', 'Patient account'),
+    HOTLINE: cap('Tổng đài / quầy', 'Hotline / front desk'),
+});
 // Lịch không còn khám: đã hủy (các kiểu) hoặc đã đóng là không đến (job đóng ngày khám, sang ngày hôm sau); tô cùng màu
 const KHONG_CON_KHAM = [...DA_HUY, 'KHONG_DEN'];
 // Hàng đợi khám của bác sĩ: buổi của ca (theo giờ bắt đầu) và trạng thái trong hàng đợi (DA_KHAM = đã ghi nhận kết quả khám)
@@ -58,10 +63,14 @@ const HANG_DOI = nhan({
 // Dùng như chuỗi: the('p', CAN_DOI_LICH) và `${CAN_DOI_LICH}` đều ra chữ của ngôn ngữ đang chọn
 const CAN_DOI_LICH = cap('Ca khám của lịch hẹn này đã bị hủy. Hãy đổi sang khung giờ khác (hoặc hủy lịch hẹn).',
     'The shift of this appointment was cancelled. Please move it to another time slot (or cancel the appointment).');
-const LOAI_YEU_CAU = nhan({ XIN_NGHI: cap('Xin nghỉ', 'Leave'), DOI_CA: cap('Đổi ca', 'Shift change') });
+const DA_DOI_BAC_SI = cap('Ca khám đã chuyển sang bác sĩ khác (giờ, phòng không đổi). Bạn được đổi hoặc hủy lịch hẹn tới giờ khám, không tính vào số lần đổi.',
+    'The session was handed to another doctor (same time and room). You may reschedule or cancel up to the appointment time; it does not count toward your reschedule limit.');
+const LOAI_YEU_CAU = nhan({ XIN_NGHI: cap('Xin nghỉ', 'Leave'), DOI_CA: cap('Đổi ca', 'Shift change'), NHUONG_CA: cap('Nhường ca', 'Hand over') });
 const TRANG_THAI_YEU_CAU = nhan({
+    CHO_DONG_Y: cap('Chờ đồng nghiệp đồng ý', 'Waiting for the colleague'),
     CHO_DUYET: cap('Chờ duyệt', 'Pending'), DA_DUYET: cap('Đã duyệt', 'Approved'),
     TU_CHOI: cap('Bị từ chối', 'Rejected'), DA_RUT: cap('Đã rút', 'Withdrawn'),
+    DONG_NGHIEP_TU_CHOI: cap('Đồng nghiệp không nhận', 'Declined by the colleague'),
 });
 const GIOI_TINH = nhan({ NAM: cap('Nam', 'Male'), NU: cap('Nữ', 'Female'), KHAC: cap('Khác', 'Other') });
 const QUAN_HE = nhan({
@@ -118,7 +127,8 @@ const trangChu = () => TRANG_CHU[vaiTro()] || '/login';
 
 // ===== Gọi API =====
 // API công khai chỉ đọc: không gửi access token (token hết hạn sẽ làm cả API công khai trả 401)
-const GET_CONG_KHAI = ['/api/booking/khung-gio', '/api/booking/phieu-kham', '/api/catalog/chuyen-khoa', '/api/catalog/bac-si'];
+const GET_CONG_KHAI = ['/api/booking/khung-gio', '/api/booking/phieu-kham', '/api/catalog/chuyen-khoa', '/api/catalog/bac-si',
+    '/api/booking/so-kham', '/api/booking/ngay-nghi', '/api/booking/quy-tac-dat-lich'];
 
 // Nằm dưới đường dẫn công khai nhưng cần đăng nhập (hồ sơ của bác sĩ đang đăng nhập)
 const GET_CAN_TOKEN = ['/api/catalog/bac-si/toi/'];
@@ -166,6 +176,40 @@ async function goi(duongDan, body, phuongThuc = 'POST', imLang = false, duocThuL
     return { status, json };
 }
 const lay = (duongDan, imLang = false) => goi(duongDan, undefined, 'GET', imLang);
+
+// Tải 1 tệp (Excel, PDF...) bằng GET kèm token / ngôn ngữ như goi, rồi lưu qua 1 thẻ <a download>. Tên tệp lấy từ header
+// Content-Disposition, không có thì dùng tenTep. Lỗi (không phải 2xx) trả { status, json } để nơi gọi hiện thongDiep.
+async function taiTep(duongDan, tenTep, duocThuLai = true) {
+    const guiToken = coGuiToken(duongDan, 'GET');
+    const headers = { 'Accept-Language': ngonNgu };
+    if (guiToken) headers['Authorization'] = 'Bearer ' + accessToken;
+    let res;
+    try {
+        res = await fetch(API_URL + duongDan, { credentials: 'include', headers });
+    } catch (e) {
+        return { status: 0, json: { thongDiep: t('Không gọi được API: ', 'Could not call the API: ') + String(e) } };
+    }
+    if (guiToken && res.status === 401) {
+        if (duocThuLai && await lamMoiPhien()) return taiTep(duongDan, tenTep, false);
+        xoaPhien(t('Phiên đăng nhập đã hết hạn: hãy đăng nhập lại.', 'Your session has expired: please sign in again.'));
+    }
+    $('ket-qua').textContent = `GET ${duongDan} -> ${res.status}`;
+    if (!res.ok) {
+        const json = await res.json().catch(() => null);
+        $('ket-qua').textContent += '\n' + JSON.stringify(json, null, 2);
+        return { status: res.status, json };
+    }
+    const tenTrongHeader = /filename="?([^";]+)"?/.exec(res.headers.get('Content-Disposition') || '');
+    const url = URL.createObjectURL(await res.blob());
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = tenTrongHeader ? tenTrongHeader[1] : tenTep;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    return { status: res.status, json: null };
+}
 
 // Thông điệp lỗi của API: thongDiep + từng trường sai (chiTiet)
 function thongDiepLoi(json, macDinh) {
@@ -276,6 +320,7 @@ function dangNhapXong(json) {
     return diToi(hopLe ? tiep : trangChu());
 }
 
+// POST /api/auth/logout: thu hồi phiên của cookie eclinic_rt và xoá cookie
 async function dangXuat() {
     await goi('/api/auth/logout');
     accessToken = null;
@@ -487,7 +532,19 @@ function ketQuaKham(ketQua) {
     } else {
         khung.append(ghiChu(t('Không kê đơn thuốc.', 'No prescription.')));
     }
+    // Sổ khám bệnh (EXAM-03 / EXAM-04): maSoKham / linkSoKham chỉ có ở kết quả khám trả cho bệnh nhân (lịch sử khám, chi tiết
+    // lịch hẹn) và BenhAnResponse của bác sĩ; link mở trang /so-kham/<mã> (xem kết quả cần 4 số cuối SĐT liên hệ)
+    if (ketQua.maSoKham) khung.append(khoiSoKham(ketQua.maSoKham, ketQua.linkSoKham));
     return khung;
+}
+
+// Link sổ khám bệnh kèm mã QR (GET /api/booking/so-kham/{ma}/qr, công khai)
+function khoiSoKham(maSoKham, linkSoKham) {
+    const khoi = the('p');
+    const qr = anh(`${API_URL}/api/booking/so-kham/${encodeURIComponent(maSoKham)}/qr?kichThuoc=150`, t('Mã QR của sổ khám bệnh', 'QR code of the visit record'));
+    khoi.append(the('b', t('Sổ khám bệnh: ', 'Visit record: ')), lienKet(linkSoKham, '/so-kham/' + encodeURIComponent(maSoKham), true),
+        the('br'), qr);
+    return khoi;
 }
 
 // Lịch sử sửa hồ sơ bệnh án (bác sĩ: GET /api/medical/bac-si/toi/lich-hen/{id}/benh-an/lich-su; quản trị viên:
@@ -554,6 +611,8 @@ function khoiHuyDoi({ lich, canSoDienThoai, gui, khiXong }) {
     khung.append(the('h3', t('Hủy / đổi lịch', 'Cancel / reschedule')));
     // canDoiLich: ca khám đã bị hủy; hủy / đổi được tới giờ khám cũ và không tính vào số lần đổi lịch
     if (lich.canDoiLich) khung.append(the('p', CAN_DOI_LICH, 'canh-bao'));
+    // daDoiBacSi: ca khám được nhường cho bác sĩ khác; hủy / đổi tự do tới giờ khám
+    if (lich.daDoiBacSi) khung.append(the('p', DA_DOI_BAC_SI, 'canh-bao'));
     if (!lich.duocHuyDoi) {
         khung.append(ghiChu(lich.trangThai === 'DA_XAC_NHAN'
             ? t(`Không hủy / đổi được trên hệ thống (hạn chót: ${ngayGioVn(lich.hanHuyDoi)}, hoặc tài khoản này không phải người đặt / người khám). Vui lòng liên hệ phòng khám.`,
@@ -632,6 +691,7 @@ function hienPhieu(khung, phieu) {
     them(t('Số thứ tự', 'Queue number'), phieu.soThuTu, 'so-thu-tu');
     them(t('Trạng thái', 'Status'), TRANG_THAI[phieu.trangThai] || phieu.trangThai);
     if (phieu.canDoiLich) them(t('Cần đổi lịch', 'Needs rescheduling'), CAN_DOI_LICH);
+    if (phieu.daDoiBacSi) them(t('Đã đổi bác sĩ', 'Doctor changed'), DA_DOI_BAC_SI);
     if (phieu.lyDoHuy) them(t('Lý do hủy', 'Cancellation reason'), phieu.lyDoHuy);
     them(t('Ngày khám', 'Visit date'), `${thuCuaNgay(phieu.ngay)} ${ngayVn(phieu.ngay)}`);
     them(t('Giờ khám dự kiến', 'Expected time'), gio(phieu.gioKhamDuKien));
@@ -655,12 +715,63 @@ function hienPhieu(khung, phieu) {
     const anhQr = document.createElement('img');
     anhQr.alt = t('Mã QR của link phiếu khám', 'QR code of the ticket link');
     anhQr.src = duongDanQr;
+    // Tệp lịch .ics (GET /api/booking/phieu-kham/{ma}/lich.ics, công khai): trạng thái hiện tại của lịch hẹn, mở bằng ứng
+    // dụng lịch để thêm / cập nhật / hủy sự kiện (cả chuỗi đổi lịch là 1 sự kiện)
     cotQr.append(anhQr, the('br'), lienKet(t('Tải mã QR', 'Download QR code'), duongDanQr + '?taiVe=true'), the('br'),
-        lienKet(t('Mở trang phiếu khám', 'Open the ticket page'), '/phieu-kham/' + encodeURIComponent(phieu.maPhieuKham), true));
+        lienKet(t('Thêm vào lịch (.ics)', 'Add to calendar (.ics)'), `${API_URL}/api/booking/phieu-kham/${encodeURIComponent(phieu.maPhieuKham)}/lich.ics`),
+        the('br'), lienKet(t('Mở trang phiếu khám', 'Open the ticket page'), '/phieu-kham/' + encodeURIComponent(phieu.maPhieuKham), true));
 
     const hop = the('div', undefined, 'phieu');
     hop.append(dl, cotQr);
     khung.replaceChildren(hop);
+}
+
+// Cấp lại liên kết phiếu khám / sổ khám bệnh cho người đã mất link (PAT-03), dùng ở Lịch hẹn toàn viện (quản trị viên) và
+// Upcoming Appointments (bác sĩ). duongDanPost:
+//   POST /api/booking/quan-tri/lich-hen/{id}/cap-lai-lien-ket          quản trị viên, mọi lịch hẹn
+//   POST /api/booking/bac-si/toi/lich-hen/{id}/cap-lai-lien-ket        bác sĩ, lịch hẹn của chính mình (khác -> 404)
+// Body { cccd, cachGui }: cccd = số trên giấy tờ người đó xuất trình (bệnh nhân hoặc người giám hộ của lịch hẹn; sai -> 403
+// CCCD_KHONG_KHOP). cachGui EMAIL: gửi tới email của lịch hẹn, trả emailDaGui đã che (không có email -> 409
+// KHONG_CO_EMAIL_NHAN). MAN_HINH: trả maPhieuKham + lienKetPhieuKham (và maSoKham + lienKetSoKham nếu đã khám) để mở QR.
+// Luôn là lịch hẹn hiện hành của chuỗi đổi lịch (maTraCuu trong phản hồi có thể khác lịch đã chọn).
+function hopCapLaiLienKet(duongDanPost, maTraCuu) {
+    const khung = the('div', null, 'huy-doi');
+    khung.append(the('h3', t(`Cấp lại liên kết · ${maTraCuu}`, `Reissue the link · ${maTraCuu}`)),
+        ghiChu(t('Nhập số CCCD trên giấy tờ người đến xuất trình (của bệnh nhân, hoặc của người giám hộ khi bệnh nhân là trẻ em).',
+            'Enter the national ID number on the document the person shows (the patient\'s, or the guardian\'s for a child).')));
+    const form = the('form', null, 'hai-cot');
+    khuon(form, `
+        <div><label>${t('Số CCCD (12 số)', 'National ID number (12 digits)')}</label><input name="cccd" required pattern="\\d{12}" maxlength="12"></div>
+        <div><label>${t('Cách gửi', 'Delivery')}</label><select name="cachGui">
+            <option value="EMAIL">${t('Gửi tới email của lịch hẹn', 'Email it to the booking address')}</option>
+            <option value="MAN_HINH">${t('Hiện mã QR trên màn hình', 'Show the QR code on screen')}</option></select></div>
+        <button>${t('Cấp lại', 'Reissue')}</button>`);
+    const ketQua = the('div');
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const { status, json } = await goi(duongDanPost, giaTriForm(form));
+        if (status !== 200) {
+            ketQua.replaceChildren(the('p', thongDiepLoi(json, t('Không cấp lại được.', 'Could not reissue the link.')), 'ghi-chu loi'));
+            return;
+        }
+        const kq = json.duLieu;
+        ketQua.replaceChildren(the('p', `${json.thongDiep} · ${kq.maTraCuu}`, 'ghi-chu tot'));
+        if (kq.cachGui === 'EMAIL') {
+            ketQua.append(ghiChu(t(`Đã gửi tới ${kq.emailDaGui}`, `Sent to ${kq.emailDaGui}`)));
+            return;
+        }
+        const qr = (nhanQr, duongDanQr, lienKetDay) => {
+            const o = the('div');
+            o.append(the('b', nhanQr), the('br'), anh(`${API_URL}${duongDanQr}`, nhanQr), the('br'), lienKet(lienKetDay, lienKetDay, true));
+            return o;
+        };
+        const luoi = the('div', null, 'hai-cot');
+        luoi.append(qr(t('Phiếu khám', 'Appointment ticket'), `/api/booking/phieu-kham/${encodeURIComponent(kq.maPhieuKham)}/qr`, kq.lienKetPhieuKham));
+        if (kq.maSoKham) luoi.append(qr(t('Sổ khám bệnh', 'Visit record'), `/api/booking/so-kham/${encodeURIComponent(kq.maSoKham)}/qr`, kq.lienKetSoKham));
+        ketQua.append(luoi);
+    });
+    khung.append(form, ketQua);
+    return khung;
 }
 
 // ===== Bộ định tuyến =====
@@ -753,6 +864,11 @@ const THANH_BEN = {
         [cap('Quản lý bệnh nhân', 'Patient Management'), '/admin/patients'],
         [null, cap('Ngoài danh sách UI', 'Not in the UI list')],
         [cap('Tài khoản', 'Accounts'), '/admin/accounts'],
+        [cap('Lịch hẹn toàn viện', 'All Appointments'), '/admin/appointments'],
+        [cap('Đặt lịch qua tổng đài', 'Hotline Booking'), '/admin/hotline-booking'],
+        [cap('Quy tắc đặt lịch', 'Booking Rules'), '/admin/booking-rules'],
+        [cap('Ngày nghỉ bệnh viện', 'Hospital Closures'), '/admin/closures'],
+        [cap('Báo cáo thống kê', 'Reports'), '/admin/reports'],
     ],
 };
 const NAV_CONG_KHAI = [
@@ -818,7 +934,10 @@ function veKhung(duongDan) {
 // loai: bác sĩ nhận LICH_HEN_MOI / LICH_HEN_DA_HUY / LICH_HEN_DA_DOI / CA_LAM_VIEC_THAY_DOI / KET_QUA_DUYET_DOI_LICH;
 //       bệnh nhân nhận LICH_HEN_DA_XAC_NHAN / LICH_HEN_BI_TU_CHOI / LICH_HEN_CAN_DOI / LICH_HEN_DOI_PHONG /
 //       NHAC_LICH_KHAM (nhắc trước giờ khám, có maPhieuKham) / NHAC_TAI_KHAM (bác sĩ hẹn, đổi ngày tái khám và lời
-//       nhắc trước ngày đó; idLichHen / maPhieuKham là của lượt khám ĐÃ XONG, chưa có lịch hẹn mới: mở trang đặt lịch);
+//       nhắc trước ngày đó; idLichHen / maPhieuKham là của lượt khám ĐÃ XONG, chưa có lịch hẹn mới: mở trang đặt lịch) /
+//       LICH_HEN_DOI_BAC_SI / LICH_HEN_QUAN_TRI_HUY / LICH_HEN_QUAN_TRI_DOI (quản trị viên hủy / đổi lịch thay bệnh nhân);
+//       ngày bệnh viện nghỉ hủy ca: bệnh nhân nhận LICH_HEN_CAN_DOI, bác sĩ nhận 1 CA_LAM_VIEC_THAY_DOI cho mọi ca bị hủy;
+//       quản trị viên hủy / đổi lịch: bác sĩ nhận LICH_HEN_DA_HUY / LICH_HEN_DA_DOI;
 //       quản trị viên nhận YEU_CAU_DOI_LICH_MOI. Thông báo về yêu cầu đổi ca / xin nghỉ có idYeuCau.
 const CHU_KY_CHUONG = 30000;
 let soChuaDoc = 0;

@@ -6,11 +6,7 @@ spring:
     name: chatbot-service
   config:
     import: classpath:application-common.yml
-  data:
-    redis:
-      # Redis chỉ dùng để giới hạn số tin nhắn / số phiên chat; chậm hoặc mất kết nối thì bỏ qua giới hạn, không treo request
-      timeout: 2s
-      connect-timeout: 2s
+  # Redis chỉ dùng để giới hạn số tin nhắn / số phiên chat; thời gian chờ đặt chung trong application-common.yml
 
 app:
   bao-mat:

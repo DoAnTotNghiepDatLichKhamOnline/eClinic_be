@@ -5,7 +5,8 @@ import java.time.Duration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Giới hạn khi đặt lịch, prefix {@code app.dat-lich} trong application.yml.
+ * Giới hạn khi đặt lịch, prefix {@code app.dat-lich} trong application.yml. Trừ 2 giá trị giới hạn theo IP, các giá trị
+ * ở đây chỉ dùng để ghi dòng {@code cau_hinh_he_thong} đầu tiên; sau đó đọc bằng {@code CauHinhService#hienTai()}.
  *
  * @param datTruocToiThieu               lượt khám chỉ đặt được khi còn cách giờ bắt đầu ít nhất khoảng này
  * @param soNgayDatTruocToiDa            chỉ đặt được lịch trong số ngày tới này, tính từ hôm nay

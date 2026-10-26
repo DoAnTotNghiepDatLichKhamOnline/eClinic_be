@@ -15,8 +15,11 @@ import jakarta.validation.constraints.Size;
  * @param nguoiNhan địa chỉ nhận (người nhận có thể không có tài khoản)
  * @param ngonNgu   ngôn ngữ của email
  * @param khoaMau   mẫu email, vd {@code email.datLich}
- * @param thamSo    tham số của mẫu, mảng JSON (xem {@code ThamSoThongBao}), theo thứ tự mẫu quy định
+ * @param thamSo    tham số của mẫu, mảng JSON (xem {@code ThamSoThongBao}), theo thứ tự mẫu quy định. Tối đa 20000 ký
+ *                  tự: email lịch làm việc liệt kê tới 100 ca (~100 ký tự / ca); cột tham_so là TEXT (65535 byte)
  * @param idLichHen lịch hẹn liên quan, có thể null
+ * @param tepLich   nội dung tệp lịch .ics gửi kèm thành lich-kham.ics, null = không kèm. Tối đa 20000 ký tự (1 sự kiện
+ *                  khoảng 1-2 KB)
  */
 public record TaoEmailRequest(
         @NotBlank @Size(max = 64) @Pattern(regexp = "[a-z-]+:[0-9]+", message = "{kiemTra.maNguon.dinhDang}")
@@ -24,6 +27,7 @@ public record TaoEmailRequest(
         @NotBlank @Email @Size(max = 255) String nguoiNhan,
         @NotNull NgonNgu ngonNgu,
         @NotBlank @Size(max = 80) String khoaMau,
-        @Size(max = 4000) String thamSo,
-        Long idLichHen) {
+        @Size(max = 20000) String thamSo,
+        Long idLichHen,
+        @Size(max = 20000) String tepLich) {
 }

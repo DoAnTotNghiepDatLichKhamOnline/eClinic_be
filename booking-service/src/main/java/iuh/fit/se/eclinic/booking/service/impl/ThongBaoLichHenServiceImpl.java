@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import iuh.fit.se.eclinic.booking.config.NhacTaiKhamProperties;
 import iuh.fit.se.eclinic.booking.config.PhieuKhamProperties;
 import iuh.fit.se.eclinic.booking.repository.SuKienThongBaoRepository;
+import iuh.fit.se.eclinic.booking.service.LichIcsService;
 import iuh.fit.se.eclinic.booking.service.ThongBaoLichHenService;
 import iuh.fit.se.eclinic.common.entity.booking.LichHen;
 import iuh.fit.se.eclinic.common.entity.booking.SuKienThongBao;
@@ -39,6 +40,14 @@ public class ThongBaoLichHenServiceImpl implements ThongBaoLichHenService {
     private final SuKienThongBaoRepository suKienThongBaoRepository;
     private final PhieuKhamProperties phieuKhamProperties;
     private final NhacTaiKhamProperties nhacTaiKhamProperties;
+    private final LichIcsService lichIcsService;
+
+    /**
+     * Email kèm tệp lịch .ics: các email tạo / đổi / hủy sự kiện trong lịch của bệnh nhân. Email nhắc lịch và tái khám
+     * không kèm (không đổi gì, nhập lại có thể thành 2 sự kiện ở vài ứng dụng lịch).
+     */
+    private static final Set<String> MAU_KEM_LICH = Set.of("email.datLich", "email.doiLich", "email.doiBacSi",
+            "email.canDoiLich", "email.bacSiHuy", "email.quanTriHuy");
 
     @Override
     public void lichHenMoi(LichHen lichHen) {
@@ -54,6 +63,33 @@ public class ThongBaoLichHenServiceImpl implements ThongBaoLichHenService {
             ghi(LoaiThongBao.LICH_HEN_BI_TU_CHOI, idTaiKhoan, lichHen, "thongBao.bacSiHuy", thamSo);
         }
         ghiEmail(lichHen, "email.bacSiHuy");
+    }
+
+    @Override
+    public void quanTriHuy(LichHen lichHen) {
+        ThamSoThongBao thamSo = ThamSoThongBao.tao().chu(tenBenhNhan(lichHen)).gioNgay(gioKham(lichHen))
+                .chu(lichHen.getMaTraCuu()).chu(lichHen.getLyDoHuy());
+        for (Long idTaiKhoan : taiKhoanPhiaBenhNhan(lichHen)) {
+            ghi(LoaiThongBao.LICH_HEN_QUAN_TRI_HUY, idTaiKhoan, lichHen, "thongBao.quanTriHuy", thamSo);
+        }
+        ghi(LoaiThongBao.LICH_HEN_DA_HUY, taiKhoanBacSi(lichHen), lichHen, "thongBao.quanTriHuy.bacSi", thamSo);
+        ghiEmail(lichHen, "email.quanTriHuy");
+    }
+
+    @Override
+    public void quanTriDoi(LichHen lichCu, LichHen lichMoi) {
+        ThamSoThongBao thamSo = ThamSoThongBao.tao().chu(tenBenhNhan(lichMoi)).gioNgay(gioKham(lichCu))
+                .gioNgay(gioKham(lichMoi)).chu(lichMoi.getMaTraCuu());
+        for (Long idTaiKhoan : taiKhoanPhiaBenhNhan(lichMoi)) {
+            ghi(LoaiThongBao.LICH_HEN_QUAN_TRI_DOI, idTaiKhoan, lichMoi, "thongBao.quanTriDoi", thamSo);
+        }
+        if (lichCu.getBacSi().getId().equals(lichMoi.getBacSi().getId())) {
+            ghi(LoaiThongBao.LICH_HEN_DA_DOI, taiKhoanBacSi(lichMoi), lichMoi, "thongBao.quanTriDoi.bacSi", thamSo);
+            return;
+        }
+        ghi(LoaiThongBao.LICH_HEN_DA_HUY, taiKhoanBacSi(lichCu), lichCu, "thongBao.quanTriDoiBacSi",
+                ThamSoThongBao.tao().chu(tenBenhNhan(lichCu)).gioNgay(gioKham(lichCu)).chu(lichCu.getMaTraCuu()));
+        lichHenMoi(lichMoi);
     }
 
     @Override
@@ -89,6 +125,30 @@ public class ThongBaoLichHenServiceImpl implements ThongBaoLichHenService {
     @Override
     public void emailDaDoiLich(LichHen lichMoi) {
         ghiEmail(lichMoi, "email.doiLich");
+    }
+
+    @Override
+    public void emailDoiBacSi(LichHen lichHen) {
+        ghiEmail(lichHen, "email.doiBacSi");
+    }
+
+    @Override
+    public void emailCanDoiLich(LichHen lichHen) {
+        ghiEmail(lichHen, "email.canDoiLich");
+    }
+
+    @Override
+    public String emailCapLaiLienKet(LichHen lichHen, String lienKetSoKham) {
+        SuKienThongBao suKien = emailCho(lichHen);
+        if (suKien == null) {
+            return null;
+        }
+        suKien.setKhoaMau("email.capLaiLienKet");
+        // Tham số thứ 8: link sổ khám, chuỗi rỗng khi chưa khám (mẫu bỏ nút sổ khám)
+        suKien.setThamSo(thamSoEmail(lichHen).chu(lienKetSoKham).toJson());
+        suKien.setTepLich(lichIcsService.tao(lichHen, suKien.getNgonNgu()));
+        suKienThongBaoRepository.save(suKien);
+        return suKien.getEmailNhan();
     }
 
     @Override
@@ -139,20 +199,29 @@ public class ThongBaoLichHenServiceImpl implements ThongBaoLichHenService {
 
     /**
      * Thứ tự tham số của mọi mẫu email lịch hẹn (notification-service: {@code MauEmail}): họ tên bệnh nhân, giờ khám,
-     * họ tên bác sĩ, tên phòng, tầng (chuỗi rỗng nếu phòng không ghi tầng), mã tra cứu, link phiếu khám.
+     * họ tên bác sĩ, tên phòng, tầng (chuỗi rỗng nếu phòng không ghi tầng), mã tra cứu, link phiếu khám. Email cấp lại
+     * liên kết thêm tham số thứ 8 (link sổ khám).
      */
     private void ghiEmail(LichHen lichHen, String khoaMau) {
         SuKienThongBao suKien = emailCho(lichHen);
         if (suKien == null) {
             return;
         }
-        PhongKham phong = lichHen.getPhongKham();
         suKien.setKhoaMau(khoaMau);
-        suKien.setThamSo(ThamSoThongBao.tao().chu(tenBenhNhan(lichHen)).gioNgay(gioKham(lichHen))
+        suKien.setThamSo(thamSoEmail(lichHen).toJson());
+        if (MAU_KEM_LICH.contains(khoaMau)) {
+            // Theo ngôn ngữ của email; soạn lúc xếp email nên là trạng thái của đúng thao tác này
+            suKien.setTepLich(lichIcsService.tao(lichHen, suKien.getNgonNgu()));
+        }
+        suKienThongBaoRepository.save(suKien);
+    }
+
+    private ThamSoThongBao thamSoEmail(LichHen lichHen) {
+        PhongKham phong = lichHen.getPhongKham();
+        return ThamSoThongBao.tao().chu(tenBenhNhan(lichHen)).gioNgay(gioKham(lichHen))
                 .chu(tenBacSi(lichHen)).haiNgonNgu(phong.getTenPhong(), phong.getTenPhongEn())
                 .haiNgonNgu(phong.getTang(), phong.getTangEn()).chu(lichHen.getMaTraCuu())
-                .chu(phieuKhamProperties.lienKet(lichHen.getMaTokenPhieuKham())).toJson());
-        suKienThongBaoRepository.save(suKien);
+                .chu(phieuKhamProperties.lienKet(lichHen.getMaTokenPhieuKham()));
     }
 
     /**

@@ -21,6 +21,7 @@ import json
 import re
 import sys
 from http import HTTPStatus
+from itertools import combinations
 from pathlib import Path
 from xml.dom import minidom
 
@@ -47,6 +48,11 @@ CONTROLLER_TRONG_TAI_LIEU = (
     ("booking", "LichSuKhamController", None, None),
     ("booking", "HoSoBenhNhanController", None, None),
     ("booking", "TrangCaNhanController", None, None),
+    # Từ bản 2.5 (DOANTOTNGH-14): quy tắc đặt lịch, ngày nghỉ, sổ khám bệnh, khách xin cấp lại link (đều công khai)
+    ("booking", "QuyTacDatLichController", None, None),
+    ("booking", "NgayNghiController", None, None),
+    ("booking", "SoKhamController", None, None),
+    ("booking", "CapLaiLienKetController", None, None),
     ("notification", "ThongBaoController", None, None),
     ("chatbot", "ChatbotController", None, None),
 )
@@ -164,10 +170,12 @@ def cac_record(loai):
             for ten in re.findall(r"\brecord (\w+)\(", ma):
                 truong = truong_cua_record(ma, ten)
                 ket_qua.append(truong)
-                # Trường @JsonInclude(NON_NULL) vắng hẳn khỏi JSON khi null: mẫu không có các trường đó cũng khớp
-                bo_duoc = truong_khong_null(ma, ten)
-                if bo_duoc:
-                    ket_qua.append([t for t in truong if t not in bo_duoc])
+                # Trường @JsonInclude(NON_NULL) vắng hẳn khỏi JSON khi null: mẫu thiếu bất kỳ nhóm nào trong các trường
+                # đó cũng khớp (vd kết quả khám của bệnh nhân có maSoKham / linkSoKham nhưng không có phienBan / hanSua)
+                bo_duoc = sorted(truong_khong_null(ma, ten))
+                for so in range(1, len(bo_duoc) + 1):
+                    for nhom in combinations(bo_duoc, so):
+                        ket_qua.append([t for t in truong if t not in nhom])
     return ket_qua
 
 

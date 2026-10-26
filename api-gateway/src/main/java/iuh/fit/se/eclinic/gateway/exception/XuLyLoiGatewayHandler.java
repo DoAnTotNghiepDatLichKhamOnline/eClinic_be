@@ -23,7 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * Lỗi phát sinh tại gateway (không phải lỗi do service trả về — lỗi đó được chuyển nguyên cho frontend):
  * service chưa chạy -> 503, service trả lời quá lâu -> 504, đường dẫn không thuộc route nào -> 404,
- * body request quá lớn -> 413.
+ * body request quá lớn -> 413, 1 địa chỉ IP gửi quá nhiều request -> 429.
  * Thông điệp theo ngôn ngữ của request (thong-diep/gateway*.properties).
  * <p>
  * Cố ý KHÔNG có @ExceptionHandler(Exception.class): lỗi khác rơi về trang lỗi 500 mặc định của Spring Boot
@@ -63,6 +63,14 @@ public class XuLyLoiGatewayHandler {
     ResponseEntity<PhanHoiLoiGateway> xuLyYeuCauQuaLon(YeuCauQuaLonException loi, HttpServletRequest request) {
         return ResponseEntity.status(HttpStatus.CONTENT_TOO_LARGE)
                 .body(loi("YEU_CAU_QUA_LON", request, String.valueOf(loi.getKichThuocToiDa().toMegabytes())));
+    }
+
+    /** Địa chỉ IP vượt giới hạn tần suất (GioiHanTanSuatFilter gọi tới đây, request chưa được chuyển tiếp). */
+    @ExceptionHandler(QuaNhieuYeuCauException.class)
+    ResponseEntity<PhanHoiLoiGateway> xuLyQuaNhieuYeuCau(QuaNhieuYeuCauException loi, HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .header(HttpHeaders.RETRY_AFTER, String.valueOf(loi.getGiayChoLai()))
+                .body(loi("QUA_NHIEU_YEU_CAU", request, String.valueOf(loi.getGiayChoLai())));
     }
 
     /** Đường dẫn không khớp route nào. */

@@ -425,10 +425,111 @@ def p5_quan_tri(p4):
     goi("loi-bs-lich-su-sua-route-quan-tri", "GET", ls.format(p4["id_a"]), token=token_bs, mong=403)
 
 
+def p7_quan_tri_lich_hen(p4):
+    """Mục 9.4-9.9 và 7.7-7.8 (DOANTOTNGH-14): quản trị viên xem lịch hẹn toàn viện, chi tiết + nhật ký, đặt lịch qua
+    tổng đài, hủy / đổi lịch thay bệnh nhân, cấp lại liên kết; bác sĩ tìm lịch theo CCCD và cấp lại liên kết. Dựng: 2
+    lịch tổng đài (không email / có email) vào 1 ca sau hôm nay còn chỗ của bác sĩ 01."""
+    xoa_gioi_han_ip()
+    QT = "/api/booking/quan-tri/lich-hen"
+    token_bs = p4["token_bs"]
+    token_bs2 = bac_si(2)
+    _, ad = goi("dang-nhap-admin-p7", "POST", "/api/auth/login",
+                {"email": "admin@eclinic.local", "matKhau": "Admin@123"}, mong=200)
+    token_ad = ad["duLieu"]["accessToken"]
+    hom_nay = date.today()
+    tu, den = hom_nay.isoformat(), (hom_nay + timedelta(days=13)).isoformat()
+
+    # --- Dựng: ca còn ít nhất 3 khung trống của bác sĩ 01 (từ ca muộn nhất: các giai đoạn trước dùng ca sớm) ---
+    _, ca_ds = goi("bs-lich-lam-viec-p7", "GET", f"{BS}/lich-lam-viec?tuNgay={tu}&denNgay={den}", token=token_bs,
+                   mong=200)
+    ca_sau = [c for c in ca_ds["duLieu"] if c["ngay"] > tu and c["trangThai"] == "HOAT_DONG"]
+    ca_t, khung_t = next((c, k) for c, k in ((c, khung_con_cho(p4["id_bac_si"], c)) for c in reversed(ca_sau))
+                         if len(k) >= 3)
+
+    # --- 9.5 Đặt lịch qua tổng đài ---
+    goi_dien = {"hoTen": "Phạm Văn Gọi", "ngaySinh": "1985-07-12", "gioiTinh": "NAM", "soDienThoai": "0933200001",
+                "cccd": "079185000201"}
+    dat_t = {"idLichLamViec": ca_t["idLichLamViec"], "gioBatDauKhung": khung_t[0], "benhNhan": goi_dien,
+             "lyDoKham": "Đau lưng 1 tuần nay", "ngonNgu": "VI"}
+    _, hl1 = goi("qt-dat-lich-tong-dai", "POST", QT, dat_t, token=token_ad, mong=201)
+    co_email = {"hoTen": "Lý Thị Đến", "ngaySinh": "1990-02-03", "gioiTinh": "NU", "soDienThoai": "0933200002",
+                "cccd": "079190000202", "email": "den@example.com"}
+    _, hl2 = goi("qt-dat-lich-tong-dai-co-email", "POST", QT,
+                 {**dat_t, "gioBatDauKhung": khung_t[1], "benhNhan": co_email, "lyDoKham": "Khám tổng quát",
+                  "ngonNgu": "EN"}, token=token_ad, mong=201)
+    goi("loi-qt-dat-lich-thieu-ly-do", "POST", QT, {**dat_t, "lyDoKham": " "}, token=token_ad, mong=400)
+    goi("loi-qt-dat-lich-trung-gio", "POST", QT, dat_t, token=token_ad, mong=409)
+    goi("loi-bs-dat-lich-tong-dai", "POST", QT, dat_t, token=token_bs, mong=403)
+    id1, id2 = hl1["duLieu"]["idLichHen"], hl2["duLieu"]["idLichHen"]
+
+    # --- 9.4 Danh sách toàn viện ---
+    goi("qt-lich-hen-ds", "GET", f"{QT}?kichThuoc=3", token=token_ad, mong=200)
+    goi("qt-lich-hen-ds-loc", "GET", f"{QT}?tuNgay={tu}&denNgay={den}&idBacSi={p4['id_bac_si']}&kenhDat=HOTLINE"
+                                     f"&trangThai=DA_XAC_NHAN", token=token_ad, mong=200)
+    goi("qt-lich-hen-ds-tu-khoa-cccd", "GET", f"{QT}?tuKhoa=079185000201", token=token_ad, mong=200)
+    goi("qt-lich-hen-ds-tu-khoa-ma", "GET", f"{QT}?tuKhoa={hl1['duLieu']['phieuKham']['maTraCuu']}", token=token_ad,
+        mong=200)
+    goi("loi-qt-lich-hen-ds-qua-366", "GET", f"{QT}?tuNgay=2026-01-01&denNgay=2027-06-01", token=token_ad, mong=400)
+    goi("loi-qt-lich-hen-ds-trang-thai-sai", "GET", f"{QT}?trangThai=ABC", token=token_ad, mong=400)
+    goi("loi-bs-lich-hen-ds-quan-tri", "GET", QT, token=token_bs, mong=403)
+
+    # --- 9.6 Chi tiết ---
+    goi("qt-lich-hen-chi-tiet", "GET", f"{QT}/{id1}", token=token_ad, mong=200)
+    goi("loi-qt-lich-hen-chi-tiet-khong-co", "GET", f"{QT}/999999", token=token_ad, mong=404)
+
+    # --- 9.9 Cấp lại liên kết ---
+    cl = f"{QT}/{{}}/cap-lai-lien-ket"
+    goi("loi-qt-cap-lai-sai-cccd", "POST", cl.format(id1), {"cccd": "079000000000", "cachGui": "EMAIL"}, token=token_ad,
+        mong=403)
+    goi("loi-qt-cap-lai-khong-co-email", "POST", cl.format(id1), {"cccd": "079185000201", "cachGui": "EMAIL"},
+        token=token_ad, mong=409)
+    goi("qt-cap-lai-man-hinh", "POST", cl.format(id1), {"cccd": "079185000201", "cachGui": "MAN_HINH"}, token=token_ad,
+        mong=200)
+    goi("qt-cap-lai-email", "POST", cl.format(id2), {"cccd": "079190000202", "cachGui": "EMAIL"}, token=token_ad,
+        mong=200)
+    goi("loi-qt-cap-lai-cccd-sai-dang", "POST", cl.format(id1), {"cccd": "123", "cachGui": "EMAIL"}, token=token_ad,
+        mong=400)
+    goi("loi-qt-cap-lai-khong-co", "POST", cl.format(999999), {"cccd": "079185000201", "cachGui": "EMAIL"},
+        token=token_ad, mong=404)
+
+    # --- 9.8 Đổi lịch thay bệnh nhân ---
+    dl = f"{QT}/{{}}/doi-lich"
+    doi = {"idLichLamViec": ca_t["idLichLamViec"], "gioBatDauKhung": khung_t[2],
+           "lyDo": "Bệnh nhân gọi tổng đài xin đổi sang giờ muộn hơn"}
+    goi("loi-qt-doi-lich-thieu-ly-do", "POST", dl.format(id1), {**doi, "lyDo": ""}, token=token_ad, mong=400)
+    _, moi = goi("qt-doi-lich", "POST", dl.format(id1), doi, token=token_ad, mong=201)
+    goi("loi-qt-doi-lich-da-doi", "POST", dl.format(id1), doi, token=token_ad, mong=409)
+    id_moi = moi["duLieu"]["lichHen"]["id"]
+    goi("qt-lich-hen-chi-tiet-sau-doi", "GET", f"{QT}/{id_moi}", token=token_ad, mong=200)
+
+    # --- 9.7 Hủy thay bệnh nhân ---
+    huy = f"{QT}/{{}}/huy"
+    goi("loi-qt-huy-thieu-ly-do", "POST", huy.format(id2), {"lyDo": "  "}, token=token_ad, mong=400)
+    goi("qt-huy", "POST", huy.format(id2), {"lyDo": "Bác sĩ đi công tác đột xuất, phòng khám đã gọi báo bệnh nhân"},
+        token=token_ad, mong=200)
+    goi("loi-qt-huy-lan-2", "POST", huy.format(id2), {"lyDo": "Bận"}, token=token_ad, mong=409)
+    goi("loi-qt-huy-khong-co", "POST", huy.format(999999), {"lyDo": "Bận"}, token=token_ad, mong=404)
+
+    # --- 7.7, 7.8 Bác sĩ: tìm theo CCCD, cấp lại liên kết ---
+    goi("bs-lich-hen-theo-cccd", "GET", f"{BS}/lich-hen/theo-cccd?cccd=079185000201", token=token_bs, mong=200)
+    goi("bs-lich-hen-theo-cccd-rong", "GET", f"{BS}/lich-hen/theo-cccd?cccd=079000000000", token=token_bs, mong=200)
+    goi("loi-bs-lich-hen-theo-cccd-sai-dang", "GET", f"{BS}/lich-hen/theo-cccd?cccd=12", token=token_bs, mong=400)
+    bcl = f"{BS}/lich-hen/{{}}/cap-lai-lien-ket"
+    goi("bs-cap-lai-man-hinh", "POST", bcl.format(id_moi), {"cccd": "079185000201", "cachGui": "MAN_HINH"},
+        token=token_bs, mong=200)
+    goi("loi-bs-cap-lai-sai-cccd", "POST", bcl.format(id_moi), {"cccd": "079000000000", "cachGui": "MAN_HINH"},
+        token=token_bs, mong=403)
+    goi("loi-bs2-cap-lai-lich-nguoi-khac", "POST", bcl.format(id_moi), {"cccd": "079185000201", "cachGui": "MAN_HINH"},
+        token=token_bs2, mong=404)
+    goi("bs-lich-hen-sau-p7", "GET", f"{BS}/lich-hen?ngay={ca_t['ngay']}", token=token_bs, mong=200)
+
+
 def main():
     for tep in lay_mau.THU_MUC.glob("*.json") if lay_mau.THU_MUC.exists() else ():
         tep.unlink()
-    p5_quan_tri(p4_kham_benh(p3_lich_va_hang_doi()))
+    p4 = p4_kham_benh(p3_lich_va_hang_doi())
+    p5_quan_tri(p4)
+    p7_quan_tri_lich_hen(p4)
 
 
 if __name__ == "__main__":

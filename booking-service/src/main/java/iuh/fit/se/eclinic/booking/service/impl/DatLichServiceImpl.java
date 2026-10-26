@@ -17,7 +17,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
-import iuh.fit.se.eclinic.booking.config.DatLichProperties;
 import iuh.fit.se.eclinic.booking.dto.request.BenhNhanRequest;
 import iuh.fit.se.eclinic.booking.dto.request.DatLichRequest;
 import iuh.fit.se.eclinic.booking.dto.request.NguoiGiamHoRequest;
@@ -29,7 +28,10 @@ import iuh.fit.se.eclinic.booking.repository.KhungGioKhamRepository;
 import iuh.fit.se.eclinic.booking.repository.LichHenRepository;
 import iuh.fit.se.eclinic.booking.repository.LichLamViecRepository;
 import iuh.fit.se.eclinic.booking.repository.NguoiGiamHoRepository;
+import iuh.fit.se.eclinic.booking.service.CauHinhService;
 import iuh.fit.se.eclinic.booking.service.DatLichService;
+import iuh.fit.se.eclinic.booking.service.LichSuLichHenService;
+import iuh.fit.se.eclinic.booking.service.NguoiThucHien;
 import iuh.fit.se.eclinic.booking.service.TaiKhoanService;
 import iuh.fit.se.eclinic.booking.service.ThongBaoLichHenService;
 import iuh.fit.se.eclinic.booking.util.ChuanHoaTen;
@@ -38,11 +40,14 @@ import iuh.fit.se.eclinic.common.entity.booking.HoSoBenhNhan;
 import iuh.fit.se.eclinic.common.entity.booking.LichHen;
 import iuh.fit.se.eclinic.common.entity.booking.NguoiGiamHo;
 import iuh.fit.se.eclinic.common.entity.catalog.BacSi;
+import iuh.fit.se.eclinic.common.entity.identity.QuanTriVien;
 import iuh.fit.se.eclinic.common.entity.identity.TaiKhoan;
 import iuh.fit.se.eclinic.common.entity.scheduling.KhungGioKham;
 import iuh.fit.se.eclinic.common.entity.scheduling.LichLamViec;
 import iuh.fit.se.eclinic.common.enums.TrangThaiBacSi;
+import iuh.fit.se.eclinic.common.enums.KenhDatLich;
 import iuh.fit.se.eclinic.common.enums.NgonNgu;
+import iuh.fit.se.eclinic.common.enums.SuKienLichHen;
 import iuh.fit.se.eclinic.common.enums.TrangThaiKhungGio;
 import iuh.fit.se.eclinic.common.enums.TrangThaiLichHen;
 import iuh.fit.se.eclinic.common.enums.TrangThaiLichLamViec;
@@ -88,10 +93,11 @@ public class DatLichServiceImpl implements DatLichService {
     private final NguoiGiamHoRepository nguoiGiamHoRepository;
     private final LichHenRepository lichHenRepository;
     private final LichHenMapper lichHenMapper;
-    private final DatLichProperties datLichProperties;
+    private final CauHinhService cauHinhService;
     private final TaiKhoanService taiKhoanService;
     private final ApplicationEventPublisher eventPublisher;
     private final ThongBaoLichHenService thongBaoLichHenService;
+    private final LichSuLichHenService lichSuLichHenService;
 
     /**
      * READ_COMMITTED chứ không dùng REPEATABLE READ mặc định của MySQL: request phải chờ khoá (2 người cùng đặt 1 khung,
@@ -103,8 +109,27 @@ public class DatLichServiceImpl implements DatLichService {
     @Override
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public DatLichResponse datLich(DatLichRequest request, Long idTaiKhoan) {
-        LocalDateTime bayGio = LocalDateTime.now();
         TaiKhoan taiKhoanDat = idTaiKhoan == null ? null : taiKhoanService.layBenhNhanDangHoatDong(idTaiKhoan);
+        return dat(request, taiKhoanDat, taiKhoanDat == null ? KenhDatLich.KHACH : KenhDatLich.TAI_KHOAN,
+                NguoiThucHien.nguoiDat(taiKhoanDat), NgonNgu.hienTai());
+    }
+
+    @Override
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public DatLichResponse datQuaHotline(DatLichRequest request, QuanTriVien quanTri, NgonNgu ngonNgu) {
+        return dat(request, null, KenhDatLich.HOTLINE, NguoiThucHien.quanTri(quanTri), ngonNgu);
+    }
+
+    /**
+     * Phần chung của khách / tài khoản đặt và quản trị viên đặt qua tổng đài.
+     *
+     * @param taiKhoanDat tài khoản bệnh nhân đã đặt; null = đặt như khách (khách, tổng đài)
+     * @param nguoiDat    người ghi vào nhật ký lịch hẹn (DAT_LICH)
+     * @param ngonNgu     ngôn ngữ lưu vào lịch hẹn, dùng cho email khi không có tài khoản đặt
+     */
+    private DatLichResponse dat(DatLichRequest request, TaiKhoan taiKhoanDat, KenhDatLich kenhDat,
+            NguoiThucHien nguoiDat, NgonNgu ngonNgu) {
+        LocalDateTime bayGio = LocalDateTime.now();
         LocalDateTime gioBatDauKhung = request.gioBatDauKhung();
         LocalDate ngayKham = gioBatDauKhung.toLocalDate();
         boolean bacSiBatKy = request.idLichLamViec() == null;
@@ -129,7 +154,7 @@ public class DatLichServiceImpl implements DatLichService {
         // Đọc không khoá, trước khi khoá khung giờ: các từ chối về hồ sơ của tài khoản không giữ khoá nào
         TaiKhoan chuHoSoMoi = datChoBanThan && canTaoHoSoCuaTaiKhoan(taiKhoanDat, cccd) ? taiKhoanDat : null;
 
-        LocalDateTime moc = bayGio.plus(datLichProperties.datTruocToiThieu());
+        LocalDateTime moc = bayGio.plus(cauHinhService.hienTai().datTruocToiThieu());
         CaVaLuot daChon = khoaVaChonCa(caUngVien, gioBatDauKhung, moc);
         LichLamViec ca = daChon.ca();
         LocalDateTime gioKetThucKhung = daChon.gioKetThucKhung();
@@ -147,6 +172,7 @@ public class DatLichServiceImpl implements DatLichService {
         lichHen.setHoSoBenhNhan(hoSo);
         lichHen.setNguoiGiamHo(nguoiGiamHo);
         lichHen.setTaiKhoanDat(taiKhoanDat);
+        lichHen.setKenhDat(kenhDat);
         lichHen.setBacSi(ca.getBacSi());
         lichHen.setKhungGio(luot);
         lichHen.setPhongKham(ca.getPhongKham());
@@ -154,7 +180,7 @@ public class DatLichServiceImpl implements DatLichService {
         lichHen.setLyDoKham(rongThanhNull(request.lyDoKham()));
         lichHen.setSoDienThoaiLienHe(soDienThoaiLienHe);
         lichHen.setEmailLienHe(rongThanhNull(benhNhan.email()));
-        lichHen.setNgonNgu(NgonNgu.hienTai());
+        lichHen.setNgonNgu(ngonNgu);
         // Bản sao những gì người đặt nhập: hồ sơ đã có không bị sửa, nơi hiển thị cho người đặt dùng bản sao này
         lichHen.setHoTenDaNhap(ChuanHoaTen.gon(benhNhan.hoTen()));
         lichHen.setNgaySinhDaNhap(benhNhan.ngaySinh());
@@ -164,6 +190,7 @@ public class DatLichServiceImpl implements DatLichService {
         lichHen.setMaTraCuu(taoMaTraCuu(ngayKham));
         lichHen.setMaTokenPhieuKham(TokenNgauNhien.tao());
         luu(lichHen, luot);
+        lichSuLichHenService.ghi(lichHen, SuKienLichHen.DAT_LICH, nguoiDat);
         // Chỉ ở đặt lịch mới: đổi lịch (datLaiTuLichCu) do HuyDoiLichServiceImpl báo cho bác sĩ bằng 1 thông báo "đã đổi"
         thongBaoLichHenService.lichHenMoi(lichHen);
         thongBaoLichHenService.emailDaNhanLich(lichHen);
@@ -196,7 +223,7 @@ public class DatLichServiceImpl implements DatLichService {
     @Override
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public DatLichResponse datLaiTuLichCu(LichHen cu, Long idLichLamViec, Long idChuyenKhoa,
-            LocalDateTime gioBatDauKhung, LocalDateTime bayGio) {
+            LocalDateTime gioBatDauKhung, LocalDateTime bayGio, NgonNgu ngonNgu) {
         boolean bacSiBatKy = idLichLamViec == null;
         if (bacSiBatKy == (idChuyenKhoa == null)) {
             throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE,
@@ -205,7 +232,7 @@ public class DatLichServiceImpl implements DatLichService {
         List<LichLamViec> caUngVien = bacSiBatKy
                 ? timCaUngVien(idChuyenKhoa, gioBatDauKhung, bayGio.toLocalDate())
                 : List.of(timCaDichDanh(idLichLamViec, gioBatDauKhung, bayGio.toLocalDate()));
-        LocalDateTime moc = bayGio.plus(datLichProperties.datTruocToiThieu());
+        LocalDateTime moc = bayGio.plus(cauHinhService.hienTai().datTruocToiThieu());
         CaVaLuot daChon = khoaVaChonCa(caUngVien, gioBatDauKhung, moc);
         LichLamViec ca = daChon.ca();
         LocalDateTime gioKetThucKhung = daChon.gioKetThucKhung();
@@ -229,6 +256,7 @@ public class DatLichServiceImpl implements DatLichService {
         lichHen.setHoSoBenhNhan(hoSo);
         lichHen.setNguoiGiamHo(cu.getNguoiGiamHo());
         lichHen.setTaiKhoanDat(cu.getTaiKhoanDat());
+        lichHen.setKenhDat(cu.getKenhDat());
         lichHen.setBacSi(ca.getBacSi());
         lichHen.setKhungGio(luot);
         lichHen.setPhongKham(ca.getPhongKham());
@@ -237,8 +265,7 @@ public class DatLichServiceImpl implements DatLichService {
         lichHen.setGhiChu(cu.getGhiChu());
         lichHen.setSoDienThoaiLienHe(cu.getSoDienThoaiLienHe());
         lichHen.setEmailLienHe(cu.getEmailLienHe());
-        // Ngôn ngữ của request đổi lịch, không chép của lịch cũ: người đổi đang dùng ngôn ngữ này
-        lichHen.setNgonNgu(NgonNgu.hienTai());
+        lichHen.setNgonNgu(ngonNgu);
         lichHen.setHoTenDaNhap(cu.getHoTenDaNhap());
         lichHen.setNgaySinhDaNhap(cu.getNgaySinhDaNhap());
         lichHen.setGioiTinhDaNhap(cu.getGioiTinhDaNhap());
@@ -266,7 +293,7 @@ public class DatLichServiceImpl implements DatLichService {
      */
     private List<LichLamViec> timCaUngVien(Long idChuyenKhoa, LocalDateTime gioBatDauKhung, LocalDate homNay) {
         LocalDate ngay = gioBatDauKhung.toLocalDate();
-        if (ngay.isBefore(homNay) || ngay.isAfter(homNay.plusDays(datLichProperties.soNgayDatTruocToiDa()))) {
+        if (ngay.isBefore(homNay) || ngay.isAfter(homNay.plusDays(cauHinhService.hienTai().soNgayDatTruocToiDa()))) {
             throw new LoiNghiepVu(MaLoi.KHUNG_GIO_KHONG_KHA_DUNG);
         }
         List<LichLamViec> caUngVien = lichLamViecRepository.timCaDatLichDuoc(ngay, null, idChuyenKhoa).stream()
@@ -361,7 +388,7 @@ public class DatLichServiceImpl implements DatLichService {
                 && bacSi.getTaiKhoan().getTrangThai() == TrangThaiTaiKhoan.DA_KICH_HOAT;
         LocalDate ngay = ca.getNgayLamViec();
         boolean trongHan = !ngay.isBefore(homNay)
-                && !ngay.isAfter(homNay.plusDays(datLichProperties.soNgayDatTruocToiDa()));
+                && !ngay.isAfter(homNay.plusDays(cauHinhService.hienTai().soNgayDatTruocToiDa()));
         if (!caDangNhan || !trongHan) {
             throw new LoiNghiepVu(MaLoi.KHUNG_GIO_KHONG_KHA_DUNG);
         }
@@ -427,7 +454,7 @@ public class DatLichServiceImpl implements DatLichService {
                 gioKetThucKhung)) {
             throw new LoiNghiepVu(MaLoi.LICH_HEN_TRUNG_GIO);
         }
-        int toiDa = datLichProperties.soLichHieuLucToiDaMoiHoSo();
+        int toiDa = cauHinhService.hienTai().soLichHieuLucToiDaMoiHoSo();
         if (lichHenRepository.demLichCuaHoSoTu(hoSo.getId(), TRANG_THAI_CON_HIEU_LUC, bayGio) >= toiDa) {
             throw new LoiNghiepVu(MaLoi.VUOT_GIOI_HAN_DAT_LICH,
                     "loi.VUOT_GIOI_HAN_DAT_LICH.theoBenhNhan", String.valueOf(toiDa));
@@ -435,7 +462,7 @@ public class DatLichServiceImpl implements DatLichService {
     }
 
     private void kiemTraGioiHanTheoSoDienThoai(String soDienThoai, LocalDateTime bayGio) {
-        int toiDa = datLichProperties.soLichHieuLucToiDaMoiSoDienThoai();
+        int toiDa = cauHinhService.hienTai().soLichHieuLucToiDaMoiSoDienThoai();
         if (lichHenRepository.demLichTheoSoDienThoaiTu(soDienThoai, TRANG_THAI_CON_HIEU_LUC, bayGio) >= toiDa) {
             throw new LoiNghiepVu(MaLoi.VUOT_GIOI_HAN_DAT_LICH,
                     "loi.VUOT_GIOI_HAN_DAT_LICH.theoSoDienThoai", String.valueOf(toiDa));

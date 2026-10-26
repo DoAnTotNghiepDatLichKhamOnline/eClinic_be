@@ -27,7 +27,10 @@ import iuh.fit.se.eclinic.common.entity.identity.TaiKhoan;
 import iuh.fit.se.eclinic.common.entity.medical.Thuoc;
 import iuh.fit.se.eclinic.common.entity.scheduling.KhungGioKham;
 import iuh.fit.se.eclinic.common.entity.scheduling.LichLamViec;
+import iuh.fit.se.eclinic.common.entity.scheduling.LichSuCaLamViec;
+import iuh.fit.se.eclinic.common.enums.HanhDongCa;
 import iuh.fit.se.eclinic.common.enums.LoaiAnhBacSi;
+import iuh.fit.se.eclinic.common.enums.NguonThayDoiCa;
 import iuh.fit.se.eclinic.common.enums.TrangThaiBacSi;
 import iuh.fit.se.eclinic.common.enums.TrangThaiLichLamViec;
 import iuh.fit.se.eclinic.common.enums.TrangThaiLienKet;
@@ -561,6 +564,9 @@ public class DuLieuMauServiceImpl implements DuLieuMauService {
         lichLamViec.setSoLuotToiDaMoiGio(DuLieuMau.SO_LUOT_MOI_GIO);
         lichLamViec.setThoiLuongLuotPhut(DuLieuMau.SO_PHUT_MOI_LUOT);
         entityManager.persist(lichLamViec);
+        // Dòng đầu của lịch sử ca (ca nào cũng bắt đầu bằng TAO, xem lich_su_ca_lam_viec)
+        entityManager.persist(
+                LichSuCaLamViec.anhCua(lichLamViec, HanhDongCa.TAO, NguonThayDoiCa.DU_LIEU_MAU, adminTao));
 
         for (LocalTime gio : gioBatDauCacLuot) {
             KhungGioKham khungGio = new KhungGioKham();

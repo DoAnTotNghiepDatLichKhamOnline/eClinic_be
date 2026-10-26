@@ -1,5 +1,7 @@
 package iuh.fit.se.eclinic.booking.controller;
 
+import java.nio.charset.StandardCharsets;
+
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -23,6 +25,8 @@ import iuh.fit.se.eclinic.booking.dto.response.PhieuKhamResponse;
 import iuh.fit.se.eclinic.booking.service.GioiHanDatLichService;
 import iuh.fit.se.eclinic.booking.service.HuyDoiLichService;
 import iuh.fit.se.eclinic.booking.service.PhieuKhamService;
+import iuh.fit.se.eclinic.booking.service.PhieuKhamService.TepIcs;
+import iuh.fit.se.eclinic.booking.util.TepTaiVe;
 import iuh.fit.se.eclinic.common.dto.PhanHoiApi;
 import iuh.fit.se.eclinic.common.util.DiaChiIp;
 import jakarta.servlet.http.HttpServletRequest;
@@ -42,6 +46,7 @@ import lombok.RequiredArgsConstructor;
 public class PhieuKhamController {
 
     private static final String TEN_TEP_QR = "phieu-kham-qr.png";
+    private static final MediaType LICH = new MediaType("text", "calendar", StandardCharsets.UTF_8);
 
     private final PhieuKhamService phieuKhamService;
     private final HuyDoiLichService huyDoiLichService;
@@ -70,6 +75,15 @@ public class PhieuKhamController {
             @Valid @RequestBody DoiLichRequest request, HttpServletRequest httpRequest) {
         gioiHanDatLichService.ghiNhan(DiaChiIp.cua(httpRequest));
         return PhanHoiApi.ok(huyDoiLichService.doiTheoPhieu(maPhieuKham, request), "thanhCong.doiLich");
+    }
+
+    @Operation(summary = "Tệp lịch .ics của lịch hẹn để thêm vào ứng dụng lịch (Google Calendar, Outlook, điện thoại):"
+            + " giờ khám, bác sĩ, phòng, mã tra cứu, link phiếu khám; lịch đã hủy / đã đổi đi thì sự kiện ở trạng thái"
+            + " CANCELLED. Không có họ tên, SĐT, CCCD")
+    @GetMapping("/{maPhieuKham}/lich.ics")
+    public ResponseEntity<byte[]> tepLich(@PathVariable String maPhieuKham) {
+        TepIcs tep = phieuKhamService.taoTepLich(maPhieuKham);
+        return TepTaiVe.taiVe(tep.noiDung().getBytes(StandardCharsets.UTF_8), tep.tenTep(), LICH);
     }
 
     /**

@@ -31,6 +31,8 @@ import lombok.Setter;
  * {@code soLuotToiDaMoiGio} (N) lượt, mỗi lượt {@code thoiLuongLuotPhut} (t) phút, N x t &lt;= 60.
  * Mỗi lượt là 1 dòng {@link KhungGioKham}; {@code soBenhNhanToiDa} là tổng số lượt của cả ca.
  * Không được chồng giờ theo bác sĩ hoặc theo phòng (kiểm ở LichLamViecService.kiemTraKhongTrungLich).
+ * Tổng giờ các ca còn hoạt động của 1 bác sĩ trong 1 tuần thứ Hai - Chủ nhật không vượt giới hạn cấu hình (SCHED-05,
+ * kiểm ở QuanLyCaService của booking-service). Mỗi lần xếp / sửa / hủy thêm 1 dòng {@link LichSuCaLamViec}.
  * <p>
  * Khác ERD: thêm {@code trangThai} để hủy ca (Admin hủy trực tiếp, hoặc duyệt yêu cầu xin nghỉ / đổi ca, SCHED-03/06)
  * mà vẫn giữ các khung giờ / lịch hẹn cũ để truy vết: ca không bao giờ bị xoá. Lịch hẹn còn hiệu lực của ca bị hủy được

@@ -9,6 +9,10 @@
 //        lượt khám được mở lại cho người khác đặt; bệnh nhân được báo (trong ứng dụng + email liên hệ) và đọc được lý do trên phiếu khám
 //        Lỗi: 409 LICH_HEN_KHONG_HUY_DOI_DUOC (đã khám / đã hủy), 409 LICH_HEN_CAN_DOI_LICH (ca đã bị hủy, chờ bệnh nhân đổi),
 //             409 LICH_HEN_DA_QUA_GIO (lượt khám đã bắt đầu), 404 (không phải lịch của tôi)
+//   GET  /api/booking/bac-si/toi/lich-hen/theo-cccd?cccd=<12 số>   lịch hẹn của tôi (mọi trạng thái, tối đa 50, muộn nhất trước)
+//        mà người khám hoặc người giám hộ có số CCCD này: tìm lịch của người đến xin cấp lại liên kết đã mất
+//   POST /api/booking/bac-si/toi/lich-hen/{id}/cap-lai-lien-ket  { cccd, cachGui: EMAIL | MAN_HINH }   cấp lại liên kết phiếu khám
+//        (và sổ khám bệnh nếu đã khám), hộp thoại hopCapLaiLienKet() của chung.js
 // "Open record" -> /doctor/consultation?id=<id lịch hẹn>
 (() => {
     const LICH_HEN = '/api/booking/bac-si/toi/lich-hen';
@@ -54,6 +58,32 @@
         ]))));
     }
 
+    // Tìm lịch hẹn của mình theo CCCD người đến xuất trình, rồi cấp lại liên kết cho 1 dòng
+    async function timTheoCccd(cccd) {
+        const { status, json } = await lay(`${LICH_HEN}/theo-cccd?cccd=${encodeURIComponent(cccd)}`);
+        const khung = $('st-cccd-ds');
+        if (!khung) return;
+        $('st-cap-lai').replaceChildren();
+        if (status !== 200) {
+            khung.replaceChildren(the('p', thongDiepLoi(json, t('Không tìm được.', 'The search failed.')), 'ghi-chu loi'));
+            return;
+        }
+        if (!json.duLieu.length) {
+            khung.replaceChildren(ghiChu(t('Không có lịch hẹn nào của bạn với số CCCD này.', 'None of your appointments has this national ID.')));
+            return;
+        }
+        khung.replaceChildren(bang([t('Giờ khám', 'Visit time'), t('Bệnh nhân', 'Patient'), t('Người giám hộ', 'Guardian'), t('Trạng thái', 'Status'),
+            t('Mã tra cứu', 'Lookup code'), t('Thao tác', 'Actions')], json.duLieu.map((lich) => dong([
+            ngayGioVn(lich.gioKhamDuKien), lich.benhNhan.hoTen, lich.nguoiGiamHo ? lich.nguoiGiamHo.hoTen : '',
+            TRANG_THAI[lich.trangThai] || lich.trangThai, lich.maTraCuu,
+            nut(t('Cấp lại liên kết', 'Reissue the link'), () => {
+                const hop = hopCapLaiLienKet(`${LICH_HEN}/${lich.id}/cap-lai-lien-ket`, lich.maTraCuu);
+                hop.querySelector('[name=cccd]').value = cccd;
+                $('st-cap-lai').replaceChildren(hop);
+            }),
+        ]))));
+    }
+
     dangKy({
         duongDan: '/doctor/upcoming-appointments',
         vaiTro: 'BAC_SI',
@@ -68,7 +98,19 @@
                         'Reason for cancelling (required, enter it before clicking Cancel; the patient will read it)')}" maxlength="500">
                     <div id="st-ds" class="bang"></div>
                     <p id="st-trang-thai" class="ghi-chu"></p>
+                </section>
+                <section>
+                    <h2>${t('Cấp lại liên kết cho người mất link', 'Reissue a lost link')}</h2>
+                    <p class="ghi-chu">${t('Người đến xuất trình CCCD (của bệnh nhân, hoặc của người giám hộ khi bệnh nhân là trẻ em): tìm lịch hẹn của bạn theo số đó, rồi gửi lại link qua email của lịch hẹn hoặc mở mã QR trên màn hình.',
+                        'The person shows a national ID (the patient\'s, or the guardian\'s for a child): find your appointments by that number, then email the link to the booking address or show the QR code on screen.')}</p>
+                    <form id="form-st-cccd" class="hai-cot">
+                        <div><label>${t('Số CCCD (12 số)', 'National ID number (12 digits)')}</label><input name="cccd" required pattern="\\d{12}" maxlength="12"></div>
+                        <button class="phu">${t('Tìm', 'Search')}</button>
+                    </form>
+                    <div id="st-cccd-ds" class="bang"></div>
+                    <div id="st-cap-lai"></div>
                 </section>`);
+            khiGui('form-st-cccd', (v) => timTheoCccd(v.cccd));
             await taiSapToi();
         },
     });

@@ -1,16 +1,23 @@
 server:
   port: 8084
+  tomcat:
+    # Upload vượt giới hạn multipart: Tomcat chỉ đọc bỏ phần body còn lại tối đa chừng này (mặc định 2MB), quá thì ngắt
+    # kết nối trước khi trả xong response -> gateway báo 502 thay vì 413 TEP_QUA_LON. Phải LỚN HƠN giới hạn request
+    # của gateway (app.gioi-han.kich-thuoc-request-toi-da = 5MB) để mọi request gateway cho qua đều được đọc hết.
+    max-swallow-size: 10MB
 
 spring:
   application:
     name: booking-service
   config:
     import: classpath:application-common.yml
-  data:
-    redis:
-      # Redis chỉ dùng để giới hạn số lần đặt lịch theo IP; chậm hoặc mất kết nối thì bỏ qua giới hạn, không treo request
-      timeout: 2s
-      connect-timeout: 2s
+  servlet:
+    multipart:
+      # Tệp Excel nhập lịch làm việc (POST /api/booking/quan-tri/lich-lam-viec/nhap-excel): tối đa 2MB (1000 dòng ca chỉ
+      # vài chục KB). Vượt -> 413 TEP_QUA_LON (XuLyLoiHandler).
+      max-file-size: 2MB
+      max-request-size: 3MB
+  # Redis (giới hạn đặt lịch theo IP, cache ngày nghỉ): thời gian chờ đặt chung trong application-common.yml
 
 app:
   bao-mat:
@@ -21,13 +28,30 @@ app:
       - GET /api/booking/phieu-kham/**
       # Hủy / đổi lịch bằng link phiếu khám + SĐT liên hệ
       - POST /api/booking/phieu-kham/**
+      # Quy tắc đặt lịch cho trang đặt lịch / phiếu khám (đặt trước tối đa N ngày, hạn hủy / đổi lịch)
+      - GET /api/booking/quy-tac-dat-lich
+      # Sổ khám bệnh bằng mã ngẫu nhiên (EXAM-03): GET tóm tắt / mã QR, POST /xem kèm 4 số cuối SĐT để xem đầy đủ
+      - GET /api/booking/so-kham/**
+      - POST /api/booking/so-kham/**
+      # Ngày bệnh viện nghỉ cho lịch của trang đặt lịch (ngày + lý do)
+      - GET /api/booking/ngay-nghi
+      # Khách mất link xin cấp lại (PAT-03): mã tra cứu + SĐT, link chỉ gửi tới email của lịch hẹn, có giới hạn số lần
+      - POST /api/booking/cap-lai-lien-ket
       # API nội bộ cho catalog-service (bác sĩ ngừng công tác): không qua gateway, kiểm tra khoá nội bộ thay cho JWT
       - POST /noi-bo/bac-si/**
+  # 3 khối lich-lam-viec, dat-lich, danh-gia: giá trị ở đây CHỈ ghi dòng cau_hinh_he_thong đầu tiên (booking-service khởi
+  # động lần đầu trên DB mới). Sau đó quản trị viên sửa ở /api/booking/quan-tri/cau-hinh, đổi biến môi trường không còn
+  # tác dụng (log có cảnh báo). Vẫn đọc từ đây: giới hạn theo IP (so-lan-dat-toi-da-moi-ip, cua-so-gioi-han-ip) và
+  # duong-dan-lich-bac-si. Khoảng thời gian bỏ phần lẻ: dat-truoc / huy-doi tính theo phút, gui-yeu-cau theo giờ.
   lich-lam-viec:
     # Bác sĩ chỉ gửi được yêu cầu đổi ca / xin nghỉ khi ca còn cách giờ bắt đầu ít nhất khoảng này
     gui-yeu-cau-truoc-toi-thieu: ${SHIFT_REQUEST_LEAD:24h}
     # Quản trị viên chỉ xếp được ca trong số ngày tới này (tính từ hôm nay)
     so-ngay-xep-truoc-toi-da: ${SHIFT_MAX_DAYS:90}
+    # Tổng giờ các ca của 1 bác sĩ trong 1 tuần (thứ Hai - Chủ nhật) không vượt số giờ này (SCHED-05)
+    so-gio-toi-da-moi-tuan: ${SHIFT_MAX_WEEKLY_HOURS:48}
+    # Trang Lịch làm việc của bác sĩ trên frontend: link trong email gửi lịch = phieu-kham.frontend-url + đường dẫn này
+    duong-dan-lich-bac-si: ${DOCTOR_SCHEDULE_PATH:/doctor/work-schedule}
   thong-bao:
     # Thông báo trong ứng dụng: booking-service ghi sự kiện vào bảng su_kien_thong_bao, job gửi sang notification-service
     url: ${NOTIFICATION_URL:http://localhost:8086}
@@ -74,6 +98,12 @@ app:
     huy-doi-truoc-toi-thieu: ${BOOKING_CHANGE_LEAD:2h}
     # Số lần đổi lịch tối đa của 1 lần đặt
     so-lan-doi-lich-toi-da: ${BOOKING_MAX_RESCHEDULES:2}
+  cap-lai-lien-ket:
+    # Khách tự xin cấp lại liên kết phiếu khám (PAT-03): số lần tối đa cho 1 mã tra cứu (đúng hay sai SĐT đều tính) và
+    # từ 1 địa chỉ IP trong 1 cửa sổ, đếm trên Redis; Redis lỗi thì bỏ qua giới hạn
+    so-lan-toi-da-moi-ma: ${RELINK_CODE_LIMIT:3}
+    so-lan-toi-da-moi-ip: ${RELINK_IP_LIMIT:10}
+    cua-so: ${RELINK_WINDOW:1h}
   danh-gia:
     # Bệnh nhân sửa được đánh giá đã gửi trong số ngày này kể từ lúc gửi
     so-ngay-duoc-sua: ${RATING_EDIT_DAYS:7}

@@ -9,10 +9,13 @@ import iuh.fit.se.eclinic.booking.dto.response.LichHenTrongCaResponse;
 import iuh.fit.se.eclinic.booking.mapper.LichHenMapper;
 import iuh.fit.se.eclinic.booking.repository.LichHenRepository;
 import iuh.fit.se.eclinic.booking.service.BacSiHuyLichHenService;
+import iuh.fit.se.eclinic.booking.service.LichSuLichHenService;
 import iuh.fit.se.eclinic.booking.service.LuotKhamService;
+import iuh.fit.se.eclinic.booking.service.NguoiThucHien;
 import iuh.fit.se.eclinic.booking.service.TaiKhoanService;
 import iuh.fit.se.eclinic.booking.service.ThongBaoLichHenService;
 import iuh.fit.se.eclinic.common.entity.booking.LichHen;
+import iuh.fit.se.eclinic.common.enums.SuKienLichHen;
 import iuh.fit.se.eclinic.common.enums.TrangThaiLichHen;
 import iuh.fit.se.eclinic.common.exception.LoiNghiepVu;
 import iuh.fit.se.eclinic.common.exception.MaLoi;
@@ -30,6 +33,7 @@ public class BacSiHuyLichHenServiceImpl implements BacSiHuyLichHenService {
     private final LuotKhamService luotKhamService;
     private final LichHenMapper lichHenMapper;
     private final ThongBaoLichHenService thongBaoLichHenService;
+    private final LichSuLichHenService lichSuLichHenService;
 
     @Override
     @Transactional
@@ -39,6 +43,8 @@ public class BacSiHuyLichHenServiceImpl implements BacSiHuyLichHenService {
         lichHen.setLyDoHuy(lyDo.trim());
         // BI_TU_CHOI không còn chiếm khung giờ (TrangThaiLichHen#chiemKhungGio)
         luotKhamService.traLuot(lichHen);
+        lichSuLichHenService.ghi(lichHen, SuKienLichHen.HUY, NguoiThucHien.bacSi(lichHen.getBacSi()),
+                lichHen.getLyDoHuy(), null);
         thongBaoLichHenService.bacSiHuy(lichHen);
         log.info("Bác sĩ id={} hủy lịch hẹn id={}", lichHen.getBacSi().getId(), idLichHen);
         return toResponse(lichHen);
