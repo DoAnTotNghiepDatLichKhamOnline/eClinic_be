@@ -1,0 +1,193 @@
+package iuh.fit.se.eclinic.common.entity.catalog;
+
+import java.time.LocalDate;
+import java.time.Year;
+
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
+import iuh.fit.se.eclinic.common.entity.BaseEntity;
+import iuh.fit.se.eclinic.common.entity.identity.TaiKhoan;
+import iuh.fit.se.eclinic.common.enums.NgonNgu;
+import iuh.fit.se.eclinic.common.enums.TrangThaiBacSi;
+import jakarta.persistence.AttributeOverride;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+/**
+ * Hồ sơ bác sĩ (ERD: BacSi). Quản trị viên sửa mọi mục (DOC-01, ADM-02); bác sĩ tự sửa giới thiệu ngắn, tiểu sử, ngôn
+ * ngữ khám, giải thưởng, công trình nghiên cứu (DOANTOTNGH-10 B7). Chuyên khoa, giấy phép, học vị, chức vụ, quá trình đào
+ * tạo / công tác, lĩnh vực khám chữa, năm bắt đầu hành nghề, trạng thái: chỉ quản trị viên.
+ * <p>
+ * Khác ERD: bỏ {@code phiKham} (Q1 — không thanh toán ở MVP); thêm {@code hocVi} (DOC-01/DOC-03)
+ * và {@code trangThai} "Đang/Ngừng công tác" (ADM-02).
+ */
+@Getter
+@Setter
+@NoArgsConstructor
+@Entity
+@Table(name = "bac_si")
+@AttributeOverride(name = "id", column = @Column(name = "id_bac_si"))
+public class BacSi extends BaseEntity {
+
+    @OneToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "id_tai_khoan", nullable = false, unique = true)
+    private TaiKhoan taiKhoan;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "id_chuyen_khoa", nullable = false)
+    private ChuyenKhoa chuyenKhoa;
+
+    @Column(name = "so_giay_phep", length = 50, unique = true)
+    private String soGiayPhep;
+
+    /** vd: ThS.BS, TS.BS, BSCKII */
+    @Column(name = "hoc_vi", length = 100)
+    private String hocVi;
+
+    /** vd: Trưởng khoa Nhi */
+    @Column(name = "chuc_vu", length = 150)
+    private String chucVu;
+
+    @Column(name = "chuc_vu_en", length = 150)
+    private String chucVuEn;
+
+    /** 1-2 câu hiện trên thẻ bác sĩ. */
+    @Column(name = "gioi_thieu_ngan", length = 300)
+    private String gioiThieuNgan;
+
+    @Column(name = "gioi_thieu_ngan_en", length = 300)
+    private String gioiThieuNganEn;
+
+    /** Đoạn giới thiệu tự do. */
+    @Column(name = "tieu_su", columnDefinition = "TEXT")
+    private String tieuSu;
+
+    @Column(name = "tieu_su_en", columnDefinition = "TEXT")
+    private String tieuSuEn;
+
+    /** 3 mục dưới đây lưu văn bản thuần, mỗi dòng 1 ý; API trả về / nhận vào dạng mảng chuỗi. */
+    @Column(name = "qua_trinh_dao_tao", columnDefinition = "TEXT")
+    private String quaTrinhDaoTao;
+
+    @Column(name = "qua_trinh_dao_tao_en", columnDefinition = "TEXT")
+    private String quaTrinhDaoTaoEn;
+
+    @Column(name = "qua_trinh_cong_tac", columnDefinition = "TEXT")
+    private String quaTrinhCongTac;
+
+    @Column(name = "qua_trinh_cong_tac_en", columnDefinition = "TEXT")
+    private String quaTrinhCongTacEn;
+
+    /** Khám và điều trị. */
+    @Column(name = "linh_vuc_kham_chua", columnDefinition = "TEXT")
+    private String linhVucKhamChua;
+
+    @Column(name = "linh_vuc_kham_chua_en", columnDefinition = "TEXT")
+    private String linhVucKhamChuaEn;
+
+    /** Giấy phép hành nghề (cạnh {@link #soGiayPhep}): chỉ quản trị viên sửa, hiện công khai. */
+    @Column(name = "ngay_cap_giay_phep")
+    private LocalDate ngayCapGiayPhep;
+
+    @Column(name = "noi_cap_giay_phep", length = 200)
+    private String noiCapGiayPhep;
+
+    @Column(name = "noi_cap_giay_phep_en", length = 200)
+    private String noiCapGiayPhepEn;
+
+    @Column(name = "pham_vi_hanh_nghe", length = 500)
+    private String phamViHanhNghe;
+
+    @Column(name = "pham_vi_hanh_nghe_en", length = 500)
+    private String phamViHanhNgheEn;
+
+    /** Số năm kinh nghiệm suy ra từ đây ({@link #soNamKinhNghiem()}), không lưu riêng. */
+    @Column(name = "nam_bat_dau_hanh_nghe")
+    private Integer namBatDauHanhNghe;
+
+    /** Mã ngôn ngữ ISO 639 viết thường, cách nhau dấu phẩy (vd "vi,en"); API trả về / nhận vào dạng mảng. */
+    @Column(name = "ngon_ngu_kham", length = 50)
+    private String ngonNguKham;
+
+    /** Mỗi dòng 1 ý như {@link #quaTrinhDaoTao}. */
+    @Column(name = "giai_thuong", columnDefinition = "TEXT")
+    private String giaiThuong;
+
+    @Column(name = "giai_thuong_en", columnDefinition = "TEXT")
+    private String giaiThuongEn;
+
+    @Column(name = "cong_trinh_nghien_cuu", columnDefinition = "TEXT")
+    private String congTrinhNghienCuu;
+
+    @Column(name = "cong_trinh_nghien_cuu_en", columnDefinition = "TEXT")
+    private String congTrinhNghienCuuEn;
+
+    /**
+     * Tăng 1 mỗi lần lưu hồ sơ giới thiệu (quản trị viên hoặc bác sĩ); lần lưu gửi phiên bản cũ bị từ chối. Không dùng
+     * {@code @Version}: đổi trạng thái / chuyên khoa không được làm hỏng lần lưu hồ sơ đang mở.
+     */
+    @Column(name = "phien_ban_ho_so", nullable = false)
+    private int phienBanHoSo = 1;
+
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
+    @Column(name = "trang_thai", nullable = false, length = 20)
+    private TrangThaiBacSi trangThai = TrangThaiBacSi.DANG_CONG_TAC;
+
+    // Chữ theo ngôn ngữ: bản tiếng Anh nếu được yêu cầu và đã nhập, không thì bản tiếng Việt (NgonNgu.chon).
+    public String chucVu(NgonNgu ngonNgu) {
+        return ngonNgu.chon(chucVu, chucVuEn);
+    }
+
+    public String gioiThieuNgan(NgonNgu ngonNgu) {
+        return ngonNgu.chon(gioiThieuNgan, gioiThieuNganEn);
+    }
+
+    public String tieuSu(NgonNgu ngonNgu) {
+        return ngonNgu.chon(tieuSu, tieuSuEn);
+    }
+
+    public String quaTrinhDaoTao(NgonNgu ngonNgu) {
+        return ngonNgu.chon(quaTrinhDaoTao, quaTrinhDaoTaoEn);
+    }
+
+    public String quaTrinhCongTac(NgonNgu ngonNgu) {
+        return ngonNgu.chon(quaTrinhCongTac, quaTrinhCongTacEn);
+    }
+
+    public String linhVucKhamChua(NgonNgu ngonNgu) {
+        return ngonNgu.chon(linhVucKhamChua, linhVucKhamChuaEn);
+    }
+
+    public String noiCapGiayPhep(NgonNgu ngonNgu) {
+        return ngonNgu.chon(noiCapGiayPhep, noiCapGiayPhepEn);
+    }
+
+    public String phamViHanhNghe(NgonNgu ngonNgu) {
+        return ngonNgu.chon(phamViHanhNghe, phamViHanhNgheEn);
+    }
+
+    public String giaiThuong(NgonNgu ngonNgu) {
+        return ngonNgu.chon(giaiThuong, giaiThuongEn);
+    }
+
+    public String congTrinhNghienCuu(NgonNgu ngonNgu) {
+        return ngonNgu.chon(congTrinhNghienCuu, congTrinhNghienCuuEn);
+    }
+
+    /** Số năm kinh nghiệm tính tới năm nay; null khi chưa nhập năm bắt đầu hành nghề. */
+    public Integer soNamKinhNghiem() {
+        return namBatDauHanhNghe == null ? null : Math.max(0, Year.now().getValue() - namBatDauHanhNghe);
+    }
+}

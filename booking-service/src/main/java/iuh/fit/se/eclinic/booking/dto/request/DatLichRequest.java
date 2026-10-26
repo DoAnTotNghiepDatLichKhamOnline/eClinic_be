@@ -1,0 +1,49 @@
+package iuh.fit.se.eclinic.booking.dto.request;
+
+import java.time.LocalDateTime;
+
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+
+/**
+ * Đặt lịch khám (BOOK-01). Khung giờ chọn theo 1 trong 2 cách, gửi đúng 1 trong 2 trường:
+ * <ul>
+ *   <li>{@code idLichLamViec} + {@code gioBatDauKhung}: chọn bác sĩ cụ thể, đúng 2 giá trị mà
+ *       GET /api/booking/khung-gio trả về; ca làm việc đã xác định bác sĩ và phòng khám.</li>
+ *   <li>{@code idChuyenKhoa} + {@code gioBatDauKhung}: "bác sĩ bất kỳ", đúng 1 dòng của
+ *       GET /api/booking/khung-gio/gop; hệ thống xếp vào bác sĩ còn nhiều chỗ nhất của khung giờ đó.</li>
+ * </ul>
+ *
+ * @param gioBatDauKhung giờ bắt đầu khung 1 giờ, vd 2026-10-05T08:00:00
+ * @param nguoiGiamHo    bắt buộc khi người khám dưới 18 tuổi tính theo ngày khám; từ đủ 18 tuổi thì bị bỏ qua
+ * @param datChoBanThan  chỉ có nghĩa khi bệnh nhân đã đăng nhập: true = người khám là chủ tài khoản, lịch dùng hồ sơ bệnh
+ *                       nhân của tài khoản (chưa có thì tạo và gắn vào tài khoản); bỏ trống / false = đặt cho người thân,
+ *                       hồ sơ theo CCCD như khách đặt
+ * @param luuNguoiThan   chỉ có nghĩa khi bệnh nhân đã đăng nhập đặt cho người thân: bỏ trống / true = lưu thông tin vừa
+ *                       nhập vào "người thân đã lưu" của tài khoản để điền sẵn lần sau; false = không lưu
+ */
+public record DatLichRequest(
+        Long idLichLamViec,
+
+        Long idChuyenKhoa,
+
+        @NotNull(message = "{kiemTra.khungGio.batBuoc}")
+        LocalDateTime gioBatDauKhung,
+
+        @NotNull(message = "{kiemTra.benhNhan.batBuoc}")
+        @Valid
+        BenhNhanRequest benhNhan,
+
+        @Valid
+        NguoiGiamHoRequest nguoiGiamHo,
+
+        @NotBlank(message = "{kiemTra.lyDoKham.batBuoc}")
+        @Size(max = 500, message = "{kiemTra.lyDoKham.toiDa}")
+        String lyDoKham,
+
+        Boolean datChoBanThan,
+
+        Boolean luuNguoiThan) {
+}

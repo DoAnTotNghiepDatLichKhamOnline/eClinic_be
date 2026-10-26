@@ -1,0 +1,123 @@
+package iuh.fit.se.eclinic.common.entity.scheduling;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
+import iuh.fit.se.eclinic.common.entity.BaseEntity;
+import iuh.fit.se.eclinic.common.entity.catalog.BacSi;
+import iuh.fit.se.eclinic.common.entity.catalog.PhongKham;
+import iuh.fit.se.eclinic.common.entity.identity.QuanTriVien;
+import iuh.fit.se.eclinic.common.enums.LoaiYeuCauDoiLich;
+import iuh.fit.se.eclinic.common.enums.TrangThaiYeuCau;
+import jakarta.persistence.AttributeOverride;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+/**
+ * Yêu cầu đổi lịch làm việc do bác sĩ gửi, Admin duyệt/từ chối (ERD: YeuCauDoiLich — SCHED-02, SCHED-03).
+ * <p>
+ * Mỗi ca chỉ có tối đa 1 yêu cầu CHO_DUYET (quy tắc #15): DB chặn bằng cột generated
+ * {@code id_lich_lam_viec_cho_duyet} (không map trong entity) + UNIQUE.
+ * <p>
+ * Khác ERD: thêm {@code loaiYeuCau}, {@code phongKhamMongMuon}, {@code ghiChuXuLy} (.md mục 15.4);
+ * {@code thoiGianMongMuon} được tách thành ngày + giờ bắt đầu + giờ kết thúc mong muốn (ca mới cần cả giờ kết thúc).
+ * <p>
+ * NHUONG_CA (nhường ca cho {@code bacSiNhan}): CHO_DONG_Y -> bác sĩ nhận đồng ý (CHO_DUYET) hoặc từ chối
+ * (DONG_NGHIEP_TU_CHOI) -> quản trị viên duyệt (ca chuyển sang bác sĩ nhận) hoặc từ chối. "1 yêu cầu chờ mỗi ca" tính
+ * cả CHO_DONG_Y. Xin nghỉ nhiều ca: các yêu cầu XIN_NGHI gửi cùng lần mang chung {@code maNhom}.
+ */
+@Getter
+@Setter
+@NoArgsConstructor
+@Entity
+@EntityListeners(AuditingEntityListener.class)
+@Table(name = "yeu_cau_doi_lich")
+@AttributeOverride(name = "id", column = @Column(name = "id_yeu_cau"))
+public class YeuCauDoiLich extends BaseEntity {
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "id_bac_si", nullable = false)
+    private BacSi bacSi;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "id_lich_lam_viec", nullable = false)
+    private LichLamViec lichLamViec;
+
+    /** NHUONG_CA: bác sĩ nhận ca (DB CHECK); NULL với loại khác. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_bac_si_nhan")
+    private BacSi bacSiNhan;
+
+    /** Admin đã duyệt/từ chối; NULL khi còn CHO_DUYET. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_admin_xu_ly")
+    private QuanTriVien adminXuLy;
+
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
+    @Column(name = "loai_yeu_cau", nullable = false, length = 20)
+    private LoaiYeuCauDoiLich loaiYeuCau;
+
+    @Column(name = "ly_do", nullable = false, columnDefinition = "TEXT")
+    private String lyDo;
+
+    /** Bắt buộc với DOI_CA (DB CHECK), NULL với XIN_NGHI. */
+    @Column(name = "ngay_mong_muon")
+    private LocalDate ngayMongMuon;
+
+    @Column(name = "gio_bat_dau_mong_muon")
+    private LocalTime gioBatDauMongMuon;
+
+    @Column(name = "gio_ket_thuc_mong_muon")
+    private LocalTime gioKetThucMongMuon;
+
+    /** NULL = giữ phòng khám hiện tại. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_phong_kham_mong_muon")
+    private PhongKham phongKhamMongMuon;
+
+    /** UUID chung của các yêu cầu xin nghỉ gửi cùng 1 lần; NULL với yêu cầu gửi lẻ. */
+    @Column(name = "ma_nhom", length = 36)
+    private String maNhom;
+
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
+    @Column(name = "trang_thai", nullable = false, length = 20)
+    private TrangThaiYeuCau trangThai = TrangThaiYeuCau.CHO_DUYET;
+
+    /** Ghi chú của Admin khi xử lý — bắt buộc khi từ chối (SCHED-03). */
+    @Column(name = "ghi_chu_xu_ly", columnDefinition = "TEXT")
+    private String ghiChuXuLy;
+
+    /** NHUONG_CA: ghi chú của bác sĩ nhận khi từ chối (tùy chọn). */
+    @Column(name = "ghi_chu_bac_si_nhan", columnDefinition = "TEXT")
+    private String ghiChuBacSiNhan;
+
+    @CreatedDate
+    @Column(name = "ngay_gui", nullable = false, updatable = false)
+    private LocalDateTime ngayGui;
+
+    @Column(name = "ngay_xu_ly")
+    private LocalDateTime ngayXuLy;
+
+    /** NHUONG_CA: lúc bác sĩ nhận đồng ý / từ chối. */
+    @Column(name = "ngay_bac_si_nhan_phan_hoi")
+    private LocalDateTime ngayBacSiNhanPhanHoi;
+
+}

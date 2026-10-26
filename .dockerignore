@@ -1,0 +1,35 @@
+# Build context của Dockerfile gốc: chỉ cần pom.xml + mã nguồn các module.
+# Không được lọt bí mật (.env, khoá API) hay công cụ nội bộ vào image.
+
+# Git, IDE, kết quả build cũ
+.git
+.gitignore
+.gitattributes
+.idea
+*.iml
+.vscode
+**/target
+**/node_modules
+
+# Bí mật
+.env
+.env.*
+**/.env
+**/seop-providers.json
+*.pem
+*.key
+
+# Công cụ PM Bible và kế hoạch (không phải mã nguồn)
+bible/
+.bible/
+bible-files/
+.claude/
+cycles/
+temp/
+
+# Tài liệu, không cần để build
+*.docx
+yeu-cau-*.md
+Dockerfile
+.dockerignore
+docker-compose.yml
