@@ -1,0 +1,43 @@
+# Production override for the Google Cloud VM. Use together with docker-compose.yml:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml --profile app up -d --build
+# Only Caddy (80/443) faces the internet. MySQL and phpMyAdmin are bound to 127.0.0.1 (reach them by SSH tunnel).
+
+services:
+  mysql:
+    ports: !override
+      - "127.0.0.1:3306:3306"
+  redis:
+    ports: !reset []
+  phpmyadmin:
+    ports: !override
+      - "127.0.0.1:8090:80"
+
+  identity-service:     { ports: !reset [] }
+  catalog-service:      { ports: !reset [] }
+  booking-service:      { ports: !reset [] }
+  medical-service:      { ports: !reset [] }
+  notification-service: { ports: !reset [] }
+  chatbot-service:      { ports: !reset [] }
+  report-service:       { ports: !reset [] }
+  api-gateway:          { ports: !reset [] }
+
+  caddy:
+    image: caddy:2.8
+    container_name: eclinic-caddy
+    profiles: [app]
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      API_DOMAIN: ${API_DOMAIN}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - api-gateway
+
+volumes:
+  caddy_data:
+  caddy_config:
