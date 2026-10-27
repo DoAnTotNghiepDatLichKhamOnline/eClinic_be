@@ -14,9 +14,7 @@ import iuh.fit.se.eclinic.common.dto.PhanHoiApi;
 import iuh.fit.se.eclinic.common.security.NguoiDungHienTai;
 import lombok.RequiredArgsConstructor;
 
-/**
- * Trang cá nhân của bệnh nhân đã đăng nhập. Luôn thao tác trên tài khoản của chính người gọi.
- */
+/** Trang cá nhân của bệnh nhân đã đăng nhập. */
 @Tag(name = "Trang cá nhân", description = "Hồ sơ, người thân đã lưu và lịch sắp tới của bệnh nhân trong 1 lần gọi")
 @RestController
 @RequestMapping("/api/booking/trang-ca-nhan/cua-toi")
@@ -31,7 +29,7 @@ public class TrangCaNhanController {
     @GetMapping
     public PhanHoiApi<TrangCaNhanResponse> cuaToi() {
         Long idTaiKhoan = NguoiDungHienTai.layIdTaiKhoan();
-        // Lịch đặt như khách bằng số CCCD đã khai khi đăng ký phải có ngay lần xem đầu tiên (quy tắc #3)
+        // Lịch đặt như khách bằng CCCD đã khai khi đăng ký phải hiện ngay lần xem đầu tiên
         lienKetHoSoService.thuLienKet(idTaiKhoan);
         return PhanHoiApi.ok(trangCaNhanService.cuaToi(idTaiKhoan));
     }

@@ -10,10 +10,7 @@ import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-/**
- * 1 mã trong danh mục ICD-10 (DOANTOTNGH-11). Danh mục chỉ đọc, nạp sẵn bằng migration V30; bác sĩ chọn 1 mã cho chẩn
- * đoán chính. Khác các entity khác: khoá chính là chính mã ICD (vd {@code J06.9}), nên không kế thừa {@code BaseEntity}.
- */
+/** 1 mã trong danh mục ICD-10. */
 @Getter
 @NoArgsConstructor
 @Immutable

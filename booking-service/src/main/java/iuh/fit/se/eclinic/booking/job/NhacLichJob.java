@@ -7,10 +7,7 @@ import iuh.fit.se.eclinic.booking.service.NhacLichService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Tìm và nhắc các lịch hẹn đến hạn nhắc sau mỗi {@code app.nhac-lich.chu-ky} (tính từ lúc lần trước chạy xong). Thông báo
- * và email nhắc được ghi vào bảng chờ gửi, {@link GuiThongBaoJob} gửi đi.
- */
+/** Tìm và nhắc các lịch hẹn đến hạn nhắc sau mỗi {@code app.nhac-lich.chu-ky} (tính từ lúc lần trước chạy xong). */
 @Slf4j
 @Component
 @RequiredArgsConstructor

@@ -30,11 +30,7 @@ public interface PhongKhamRepository extends JpaRepository<PhongKham, Long> {
 
     boolean existsByTenPhongEnAndIdNot(String tenPhongEn, Long id);
 
-    /**
-     * Danh mục phòng khám của quản trị viên theo tên, kể cả phòng ngừng hoạt động, kèm chuyên khoa.
-     *
-     * @param mau mẫu LIKE (escape '!') so với tên phòng và tầng ở cả 2 ngôn ngữ; null = không lọc
-     */
+    /** Danh mục phòng khám của quản trị viên theo tên, kể cả phòng ngừng hoạt động, kèm chuyên khoa. */
     @Query(value = """
             select p from PhongKham p
               join fetch p.chuyenKhoa c
@@ -52,10 +48,7 @@ public interface PhongKhamRepository extends JpaRepository<PhongKham, Long> {
             """)
     Page<PhongKham> timChoQuanTri(String mau, Long idChuyenKhoa, TrangThaiPhongKham trangThai, Pageable pageable);
 
-    /**
-     * Khoá dòng phòng khám khi sửa / đổi trạng thái. booking-service khoá cùng dòng này khi tạo ca và khi đổi phòng của
-     * ca, nên "ngừng hoạt động" và "xếp ca vào phòng" chạy lần lượt.
-     */
+    /** Khoá dòng phòng khám khi sửa, đổi trạng thái; booking-service khoá cùng dòng khi tạo ca. */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select p from PhongKham p join fetch p.chuyenKhoa where p.id = :id")
     Optional<PhongKham> findByIdForUpdate(Long id);

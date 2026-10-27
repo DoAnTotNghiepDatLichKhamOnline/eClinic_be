@@ -4,15 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * Hồ sơ giới thiệu mẫu của các bác sĩ mẫu, theo số thứ tự trong {@link DuLieuMau#BAC_SI}. Nội dung chỉ để thử / demo.
- *
- * @param chucVu        chức vụ tại phòng khám
- * @param gioiThieuNgan 1-2 câu hiện trên thẻ bác sĩ
- * @param daoTao        quá trình đào tạo, mỗi phần tử 1 ý
- * @param congTac       quá trình công tác, mỗi phần tử 1 ý
- * @param linhVuc       khám và điều trị, mỗi phần tử 1 ý
- */
+/** Hồ sơ giới thiệu mẫu của các bác sĩ mẫu, theo số thứ tự trong {@link DuLieuMau#BAC_SI}. */
 public record HoSoBacSiMau(String chucVu, String gioiThieuNgan, List<String> daoTao, List<String> congTac,
         List<String> linhVuc) {
 

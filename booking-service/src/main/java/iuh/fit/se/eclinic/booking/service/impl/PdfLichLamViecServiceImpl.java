@@ -57,11 +57,7 @@ import iuh.fit.se.eclinic.common.exception.LoiKhongTimThay;
 import iuh.fit.se.eclinic.common.util.MaBacSi;
 import lombok.RequiredArgsConstructor;
 
-/**
- * Bố cục 2 loại bản in. Chữ cố định nằm ở khoá {@code pdf.*} (thong-diep/booking*.properties); tên thứ trong tuần lấy từ
- * dữ liệu ngôn ngữ của JDK ("Thứ Hai" / "Monday"). Số trang "Trang i / n" được đóng lên sau khi đã dựng xong tệp, lúc đó
- * mới biết tổng số trang.
- */
+/** Bố cục 2 loại bản in. */
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)

@@ -11,11 +11,7 @@ import iuh.fit.se.eclinic.common.entity.booking.LichHen;
 import iuh.fit.se.eclinic.common.enums.KenhDatLich;
 import iuh.fit.se.eclinic.common.enums.TrangThaiLichHen;
 
-/**
- * Chỉ đọc: lịch hẹn thuộc booking-service. "Lịch hẹn trong kỳ" = lịch có lượt khám bắt đầu trong
- * {@code [tu, den)}, trừ DA_HUY_DO_DOI_LICH (nửa cũ của 1 lần đổi lịch: không là lượt khám cũng không là lịch bị hủy).
- * Mọi hàm nhận {@code idChuyenKhoa} null = mọi chuyên khoa; chuyên khoa là chuyên khoa của bác sĩ.
- */
+/** Chỉ đọc lịch hẹn của booking-service; lịch trong kỳ không tính DA_HUY_DO_DOI_LICH. */
 public interface ThongKeLichHenRepository extends Repository<LichHen, Long> {
 
     String TRONG_KY = """
@@ -117,10 +113,7 @@ public interface ThongKeLichHenRepository extends Repository<LichHen, Long> {
             """ + " where " + TRONG_KY)
     ThoiGianDatTruoc thoiGianDatTruoc(LocalDateTime tu, LocalDateTime den, Long idChuyenKhoa);
 
-    /**
-     * Lượt đặt mới: lịch hẹn được TẠO trong {@code [tu, den)}, trừ DA_HUY_DO_DOI_LICH. Cùng quy tắc với ô
-     * "lượt đặt trong tháng" của Dashboard quản trị viên (booking-service).
-     */
+    /** Lượt đặt mới: lịch hẹn được TẠO trong {@code [tu, den)}, trừ DA_HUY_DO_DOI_LICH. */
     @Query("""
             select count(l) from LichHen l
             where l.ngayTao >= :tu and l.ngayTao < :den

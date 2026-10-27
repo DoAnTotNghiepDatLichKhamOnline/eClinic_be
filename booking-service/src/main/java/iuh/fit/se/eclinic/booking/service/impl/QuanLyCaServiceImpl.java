@@ -87,15 +87,7 @@ import iuh.fit.se.eclinic.common.util.ChiaCaLamViec;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * READ_COMMITTED như đặt lịch: sau khi chờ được khoá phải thấy dữ liệu request trước vừa commit (ca vừa xếp, lịch hẹn
- * vừa đặt), không đọc lại snapshot cũ.
- * <p>
- * Thứ tự khoá cố định: khoá xếp ca toàn viện (khi tạo ca, xem {@link #giuKhoaXepCa}) -> dòng ca (khi sửa / hủy) -> dòng
- * bác sĩ -> dòng phòng khám -> các lịch hẹn còn hiệu lực của ca (theo id) -> các lượt khám của ca (theo giờ). "Lịch hẹn
- * trước, lượt khám sau" giống bác sĩ từ chối và bệnh nhân hủy / đổi. Đặt lịch chỉ khoá lượt khám rồi mới thêm lịch hẹn,
- * nên sau khi khoá được các lượt phải đọc lại lịch hẹn của ca.
- */
+/** READ_COMMITTED như đặt lịch: chờ được khoá xong phải thấy dữ liệu request trước vừa commit. */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -132,11 +124,7 @@ public class QuanLyCaServiceImpl implements QuanLyCaService {
     private record DaKhoa(List<LichHen> lichHen, List<KhungGioKham> luot) {
     }
 
-    /**
-     * 1 quy tắc xếp ca bị vi phạm: ném thành lỗi (xếp 1 ca, sửa ca) hoặc thành lý do bỏ qua 1 ngày (xếp ca lặp lại).
-     *
-     * @param thamSo đã đổi sang chuỗi theo ngôn ngữ của request
-     */
+    /** 1 quy tắc xếp ca bị vi phạm: thành lỗi hoặc thành lý do bỏ qua 1 ngày khi xếp lặp lại. */
     private record ViPham(MaLoi maLoi, String khoa, String... thamSo) {
 
         LoiNghiepVu loi() {
@@ -277,7 +265,7 @@ public class QuanLyCaServiceImpl implements QuanLyCaService {
                 .ifPresent(yeuCau -> {
                     yeuCau.setTrangThai(TrangThaiYeuCau.TU_CHOI);
                     yeuCau.setAdminXuLy(quanTri);
-                    // Câu của hệ thống: lưu khoá + lý do quản trị viên gõ, lúc đọc mới thành câu (xem VanBanHeThong)
+                    // Câu của hệ thống: lưu khoá và lý do quản trị viên gõ, lúc đọc mới thành câu
                     yeuCau.setGhiChuXuLy(VanBanHeThong.ghi("heThong.caBiQuanTriHuy", lyDo.chu()));
                     yeuCau.setNgayXuLy(LocalDateTime.now());
                     thongBaoLichLamViecService.yeuCauDongDoHuyCa(yeuCau, lyDo);
@@ -421,8 +409,7 @@ public class QuanLyCaServiceImpl implements QuanLyCaService {
                     String.valueOf(SO_BAN_SAO_TOI_DA));
         }
 
-        // Khoá mọi bác sĩ rồi mọi phòng, mỗi loại theo id tăng dần. Các đường ghi khác khoá 1 bác sĩ rồi 1 phòng, nên
-        // không thành vòng chờ. Ca nguồn chưa lấy bác sĩ / phòng: câu khoá đọc chúng lần đầu, ra trạng thái mới nhất.
+        // Khoá mọi bác sĩ rồi mọi phòng theo id tăng dần, cùng thứ tự với các đường ghi khác nên không deadlock
         Map<Long, BacSi> bacSiTheoId = new HashMap<>();
         cacCaNguon.stream().map(ca -> ca.getBacSi().getId()).distinct().sorted()
                 .forEach(id -> bacSiTheoId.put(id, khoaBacSi(id, false)));
@@ -506,7 +493,7 @@ public class QuanLyCaServiceImpl implements QuanLyCaService {
     public KetQuaNhapExcelResponse nhapCa(Long idTaiKhoanQuanTri, List<DongCaNhap> cacDong, boolean luu) {
         QuanTriVien quanTri = layQuanTriVien(idTaiKhoanQuanTri);
         giuKhoaXepCa();
-        // Thứ tự khoá như sao chép: mọi bác sĩ rồi mọi phòng, theo id tăng dần. Mã / id không có trong DB thành lỗi dòng.
+        // Thứ tự khoá như sao chép; mã hoặc id không có trong DB thành lỗi dòng
         Map<Long, BacSi> bacSiTheoId = new HashMap<>();
         cacDong.stream().map(DongCaNhap::idBacSi).distinct().sorted()
                 .forEach(id -> bacSiChiDocRepository.khoaTheoId(id).ifPresent(bacSi -> bacSiTheoId.put(id, bacSi)));
@@ -570,10 +557,7 @@ public class QuanLyCaServiceImpl implements QuanLyCaService {
         return new KetQuaNhapExcelResponse(coLuu, cacDong.size(), hopLe, loi);
     }
 
-    /**
-     * Lỗi đầu tiên của 1 dòng nhập (bác sĩ, phòng đã khoá); null nếu lưu được. Thứ tự: sức chứa, ngày (đã qua / quá xa,
-     * ngày bệnh viện nghỉ), bác sĩ, phòng, trùng giờ, giờ làm trong tuần. Không ném (xem ViPham).
-     */
+    /** Lỗi đầu tiên của 1 dòng nhập (bác sĩ, phòng đã khoá); null nếu lưu được. */
     private LoiDong loiDongNhap(DongCaNhap dong, BacSi bacSi, PhongKham phongKham, LocalDate homNay) {
         String cot = null;
         ViPham viPham = viPhamSucChua(dong.gioBatDau(), dong.gioKetThuc(), dong.soLuotToiDaMoiGio(),
@@ -631,13 +615,7 @@ public class QuanLyCaServiceImpl implements QuanLyCaService {
         return cacCa.stream().map(ca -> lichLamViecMapper.toResponse(ca, soLuot.get(ca.getId()))).toList();
     }
 
-    /**
-     * Lý do ca [gioBatDau, gioKetThuc) trùng giờ với ca còn hoạt động khác của bác sĩ hoặc của phòng; null nếu không trùng.
-     * Hỏi thẳng repository chứ không gọi LichLamViecService.kiemTraKhongTrungLich: exception ném qua 1 bean
-     * {@code @Transactional} khác đánh dấu cả transaction là rollback-only, nên không "bỏ qua ngày trùng" được.
-     *
-     * @param idCaDangSua ca đang sửa (không tự trùng với chính nó); null khi xếp ca mới
-     */
+    /** Lý do ca trùng giờ với ca còn hoạt động của bác sĩ hoặc của phòng; null nếu không trùng. */
     /** @return khoá thông điệp của lý do trùng (thong-diep/booking*.properties); null nếu không trùng */
     private String lyDoTrungLich(Long idBacSi, Long idPhongKham, LocalDate ngay, LocalTime gioBatDau,
             LocalTime gioKetThuc, Long idCaDangSua) {
@@ -802,7 +780,7 @@ public class QuanLyCaServiceImpl implements QuanLyCaService {
         ca.setSoBenhNhanToiDa(gioBatDauCacLuot.size());
         ca.setSoLuotToiDaMoiGio(soLuotToiDaMoiGio);
         ca.setThoiLuongLuotPhut(thoiLuongLuotPhut);
-        // Flush ngay: ca kế tiếp của cùng lần gọi (lặp lại) và request khác đang chờ khoá phải thấy ca này khi kiểm tra trùng
+        // Flush ngay để ca kế tiếp và request đang chờ khoá thấy ca này khi kiểm tra trùng
         lichLamViecRepository.saveAndFlush(ca);
         List<KhungGioKham> cacLuot = new ArrayList<>();
         for (LocalTime gio : gioBatDauCacLuot) {
@@ -822,15 +800,7 @@ public class QuanLyCaServiceImpl implements QuanLyCaService {
         lichSuCaLamViecRepository.save(dong);
     }
 
-    /**
-     * Vi phạm giới hạn giờ làm trong tuần (thứ Hai - Chủ nhật) của ngày {@code ngay} nếu bác sĩ nhận thêm ca
-     * [gioBatDau, gioKetThuc); null nếu không vi phạm. Gọi sau khi đã khoá dòng bác sĩ: 2 lần xếp cùng lúc cho 1 bác sĩ
-     * chạy lần lượt nên tổng giờ không bị đếm thiếu. Trả lý do chứ không ném: xếp ca lặp lại cần bỏ qua ngày vi phạm.
-     *
-     * @param idCaDangSua ca đang sửa (giờ cũ của nó không cộng vào); null khi xếp ca mới
-     * @param soPhutCu    số phút cũ của ca đang sửa (0 khi xếp mới): ca không dài thêm thì không chặn, để tuần đã vượt
-     *                    giới hạn từ trước vẫn sửa / rút ngắn được
-     */
+    /** Vi phạm giới hạn giờ làm trong tuần nếu bác sĩ nhận thêm ca này; null nếu không vi phạm. */
     private ViPham viPhamGioLamTuan(Long idBacSi, LocalDate ngay, LocalTime gioBatDau, LocalTime gioKetThuc,
             Long idCaDangSua, long soPhutCu) {
         long soPhutCa = soPhut(gioBatDau, gioKetThuc);
@@ -871,10 +841,7 @@ public class QuanLyCaServiceImpl implements QuanLyCaService {
         return luot;
     }
 
-    /**
-     * Khoá các lịch hẹn còn hiệu lực của ca rồi các lượt khám của ca. Một lượt đặt lịch đang giữ khoá lượt khám có thể
-     * vừa commit thêm lịch hẹn trong lúc chờ, nên sau khi khoá được các lượt thì đọc (và khoá) lại lịch hẹn.
-     */
+    /** Khoá các lịch hẹn còn hiệu lực của ca rồi các lượt khám của ca. */
     private DaKhoa khoaLichHenVaLuot(Long idLichLamViec) {
         List<Long> cacId = lichHenRepository.timIdTheoCaVaTrangThai(idLichLamViec, CON_HIEU_LUC);
         if (!cacId.isEmpty()) {
@@ -885,10 +852,7 @@ public class QuanLyCaServiceImpl implements QuanLyCaService {
         return new DaKhoa(cacIdSau.isEmpty() ? List.of() : lichHenRepository.khoaTheoId(cacIdSau), luot);
     }
 
-    /**
-     * Chỉnh các lượt khám theo giờ / sức chứa mới. Dòng lượt khám không bao giờ bị xoá (lịch hẹn cũ còn trỏ tới): lượt
-     * không còn trong ca thành DA_HUY, lượt có lại thành CON_TRONG, lượt mới thì thêm dòng.
-     */
+    /** Chỉnh các lượt khám theo giờ / sức chứa mới. */
     private void chinhLuot(LichLamViec ca, DaKhoa daKhoa, LocalTime gioBatDau, LocalTime gioKetThuc,
             int soLuotToiDaMoiGio, int thoiLuongLuotPhut) {
         LocalDate ngay = ca.getNgayLamViec();

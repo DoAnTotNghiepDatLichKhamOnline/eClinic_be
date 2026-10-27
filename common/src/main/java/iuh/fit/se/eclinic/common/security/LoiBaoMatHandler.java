@@ -19,10 +19,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import tools.jackson.databind.json.JsonMapper;
 
-/**
- * Trả lỗi 401/403 dạng PhanHoiApi khi request bị chặn ở filter bảo mật (thiếu token, token sai/hết hạn...).
- * Ở đây Spring MVC chưa đặt ngôn ngữ của request nên tự đọc header Accept-Language (NgonNgu.cuaYeuCau).
- */
+/** Trả lỗi 401/403 dạng PhanHoiApi khi request bị chặn ở filter bảo mật (thiếu token, token sai/hết hạn...). */
 @Component
 @RequiredArgsConstructor
 public class LoiBaoMatHandler implements AuthenticationEntryPoint, AccessDeniedHandler {

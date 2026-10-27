@@ -14,15 +14,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * Một phiên đăng nhập (1 thiết bị) — ERD: RefreshToken.
- * <p>
- * Khác ERD: cột {@code token} lưu SHA-256 của refresh token ({@code token_hash}), không lưu token gốc;
- * thêm {@code ngayThuHoi} để thu hồi phiên (AUTH-03 đặt lại mật khẩu, ADM-03 vô hiệu hóa tài khoản).
- * <p>
- * Mỗi lần làm mới phiên tạo 1 dòng mới (token xoay vòng) và thu hồi dòng cũ; các dòng của cùng 1 lần đăng nhập
- * có chung {@code maPhien} và {@code ngayDangNhap} (V3). Một phiên có nhiều nhất 1 dòng còn hiệu lực.
- */
+/** Một phiên đăng nhập (1 thiết bị). */
 @Getter
 @Setter
 @NoArgsConstructor

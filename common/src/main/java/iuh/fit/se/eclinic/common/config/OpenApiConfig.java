@@ -10,9 +10,7 @@ import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 
-/**
- * Swagger UI ở /swagger-ui.html của từng service. Nút "Authorize" nhận access token (không cần gõ "Bearer ").
- */
+/** Swagger UI ở /swagger-ui.html của từng service. */
 @Configuration
 public class OpenApiConfig {
 

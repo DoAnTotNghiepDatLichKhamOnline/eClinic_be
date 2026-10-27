@@ -25,8 +25,7 @@ public class GioiHanDangNhapServiceImpl implements GioiHanDangNhapService {
         String khoa = khoa(dinhDanh);
         Long soLan = redisTemplate.opsForValue().increment(khoa);
         long ketQua = soLan == null ? 0 : soLan;
-        // Lần sai đầu: mở cửa sổ đếm. Từ lần sai thứ N: khoá tính lại từ lúc này (dùng >= vì 2 request đồng thời
-        // có thể nhảy qua đúng N). TTL < 0: INCR xong mà chưa kịp EXPIRE (service chết giữa chừng) thì đặt lại.
+        // Lần sai đầu mở cửa sổ đếm; từ lần thứ N khoá tính lại từ lúc này; TTL < 0 (chưa kịp EXPIRE) thì đặt lại
         if (ketQua == 1 || ketQua >= dangNhapProperties.soLanSaiToiDa() || conThieuTtl(khoa)) {
             redisTemplate.expire(khoa, dangNhapProperties.thoiGianKhoa());
         }

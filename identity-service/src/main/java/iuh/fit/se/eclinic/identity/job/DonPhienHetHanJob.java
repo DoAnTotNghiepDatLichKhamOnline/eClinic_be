@@ -7,10 +7,7 @@ import iuh.fit.se.eclinic.identity.service.RefreshTokenService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * 3 giờ sáng mỗi ngày xoá các phiên đăng nhập đã hết hạn. Phiên đã thu hồi nhưng chưa hết hạn được giữ lại
- * để còn phát hiện refresh token cũ bị dùng lại.
- */
+/** 3 giờ sáng mỗi ngày xoá các phiên đăng nhập đã hết hạn. */
 @Slf4j
 @Component
 @RequiredArgsConstructor

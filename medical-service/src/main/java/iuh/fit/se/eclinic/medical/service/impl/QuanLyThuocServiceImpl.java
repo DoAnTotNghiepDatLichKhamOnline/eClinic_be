@@ -60,7 +60,7 @@ public class QuanLyThuocServiceImpl implements QuanLyThuocService {
         ganNoiDung(thuoc, request);
         thuoc.setDaXacMinh(true);
         thuoc.setTrangThai(TrangThaiThuoc.DANG_DUNG);
-        // Flush ngay: quản trị viên khác vừa thêm cùng tên + hàm lượng thì vi phạm UNIQUE -> 409 XUNG_DOT_DU_LIEU
+        // Flush ngay: trùng tên và hàm lượng thì vi phạm UNIQUE -> 409 XUNG_DOT_DU_LIEU
         thuocRepository.saveAndFlush(thuoc);
         log.info("Thêm thuốc id={} vào danh mục", thuoc.getId());
         return toResponse(thuoc, 0);
@@ -92,7 +92,7 @@ public class QuanLyThuocServiceImpl implements QuanLyThuocService {
     @Transactional
     public ThuocQuanTriResponse xacMinh(Long id) {
         return doi(id, thuoc -> {
-            // Thuốc bác sĩ thêm trước đây chỉ có tên: phải có hoạt chất + hàm lượng mới kê được (Thông tư 26/2025/TT-BYT)
+            // Thuốc chỉ có tên phải có hoạt chất và hàm lượng mới kê được (Thông tư 26/2025/TT-BYT)
             if (thuoc.getHoatChat() == null || thuoc.getHamLuong() == null) {
                 throw new LoiNghiepVu(MaLoi.THUOC_THIEU_THONG_TIN);
             }
@@ -124,7 +124,7 @@ public class QuanLyThuocServiceImpl implements QuanLyThuocService {
         return thuocRepository.findByIdForUpdate(id).orElseThrow(() -> new LoiKhongTimThay("Thuoc", id));
     }
 
-    /** Tên (trừ hoa thường, khoảng trắng), hoạt chất, hàm lượng, dạng bào chế, đường dùng; trường đang trống thì điền được. */
+    /** Tên (trừ hoa thường, khoảng trắng), hoạt chất, hàm lượng, dạng bào chế, đường dùng. */
     private static boolean doiNhanDang(Thuoc thuoc, ThuocRequest request) {
         return !ThuocServiceImpl.normalize(request.tenThuoc()).equals(thuoc.getTenChuanHoa())
                 || khacGiaTriCu(thuoc.getHoatChat(), request.hoatChat())

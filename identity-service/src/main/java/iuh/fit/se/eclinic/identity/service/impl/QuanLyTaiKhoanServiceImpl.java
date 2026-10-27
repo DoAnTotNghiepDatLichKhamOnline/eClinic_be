@@ -52,7 +52,7 @@ import lombok.extern.slf4j.Slf4j;
 @Transactional(readOnly = true)
 public class QuanLyTaiKhoanServiceImpl implements QuanLyTaiKhoanService {
 
-    /** Lịch hẹn còn phải khám: chặn việc vô hiệu hoá bác sĩ (UC-DOCT-03). */
+    /** Lịch hẹn còn phải khám: chặn việc vô hiệu hoá bác sĩ. */
     private static final List<TrangThaiLichHen> LICH_HEN_CON_HIEU_LUC = List.of(TrangThaiLichHen.DA_XAC_NHAN);
 
     private final TaiKhoanRepository taiKhoanRepository;
@@ -71,7 +71,7 @@ public class QuanLyTaiKhoanServiceImpl implements QuanLyTaiKhoanService {
     public TrangDuLieu<TaiKhoanQuanTriResponse> timKiem(Long idNguoiThucHien, String tuKhoa, VaiTro vaiTro,
             TrangThaiTaiKhoan trangThai, int trang, int kichThuoc) {
         kiemTraNguoiThucHien(idNguoiThucHien);
-        // id là tiêu chí phụ để thứ tự ổn định giữa các trang khi nhiều tài khoản tạo cùng lúc (dữ liệu mẫu)
+        // id là tiêu chí phụ để thứ tự ổn định giữa các trang
         Pageable pageable = PageRequest.of(trang, kichThuoc, Sort.by(Sort.Order.desc("ngayTao"), Sort.Order.desc("id")));
         Page<TaiKhoan> ketQua = taiKhoanRepository.timKiem(mauTimKiem(tuKhoa), vaiTro, trangThai, pageable);
         Map<Long, LocalDate> ngaySinh = ngaySinhTheoTaiKhoan(ketQua.getContent());
@@ -96,7 +96,7 @@ public class QuanLyTaiKhoanServiceImpl implements QuanLyTaiKhoanService {
             throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE,
                     "loi.DU_LIEU_KHONG_HOP_LE.trangThaiTaiKhoan");
         }
-        // Tài khoản chưa xác thực email: vô hiệu hoá rồi kích hoạt lại sẽ thành kích hoạt mà không qua xác thực email
+        // Chưa xác thực email: vô hiệu hoá rồi kích hoạt lại sẽ bỏ qua bước xác thực
         if (taiKhoan.getTrangThai() == TrangThaiTaiKhoan.CHO_XAC_NHAN) {
             throw new LoiNghiepVu(MaLoi.TRANG_THAI_TAI_KHOAN_KHONG_HOP_LE, "loi.TRANG_THAI_TAI_KHOAN_KHONG_HOP_LE.chuaXacThuc");
         }
@@ -120,7 +120,7 @@ public class QuanLyTaiKhoanServiceImpl implements QuanLyTaiKhoanService {
         kiemTraNguoiThucHien(idNguoiThucHien);
         TaiKhoan taiKhoan = taiKhoanService.layTheoId(id);
         kiemTraKhongPhaiQuanTriVien(taiKhoan);
-        // Kiểm tra từng bảng để thông điệp nói rõ dữ liệu nào đang giữ tài khoản (khoá ngoại của các bảng này là RESTRICT)
+        // Kiểm tra từng bảng để thông điệp nói rõ dữ liệu nào đang giữ tài khoản (khoá ngoại RESTRICT)
         List<String> dangThamChieu = new ArrayList<>();
         if (bacSiChiDocRepository.existsByTaiKhoanId(id)) {
             dangThamChieu.add(tenDuLieu("duLieu.hoSoBacSi"));
@@ -142,8 +142,7 @@ public class QuanLyTaiKhoanServiceImpl implements QuanLyTaiKhoanService {
         }
         String anhDaiDien = taiKhoan.getAnhDaiDien();
         try {
-            // Phiên đăng nhập (refresh_token) bị xoá theo nhờ ON DELETE CASCADE. Flush ngay để lỗi khoá ngoại của bảng
-            // chưa được kiểm tra ở trên (bảng thêm sau này, hoặc dữ liệu vừa được tạo) bật ra tại đây với mã lỗi đúng.
+            // refresh_token xoá theo nhờ CASCADE; flush ngay để lỗi khoá ngoại khác bật ra tại đây với mã đúng
             taiKhoanRepository.delete(taiKhoan);
             taiKhoanRepository.flush();
         } catch (DataIntegrityViolationException e) {
@@ -176,7 +175,7 @@ public class QuanLyTaiKhoanServiceImpl implements QuanLyTaiKhoanService {
         log.info("Quản trị viên id={} kích hoạt lại tài khoản id={}", idNguoiThucHien, taiKhoan.getId());
     }
 
-    /** Xem javadoc của {@link QuanLyTaiKhoanService}. */
+    /** Người thực hiện phải là quản trị viên đang hoạt động. */
     private void kiemTraNguoiThucHien(Long idNguoiThucHien) {
         if (taiKhoanService.layDangHoatDong(idNguoiThucHien).getVaiTro() != VaiTro.QUAN_TRI_VIEN) {
             throw new LoiNghiepVu(MaLoi.KHONG_CO_QUYEN);
@@ -205,7 +204,7 @@ public class QuanLyTaiKhoanServiceImpl implements QuanLyTaiKhoanService {
         return taiKhoanQuanTriMapper.toChiTiet(taiKhoan, bacSi, hoSoBenhNhan);
     }
 
-    /** Ngày sinh (từ hồ sơ bệnh nhân đã liên kết) của các tài khoản bệnh nhân trong 1 trang, bằng 1 truy vấn. */
+    /** Ngày sinh của các tài khoản bệnh nhân trong 1 trang, bằng 1 truy vấn. */
     private Map<Long, LocalDate> ngaySinhTheoTaiKhoan(List<TaiKhoan> taiKhoan) {
         List<Long> idBenhNhan = taiKhoan.stream()
                 .filter(tk -> tk.getVaiTro() == VaiTro.BENH_NHAN)
@@ -222,10 +221,7 @@ public class QuanLyTaiKhoanServiceImpl implements QuanLyTaiKhoanService {
         return ketQua;
     }
 
-    /**
-     * Từ khoá -> mẫu LIKE "%...%"; %, _ và ký tự thoát trong từ khoá được thoát để so khớp đúng ký tự đó (gõ "%" không
-     * liệt kê mọi tài khoản). null nếu không có từ khoá.
-     */
+    /** Từ khoá -> mẫu LIKE "%...%" đã thoát %, _ và ký tự thoát; null nếu không có từ khoá. */
     private static String mauTimKiem(String tuKhoa) {
         if (tuKhoa == null || tuKhoa.isBlank()) {
             return null;

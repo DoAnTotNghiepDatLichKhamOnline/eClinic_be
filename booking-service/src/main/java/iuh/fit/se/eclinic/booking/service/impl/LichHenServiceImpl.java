@@ -156,7 +156,7 @@ public class LichHenServiceImpl implements LichHenService {
         return Optional.empty();
     }
 
-    /** Máy quét QR trả cả link phiếu khám (.../phieu-kham/<mã>): lấy đoạn cuối của đường dẫn, bỏ ?query và #fragment. */
+    /** Máy quét QR trả cả link phiếu khám: lấy đoạn cuối đường dẫn, bỏ query và fragment. */
     private static String boDuongDan(String ma) {
         if (!ma.contains("/")) {
             return ma;

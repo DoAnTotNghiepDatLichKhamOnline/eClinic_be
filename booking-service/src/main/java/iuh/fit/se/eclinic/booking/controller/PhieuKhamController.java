@@ -35,10 +35,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 
-/**
- * BOOK-05, BOOK-06: phiếu khám và mã QR, tra bằng mã ngẫu nhiên trả về khi đặt lịch (quy tắc #8). Công khai
- * (app.bao-mat.duong-dan-cong-khai): ai có link đều xem được nên CCCD, SĐT đã che; không nhận id lịch hẹn.
- */
+/** Phiếu khám và mã QR, tra bằng mã ngẫu nhiên trả về khi đặt lịch. */
 @Tag(name = "Phiếu khám", description = "BOOK-05, BOOK-06: xem phiếu khám và mã QR bằng mã phiếu khám")
 @RestController
 @RequestMapping("/api/booking/phieu-kham")
@@ -86,9 +83,7 @@ public class PhieuKhamController {
         return TepTaiVe.taiVe(tep.noiDung().getBytes(StandardCharsets.UTF_8), tep.tenTep(), LICH);
     }
 
-    /**
-     * Không khai báo {@code produces = image/png}: khi mã không tồn tại, lỗi vẫn phải trả về dạng JSON của PhanHoiApi.
-     */
+    /** Không khai báo {@code produces = image/png} để lỗi vẫn trả về JSON của PhanHoiApi. */
     @Operation(summary = "Ảnh PNG mã QR chứa link phiếu khám; taiVe=true để trình duyệt lưu thành tệp")
     @GetMapping("/{maPhieuKham}/qr")
     public ResponseEntity<byte[]> qr(@PathVariable String maPhieuKham,

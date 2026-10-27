@@ -10,12 +10,7 @@ import java.util.List;
 
 import iuh.fit.se.eclinic.common.config.AppTimeZone;
 
-/**
- * Soạn tệp lịch .ics (RFC 5545) cho 1 lịch hẹn: 1 VCALENDAR {@code METHOD:PUBLISH} chứa 1 VEVENT. Là tệp "thêm vào lịch",
- * không phải thư mời: không có ORGANIZER / ATTENDEE nên ứng dụng lịch không gửi thư trả lời. Cùng UID + SEQUENCE lớn hơn
- * = bản mới của cùng sự kiện (đổi giờ, hủy). Giờ lưu là giờ Việt Nam ({@link AppTimeZone}), ghi ra dạng UTC {@code ...Z}.
- * Mỗi dòng kết thúc bằng CRLF, dài tối đa 75 byte (gập dòng không cắt giữa 1 ký tự UTF-8).
- */
+/** Soạn tệp lịch .ics (RFC 5545) cho 1 lịch hẹn: 1 VCALENDAR {@code METHOD:PUBLISH} chứa 1 VEVENT. */
 public final class TepLichIcs {
 
     /** Trạng thái của sự kiện (thuộc tính STATUS). */
@@ -26,13 +21,6 @@ public final class TepLichIcs {
         CANCELLED
     }
 
-    /**
-     * @param uid      giống nhau cho mọi bản của cùng 1 sự kiện
-     * @param sequence bản sau phải lớn hơn bản trước
-     * @param moTa     các dòng của DESCRIPTION
-     * @param lienKet  thuộc tính URL (link phiếu khám)
-     * @param nhac     chữ của lời nhắc trước giờ khám; null = không nhắc
-     */
     public record SuKien(String uid, int sequence, TrangThai trangThai, LocalDateTime batDau, LocalDateTime ketThuc,
             String tieuDe, String diaDiem, List<String> moTa, String lienKet, String nhac) {
     }

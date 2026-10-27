@@ -50,8 +50,7 @@ public class TokenLienKetServiceImpl implements TokenLienKetService {
         if (token == null || token.isBlank() || token.length() > DO_DAI_TOI_DA) {
             throw new LoiNghiepVu(MaLoi.LIEN_KET_KHONG_HOP_LE);
         }
-        // GETDEL nguyên tử. Không dọn khoá con trỏ: con trỏ cũ vô hại (lần tao sau xoá 1 khoá không còn),
-        // còn GET-so sánh-DEL sẽ tranh chấp với 1 lần tao đồng thời.
+        // GETDEL nguyên tử; không dọn khoá con trỏ vì con trỏ cũ vô hại
         String giaTri = redisTemplate.opsForValue().getAndDelete(khoaToken(mucDich, TokenNgauNhien.bam(token)));
         if (giaTri == null) {
             throw new LoiNghiepVu(MaLoi.LIEN_KET_KHONG_HOP_LE);
@@ -65,7 +64,7 @@ public class TokenLienKetServiceImpl implements TokenLienKetService {
         if (bam == null) {
             return Optional.empty();
         }
-        // Con trỏ có thể còn sau khi token đã dùng (xem suDungKemDuLieu): khi đó khoá token không còn
+        // Con trỏ có thể còn sau khi token đã dùng: khi đó khoá token không còn
         String giaTri = redisTemplate.opsForValue().get(khoaToken(mucDich, bam));
         return giaTri == null ? Optional.empty() : Optional.ofNullable(tach(giaTri).duLieu());
     }

@@ -1,8 +1,6 @@
 package iuh.fit.se.eclinic.report.dto.request;
 
-/**
- * Kỳ của báo cáo thống kê (DASH-02): ngày, tuần (thứ Hai - Chủ nhật), tháng, năm chứa 1 ngày mốc, hoặc khoảng tuỳ chọn.
- */
+/** Kỳ của báo cáo thống kê: ngày, tuần, tháng, năm chứa 1 ngày mốc, hoặc khoảng tuỳ chọn. */
 public enum KyBaoCao {
     NGAY,
     TUAN,

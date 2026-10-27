@@ -28,11 +28,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
-/**
- * UC-CHAT-01: hội thoại với chatbot (trợ lý AI). Mở phiên, gửi tin nhắn, đọc lại phiên là công khai
- * (app.bao-mat.duong-dan-cong-khai): khách dùng mã bí mật của phiên ở header {@value #HEADER_KHACH}, người đã đăng nhập
- * dùng JWT. Danh sách phiên của tôi cần đăng nhập.
- */
+/** Hội thoại với chatbot (trợ lý AI). */
 @Tag(name = "Chatbot", description = "UC-CHAT-01: mở phiên chat, gửi tin nhắn, đọc lại hội thoại")
 @RestController
 @RequestMapping("/api/chatbot/phien")

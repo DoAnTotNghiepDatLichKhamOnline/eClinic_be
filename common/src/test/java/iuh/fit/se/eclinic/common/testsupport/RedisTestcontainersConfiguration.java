@@ -6,9 +6,7 @@ import org.springframework.context.annotation.Bean;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.utility.DockerImageName;
 
-/**
- * Redis thật chạy bằng Docker cho test. Chỉ import ở service có spring-boot-starter-data-redis.
- */
+/** Redis thật chạy bằng Docker cho test. */
 @TestConfiguration(proxyBeanMethods = false)
 public class RedisTestcontainersConfiguration {
 

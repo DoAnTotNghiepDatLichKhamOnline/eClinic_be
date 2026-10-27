@@ -38,13 +38,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 
-/**
- * ADM-04: quản trị viên quản lý lịch hẹn toàn viện: danh sách có bộ lọc, chi tiết kèm nhật ký thao tác, hủy / đổi lịch
- * thay bệnh nhân (kèm lý do, không theo hạn hủy / đổi của bệnh nhân); tra lịch hẹn theo mã in trên phiếu khám, bỏ đánh
- * dấu "cần đối chiếu" sau khi đã đối chiếu giấy tờ; đặt lịch thay người gọi tổng đài / người đến quầy; cấp lại liên kết
- * phiếu khám cho người đã mất link (PAT-03). Không trả mã phiếu khám, trừ phản hồi đặt lịch qua tổng đài (cho người vừa
- * đặt in phiếu) và cấp lại liên kết trên màn hình.
- */
+/** Quản trị viên quản lý lịch hẹn toàn viện: lọc, xem, hủy, đổi lịch và đặt lịch thay bệnh nhân. */
 @Tag(name = "Quản trị lịch hẹn", description = "ADM-04: danh sách lịch hẹn toàn viện, chi tiết + nhật ký, hủy / đổi lịch"
         + " thay bệnh nhân, tra theo mã, đánh dấu đã đối chiếu, đặt lịch qua tổng đài, cấp lại liên kết (quản trị viên)")
 @RestController

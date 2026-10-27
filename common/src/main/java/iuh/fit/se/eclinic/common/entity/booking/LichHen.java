@@ -30,18 +30,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * Lịch hẹn khám (ERD: LichHen). Gắn với hồ sơ bệnh nhân (CCCD), không gắn trực tiếp tài khoản (quy tắc #2).
- * <p>
- * Chống đặt trùng ở mức DB: cột generated {@code id_khung_gio_hieu_luc} (không map trong entity) + UNIQUE,
- * nên 2 lịch hẹn có {@link TrangThaiLichHen#chiemKhungGio()} trên cùng 1 khung giờ sẽ ném
- * {@code DataIntegrityViolationException}.
- * <p>
- * Đổi lịch = hủy + tạo mới (quy tắc #10): lịch cũ -> DA_HUY_DO_DOI_LICH, lịch mới có {@code lichHenCu} trỏ về lịch cũ.
- * <p>
- * Khác ERD: thêm {@code lyDoHuy}, {@code canDoiLich} (.md mục 15.4), {@code lichHenCu}, {@code nguoiGiamHo},
- * {@code taiKhoanDat}, {@code soDienThoaiLienHe}, các trường {@code *DaNhap}, {@code canDoiChieu} và {@code kenhDat}.
- */
+/** Lịch hẹn khám, gắn với hồ sơ bệnh nhân; đổi lịch = hủy lịch cũ + tạo lịch mới. */
 @Getter
 @Setter
 @NoArgsConstructor
@@ -54,17 +43,17 @@ public class LichHen extends AuditableEntity {
     @JoinColumn(name = "id_ho_so_benh_nhan", nullable = false)
     private HoSoBenhNhan hoSoBenhNhan;
 
-    /** Người giám hộ của lượt khám này, bắt buộc khi bệnh nhân dưới 18 tuổi (BOOK-11). */
+    /** Người giám hộ của lượt khám này, bắt buộc khi bệnh nhân dưới 18 tuổi. */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_nguoi_giam_ho")
     private NguoiGiamHo nguoiGiamHo;
 
-    /** Tài khoản đã đặt lịch; null = Khách đặt. Chỉ để biết ai đặt, lịch hẹn vẫn thuộc về hồ sơ bệnh nhân. */
+    /** Tài khoản đã đặt lịch; null = Khách đặt. */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_tai_khoan_dat")
     private TaiKhoan taiKhoanDat;
 
-    /** Kênh đặt lịch (V35); đổi lịch giữ kênh của lịch cũ. */
+    /** Kênh đặt lịch; đổi lịch giữ kênh của lịch cũ. */
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.VARCHAR)
     @Column(name = "kenh_dat", nullable = false, length = 20)
@@ -83,7 +72,7 @@ public class LichHen extends AuditableEntity {
     @JoinColumn(name = "id_phong_kham", nullable = false)
     private PhongKham phongKham;
 
-    /** Số thứ tự khám theo phòng khám + ngày (quy tắc #4). */
+    /** Số thứ tự khám theo phòng khám + ngày. */
     @Column(name = "so_thu_tu", nullable = false)
     private Integer soThuTu;
 
@@ -98,34 +87,21 @@ public class LichHen extends AuditableEntity {
     @Column(name = "ghi_chu", columnDefinition = "TEXT")
     private String ghiChu;
 
-    /**
-     * SĐT người đặt nhập trên form, để liên hệ cho lượt khám này. Không ghi vào hồ sơ bệnh nhân: SĐT của hồ sơ là thứ
-     * được đối chiếu khi liên kết hồ sơ vào tài khoản (quy tắc #3). Null với lịch hẹn tạo trước V5.
-     */
+    /** SĐT người đặt nhập trên form, để liên hệ cho lượt khám này. */
     @Column(name = "so_dien_thoai_lien_he", length = 20)
     private String soDienThoaiLienHe;
 
-    /**
-     * Email người đặt nhập trên form (không bắt buộc). Email xác nhận đặt lịch gửi tới đây; để trống thì gửi tới email
-     * của tài khoản đã đặt, khách đặt mà để trống thì không có email nào.
-     */
+    /** Email người đặt nhập trên form (không bắt buộc). */
     @Column(name = "email_lien_he", length = 255)
     private String emailLienHe;
 
-    /**
-     * Ngôn ngữ của request đã tạo lịch hẹn (V19). Email gửi tới khách dùng ngôn ngữ này; lịch hẹn do tài khoản đặt thì
-     * email theo ngôn ngữ đã lưu của tài khoản. Null = lịch hẹn tạo trước V19.
-     */
+    /** Ngôn ngữ của request đã tạo lịch hẹn. */
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.VARCHAR)
     @Column(name = "ngon_ngu", length = 5)
     private NgonNgu ngonNgu;
 
-    /**
-     * Họ tên, ngày sinh, giới tính người khám và họ tên người giám hộ ĐÚNG như người đặt nhập trên form. Số CCCD đã có
-     * hồ sơ thì lần đặt sau không sửa hồ sơ, nên phiếu khám và "lịch hẹn của tôi" hiện các trường này thay cho dữ liệu
-     * của hồ sơ (không lộ dữ liệu người khác đã nhập). Null với lịch hẹn tạo trước V10.
-     */
+    /** Họ tên, ngày sinh, giới tính người khám và họ tên người giám hộ ĐÚNG như người đặt nhập trên form. */
     @Column(name = "ho_ten_da_nhap", length = 150)
     private String hoTenDaNhap;
 
@@ -141,41 +117,27 @@ public class LichHen extends AuditableEntity {
     @Column(name = "ho_ten_giam_ho_da_nhap", length = 150)
     private String hoTenGiamHoDaNhap;
 
-    /**
-     * Họ tên / ngày sinh nhập vào khác hồ sơ bệnh nhân (hoặc khác người giám hộ đã khai): phòng khám đối chiếu giấy tờ
-     * khi bệnh nhân đến khám rồi bỏ đánh dấu.
-     */
+    /** Thông tin nhập khác hồ sơ bệnh nhân: phòng khám đối chiếu giấy tờ khi bệnh nhân đến. */
     @Column(name = "can_doi_chieu", nullable = false)
     private boolean canDoiChieu;
 
-    /**
-     * Mã ngắn để đọc / gõ, dạng {@code ECL-<ngày khám yyyyMMdd>-<4 chữ số>}. Bác sĩ, quản trị viên tra lịch hẹn theo mã
-     * này; KHÔNG dùng để mở phiếu khám công khai (đoán được).
-     */
+    /** Mã ngắn để đọc / gõ, dạng {@code ECL-<ngày khám yyyyMMdd>-<4 chữ số>}. */
     @Column(name = "ma_tra_cuu", nullable = false, unique = true, length = 20)
     private String maTraCuu;
 
-    /** Chuỗi ngẫu nhiên cho link/QR phiếu khám (quy tắc #8), không dùng id tuần tự. */
+    /** Chuỗi ngẫu nhiên cho link/QR phiếu khám, không dùng id tuần tự. */
     @Column(name = "ma_token_phieu_kham", nullable = false, unique = true, length = 64)
     private String maTokenPhieuKham;
 
-    /** Lý do hủy (BOOK-09, tùy chọn) hoặc lý do từ chối (BOOK-10, bắt buộc). */
+    /** Lý do hủy (tùy chọn) hoặc lý do từ chối (bắt buộc). */
     @Column(name = "ly_do_huy", length = 500)
     private String lyDoHuy;
 
-    /**
-     * Ca khám của lịch hẹn đã bị hủy (quản trị viên hủy ca, hoặc duyệt yêu cầu xin nghỉ / đổi ca): lịch hẹn giữ nguyên
-     * trạng thái, bệnh nhân phải đổi sang khung giờ khác hoặc hủy. Chỉ có nghĩa khi lịch hẹn còn hiệu lực; lịch mới tạo
-     * ra khi đổi lịch không mang cờ này.
-     */
+    /** Ca khám đã bị hủy: lịch hẹn giữ trạng thái, bệnh nhân phải đổi khung giờ khác hoặc hủy. */
     @Column(name = "can_doi_lich", nullable = false)
     private boolean canDoiLich;
 
-    /**
-     * Ca khám được nhường cho bác sĩ khác (duyệt yêu cầu NHUONG_CA): lịch hẹn vẫn khám bình thường với bác sĩ mới, nhưng
-     * bệnh nhân được hủy / đổi tới đúng giờ khám và lần đổi đó không tính vào giới hạn số lần đổi. Lịch mới tạo ra khi
-     * đổi lịch không mang cờ này.
-     */
+    /** Ca được nhường cho bác sĩ khác: bệnh nhân được hủy / đổi tới giờ khám, không tính lượt đổi. */
     @Column(name = "doi_bac_si", nullable = false)
     private boolean doiBacSi;
 
@@ -197,10 +159,7 @@ public class LichHen extends AuditableEntity {
     @Column(name = "version", nullable = false)
     private Long version;
 
-    /**
-     * Trạng thái hàng đợi để hiển thị: DA_KHAM khi đã ghi nhận kết quả khám, VANG_MAT khi đã đóng là bệnh nhân không đến,
-     * còn lại là giá trị đã lưu.
-     */
+    /** Trạng thái hàng đợi để hiển thị: DA_KHAM khi đã có kết quả, VANG_MAT khi không đến, còn lại giá trị đã lưu. */
     public TrangThaiHangDoi hangDoiHienThi() {
         return switch (trangThai) {
             case DA_HOAN_THANH -> TrangThaiHangDoi.DA_KHAM;

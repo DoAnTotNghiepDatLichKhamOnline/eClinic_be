@@ -29,19 +29,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * Yêu cầu đổi lịch làm việc do bác sĩ gửi, Admin duyệt/từ chối (ERD: YeuCauDoiLich — SCHED-02, SCHED-03).
- * <p>
- * Mỗi ca chỉ có tối đa 1 yêu cầu CHO_DUYET (quy tắc #15): DB chặn bằng cột generated
- * {@code id_lich_lam_viec_cho_duyet} (không map trong entity) + UNIQUE.
- * <p>
- * Khác ERD: thêm {@code loaiYeuCau}, {@code phongKhamMongMuon}, {@code ghiChuXuLy} (.md mục 15.4);
- * {@code thoiGianMongMuon} được tách thành ngày + giờ bắt đầu + giờ kết thúc mong muốn (ca mới cần cả giờ kết thúc).
- * <p>
- * NHUONG_CA (nhường ca cho {@code bacSiNhan}): CHO_DONG_Y -> bác sĩ nhận đồng ý (CHO_DUYET) hoặc từ chối
- * (DONG_NGHIEP_TU_CHOI) -> quản trị viên duyệt (ca chuyển sang bác sĩ nhận) hoặc từ chối. "1 yêu cầu chờ mỗi ca" tính
- * cả CHO_DONG_Y. Xin nghỉ nhiều ca: các yêu cầu XIN_NGHI gửi cùng lần mang chung {@code maNhom}.
- */
+/** Yêu cầu đổi lịch làm việc do bác sĩ gửi, quản trị viên duyệt / từ chối. */
 @Getter
 @Setter
 @NoArgsConstructor
@@ -101,7 +89,7 @@ public class YeuCauDoiLich extends BaseEntity {
     @Column(name = "trang_thai", nullable = false, length = 20)
     private TrangThaiYeuCau trangThai = TrangThaiYeuCau.CHO_DUYET;
 
-    /** Ghi chú của Admin khi xử lý — bắt buộc khi từ chối (SCHED-03). */
+    /** Ghi chú của quản trị viên khi xử lý, bắt buộc khi từ chối. */
     @Column(name = "ghi_chu_xu_ly", columnDefinition = "TEXT")
     private String ghiChuXuLy;
 

@@ -3,11 +3,7 @@ package iuh.fit.se.eclinic.identity.dulieumau;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Bản tiếng Anh của nội dung dữ liệu mẫu trong {@link DuLieuMau} và {@link HoSoBacSiMau}: chuyên khoa + phòng khám theo
- * tên tiếng Việt của chuyên khoa, hồ sơ bác sĩ theo số thứ tự. Họ tên, học vị (chữ viết tắt) không có ở đây vì không
- * dịch.
- */
+/** Bản tiếng Anh của dữ liệu mẫu trong {@link DuLieuMau} và {@link HoSoBacSiMau}. */
 public final class DuLieuMauTiengAnh {
 
     private DuLieuMauTiengAnh() {
@@ -16,9 +12,6 @@ public final class DuLieuMauTiengAnh {
     public record ChuyenKhoaEn(String ten, String moTa, String tenPhong, String tang) {
     }
 
-    /**
-     * @param tieuSu bản tiếng Anh của {@link DuLieuMau.BacSiMau#tieuSu()}; các mục còn lại ứng với {@link HoSoBacSiMau}
-     */
     public record HoSoBacSiEn(String tieuSu, String chucVu, String gioiThieuNgan, List<String> daoTao,
             List<String> congTac, List<String> linhVuc) {
     }

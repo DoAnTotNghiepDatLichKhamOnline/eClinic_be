@@ -18,9 +18,7 @@ import iuh.fit.se.eclinic.identity.config.KhoiTaoAdminRunner;
 import iuh.fit.se.eclinic.identity.repository.QuanTriVienRepository;
 import iuh.fit.se.eclinic.identity.repository.TaiKhoanRepository;
 
-/**
- * Khởi động identity-service trên DB trống phải tạo đúng 1 admin mặc định, chạy lại không tạo thêm.
- */
+/** Khởi động identity-service trên DB trống phải tạo đúng 1 admin mặc định, chạy lại không tạo thêm. */
 @SpringBootTest
 @Import({ MySqlTestcontainersConfiguration.class, RedisTestcontainersConfiguration.class })
 class KhoiTaoAdminTest {

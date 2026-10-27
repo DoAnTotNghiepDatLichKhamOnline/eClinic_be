@@ -6,11 +6,7 @@ import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 
 import iuh.fit.se.eclinic.common.config.AppTimeZone;
 
-/**
- * catalog-service (cổng 8082): chuyên khoa, phòng khám, hồ sơ bác sĩ, tìm kiếm bác sĩ — ADM-01, ADM-02, AUTH-04, DOC-01, DOC-03.
- * <p>
- * Đặt ở package gốc để scan được cả entity/config trong module common lẫn code trong package {@code catalog}.
- */
+/** catalog-service (cổng 8082): chuyên khoa, phòng khám, hồ sơ bác sĩ, tìm kiếm bác sĩ. */
 @SpringBootApplication
 @ConfigurationPropertiesScan
 public class CatalogServiceApplication {

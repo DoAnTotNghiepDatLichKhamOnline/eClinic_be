@@ -16,7 +16,7 @@ import iuh.fit.se.eclinic.booking.service.NgayNghiService;
 import iuh.fit.se.eclinic.common.dto.PhanHoiApi;
 import lombok.RequiredArgsConstructor;
 
-/** Ngày bệnh viện nghỉ cho lịch của trang đặt lịch. Công khai (app.bao-mat.duong-dan-cong-khai). */
+/** Ngày bệnh viện nghỉ cho lịch của trang đặt lịch (công khai). */
 @Tag(name = "Ngày nghỉ", description = "Ngày bệnh viện nghỉ: làm mờ trên lịch đặt khám, kèm lý do")
 @RestController
 @RequestMapping("/api/booking/ngay-nghi")

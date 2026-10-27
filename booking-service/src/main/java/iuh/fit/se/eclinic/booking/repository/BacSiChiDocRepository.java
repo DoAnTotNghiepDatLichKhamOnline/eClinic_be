@@ -12,18 +12,12 @@ import jakarta.persistence.LockModeType;
 
 import iuh.fit.se.eclinic.common.entity.catalog.BacSi;
 
-/**
- * CHỈ ĐỌC hồ sơ bác sĩ (bảng của catalog-service) để biết bác sĩ nào đang đăng nhập khi xem lịch làm việc, lịch hẹn
- * của mình. Kế thừa {@link Repository} chứ không phải JpaRepository nên không có save / delete.
- */
+/** Chỉ đọc hồ sơ bác sĩ (bảng của catalog-service) để biết bác sĩ nào đang đăng nhập. */
 public interface BacSiChiDocRepository extends Repository<BacSi, Long> {
 
     Optional<BacSi> findByTaiKhoanId(Long taiKhoanId);
 
-    /**
-     * Khoá dòng bác sĩ (SELECT ... FOR UPDATE; khoá không phải là ghi) khi xếp / sửa ca của bác sĩ đó: 2 quản trị viên
-     * xếp 2 ca chồng giờ cho cùng bác sĩ chạy lần lượt, người sau thấy ca của người trước. Lấy sẵn tài khoản, chuyên khoa.
-     */
+    /** Khoá dòng bác sĩ (SELECT ... */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select b from BacSi b join fetch b.taiKhoan join fetch b.chuyenKhoa where b.id = :id")
     Optional<BacSi> khoaTheoId(Long id);

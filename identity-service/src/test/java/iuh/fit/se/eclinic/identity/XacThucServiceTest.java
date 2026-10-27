@@ -30,11 +30,7 @@ import iuh.fit.se.eclinic.identity.event.EmailXacThucEvent;
 import iuh.fit.se.eclinic.identity.repository.TaiKhoanRepository;
 import iuh.fit.se.eclinic.identity.service.XacThucService;
 
-/**
- * Đăng ký / kích hoạt với MySQL + Redis thật. Không gửi email: token lấy từ event đã phát
- * (EmailService thật chạy ở chế độ console và chỉ ghi log).
- * Thời gian chờ gửi lại rút còn 5 giây để test được cả lúc còn và lúc hết thời gian chờ.
- */
+/** Đăng ký / kích hoạt với MySQL + Redis thật. */
 @SpringBootTest
 @Import({ MySqlTestcontainersConfiguration.class, RedisTestcontainersConfiguration.class })
 @RecordApplicationEvents

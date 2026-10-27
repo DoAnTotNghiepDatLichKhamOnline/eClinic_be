@@ -3,14 +3,7 @@ package iuh.fit.se.eclinic.catalog.dto.request;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-/**
- * Dữ liệu thêm / sửa chuyên khoa (ADM-01). 2 trường tiếng Anh có thể bỏ trống: khi đó người xem tiếng Anh thấy bản
- * tiếng Việt.
- *
- * @param trieuChung   triệu chứng, vấn đề thường gặp mà chuyên khoa tiếp nhận (vd "ho, sốt, đau họng"): chatbot dựa vào
- *                     đây để gợi ý chuyên khoa theo lời người dùng kể; không hiện ở API công khai
- * @param trieuChungEn bản tiếng Anh; bỏ trống thì chatbot dùng bản tiếng Việt
- */
+/** Thêm, sửa chuyên khoa; bỏ trống tiếng Anh thì người xem tiếng Anh thấy bản tiếng Việt. */
 public record ChuyenKhoaRequest(
 
         @NotBlank(message = "{kiemTra.tenChuyenKhoa.batBuoc}")

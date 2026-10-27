@@ -38,11 +38,7 @@ import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Path;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Chuyển mọi exception của controller thành PhanHoiApi, HTTP status lấy từ MaLoi.
- * Lỗi 401/403 xảy ra trước controller (filter bảo mật) do LoiBaoMatHandler xử lý.
- * Thông điệp soạn theo ngôn ngữ của request từ khoá trong thong-diep/*.properties.
- */
+/** Chuyển mọi exception của controller thành PhanHoiApi, HTTP status lấy từ MaLoi. */
 @Slf4j
 @RestControllerAdvice
 public class XuLyLoiHandler {
@@ -151,10 +147,6 @@ public class XuLyLoiHandler {
         return traVe(MaLoi.KHONG_TIM_THAY, dich("loi.KHONG_TIM_THAY.duongDan", ex.getResourcePath()), null);
     }
 
-    /**
-     * @PreAuthorize ném lỗi bên trong controller nên tới đây chứ không tới LoiBaoMatHandler.
-     * Thiếu handler này thì mọi lỗi phân quyền sẽ rơi vào 500.
-     */
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<PhanHoiApi<Void>> xuLyKhongCoQuyen(AccessDeniedException ex) {
         boolean anDanh = TRUST_RESOLVER.isAnonymous(SecurityContextHolder.getContext().getAuthentication());
@@ -187,7 +179,7 @@ public class XuLyLoiHandler {
         return traVe(MaLoi.LOI_HE_THONG, null, null);
     }
 
-    /** @param thongDiep câu đã soạn theo ngôn ngữ của request; null thì dùng thông điệp mặc định của mã lỗi */
+    /** Trả lỗi theo mã; {@code thongDiep} null thì dùng thông điệp mặc định của mã lỗi. */
     private ResponseEntity<PhanHoiApi<Void>> traVe(MaLoi maLoi, String thongDiep, List<ChiTietLoi> chiTiet) {
         String noiDung = thongDiep != null ? thongDiep : dich(maLoi.khoa());
         return ResponseEntity.status(maLoi.getTrangThaiHttp()).body(PhanHoiApi.loi(maLoi, noiDung, chiTiet));

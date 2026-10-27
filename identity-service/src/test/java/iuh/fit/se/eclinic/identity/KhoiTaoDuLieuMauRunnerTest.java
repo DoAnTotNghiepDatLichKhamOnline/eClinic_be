@@ -15,9 +15,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import iuh.fit.se.eclinic.identity.dulieumau.DuLieuMauService;
 import iuh.fit.se.eclinic.identity.dulieumau.KhoiTaoDuLieuMauRunner;
 
-/**
- * Tạo dữ liệu mẫu lỗi thì chỉ ghi log: identity-service vẫn phải khởi động được.
- */
+/** Tạo dữ liệu mẫu lỗi thì chỉ ghi log: identity-service vẫn phải khởi động được. */
 class KhoiTaoDuLieuMauRunnerTest {
 
     private final DuLieuMauService duLieuMauService = mock(DuLieuMauService.class);

@@ -38,12 +38,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
 
-/**
- * SCHED-04: bác sĩ xem (và tải bản in PDF) lịch làm việc và lịch hẹn của CHÍNH MÌNH, mở hồ sơ khám của bệnh nhân từ 1 lịch hẹn của mình, và
- * sửa hồ sơ bệnh nhân / ghi nhận đã đối chiếu giấy tờ cho lịch hẹn đó, cấp lại liên kết phiếu khám cho người đã mất
- * link (PAT-03). Không nhận id bác sĩ: bác sĩ lấy từ tài khoản
- * đang đăng nhập; lịch hẹn của bác sĩ khác coi như không có (404). Ngày theo dạng yyyy-MM-dd.
- */
+/** Bác sĩ xem lịch làm việc, lịch hẹn của chính mình và xử lý hồ sơ bệnh nhân của lịch hẹn đó. */
 @Tag(name = "Lịch của bác sĩ", description = "SCHED-04: bác sĩ xem lịch làm việc, lịch hẹn, hồ sơ khám của bệnh nhân")
 @RestController
 @RequestMapping("/api/booking/bac-si/toi")
@@ -65,7 +60,7 @@ public class LichCuaBacSiController {
         return PhanHoiApi.ok(lichLamViecService.lichCuaBacSi(NguoiDungHienTai.layIdTaiKhoan(), tuNgay, denNgay));
     }
 
-    // Không khai báo produces: lỗi (khoảng ngày sai...) vẫn trả JSON như các API khác
+    // Không khai báo produces để lỗi vẫn trả về JSON
     @Operation(summary = "Tải bản in PDF lịch làm việc của tôi trong khoảng ngày (tối đa 42 ngày, chỉ ca còn hoạt động),"
             + " chữ theo ngôn ngữ của request")
     @GetMapping("/lich-lam-viec/pdf")

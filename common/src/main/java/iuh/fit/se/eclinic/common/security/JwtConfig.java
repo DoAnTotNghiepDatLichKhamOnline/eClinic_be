@@ -20,9 +20,7 @@ import com.nimbusds.jose.jwk.source.ImmutableSecret;
 
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * JWT ký bằng HS256 với khoá chung JWT_SECRET: identity-service phát hành, mọi service tự kiểm tra.
- */
+/** JWT ký bằng HS256 với khoá chung JWT_SECRET: identity-service phát hành, mọi service tự kiểm tra. */
 @Slf4j
 @Configuration
 public class JwtConfig {
@@ -59,7 +57,7 @@ public class JwtConfig {
         return decoder;
     }
 
-    /** Lưu ý: mặc định encoder ký RS256, nên khi encode phải truyền header HS256 (xem JwtService). */
+    /** Encoder mặc định ký RS256, nên khi encode phải truyền header HS256. */
     @Bean
     JwtEncoder jwtEncoder(SecretKey khoaKyJwt) {
         return new NimbusJwtEncoder(new ImmutableSecret<>(khoaKyJwt));

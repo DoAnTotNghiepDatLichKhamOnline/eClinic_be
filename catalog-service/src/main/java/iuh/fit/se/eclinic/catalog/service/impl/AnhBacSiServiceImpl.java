@@ -26,13 +26,7 @@ import iuh.fit.se.eclinic.common.util.TokenNgauNhien;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * CỐ Ý không có @Transactional ở class (như AnhDaiDienServiceImpl của identity-service): gọi kho ảnh có thể mất tới
- * 20 giây, không được giữ transaction / kết nối DB trong lúc đó. Phần ghi DB chạy trong transaction ngắn qua
- * {@link TransactionTemplate}.
- * <p>
- * Mỗi ảnh có mã riêng trong kho ({@code bac-si/<idBacSi>/<mã ngẫu nhiên>}) nên không ảnh nào ghi đè ảnh nào.
- */
+/** Không có @Transactional ở class: gọi kho ảnh có thể mất 20 giây, không được giữ kết nối DB. */
 @Slf4j
 @Service
 @RequiredArgsConstructor

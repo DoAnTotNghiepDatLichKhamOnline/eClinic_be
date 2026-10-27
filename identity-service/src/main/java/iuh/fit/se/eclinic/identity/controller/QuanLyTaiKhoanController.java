@@ -26,11 +26,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 
-/**
- * Quản trị viên quản lý tài khoản người dùng (UC-USER-01, ADM-03). Chỉ vai trò QUAN_TRI_VIEN gọi được; id của quản trị
- * viên lấy từ JWT và được service kiểm tra lại ở mỗi lời gọi.
- * Đường dẫn theo tài liệu API: /api/users, /api/users/{id} (các đường dẫn /api/users/me... thuộc controller khác).
- */
+/** Quản trị viên quản lý tài khoản người dùng. */
 @Tag(name = "Quản lý tài khoản", description = "UC-USER-01: quản trị viên xem, vô hiệu hoá / kích hoạt lại, xoá tài khoản")
 @RestController
 @RequestMapping("/api/users")

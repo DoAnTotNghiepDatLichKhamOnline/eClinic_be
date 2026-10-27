@@ -33,10 +33,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.groups.Default;
 import lombok.RequiredArgsConstructor;
 
-/**
- * EXAM-01, EXAM-02: bác sĩ ghi nhận kết quả khám cho lịch hẹn của CHÍNH MÌNH. Không nhận id bác sĩ: bác sĩ lấy từ tài
- * khoản đang đăng nhập; lịch hẹn của bác sĩ khác coi như không có (404).
- */
+/** Bác sĩ ghi nhận kết quả khám cho lịch hẹn của chính mình. */
 @Tag(name = "Khám bệnh", description = "EXAM-01, EXAM-02: bác sĩ ghi hồ sơ bệnh án, đơn thuốc cho lịch hẹn của mình")
 @RestController
 @RequestMapping("/api/medical/bac-si/toi")

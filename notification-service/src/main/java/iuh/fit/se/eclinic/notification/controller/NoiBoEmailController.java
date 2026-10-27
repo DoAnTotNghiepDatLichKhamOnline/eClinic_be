@@ -19,10 +19,7 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 
-/**
- * API nội bộ: service khác (booking-service) gửi email cần gửi đi. Không qua gateway, không có JWT của người dùng: người
- * gọi chứng minh bằng khoá nội bộ ({@link KhoaNoiBo}). Trả 2xx = email đã nằm trong hàng chờ gửi, chưa chắc đã đi.
- */
+/** API nội bộ: service khác (booking-service) gửi email cần gửi đi. */
 @Hidden
 @RestController
 @RequestMapping("/noi-bo/email")

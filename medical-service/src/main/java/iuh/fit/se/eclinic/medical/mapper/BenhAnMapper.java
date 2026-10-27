@@ -14,9 +14,7 @@ import iuh.fit.se.eclinic.medical.dto.response.Icd10Response;
 import iuh.fit.se.eclinic.medical.dto.response.ThuocGoiYResponse;
 import lombok.RequiredArgsConstructor;
 
-/**
- * Chuyển hồ sơ bệnh án sang DTO. Gọi trong transaction: đơn thuốc, thuốc và mã ICD-10 là quan hệ lazy.
- */
+/** Chuyển hồ sơ bệnh án sang DTO. */
 @Component
 @RequiredArgsConstructor
 public class BenhAnMapper {

@@ -19,9 +19,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * Tin nhắn trong phiên chat (ERD: TinNhanChat).
- */
+/** Tin nhắn trong phiên chat. */
 @Getter
 @Setter
 @NoArgsConstructor
@@ -47,7 +45,7 @@ public class TinNhanChat extends CreatableEntity {
     @Column(name = "noi_dung", nullable = false, columnDefinition = "TEXT")
     private String noiDung;
 
-    /** Gợi ý kèm câu trả lời của chatbot (JSON của {@code GoiYResponse}), do server dựng từ kết quả tra cứu; null = không có. */
+    /** Gợi ý kèm câu trả lời của chatbot (JSON của {@code GoiYResponse}); null = không có. */
     @Column(name = "goi_y", columnDefinition = "TEXT")
     private String goiY;
 

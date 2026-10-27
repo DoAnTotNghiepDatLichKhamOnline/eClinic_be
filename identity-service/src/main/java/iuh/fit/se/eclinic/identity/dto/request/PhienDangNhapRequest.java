@@ -2,10 +2,7 @@ package iuh.fit.se.eclinic.identity.dto.request;
 
 import jakarta.validation.constraints.Size;
 
-/**
- * Refresh token gửi trong body khi làm mới phiên / đăng xuất. Không bắt buộc: trình duyệt gửi bằng cookie
- * (xem CookiePhien), body chỉ dùng khi thử API bằng Swagger, curl.
- */
+/** Refresh token gửi trong body khi làm mới phiên / đăng xuất. */
 public record PhienDangNhapRequest(
 
         @Size(max = 100, message = "{kiemTra.refreshToken.khongHopLe}")

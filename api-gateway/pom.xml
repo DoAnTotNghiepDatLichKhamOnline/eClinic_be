@@ -32,8 +32,7 @@
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
 
-        <!-- Gateway KHÔNG dùng Spring Security (mỗi service tự kiểm tra JWT). Pom cha thêm security-test cho mọi module;
-             khai báo lại ở đây và bỏ hết thư viện kéo theo để test của gateway chạy giống lúc chạy thật (không bị 401). -->
+        <!-- Gateway không dùng Spring Security: bỏ thư viện kéo theo của security-test để test không bị 401 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security-test</artifactId>

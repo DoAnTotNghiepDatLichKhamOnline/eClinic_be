@@ -12,11 +12,7 @@ import iuh.fit.se.eclinic.common.entity.notification.ThongBao;
 
 public interface ThongBaoRepository extends JpaRepository<ThongBao, Long> {
 
-    /**
-     * Thông báo của 1 tài khoản, mới nhất trước, kèm lịch hẹn liên quan (để lấy mã phiếu khám).
-     *
-     * @param chiChuaDoc true = chỉ lấy thông báo chưa đọc
-     */
+    /** Thông báo của 1 tài khoản, mới nhất trước, kèm lịch hẹn liên quan (để lấy mã phiếu khám). */
     @Query(value = """
             select t from ThongBao t left join fetch t.lichHen
             where t.taiKhoan.id = :idTaiKhoan and (:chiChuaDoc = false or t.daDoc = false)

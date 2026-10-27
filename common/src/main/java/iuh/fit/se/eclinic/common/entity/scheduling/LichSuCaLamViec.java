@@ -26,11 +26,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * 1 lần xếp / sửa / hủy 1 ca làm việc: ai làm ({@code quanTri}), lúc nào ({@code ngayTao}), từ đâu ({@code nguon}),
- * lý do, và ẢNH CA SAU THAY ĐỔI. Giá trị trước thay đổi là ảnh của dòng liền trước của cùng ca (dòng đầu luôn là TAO).
- * CHỈ THÊM: {@link Immutable} nên Hibernate bỏ qua mọi thay đổi trên dòng đã lưu.
- */
+/** 1 lần xếp / sửa / hủy 1 ca làm việc: ai làm, lúc nào, từ đâu, lý do, và ảnh ca sau thay đổi. */
 @Getter
 @Setter
 @NoArgsConstructor

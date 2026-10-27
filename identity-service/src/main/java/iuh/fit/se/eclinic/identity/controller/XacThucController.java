@@ -37,16 +37,7 @@ import iuh.fit.se.eclinic.identity.service.XacThucService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
-/**
- * AUTH-01: đăng ký và kích hoạt tài khoản qua liên kết email. AUTH-02: đăng nhập, làm mới phiên, đăng xuất.
- * AUTH-03: quên / đặt lại mật khẩu qua liên kết email. Đăng nhập bằng Google (chỉ bệnh nhân). Xác nhận đổi email
- * (yêu cầu đổi nằm ở DoiEmailController).
- * Mọi đường dẫn ở đây đều công khai (app.bao-mat.duong-dan-cong-khai); đăng xuất chỉ cần refresh token.
- * Đường dẫn theo tài liệu API: /api/auth/...
- * <p>
- * Refresh token nằm trong cookie HttpOnly {@value CookiePhien#TEN} (không có trong body). Làm mới phiên / đăng xuất
- * đọc cookie trước, không có thì đọc {@code refreshToken} trong body (để thử bằng Swagger, curl).
- */
+/** Đăng ký, kích hoạt, đăng nhập, phiên và mật khẩu (/api/auth). */
 @Tag(name = "Xác thực", description = "AUTH-01: đăng ký, kích hoạt tài khoản. AUTH-02: đăng nhập, làm mới phiên, đăng xuất."
         + " AUTH-03: quên / đặt lại mật khẩu. Đăng nhập bằng Google. Xác nhận đổi email")
 @RestController

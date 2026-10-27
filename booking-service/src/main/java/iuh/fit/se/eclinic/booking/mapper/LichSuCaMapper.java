@@ -14,10 +14,7 @@ import iuh.fit.se.eclinic.common.enums.NgonNgu;
 import iuh.fit.se.eclinic.common.thongbao.VanBanHeThong;
 import lombok.RequiredArgsConstructor;
 
-/**
- * Chuyển lịch sử 1 ca sang DTO. Mỗi dòng chỉ lưu ảnh ca SAU thay đổi; giá trị trước là ảnh của dòng liền trước. Gọi
- * trong transaction, dòng phải lấy sẵn quản trị viên + tài khoản, bác sĩ + tài khoản, phòng khám.
- */
+/** Chuyển lịch sử 1 ca sang DTO. */
 @Component
 @RequiredArgsConstructor
 public class LichSuCaMapper {

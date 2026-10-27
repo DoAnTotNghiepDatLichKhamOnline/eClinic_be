@@ -51,14 +51,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 
-/**
- * ADM-04, SCHED-01/05/06: quản trị viên xem lịch làm việc toàn viện, giờ làm theo tuần của bác sĩ, lịch hẹn và lịch sử
- * thay đổi của từng ca; xếp / sửa / hủy ca, sao chép ca sang khoảng ngày khác, nhập ca từ tệp Excel (cả 2 đều xem trước
- * rồi mới lưu), xuất lịch ra Excel, in lịch ra PDF (của 1 bác sĩ, lưới tuần toàn viện) và gửi lịch cho bác sĩ (email +
- * thông báo); quy tắc ở {@link QuanLyCaService}, bố cục tệp ở {@link ExcelLichLamViecService} /
- * {@link PdfLichLamViecService}.
- * Ngày theo dạng yyyy-MM-dd.
- */
+/** Quản trị viên xếp, sửa, hủy ca và nhập, xuất, in, gửi lịch làm việc toàn viện. */
 @Tag(name = "Quản trị lịch làm việc", description = "ADM-04, SCHED-01/05/06: lịch làm việc toàn viện, xếp / sửa / hủy ca,"
         + " sao chép ca, xuất / nhập Excel, in PDF, gửi lịch cho bác sĩ, lịch hẹn của ca (quản trị viên)")
 @RestController
@@ -112,7 +105,7 @@ public class QuanTriLichLamViecController {
                 "thanhCong.saoChepCa");
     }
 
-    // Không khai báo produces: lỗi (khoảng ngày sai...) vẫn trả JSON như các API khác
+    // Không khai báo produces để lỗi vẫn trả về JSON
     @Operation(summary = "Tải tệp Excel các ca còn hoạt động trong khoảng ngày (tối đa 42 ngày) theo bộ lọc như lịch toàn"
             + " viện. Cột A-G cùng bố cục với tệp nhập, nên sửa rồi nhập lại được; cột sau G chỉ để xem")
     @GetMapping("/xuat-excel")

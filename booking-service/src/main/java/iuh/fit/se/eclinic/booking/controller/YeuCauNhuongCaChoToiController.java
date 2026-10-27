@@ -23,10 +23,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 
-/**
- * SCHED-03: bác sĩ được đồng nghiệp nhường ca xem các yêu cầu gửi cho mình, đồng ý (yêu cầu sang quản trị viên duyệt)
- * hoặc từ chối. Yêu cầu không gửi cho bác sĩ đang đăng nhập coi như không có (404).
- */
+/** Bác sĩ được nhường ca xem, đồng ý hoặc từ chối yêu cầu gửi cho mình. */
 @Tag(name = "Yêu cầu nhường ca gửi cho tôi", description = "SCHED-03: bác sĩ nhận ca đồng ý / từ chối")
 @RestController
 @RequestMapping("/api/booking/bac-si/toi/yeu-cau-nhuong-ca")

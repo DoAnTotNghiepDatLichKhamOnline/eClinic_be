@@ -35,9 +35,7 @@ import jakarta.mail.Message;
 import jakarta.mail.Session;
 import jakarta.mail.internet.MimeMessage;
 
-/**
- * EmailService không cần Spring: JavaMailSender là mock, không bao giờ gọi tới Gmail.
- */
+/** EmailService không cần Spring: JavaMailSender là mock, không bao giờ gọi tới Gmail. */
 class EmailServiceTest {
 
     private static final LienKetProperties LIEN_KET = new LienKetProperties(Duration.ofHours(24), Duration.ofSeconds(60),

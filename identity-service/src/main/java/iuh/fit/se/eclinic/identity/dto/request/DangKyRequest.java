@@ -6,9 +6,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
-/**
- * Bệnh nhân tự đăng ký tài khoản (AUTH-01).
- */
+/** Bệnh nhân tự đăng ký tài khoản. */
 public record DangKyRequest(
 
         @NotBlank(message = "{kiemTra.hoTen.batBuoc}")
@@ -27,10 +25,7 @@ public record DangKyRequest(
         @Pattern(regexp = "^0\\d{9}$", message = "{kiemTra.soDienThoai.dinhDang}")
         String soDienThoai,
 
-        /**
-         * Không bắt buộc. Có thì hồ sơ bệnh nhân đã tạo khi đặt lịch như khách bằng số CCCD này được liên kết vào tài
-         * khoản sau khi đăng nhập (quy tắc #3).
-         */
+        /** Không bắt buộc. */
         @Pattern(regexp = "^(\\d{12})?$", message = "{kiemTra.cccd.dinhDang}")
         String cccd) {
 

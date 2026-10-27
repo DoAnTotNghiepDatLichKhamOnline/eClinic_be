@@ -36,13 +36,7 @@ import iuh.fit.se.eclinic.common.exception.MaLoi;
 import iuh.fit.se.eclinic.common.security.BaoMatConfig;
 import iuh.fit.se.eclinic.common.testsupport.NguoiDungGiaLap;
 
-/**
- * MẪU test controller: chỉ dựng tầng web (không DB), service là mock.
- * Kiểm tra URL, phân quyền, validate dữ liệu vào và định dạng JSON trả về.
- * <p>
- * Luôn cần 2 annotation: {@code @Import(BaoMatConfig.class)} (cấu hình bảo mật JWT)
- * và {@code @AutoConfigureJson} (JsonMapper cho LoiBaoMatHandler, @WebMvcTest không tự nạp).
- */
+/** MẪU test controller: chỉ dựng tầng web (không DB), service là mock. */
 @WebMvcTest(ChuyenKhoaController.class)
 @AutoConfigureJson
 @Import(BaoMatConfig.class)

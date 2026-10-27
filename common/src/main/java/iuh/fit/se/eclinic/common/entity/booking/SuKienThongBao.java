@@ -19,15 +19,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * Thông báo chờ gửi sang notification-service (không có trong ERD; bảng "outbox" của booking-service, V11). Ghi trong
- * cùng transaction với việc đổi trạng thái lịch hẹn, nên có lịch hẹn đổi trạng thái là có dòng này; việc gửi làm sau.
- * <p>
- * 2 kênh (V19): dòng CHUONG gửi cho 1 tài khoản ({@code loai}, {@code idTaiKhoan}); dòng EMAIL gửi tới 1 địa chỉ
- * ({@code emailNhan}, {@code ngonNgu}), {@code khoaMau} khi đó là mẫu email.
- * <p>
- * {@code idTaiKhoan}, {@code idLichHen} là số thường, không phải quan hệ: bảng không có khoá ngoại tới miền khác.
- */
+/** Thông báo chờ gửi sang notification-service (bảng outbox của booking-service). */
 @Getter
 @Setter
 @NoArgsConstructor
@@ -64,15 +56,15 @@ public class SuKienThongBao extends CreatableEntity {
     @Column(name = "id_lich_hen")
     private Long idLichHen;
 
-    /** Yêu cầu đổi ca / xin nghỉ liên quan (V12). */
+    /** Yêu cầu đổi ca / xin nghỉ liên quan. */
     @Column(name = "id_yeu_cau")
     private Long idYeuCau;
 
-    /** Khoá mẫu câu trong thong-diep/ (vd {@code thongBao.lichHenMoi}); câu chữ được soạn lúc đọc (V18). */
+    /** Khoá mẫu câu trong thong-diep/ (vd {@code thongBao.lichHenMoi}); câu chữ được soạn lúc đọc. */
     @Column(name = "khoa_mau", length = 80)
     private String khoaMau;
 
-    /** Tham số của mẫu, mảng JSON (xem {@code ThamSoThongBao}). */
+    /** Tham số của mẫu, mảng JSON ({@code ThamSoThongBao}). */
     @Column(name = "tham_so", columnDefinition = "TEXT")
     private String thamSo;
 
@@ -80,7 +72,7 @@ public class SuKienThongBao extends CreatableEntity {
     @Column(name = "tep_lich", columnDefinition = "TEXT")
     private String tepLich;
 
-    /** Câu soạn sẵn của sự kiện ghi trước V18; sự kiện mới để null và dùng {@code khoaMau}. */
+    /** Câu soạn sẵn của sự kiện cũ; sự kiện mới để null và dùng {@code khoaMau}. */
     @Column(name = "noi_dung", columnDefinition = "TEXT")
     private String noiDung;
 

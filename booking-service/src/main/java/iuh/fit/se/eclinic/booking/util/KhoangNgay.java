@@ -6,9 +6,7 @@ import java.time.temporal.ChronoUnit;
 import iuh.fit.se.eclinic.common.exception.LoiNghiepVu;
 import iuh.fit.se.eclinic.common.exception.MaLoi;
 
-/**
- * Khoảng ngày [tuNgay, denNgay] của các API xem theo lịch (lịch làm việc, lịch hẹn theo khoảng ngày).
- */
+/** Khoảng ngày [tuNgay, denNgay] của các API xem theo lịch (lịch làm việc, lịch hẹn theo khoảng ngày). */
 public final class KhoangNgay {
 
     /** Số ngày tối đa của 1 lần xem (lưới tháng 6 tuần). */

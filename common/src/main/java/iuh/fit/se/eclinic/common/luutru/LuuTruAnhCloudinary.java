@@ -26,15 +26,7 @@ import iuh.fit.se.eclinic.common.exception.LoiNghiepVu;
 import iuh.fit.se.eclinic.common.exception.MaLoi;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Kho ảnh Cloudinary qua Upload API (REST), không dùng SDK: chỉ cần 2 lời gọi upload và destroy.
- * <p>
- * Mỗi request được ký: SHA-1 của các tham số (xếp theo tên, nối {@code ten=giaTri} bằng {@code &}) + API secret;
- * {@code file}, {@code api_key} không nằm trong chữ ký. Ảnh được tải lên với {@code overwrite} nên mỗi mã chỉ có 1 ảnh,
- * và {@code invalidate} để CDN bỏ bản cũ. Ảnh lớn được thu nhỏ ngay khi lưu.
- * <p>
- * Không phải @Component: bean do {@link LuuTruAnhConfig} tạo ở service có dùng kho ảnh.
- */
+/** Kho ảnh Cloudinary qua Upload API (REST), không dùng SDK: chỉ cần 2 lời gọi upload và destroy. */
 @Slf4j
 public class LuuTruAnhCloudinary implements LuuTruAnh {
 
@@ -122,10 +114,7 @@ public class LuuTruAnhCloudinary implements LuuTruAnh {
         return url != null && properties.daCauHinh() && url.startsWith(MAY_CHU_ANH + properties.cloudName() + "/");
     }
 
-    /**
-     * Chữ ký của Upload API: các tham số (đã xếp theo tên) nối thành {@code a=1&b=2}, nối tiếp API secret, băm SHA-1,
-     * viết dạng hex.
-     */
+    /** Chữ ký Upload API: tham số xếp theo tên nối {@code a=1&b=2} + API secret, băm SHA-1 dạng hex. */
     public static String ky(SortedMap<String, String> thamSo, String apiSecret) {
         String chuoi = thamSo.entrySet().stream()
                 .map(e -> e.getKey() + "=" + e.getValue())

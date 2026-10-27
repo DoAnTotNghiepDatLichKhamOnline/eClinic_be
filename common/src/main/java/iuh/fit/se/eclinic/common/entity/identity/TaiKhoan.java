@@ -17,9 +17,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * Tài khoản đăng nhập (ERD: TaiKhoan). Thông tin theo vai trò nằm ở {@link QuanTriVien}, BacSi, HoSoBenhNhan.
- */
+/** Tài khoản đăng nhập. */
 @Getter
 @Setter
 @NoArgsConstructor
@@ -38,25 +36,19 @@ public class TaiKhoan extends AuditableEntity {
     @Column(name = "mat_khau_hash")
     private String matKhauHash;
 
-    /**
-     * Tài khoản bác sĩ do quản trị viên tạo đang mang mật khẩu mặc định (V13): đăng nhập đúng mật khẩu vẫn không được
-     * cấp phiên cho tới khi chủ tài khoản đặt mật khẩu của mình (POST /api/auth/first-password hoặc liên kết đặt lại).
-     */
+    /** Bác sĩ đang mang mật khẩu mặc định: chưa được cấp phiên cho tới khi tự đặt mật khẩu. */
     @Column(name = "phai_doi_mat_khau", nullable = false)
     private boolean phaiDoiMatKhau;
 
-    /** "sub" trong ID token Google: định danh bất biến của tài khoản Google đã liên kết (V2). */
+    /** "sub" trong ID token Google: định danh bất biến của tài khoản Google đã liên kết. */
     @Column(name = "google_id", unique = true)
     private String googleId;
 
-    /** Duy nhất trên toàn hệ thống (AUTH-04). */
+    /** Duy nhất trên toàn hệ thống. */
     @Column(name = "so_dien_thoai", length = 20, unique = true)
     private String soDienThoai;
 
-    /**
-     * Số CCCD khai khi đăng ký (không bắt buộc, chưa được kiểm chứng). booking-service dùng để tìm hồ sơ bệnh nhân đã
-     * có của Khách và liên kết vào tài khoản (quy tắc #3). Không duy nhất, không trả về trong API nào.
-     */
+    /** Số CCCD khai khi đăng ký (chưa kiểm chứng); booking-service dùng để liên kết hồ sơ bệnh nhân. */
     @Column(name = "cccd_dang_ky", length = 12)
     private String cccdDangKy;
 
@@ -73,16 +65,13 @@ public class TaiKhoan extends AuditableEntity {
     @Column(name = "trang_thai", nullable = false, length = 20)
     private TrangThaiTaiKhoan trangThai = TrangThaiTaiKhoan.CHO_XAC_NHAN;
 
-    /**
-     * Ngôn ngữ ưa dùng (V16). Chỉ dùng khi soạn nội dung không gắn với request nào (email, nhắc lịch); thông điệp của
-     * API theo header Accept-Language của từng request, không theo cột này.
-     */
+    /** Ngôn ngữ ưa dùng. */
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.VARCHAR)
     @Column(name = "ngon_ngu", nullable = false, length = 5)
     private NgonNgu ngonNgu = NgonNgu.VI;
 
-    /** Bổ sung ngoài ERD: lý do Admin vô hiệu hóa tài khoản (ADM-03 bắt buộc chọn lý do). */
+    /** Lý do quản trị viên vô hiệu hóa tài khoản. */
     @Column(name = "ly_do_vo_hieu_hoa", length = 500)
     private String lyDoVoHieuHoa;
 

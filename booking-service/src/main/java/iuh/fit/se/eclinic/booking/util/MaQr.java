@@ -16,9 +16,7 @@ import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
 
-/**
- * Vẽ mã QR thành ảnh PNG đen trắng. ZXing chỉ tính ma trận, ảnh do ImageIO của JDK ghi (chạy được ở chế độ headless).
- */
+/** Vẽ mã QR thành ảnh PNG đen trắng. */
 public final class MaQr {
 
     /** Viền trắng quanh mã, tính bằng số ô: 4 là mức chuẩn để máy quét đọc được cả khi in ra giấy. */
@@ -37,10 +35,6 @@ public final class MaQr {
     private MaQr() {
     }
 
-    /**
-     * @param noiDung   chuỗi đưa vào mã QR
-     * @param kichThuoc cạnh ảnh (pixel); ảnh vuông
-     */
     public static byte[] taoPng(String noiDung, int kichThuoc) {
         BitMatrix maTran;
         try {

@@ -51,21 +51,7 @@ import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Chuỗi xử lý 1 tin nhắn, thứ tự cố định (docs/QUY-UOC-CODE.md mục 7):
- * chủ phiên → giới hạn của người gửi → dấu hiệu cấp cứu → giới hạn toàn hệ thống → mô hình → dấu hiệu ngoài phạm vi → lưu.
- * <p>
- * Bước "mô hình" là 1 vòng có giới hạn ({@link #hoiMoHinh}): mô hình có thể xin tra cứu bác sĩ / lịch khám
- * ({@link TraCuuPhongKham}) vài lần rồi mới trả lời. Gợi ý trả cho người dùng ({@code goiY}) dựng từ kết quả tra cứu,
- * không từ câu chữ của mô hình.
- * <p>
- * Dữ liệu cá nhân: {@link NguoiHoi} (dựng từ JWT và chủ phiên ở {@link #nguoiHoi}) quyết định mô hình có được xin 2 hàm
- * "của tôi" không. Bệnh nhân chưa đồng ý trong phiên thì lần đầu mô hình xin là dừng, trả câu xin đồng ý cố định
- * (CAN_DONG_Y), chưa đọc gì.
- * <p>
- * Không có @Transactional ở lớp: lời gọi mô hình (tới 20 giây) không được nằm trong transaction. Chỉ bước lưu chạy
- * trong transaction ({@link TransactionTemplate}).
- */
+/** Chuỗi xử lý 1 tin nhắn theo thứ tự cố định: chủ phiên, giới hạn, cấp cứu, mô hình, phạm vi, lưu. */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -77,10 +63,7 @@ public class ChatbotServiceImpl implements ChatbotService {
     /** Còn ít hơn chừng này thì không gọi mô hình nữa: không kịp trả lời trước khi gateway cắt. */
     private static final Duration THOI_GIAN_TOI_THIEU = Duration.ofSeconds(1);
 
-    /**
-     * Câu trả lời của mô hình kèm gợi ý dựng từ các lần tra cứu của tin nhắn này (null khi không tra cứu được gì).
-     * {@code canDongY}: mô hình xin dữ liệu cá nhân khi bệnh nhân chưa đồng ý; không có câu trả lời nào.
-     */
+    /** Câu trả lời của mô hình kèm gợi ý dựng từ các lần tra cứu của tin nhắn này (null khi không tra cứu được gì). */
     private record TraLoiMoHinh(String noiDung, GoiYResponse goiY, boolean canDongY) {
     }
 
@@ -137,8 +120,7 @@ public class ChatbotServiceImpl implements ChatbotService {
                 loai = LoaiTinNhanChat.CAN_DONG_Y;
                 traLoi = cauCoDinh("chatbot.canDongY");
             } else if (laNgoaiPhamVi(cuaMoHinh.noiDung()) || loiNhacHeThong.biLo(cuaMoHinh.noiDung())) {
-                // Gợi ý (nếu mô hình đã tra cứu trước khi từ chối) bỏ đi cùng câu trả lời của nó. Câu trả lời chép lại
-                // chỉ dẫn hệ thống cũng bị thay bằng câu từ chối.
+                // Mô hình từ chối thì bỏ cả gợi ý; câu chép lại chỉ dẫn hệ thống cũng bị thay bằng câu từ chối
                 loai = LoaiTinNhanChat.NGOAI_PHAM_VI;
                 traLoi = cauCoDinh("chatbot.ngoaiPhamVi");
             } else {
@@ -158,12 +140,7 @@ public class ChatbotServiceImpl implements ChatbotService {
         });
     }
 
-    /**
-     * Gọi mô hình tới khi nó trả lời: mỗi lần nó xin tra cứu thì chạy các hàm tra cứu rồi gọi lại kèm kết quả. Có 2 chặn:
-     * số lần gọi mô hình ({@code so-lan-goi-mo-hinh-toi-da}; lần cuối mô hình không được xin tra cứu nữa) và tổng thời
-     * gian ({@code tong-thoi-gian-cho}, nhỏ hơn read-timeout của gateway). Vượt chặn nào cũng ra 503, không lưu gì.
-     * Mỗi lần gọi mô hình đều tính vào giới hạn toàn hệ thống.
-     */
+    /** Gọi mô hình tới khi nó trả lời: mỗi lần nó xin tra cứu thì chạy các hàm tra cứu rồi gọi lại kèm kết quả. */
     private TraLoiMoHinh hoiMoHinh(Long idPhien, String cauHoi, NguoiHoi nguoiHoi) {
         long hanChot = System.nanoTime() + properties.tongThoiGianCho().toNanos();
         NgonNgu ngonNgu = NgonNgu.hienTai();
@@ -252,17 +229,13 @@ public class ChatbotServiceImpl implements ChatbotService {
 
     @Override
     public void datDongY(Long idPhien, boolean dongY) {
-        // Không gửi mã khách: phiên của khách ra 404 như phiên không tồn tại, chỉ phiên của chính tài khoản mới đồng ý được
+        // Không gửi mã khách: phiên của khách ra 404, chỉ phiên của chính tài khoản mới đồng ý được
         kiemTraChuPhien(idPhien, null);
         transactionTemplate.executeWithoutResult(trangThai -> phienChatRepository.findById(idPhien)
                 .ifPresent(phien -> phien.setDongYDuLieuLuc(dongY ? LocalDateTime.now() : null)));
     }
 
-    /**
-     * Người đang chat có được tra cứu lịch hẹn, lượt khám của mình không: tính năng đang bật, request có JWT vai trò bệnh
-     * nhân, và phiên thuộc chính tài khoản đó ({@link #kiemTraChuPhien} đã so id). Danh tính luôn lấy từ JWT của request
-     * này, không lấy từ dòng phiên chat.
-     */
+    /** Người đang chat có được tra cứu lịch hẹn của mình không: tính năng bật, JWT bệnh nhân, đúng chủ phiên. */
     private NguoiHoi nguoiHoi(ChuPhien chu) {
         boolean duoc = properties.traCuuCaNhan() && chu.idTaiKhoan() != null && NguoiDungHienTai.daDangNhap()
                 && NguoiDungHienTai.layVaiTro() == VaiTro.BENH_NHAN
@@ -271,11 +244,7 @@ public class ChatbotServiceImpl implements ChatbotService {
                 : NguoiHoi.KHONG_CO_DU_LIEU_CA_NHAN;
     }
 
-    /**
-     * Phiên của tài khoản: người gọi phải đăng nhập bằng đúng tài khoản đó. Phiên của khách: người gọi phải gửi đúng mã
-     * bí mật (so bản băm, thời gian so không phụ thuộc vị trí sai). Mọi trường hợp sai, kể cả phiên không tồn tại, ra
-     * cùng 1 lỗi để không dò được id phiên nào có thật.
-     */
+    /** Phiên của tài khoản: người gọi phải đăng nhập bằng đúng tài khoản đó. */
     private ChuPhien kiemTraChuPhien(Long idPhien, String maKhach) {
         ChuPhien chu = phienChatRepository.timChuPhien(idPhien).orElseThrow(ChatbotServiceImpl::khongTimThayPhien);
         boolean laChu;
@@ -296,16 +265,7 @@ public class ChatbotServiceImpl implements ChatbotService {
         return new LoiNghiepVu(MaLoi.KHONG_TIM_THAY, "loi.KHONG_TIM_THAY.phienChat");
     }
 
-    /**
-     * Các cặp hỏi - đáp gần nhất của CHÍNH phiên này rồi tới câu hỏi mới. Chỉ lấy cặp mà mô hình đã trả lời (TRA_LOI) hoặc
-     * đã từ chối (gửi lại đúng dấu hiệu, không gửi câu từ chối của server); câu chào và cặp cấp cứu không gửi. Các lượt
-     * tra cứu của tin nhắn cũ không được lưu nên không gửi lại; thay vào đó câu trả lời nào có gợi ý thì được gắn thêm 1
-     * dòng ghi chú các id đã hiện ({@link #ghiChuDaHien}).
-     * <p>
-     * Cặp có câu trả lời dựng từ lịch hẹn, lượt khám của bệnh nhân chỉ gửi lại khi request này vẫn được đọc dữ liệu đó
-     * (đúng bệnh nhân, còn đồng ý); rút lại đồng ý thì các câu trả lời cũ đó cũng thôi được gửi cho nhà cung cấp. Cặp
-     * CAN_DONG_Y không gửi.
-     */
+    /** Các cặp hỏi - đáp gần nhất của CHÍNH phiên này rồi tới câu hỏi mới. */
     private List<LuotChat> hoiThoai(Long idPhien, String cauHoi, NguoiHoi nguoiHoi) {
         List<TinNhanChat> ganNhat = new ArrayList<>(
                 tinNhanChatRepository.findByPhienChatIdOrderByIdDesc(idPhien, Limit.of(properties.soTinNhanLichSu())));
@@ -333,12 +293,7 @@ public class ChatbotServiceImpl implements ChatbotService {
         return hoiThoai;
     }
 
-    /**
-     * Dòng ghi chú cho mô hình (không lưu, không trả cho người dùng): chuyên khoa và bác sĩ đã hiện cùng 1 câu trả lời cũ,
-     * kèm id, để câu hỏi tiếp theo ("thứ bảy thì sao?") tra cứu tiếp được mà không phải hỏi lại. Rỗng khi không có gợi ý.
-     * Với lịch hẹn, lượt khám của bệnh nhân chỉ ghi là "đã hiện", không ghi dữ liệu nào: muốn nói tiếp về chúng mô hình
-     * phải tra cứu lại, và lần tra cứu đó lại qua kiểm tra đồng ý.
-     */
+    /** Ghi chú cho mô hình về chuyên khoa, bác sĩ đã hiện trong câu trả lời cũ, để hỏi tiếp không phải hỏi lại. */
     private static String ghiChuDaHien(GoiYResponse goiY) {
         if (goiY == null) {
             return "";

@@ -17,10 +17,7 @@ import iuh.fit.se.eclinic.common.enums.NgonNgu;
 import iuh.fit.se.eclinic.common.thongbao.VanBanHeThong;
 import lombok.RequiredArgsConstructor;
 
-/**
- * Chi tiết lịch hẹn của quản trị viên (ADM-04). Gọi trong transaction: lịch hẹn phải lấy sẵn như
- * {@code LichHenRepository#timTheoIdKemChiTiet}, dòng nhật ký như {@code LichSuLichHenRepository#timTheoLichHen}.
- */
+/** Chi tiết lịch hẹn của quản trị viên. */
 @Component
 @RequiredArgsConstructor
 public class LichSuLichHenMapper {
@@ -28,10 +25,6 @@ public class LichSuLichHenMapper {
     private final LichHenMapper lichHenMapper;
     private final MessageSource messageSource;
 
-    /**
-     * @param chuoi  các lịch hẹn của chuỗi đổi lịch, cũ nhất trước (gồm {@code lichHen})
-     * @param lichSu nhật ký của cả chuỗi, cũ nhất trước
-     */
     public LichHenQuanTriChiTietResponse toChiTiet(LichHen lichHen, boolean quanTriHuyDoiDuoc, List<LichHen> chuoi,
             List<LichSuLichHen> lichSu) {
         TaiKhoan taiKhoanDat = lichHen.getTaiKhoanDat();

@@ -6,10 +6,7 @@ import org.springframework.context.annotation.Bean;
 import org.testcontainers.mysql.MySQLContainer;
 import org.testcontainers.utility.DockerImageName;
 
-/**
- * MySQL thật chạy bằng Docker cho test (cùng image với docker-compose.yml).
- * Dùng: {@code @Import(MySqlTestcontainersConfiguration.class)} trên class test của service.
- */
+/** MySQL thật chạy bằng Docker cho test (cùng image với docker-compose.yml). */
 @TestConfiguration(proxyBeanMethods = false)
 public class MySqlTestcontainersConfiguration {
 

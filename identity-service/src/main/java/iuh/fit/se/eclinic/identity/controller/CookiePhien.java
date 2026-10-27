@@ -7,10 +7,7 @@ import iuh.fit.se.eclinic.identity.config.CookiePhienProperties;
 import iuh.fit.se.eclinic.identity.config.DangNhapProperties;
 import lombok.RequiredArgsConstructor;
 
-/**
- * Tạo header Set-Cookie cho refresh token. Cookie HttpOnly (JavaScript không đọc được, XSS không lấy được),
- * chỉ gửi kèm các API /api/auth/*; access token vẫn trả trong body và frontend chỉ giữ trong bộ nhớ.
- */
+/** Tạo header Set-Cookie cho refresh token. */
 @Component
 @RequiredArgsConstructor
 public class CookiePhien {

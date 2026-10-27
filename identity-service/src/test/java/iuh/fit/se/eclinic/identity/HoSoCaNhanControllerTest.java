@@ -39,10 +39,7 @@ import iuh.fit.se.eclinic.identity.dto.response.HoSoCaNhanResponse;
 import iuh.fit.se.eclinic.identity.service.HoSoCaNhanService;
 import iuh.fit.se.eclinic.identity.service.MatKhauService;
 
-/**
- * Tầng web của /api/users/me (hồ sơ, đổi mật khẩu): phải đăng nhập, mọi vai trò đều gọi được, id tài khoản và mã phiên
- * lấy từ JWT, validate dữ liệu vào. Service là mock.
- */
+/** Tầng web của /api/users/me: phải đăng nhập, mọi vai trò, id và mã phiên lấy từ JWT. */
 @WebMvcTest(HoSoCaNhanController.class)
 @AutoConfigureJson
 @Import(BaoMatConfig.class)

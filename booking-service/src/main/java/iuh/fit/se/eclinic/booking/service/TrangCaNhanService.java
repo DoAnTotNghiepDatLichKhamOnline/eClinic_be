@@ -10,10 +10,7 @@ public interface TrangCaNhanService {
     /** Số lượt đã khám gần nhất trả kèm trang cá nhân. */
     int SO_LAN_KHAM_GAN_DAY = 5;
 
-    /**
-     * Hồ sơ bệnh nhân của tài khoản, người thân đã lưu, các lịch sắp tới gần nhất tách "của tôi" / "của người khác" và
-     * số lịch mỗi loại. Ném các mã của {@link TaiKhoanService#layBenhNhanDangHoatDong}.
-     */
+    /** Hồ sơ, người thân đã lưu và các lịch sắp tới của tài khoản, tách của tôi và của người khác. */
     TrangCaNhanResponse cuaToi(Long idTaiKhoan);
 
 }

@@ -13,9 +13,7 @@ import iuh.fit.se.eclinic.common.entity.catalog.PhongKham;
 import iuh.fit.se.eclinic.common.entity.scheduling.LichLamViec;
 import iuh.fit.se.eclinic.common.enums.NgonNgu;
 
-/**
- * Chuyển ca làm việc sang DTO xem khung giờ. Họ tên, ảnh đại diện bác sĩ lấy từ tài khoản của bác sĩ.
- */
+/** Chuyển ca làm việc sang DTO xem khung giờ. */
 @Component
 public class CaKhamMapper {
 

@@ -19,10 +19,7 @@ import iuh.fit.se.eclinic.booking.service.TraCuuLichKhamService;
 import iuh.fit.se.eclinic.common.dto.PhanHoiApi;
 import lombok.RequiredArgsConstructor;
 
-/**
- * SCHED-04, BOOK-12: xem khung giờ khám kèm số chỗ còn lại khi đặt lịch. Công khai (app.bao-mat.duong-dan-cong-khai).
- * Lọc theo idBacSi hoặc idChuyenKhoa (mọi bác sĩ của chuyên khoa); ngày theo dạng yyyy-MM-dd.
- */
+/** Xem khung giờ khám kèm số chỗ còn lại khi đặt lịch. */
 @Tag(name = "Khung giờ khám", description = "SCHED-04, BOOK-12: khung giờ 1 tiếng kèm số chỗ còn lại")
 @RestController
 @RequestMapping("/api/booking/khung-gio")

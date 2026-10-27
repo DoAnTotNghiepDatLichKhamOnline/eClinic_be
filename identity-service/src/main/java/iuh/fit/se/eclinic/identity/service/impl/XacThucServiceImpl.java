@@ -55,7 +55,7 @@ public class XacThucServiceImpl implements XacThucService {
             taiKhoan.setNgonNgu(NgonNgu.hienTai());
             ganThongTin(taiKhoan, request, soDienThoai);
             taiKhoan = taiKhoanRepository.save(taiKhoan);
-            // id mới (MySQL không dùng lại id) nên chắc chắn giữ được khoá chờ; vẫn phải gọi để chặn gửi lại ngay
+            // id mới nên chắc chắn giữ được khoá chờ; vẫn phải gọi để chặn gửi lại ngay
             tokenLienKetService.giuCho(taiKhoan.getId(), MucDichLienKet.XAC_THUC_EMAIL,
                     lienKetProperties.thoiGianChoGuiLai());
             log.info("Đăng ký tài khoản mới id={}", taiKhoan.getId());
@@ -63,7 +63,7 @@ public class XacThucServiceImpl implements XacThucService {
             if (taiKhoan.getTrangThai() != TrangThaiTaiKhoan.CHO_XAC_NHAN) {
                 throw new LoiNghiepVu(MaLoi.EMAIL_DA_TON_TAI);
             }
-            // Kiểm tra TRƯỚC khi sửa entity (xem ChuyenKhoaServiceImpl.capNhat) và trước khi giữ khoá chờ
+            // Kiểm tra TRƯỚC khi sửa entity và trước khi giữ khoá chờ
             if (taiKhoanRepository.existsBySoDienThoaiAndIdNot(soDienThoai, taiKhoan.getId())) {
                 throw new LoiNghiepVu(MaLoi.SO_DIEN_THOAI_DA_TON_TAI);
             }
@@ -111,7 +111,7 @@ public class XacThucServiceImpl implements XacThucService {
                 });
     }
 
-    /** Gọi sau khi đã giữ khoá chờ (quy ước của TokenLienKetService). Email đi sau khi transaction commit. */
+    /** Gọi sau khi đã giữ khoá chờ; email đi sau khi transaction commit. */
     private void guiLienKetXacThuc(TaiKhoan taiKhoan) {
         String token = tokenLienKetService.tao(taiKhoan.getId(), MucDichLienKet.XAC_THUC_EMAIL,
                 lienKetProperties.thoiHanXacThucEmail());
@@ -122,7 +122,7 @@ public class XacThucServiceImpl implements XacThucService {
     private void ganThongTin(TaiKhoan taiKhoan, DangKyRequest request, String soDienThoai) {
         taiKhoan.setHoTen(request.hoTen().trim());
         taiKhoan.setSoDienThoai(soDienThoai);
-        // Chỉ lưu lời khai; booking-service liên kết hồ sơ bệnh nhân theo số này khi bệnh nhân đăng nhập (quy tắc #3)
+        // Chỉ lưu lời khai; booking-service liên kết hồ sơ bệnh nhân theo số này khi đăng nhập
         taiKhoan.setCccdDangKy(request.cccd() == null || request.cccd().isBlank() ? null : request.cccd());
         taiKhoan.setMatKhauHash(passwordEncoder.encode(request.matKhau()));
     }

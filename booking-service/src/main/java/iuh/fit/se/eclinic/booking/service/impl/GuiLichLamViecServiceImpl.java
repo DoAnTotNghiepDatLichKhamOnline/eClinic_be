@@ -27,10 +27,7 @@ import iuh.fit.se.eclinic.common.exception.MaLoi;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Chỉ ghi các dòng chờ gửi vào su_kien_thong_bao (cùng transaction); GuiThongBaoJob chuyển sang notification-service,
- * nơi email được soạn theo ngôn ngữ của bác sĩ và gửi (thử lại khi máy chủ mail lỗi).
- */
+/** Chỉ ghi các dòng chờ gửi vào su_kien_thong_bao; GuiThongBaoJob chuyển sang notification-service. */
 @Slf4j
 @Service
 @RequiredArgsConstructor

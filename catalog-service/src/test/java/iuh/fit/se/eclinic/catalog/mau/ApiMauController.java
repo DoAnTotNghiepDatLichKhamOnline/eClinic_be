@@ -18,9 +18,7 @@ import iuh.fit.se.eclinic.common.security.NguoiDungHienTai;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 
-/**
- * Controller mẫu CHỈ có trong test, dùng để kiểm tra khung dùng chung (KhungDungChungTest).
- */
+/** Controller mẫu CHỈ có trong test, dùng để kiểm tra khung dùng chung (KhungDungChungTest). */
 @RestController
 @RequestMapping("/api/mau")
 public class ApiMauController {

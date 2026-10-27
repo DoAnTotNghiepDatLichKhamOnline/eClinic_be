@@ -4,7 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
-/** API nội bộ: catalog-service nhờ sửa họ tên, số điện thoại của tài khoản bác sĩ. Số điện thoại trống = bỏ số. */
+/** API nội bộ: catalog-service nhờ sửa họ tên, số điện thoại của tài khoản bác sĩ (trống = bỏ số). */
 public record SuaThongTinTaiKhoanRequest(
 
         @NotBlank(message = "{kiemTra.hoTen.batBuoc}")

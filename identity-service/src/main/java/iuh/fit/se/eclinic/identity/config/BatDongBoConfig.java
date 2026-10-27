@@ -4,10 +4,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
-/**
- * Bật @Async (gửi email chạy nền, không bắt request chờ SMTP) với executor mặc định applicationTaskExecutor của Boot,
- * và @Scheduled (job dọn phiên hết hạn) với scheduler riêng của Boot (1 thread).
- */
+/** Bật @Async (gửi email chạy nền) và @Scheduled (job dọn phiên hết hạn) với executor / scheduler mặc định của Boot. */
 @Configuration
 @EnableAsync
 @EnableScheduling

@@ -12,17 +12,7 @@ import iuh.fit.se.eclinic.common.entity.medical.HoSoBenhAn;
 import iuh.fit.se.eclinic.common.entity.medical.Thuoc;
 import iuh.fit.se.eclinic.common.enums.TruongBenhAn;
 
-/**
- * Nội dung hồ sơ bệnh án tại 1 thời điểm: lưu thành JSON trong lịch sử sửa (trước / sau khi sửa) và trả nguyên dạng
- * này khi xem lịch sử. Thuốc giữ cả tên, hàm lượng: 2 trường này không đổi được khi thuốc đã được kê. Mã ICD-10 chỉ lưu
- * mã: danh mục nạp sẵn, không đổi tên.
- * <p>
- * Lịch sử ghi trước DOANTOTNGH-11 không có lý do khám, sinh hiệu, khám lâm sàng, mã ICD, chẩn đoán kèm theo, số lượng
- * thuốc: đọc ra là null.
- *
- * @param sinhHieu null nếu chưa đo chỉ số nào
- * @param donThuoc theo thứ tự bác sĩ đã gửi
- */
+/** Nội dung hồ sơ bệnh án tại 1 thời điểm, lưu thành JSON trong lịch sử sửa. */
 public record NoiDungBenhAn(String lyDoKham, BenhAnResponse.SinhHieu sinhHieu, String khamLamSang, String chanDoan,
         String maIcdChinh, String chanDoanKemTheo, String ghiChu, LocalDate ngayTaiKhamDeXuat,
         List<DongThuoc> donThuoc) {
@@ -46,10 +36,7 @@ public record NoiDungBenhAn(String lyDoKham, BenhAnResponse.SinhHieu sinhHieu, S
                         .toList()));
     }
 
-    /**
-     * Các phần khác nhau giữa 2 nội dung, theo thứ tự trên hồ sơ. Chẩn đoán đổi khi đổi chữ hoặc mã ICD-10. Đơn thuốc so
-     * theo từng thuốc (mỗi thuốc 1 dòng): chỉ đổi thứ tự các dòng thì không tính là đổi.
-     */
+    /** Các phần khác nhau giữa 2 nội dung, theo thứ tự trên hồ sơ. */
     public static List<TruongBenhAn> cacTruongDoi(NoiDungBenhAn truoc, NoiDungBenhAn sau) {
         List<TruongBenhAn> doi = new ArrayList<>();
         if (!Objects.equals(truoc.lyDoKham(), sau.lyDoKham())) {

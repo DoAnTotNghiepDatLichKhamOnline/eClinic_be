@@ -4,14 +4,7 @@ import org.hibernate.validator.constraints.Range;
 
 import jakarta.validation.constraints.NotNull;
 
-/**
- * Quản trị viên lưu quy tắc đặt lịch / xếp ca. Gửi đủ 10 giá trị (form đọc từ GET rồi gửi lại cả form). Ý nghĩa từng
- * trường: xem {@code CauHinhHienTai}. Thêm ràng buộc: {@code soLichHieuLucToiDaMoiSoDienThoai} không nhỏ hơn
- * {@code soLichHieuLucToiDaMoiHoSo}.
- *
- * @param phienBan phiên bản đã tải ({@code phienBan} của GET); quản trị viên khác đã lưu trước thì 409
- *                 DU_LIEU_DA_THAY_DOI
- */
+/** Quản trị viên lưu quy tắc đặt lịch / xếp ca. */
 public record CapNhatCauHinhRequest(
         @NotNull @Range(min = 0, max = 1440, message = "{kiemTra.cauHinh.datTruocToiThieuPhut}")
         Integer datTruocToiThieuPhut,

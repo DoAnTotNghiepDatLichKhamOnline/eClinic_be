@@ -1,10 +1,6 @@
 package iuh.fit.se.eclinic.catalog.dto.request;
 
-/**
- * Giới hạn dùng chung của hồ sơ giới thiệu bác sĩ, cho cả bản quản trị viên sửa ({@link CapNhatHoSoBacSiRequest}) và
- * bản bác sĩ tự sửa ({@link CapNhatHoSoCuaToiRequest}): các mục dạng danh sách (mỗi phần tử 1 ý, không xuống dòng) và
- * ngôn ngữ khám (mã ISO 639).
- */
+/** Giới hạn dùng chung của hồ sơ giới thiệu bác sĩ, cho cả bản quản trị viên sửa và bản bác sĩ tự sửa. */
 final class GioiHanHoSoBacSi {
 
     static final int SO_Y_TOI_DA = 20;

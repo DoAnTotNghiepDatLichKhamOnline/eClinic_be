@@ -11,13 +11,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * Bệnh nhân đã được báo ngày tái khám nào của 1 hồ sơ bệnh án (không có trong ERD; V21). Mỗi hồ sơ bệnh án 1 dòng
- * (UNIQUE), ghi cùng transaction với thông báo / email chờ gửi. Job nhắc tái khám so dòng này với
- * {@code ho_so_benh_an.ngay_tai_kham_de_xuat} để biết bác sĩ vừa hẹn, đổi hay xoá ngày tái khám.
- * <p>
- * {@code idHoSoBenhAn} là số thường (DB có khoá ngoại): bảng của booking-service, hồ sơ bệnh án của medical-service.
- */
+/** Ngày tái khám đã báo cho bệnh nhân của 1 hồ sơ bệnh án. */
 @Getter
 @Setter
 @NoArgsConstructor
@@ -33,7 +27,7 @@ public class NhacTaiKham extends CreatableEntity {
     @Column(name = "ngay_da_bao")
     private LocalDate ngayDaBao;
 
-    /** Lần nhắc trước {@code ngayDaBao} đã được xử lý: đã nhắc, hoặc bỏ qua (xem {@code NhacTaiKhamService}). */
+    /** Lần nhắc trước {@code ngayDaBao} đã được xử lý: đã nhắc, hoặc bỏ qua. */
     @Column(name = "da_nhac_truoc", nullable = false)
     private boolean daNhacTruoc;
 

@@ -15,12 +15,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * Đánh giá của bệnh nhân cho 1 lượt khám đã hoàn thành: mỗi lịch hẹn tối đa 1 đánh giá.
- * <p>
- * {@code bacSi} lặp lại từ lịch hẹn để tính điểm trung bình của bác sĩ không phải join. Nhận xét chỉ bác sĩ và quản trị
- * viên đọc; công khai chỉ có điểm trung bình và số lượt đánh giá.
- */
+/** Đánh giá của bệnh nhân cho 1 lượt khám đã hoàn thành: mỗi lịch hẹn tối đa 1 đánh giá. */
 @Getter
 @Setter
 @NoArgsConstructor

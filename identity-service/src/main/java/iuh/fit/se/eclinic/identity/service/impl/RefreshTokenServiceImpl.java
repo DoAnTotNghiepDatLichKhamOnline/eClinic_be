@@ -22,7 +22,7 @@ import lombok.RequiredArgsConstructor;
 @Transactional(readOnly = true)
 public class RefreshTokenServiceImpl implements RefreshTokenService {
 
-    /** Độ dài cột thong_tin_thiet_bi (V1). */
+    /** Độ dài cột thong_tin_thiet_bi. */
     private static final int DO_DAI_THIET_BI_TOI_DA = 255;
 
     private final RefreshTokenRepository refreshTokenRepository;

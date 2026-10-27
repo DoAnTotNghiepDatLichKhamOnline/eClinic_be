@@ -4,12 +4,7 @@ import java.time.LocalDate;
 
 import iuh.fit.se.eclinic.common.enums.GioiTinh;
 
-/**
- * Sổ khám bệnh đầy đủ, sau khi nhập đúng 4 số cuối SĐT liên hệ (EXAM-03). Không có id lịch hẹn, id hồ sơ; CCCD vẫn che.
- *
- * @param hoTenNguoiGiamHo null nếu lượt khám không có người giám hộ
- * @param ketQua           kết quả khám như bệnh nhân xem trong lịch sử khám
- */
+/** Sổ khám bệnh đầy đủ, sau khi nhập đúng 4 số cuối SĐT liên hệ. */
 public record SoKhamResponse(SoKhamTomTatResponse tomTat, BenhNhan benhNhan, String hoTenNguoiGiamHo,
         KetQuaKhamResponse ketQua) {
 

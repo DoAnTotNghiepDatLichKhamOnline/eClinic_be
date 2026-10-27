@@ -23,14 +23,7 @@ import iuh.fit.se.eclinic.common.entity.medical.HoSoBenhAn;
 import iuh.fit.se.eclinic.common.enums.TrangThaiLichHen;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Không đặt {@code @Transactional} ở lớp: mỗi hồ sơ bệnh án 1 transaction riêng ({@link TransactionTemplate}), hồ sơ này
- * lỗi không làm mất phần của hồ sơ khác. Trong transaction đó: khoá dòng nhac_tai_kham (chưa có thì UNIQUE làm
- * transaction đến sau rollback), đọc lại hồ sơ bệnh án, ghi ngày đã báo cùng các dòng thông báo / email chờ gửi.
- * <p>
- * Chỉ ĐỌC ho_so_benh_an và lich_hen: bác sĩ sửa hồ sơ bệnh án không bao giờ đụng job này. Bác sĩ đổi ngày đúng lúc job
- * đang chạy thì lần chạy sau thấy ngày khác ngày đã báo và báo lại.
- */
+/** Không đặt {@code @Transactional} ở lớp: mỗi hồ sơ bệnh án 1 transaction riêng. */
 @Slf4j
 @Service
 public class NhacTaiKhamServiceImpl implements NhacTaiKhamService {

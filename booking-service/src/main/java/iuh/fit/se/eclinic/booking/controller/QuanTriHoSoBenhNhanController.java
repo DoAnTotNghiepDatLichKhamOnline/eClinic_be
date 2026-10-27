@@ -30,15 +30,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 
-/**
- * Quy tắc #3: quản trị viên xác minh hồ sơ bệnh nhân mà tài khoản khai đúng số CCCD nhưng thông tin không khớp. Duyệt
- * thì tài khoản xem được hồ sơ và lịch hẹn của hồ sơ; từ chối thì hồ sơ trở lại chưa liên kết.
- * <p>
- * Quản trị viên cũng xem / sửa hồ sơ bệnh nhân sau khi đối chiếu giấy tờ: việc đặt lịch không sửa hồ sơ đã có, nên hồ
- * sơ chưa liên kết tài khoản chỉ sửa được ở đây.
- * <p>
- * Màn hình Patient Management: danh sách / tìm kiếm hồ sơ (số CCCD đã che) và lịch hẹn của từng hồ sơ.
- */
+/** Quản trị viên xác minh hồ sơ khai đúng CCCD nhưng thông tin không khớp. */
 @Tag(name = "Quản trị hồ sơ bệnh nhân", description = "Xác minh liên kết hồ sơ với tài khoản, xem / sửa hồ sơ bệnh nhân (quản trị viên)")
 @RestController
 @RequestMapping("/api/booking/quan-tri/ho-so-benh-nhan")

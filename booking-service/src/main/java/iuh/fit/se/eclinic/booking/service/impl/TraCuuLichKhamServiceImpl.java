@@ -182,11 +182,7 @@ public class TraCuuLichKhamServiceImpl implements TraCuuLichKhamService {
         return ketQua;
     }
 
-    /**
-     * Gom các lượt khám của ca (đã sắp theo giờ bắt đầu) thành khung 1 giờ. Lượt bắt đầu trước {@code moc} không
-     * còn kịp đặt: vẫn tính vào tổng số chỗ của khung nhưng không tính là chỗ trống. Khung không còn lượt nào
-     * kịp đặt thì bỏ.
-     */
+    /** Gom các lượt khám của ca (đã sắp theo giờ bắt đầu) thành khung 1 giờ. */
     private List<KhungGioResponse> chiaKhung(LichLamViec ca, List<KhungGioKham> cacLuot, LocalDateTime moc) {
         Map<LocalTime, DemCho> demTheoKhung = new LinkedHashMap<>();
         for (KhungGioKham luot : cacLuot) {

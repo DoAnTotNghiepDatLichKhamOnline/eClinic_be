@@ -44,10 +44,7 @@ import iuh.fit.se.eclinic.report.service.KhoangBaoCao;
 import iuh.fit.se.eclinic.report.service.ThongKeService;
 import lombok.RequiredArgsConstructor;
 
-/**
- * Vài truy vấn gom nhóm (theo bác sĩ x trạng thái, theo ngày x trạng thái...), rồi cộng lên chuyên khoa / toàn viện ở
- * đây. Riêng số bệnh nhân duy nhất không cộng được nên đếm riêng cho từng cấp.
- */
+/** Vài truy vấn gom nhóm theo bác sĩ, ngày và trạng thái, rồi cộng lên chuyên khoa, toàn viện. */
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)

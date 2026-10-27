@@ -18,14 +18,7 @@ import iuh.fit.se.eclinic.identity.dto.response.PhienDangNhapResponse;
 import iuh.fit.se.eclinic.identity.service.PhienDangNhapService;
 import lombok.RequiredArgsConstructor;
 
-/**
- * Các thiết bị đang đăng nhập của người gọi: xem danh sách, đăng xuất 1 thiết bị, đăng xuất mọi thiết bị khác.
- * Mọi vai trò đều gọi được. Thiết bị đang dùng được nhận ra qua claim "phien" của access token (refresh token chỉ đi
- * tới /api/auth nên không dùng được ở đây).
- * <p>
- * Thiết bị bị đăng xuất không làm mới phiên được nữa, nhưng access token nó đang giữ còn dùng được tới khi hết hạn
- * (tối đa 30 phút).
- */
+/** Các thiết bị đang đăng nhập của người gọi: xem, đăng xuất 1 thiết bị, đăng xuất mọi thiết bị khác. */
 @Tag(name = "Phiên đăng nhập", description = "Xem và đăng xuất các thiết bị đang đăng nhập của người đang đăng nhập")
 @RestController
 @RequestMapping("/api/users/me/sessions")

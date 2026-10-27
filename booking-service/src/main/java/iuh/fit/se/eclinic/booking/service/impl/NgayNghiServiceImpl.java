@@ -94,8 +94,7 @@ public class NgayNghiServiceImpl implements NgayNghiService {
             throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE, "loi.DU_LIEU_KHONG_HOP_LE.ngayNghiTuNgayMai");
         }
         KhoangNgay.kiemTra(request.tuNgay(), request.denNgay());
-        // Khoá ghi của khoá xếp ca (QuanLyCaService#giuKhoaXepCa), trước mọi khoá khác: không ca nào được tạo xen vào
-        // giữa lúc quét ca của ngày nghỉ và lúc commit. Dòng cấu hình phải có rồi mới khoá được.
+        // Giữ khoá ghi xếp ca trước mọi khoá khác để không ca nào được tạo xen vào lúc quét ngày nghỉ
         cauHinhService.hienTai();
         cauHinhHeThongRepository.findByIdForUpdate(CauHinhHeThong.ID)
                 .orElseThrow(() -> new IllegalStateException("Không có dòng cau_hinh_he_thong"));
@@ -127,8 +126,7 @@ public class NgayNghiServiceImpl implements NgayNghiService {
         List<CaBiHuy> caBiHuy = new ArrayList<>();
         Map<Long, List<LichLamViec>> caTheoBacSi = new LinkedHashMap<>();
         int soLichHenCanDoi = 0;
-        // Khoá từng ca theo id (như duyệt nhóm xin nghỉ). Không dùng khoaCaConSuaDuoc: lỗi ném qua bean @Transactional
-        // khác làm cả transaction rollback-only, nên ca vừa bị hủy ở request khác phải được bỏ qua bằng kiểm tra ở đây.
+        // Khoá từng ca theo id; ca vừa bị hủy ở request khác được bỏ qua thay vì ném lỗi
         for (Long idCa : lichLamViecRepository
                 .timIdCaHoatDongTrongCacNgay(ngayMoi.stream().map(NgayNghiBenhVien::getNgay).toList())) {
             LichLamViec ca = lichLamViecRepository.findByIdForUpdate(idCa).orElse(null);

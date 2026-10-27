@@ -24,10 +24,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 
-/**
- * SCHED-03: quản trị viên xem và xử lý yêu cầu đổi ca / xin nghỉ của bác sĩ. Duyệt thì lịch làm việc đổi theo trong cùng
- * 1 transaction (xem {@link YeuCauDoiLichService#duyet}).
- */
+/** Quản trị viên xem và xử lý yêu cầu đổi ca, xin nghỉ của bác sĩ. */
 @Tag(name = "Quản trị yêu cầu đổi lịch", description = "SCHED-03: duyệt / từ chối yêu cầu đổi ca, xin nghỉ")
 @RestController
 @RequestMapping("/api/booking/quan-tri/yeu-cau-doi-lich")

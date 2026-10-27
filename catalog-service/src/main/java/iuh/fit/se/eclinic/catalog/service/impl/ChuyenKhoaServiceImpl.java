@@ -82,8 +82,7 @@ public class ChuyenKhoaServiceImpl implements ChuyenKhoaService {
     @CacheEvict(cacheNames = {CacheConfig.CHUYEN_KHOA, CacheConfig.CHUYEN_KHOA_CHI_TIET}, allEntries = true)
     public ChuyenKhoaQuanTriResponse capNhat(Long id, ChuyenKhoaRequest request) {
         ChuyenKhoa chuyenKhoa = timEntity(id);
-        // Kiểm tra TRƯỚC khi sửa entity: entity đang được quản lý, query sau khi sửa sẽ làm Hibernate
-        // flush UPDATE trước và lỗi unique key của DB bật ra trước khi kịp kiểm tra.
+        // Kiểm tra trước khi sửa entity, nếu không Hibernate flush UPDATE và lỗi unique key bật ra trước
         if (chuyenKhoaRepository.existsByTenChuyenKhoaAndIdNot(request.tenChuyenKhoa().trim(), id)) {
             throw new LoiNghiepVu(MaLoi.TEN_CHUYEN_KHOA_DA_TON_TAI);
         }

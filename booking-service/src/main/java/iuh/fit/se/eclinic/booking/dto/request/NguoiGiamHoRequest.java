@@ -9,10 +9,7 @@ import jakarta.validation.constraints.Past;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
-/**
- * Thông tin người giám hộ, bắt buộc khi người khám dưới 18 tuổi (BOOK-11). Ngày sinh không bắt buộc (form đặt lịch
- * không có ô này); có gửi thì người giám hộ phải từ đủ 18 tuổi tính theo ngày khám.
- */
+/** Thông tin người giám hộ, bắt buộc khi người khám dưới 18 tuổi. */
 public record NguoiGiamHoRequest(
         @NotBlank(message = "{kiemTra.hoTenGiamHo.batBuoc}")
         @Size(max = 150, message = "{kiemTra.hoTenGiamHo.toiDa}")

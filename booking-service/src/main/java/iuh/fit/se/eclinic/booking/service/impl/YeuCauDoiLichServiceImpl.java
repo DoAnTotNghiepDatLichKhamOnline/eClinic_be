@@ -58,11 +58,7 @@ import iuh.fit.se.eclinic.common.thongbao.VanBanHeThong;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Thứ tự khoá khi duyệt / từ chối / bác sĩ nhận đồng ý: dòng ca trước, dòng yêu cầu sau (giống hủy ca trực tiếp, nơi ca
- * được khoá rồi yêu cầu đang chờ của ca mới bị đóng). Cả nhóm: mọi ca theo id tăng dần, rồi mọi yêu cầu cùng thứ tự đó.
- * Bác sĩ rút yêu cầu, bác sĩ nhận từ chối chỉ khoá dòng yêu cầu.
- */
+/** Thứ tự khoá khi duyệt, từ chối, đồng ý: dòng ca trước, dòng yêu cầu sau, như hủy ca trực tiếp. */
 @Slf4j
 @Service
 @RequiredArgsConstructor

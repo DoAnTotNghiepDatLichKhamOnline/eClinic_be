@@ -19,9 +19,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * Phòng khám (ERD: PhongKham): thuộc 1 chuyên khoa. Bỏ {@code idCoSo} vì chỉ có 1 bệnh viện (Q4).
- */
+/** Phòng khám, thuộc 1 chuyên khoa. */
 @Getter
 @Setter
 @NoArgsConstructor
@@ -52,7 +50,7 @@ public class PhongKham extends BaseEntity {
     @Column(name = "trang_thai", nullable = false, length = 20)
     private TrangThaiPhongKham trangThai = TrangThaiPhongKham.HOAT_DONG;
 
-    // Chữ theo ngôn ngữ: bản tiếng Anh nếu được yêu cầu và đã nhập, không thì bản tiếng Việt (NgonNgu.chon).
+    // Chữ theo ngôn ngữ: bản tiếng Anh nếu có, không thì tiếng Việt
     public String ten(NgonNgu ngonNgu) {
         return ngonNgu.chon(tenPhong, tenPhongEn);
     }

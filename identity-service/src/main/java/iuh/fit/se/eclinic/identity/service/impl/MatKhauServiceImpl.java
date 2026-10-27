@@ -34,10 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 public class MatKhauServiceImpl implements MatKhauService {
 
     private static final int SO_BYTE_MAT_KHAU_TOI_DA = 72;
-    /**
-     * Định danh bộ đếm sai mật khẩu hiện tại (xem GioiHanDangNhapService): theo tài khoản, tách khỏi bộ đếm đăng nhập.
-     * Đổi mật khẩu và đổi email dùng chung bộ đếm này.
-     */
+    /** Định danh bộ đếm sai mật khẩu hiện tại: theo tài khoản, tách khỏi bộ đếm đăng nhập. */
     private static final String KHOA_DEM_MAT_KHAU_HIEN_TAI = "doi-mat-khau:";
 
     private final TaiKhoanRepository taiKhoanRepository;
@@ -59,7 +56,7 @@ public class MatKhauServiceImpl implements MatKhauService {
                 .filter(tk -> tokenLienKetService.giuCho(tk.getId(), MucDichLienKet.DAT_LAI_MAT_KHAU,
                         lienKetProperties.thoiGianChoGuiLai()))
                 .ifPresent(tk -> {
-                    // Sau khi giữ được khoá chờ (quy ước của TokenLienKetService); liên kết cũ hết hiệu lực
+                    // Sau khi giữ được khoá chờ; liên kết cũ hết hiệu lực
                     String token = tokenLienKetService.tao(tk.getId(), MucDichLienKet.DAT_LAI_MAT_KHAU,
                             lienKetProperties.thoiHanDatLaiMatKhau());
                     eventPublisher.publishEvent(new EmailDatLaiMatKhauEvent(tk.getEmail(), tk.getHoTen(), token,
@@ -113,7 +110,7 @@ public class MatKhauServiceImpl implements MatKhauService {
         // UPDATE thu hồi flush trước rồi mới clear persistence context, nên mật khẩu mới không bị mất
         int soPhien = refreshTokenService.thuHoiCacPhienKhac(idTaiKhoan, maPhienHienTai);
         gioiHanDangNhapService.xoa(taiKhoan.getEmail());
-        // Người vừa đổi mật khẩu vì nhận thông báo "có yêu cầu đổi email": liên kết đổi email phải chết theo
+        // Đổi mật khẩu vì nhận thông báo "có yêu cầu đổi email": liên kết đổi email phải chết theo
         tokenLienKetService.huy(idTaiKhoan, MucDichLienKet.DOI_EMAIL);
         eventPublisher.publishEvent(new EmailDoiMatKhauEvent(taiKhoan.getEmail(), taiKhoan.getHoTen(),
                 taiKhoan.getNgonNgu()));
@@ -143,7 +140,7 @@ public class MatKhauServiceImpl implements MatKhauService {
         gioiHanDangNhapService.xoa(khoaDem);
     }
 
-    /** Cùng quy tắc 72 byte với đăng nhập (xem DangNhapServiceImpl): BCrypt bỏ qua phần sau byte 72. */
+    /** Cùng quy tắc 72 byte với đăng nhập: BCrypt bỏ qua phần sau byte 72. */
     private boolean khopMatKhau(String matKhau, String hash) {
         return matKhau.getBytes(StandardCharsets.UTF_8).length <= SO_BYTE_MAT_KHAU_TOI_DA
                 && passwordEncoder.matches(matKhau, hash);

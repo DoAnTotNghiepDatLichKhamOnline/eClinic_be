@@ -16,12 +16,7 @@ import jakarta.persistence.LockModeType;
 
 public interface ThuocRepository extends JpaRepository<Thuoc, Long> {
 
-    /**
-     * Gợi ý khi bác sĩ gõ: chỉ thuốc kê được (đang dùng, đã xác minh), khớp tên đã chuẩn hoá hoặc hoạt chất (collation
-     * của DB không phân biệt hoa thường, dấu), theo tên rồi hàm lượng.
-     *
-     * @param mau mẫu LIKE (escape '!')
-     */
+    /** Gợi ý khi bác sĩ gõ: chỉ thuốc đang dùng và đã xác minh, khớp tên hoặc hoạt chất. */
     @Query("""
             select t from Thuoc t
             where t.trangThai = iuh.fit.se.eclinic.common.enums.TrangThaiThuoc.DANG_DUNG
@@ -40,13 +35,7 @@ public interface ThuocRepository extends JpaRepository<Thuoc, Long> {
     @Query("select t from Thuoc t where t.id = :id")
     Optional<Thuoc> findByIdForUpdate(Long id);
 
-    /**
-     * Danh mục thuốc của quản trị viên: thuốc chưa xác minh trước, rồi theo tên, hàm lượng; kèm bác sĩ đã thêm (nếu có).
-     *
-     * @param mau       mẫu LIKE (escape '!') so với tên đã chuẩn hoá hoặc hoạt chất; null = không lọc
-     * @param daXacMinh null = cả hai
-     * @param trangThai null = mọi trạng thái
-     */
+    /** Danh mục thuốc của quản trị viên: thuốc chưa xác minh trước, rồi theo tên, hàm lượng. */
     @Query(value = """
             select t from Thuoc t
               left join fetch t.bacSiTao b

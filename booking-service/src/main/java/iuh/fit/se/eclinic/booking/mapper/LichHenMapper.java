@@ -30,9 +30,7 @@ import iuh.fit.se.eclinic.common.enums.TrangThaiLichHen;
 import iuh.fit.se.eclinic.common.util.ChiaCaLamViec;
 import lombok.RequiredArgsConstructor;
 
-/**
- * Chuyển lịch hẹn sang DTO. Gọi trong transaction: bác sĩ, phòng khám, hồ sơ, người giám hộ là quan hệ lazy.
- */
+/** Chuyển lịch hẹn sang DTO. */
 @Component
 @RequiredArgsConstructor
 public class LichHenMapper {
@@ -41,11 +39,7 @@ public class LichHenMapper {
     private final PhieuKhamProperties phieuKhamProperties;
     private final CauHinhService cauHinhService;
 
-    /**
-     * Hạn chót bệnh nhân hủy / đổi lịch trên hệ thống: giờ khám trừ cấu hình {@code huyDoiTruocToiThieuPhut}. Lịch
-     * hẹn đang chờ đổi vì ca khám bị hủy ({@code canDoiLich}) hoặc của ca vừa được nhường cho bác sĩ khác
-     * ({@code doiBacSi}) thì được hủy / đổi tới đúng giờ khám.
-     */
+    /** Hạn chót bệnh nhân hủy / đổi lịch trên hệ thống: giờ khám trừ cấu hình {@code huyDoiTruocToiThieuPhut}. */
     public LocalDateTime hanHuyDoi(LichHen lichHen) {
         LocalDateTime gioKham = lichHen.getKhungGio().getGioBatDau();
         return lichHen.isCanDoiLich() || lichHen.isDoiBacSi() ? gioKham
@@ -59,11 +53,6 @@ public class LichHenMapper {
                 && LocalDateTime.now().isBefore(hanHuyDoi(lichHen));
     }
 
-    /**
-     * @param gioBatDauKhung  khung 1 giờ chứa lượt khám của lịch hẹn
-     * @param gioKetThucKhung giờ kết thúc khung đó
-     * @param bacSiDoPhongKhamXep true nếu người đặt chọn "bác sĩ bất kỳ"
-     */
     public DatLichResponse toDatLichResponse(LichHen lichHen, LocalDateTime gioBatDauKhung,
             LocalDateTime gioKetThucKhung, boolean bacSiDoPhongKhamXep) {
         LocalDateTime gioKhamDuKien = lichHen.getKhungGio().getGioBatDau();
@@ -75,13 +64,7 @@ public class LichHenMapper {
                 hoTenGiamHoDaNhap(lichHen), lichHen.getTaiKhoanDat() != null, bacSiDoPhongKhamXep);
     }
 
-    /**
-     * 1 dòng "lịch hẹn của tôi". Khung 1 giờ tính lại từ ca của lượt khám. Lịch của chính chủ tài khoản hiện họ tên
-     * trong hồ sơ của họ (người xem là chủ hồ sơ); lịch của người khác hiện họ tên người đặt đã nhập.
-     *
-     * @param idHoSoCuaToi id hồ sơ bệnh nhân đã liên kết của tài khoản đang xem; null nếu tài khoản chưa có hồ sơ
-     * @param idTaiKhoan   tài khoản đang xem
-     */
+    /** 1 dòng "lịch hẹn của tôi". */
     public LichHenCuaToiResponse toLichHenCuaToi(LichHen lichHen, Long idHoSoCuaToi, Long idTaiKhoan) {
         LocalDateTime gioKhamDuKien = lichHen.getKhungGio().getGioBatDau();
         LocalDate ngay = gioKhamDuKien.toLocalDate();
@@ -105,13 +88,7 @@ public class LichHenMapper {
                 canDoiLich(lichHen), daDoiBacSi(lichHen));
     }
 
-    /**
-     * Chi tiết 1 lịch hẹn cho tài khoản được xem lịch đó. Ngày sinh, giới tính theo cùng quy ước với họ tên của
-     * {@link #toLichHenCuaToi}. SĐT, email liên hệ là thứ người đặt nhập nên chỉ trả khi chính tài khoản này đặt.
-     *
-     * @param dong   dòng danh sách của lịch hẹn này (từ {@link #toLichHenCuaToi})
-     * @param ketQua kết quả khám nếu tài khoản được xem, không thì null
-     */
+    /** Chi tiết 1 lịch hẹn cho tài khoản được xem lịch đó. */
     public LichHenChiTietCuaToiResponse toChiTietCuaToi(LichHen lichHen, LichHenCuaToiResponse dong,
             KetQuaKhamResponse ketQua, boolean duocDanhGia, DanhGiaCuaToiResponse danhGia) {
         HoSoBenhNhan hoSo = lichHen.getHoSoBenhNhan();
@@ -132,11 +109,7 @@ public class LichHenMapper {
         return taiKhoanDat.getId().equals(idTaiKhoan) ? NguoiDatLich.TOI : NguoiDatLich.TAI_KHOAN_KHAC;
     }
 
-    /**
-     * Phiếu khám công khai: CCCD, SĐT đã che. Khung 1 giờ tính lại từ ca của lượt khám. SĐT của bệnh nhân là SĐT liên hệ
-     * của lượt khám; khi có người giám hộ thì SĐT đó là của người giám hộ nên chỉ hiện ở phần người giám hộ. Họ tên, năm
-     * sinh, giới tính và người giám hộ là những gì người đặt đã nhập, không phải dữ liệu của hồ sơ.
-     */
+    /** Phiếu khám công khai: CCCD, SĐT đã che. */
     public PhieuKhamResponse toPhieuKhamResponse(LichHen lichHen) {
         LocalDateTime gioKhamDuKien = lichHen.getKhungGio().getGioBatDau();
         LocalDate ngay = gioKhamDuKien.toLocalDate();
@@ -164,10 +137,7 @@ public class LichHenMapper {
                 canDoiLich(lichHen), daDoiBacSi(lichHen));
     }
 
-    /**
-     * Giờ bắt đầu khung 1 giờ chứa lượt khám của lịch hẹn. Lượt nằm ngoài giờ của ca (lịch hẹn đã hủy / bị từ chối /
-     * đã khám, sau đó quản trị viên sửa giờ ca) thì lấy chính giờ của lượt, không tính theo ca.
-     */
+    /** Giờ bắt đầu khung 1 giờ chứa lượt khám của lịch hẹn. */
     private static LocalTime gioBatDauKhung(LichHen lichHen) {
         LichLamViec ca = lichHen.getKhungGio().getLichLamViec();
         LocalTime gioLuot = lichHen.getKhungGio().getGioBatDau().toLocalTime();
@@ -177,7 +147,7 @@ public class LichHenMapper {
         return ChiaCaLamViec.gioBatDauKhung(ca.getGioBatDau(), gioLuot);
     }
 
-    /** Giờ kết thúc khung ứng với {@link #gioBatDauKhung(LichHen)}; lượt nằm ngoài giờ của ca thì là giờ kết thúc lượt. */
+    /** Giờ kết thúc khung ứng với {@link #gioBatDauKhung(LichHen)}. */
     private static LocalTime gioKetThucKhung(LichHen lichHen, LocalTime gioBatDauKhung) {
         LichLamViec ca = lichHen.getKhungGio().getLichLamViec();
         LocalTime gioLuot = lichHen.getKhungGio().getGioBatDau().toLocalTime();
@@ -187,12 +157,7 @@ public class LichHenMapper {
         return ChiaCaLamViec.gioKetThucKhung(gioBatDauKhung, ca.getGioKetThuc());
     }
 
-    /**
-     * 1 dòng lịch hẹn cho bác sĩ / quản trị viên: SĐT không che, không có mã phiếu khám và CCCD. {@code benhNhan},
-     * {@code nguoiGiamHo} là dữ liệu đang lưu; {@code doiChieu} là những gì người đặt nhập cho lượt khám này.
-     *
-     * @param kemBacSi false ở danh sách của chính bác sĩ (trường {@code bacSi} để null)
-     */
+    /** 1 dòng lịch hẹn cho bác sĩ / quản trị viên: SĐT không che, không có mã phiếu khám và CCCD. */
     public LichHenTrongCaResponse toTrongCaResponse(LichHen lichHen, boolean kemBacSi) {
         LocalDateTime gioKhamDuKien = lichHen.getKhungGio().getGioBatDau();
         LocalDate ngay = gioKhamDuKien.toLocalDate();
@@ -231,7 +196,7 @@ public class LichHenMapper {
         return lichHen.isDoiBacSi() && lichHen.getTrangThai().chiemKhungGio();
     }
 
-    /** SĐT liên hệ của lượt khám có người giám hộ là SĐT người giám hộ vừa nhập; lịch hẹn cũ chưa có thì lấy dòng đã lưu. */
+    /** SĐT liên hệ là SĐT người giám hộ vừa nhập; lịch hẹn cũ chưa có thì lấy dòng đã lưu. */
     private static NguoiGiamHoPhieuKhamResponse toNguoiGiamHoPhieuKham(LichHen lichHen, NguoiGiamHo nguoiGiamHo) {
         String soDienThoai = lichHen.getSoDienThoaiLienHe() != null ? lichHen.getSoDienThoaiLienHe()
                 : nguoiGiamHo.getSoDienThoai();
@@ -244,7 +209,7 @@ public class LichHenMapper {
         return lichHen.getHoTenDaNhap() != null ? lichHen.getHoTenDaNhap() : lichHen.getHoSoBenhNhan().getHoTen();
     }
 
-    /** Họ tên người giám hộ như người đặt đã nhập (null nếu lượt khám không có người giám hộ), cùng quy ước như trên. */
+    /** Họ tên người giám hộ như người đặt đã nhập; null nếu không có người giám hộ. */
     static String hoTenGiamHoDaNhap(LichHen lichHen) {
         NguoiGiamHo nguoiGiamHo = lichHen.getNguoiGiamHo();
         if (nguoiGiamHo == null) {

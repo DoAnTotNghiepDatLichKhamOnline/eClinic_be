@@ -25,13 +25,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * Hồ sơ bệnh án của 1 lượt khám (ERD: HoSoBenhAn): 1-1 với lịch hẹn (quy tắc #7), kèm đơn thuốc.
- * {@code maTokenSoKham} là token của link/QR Sổ khám bệnh (EXAM-03, quy tắc #8).
- * <p>
- * DOANTOTNGH-11 thêm lý do khám, sinh hiệu, khám lâm sàng, mã ICD-10 của chẩn đoán chính và chẩn đoán kèm theo: đều không
- * bắt buộc, hồ sơ cũ để trống.
- */
+/** Hồ sơ bệnh án của 1 lượt khám: 1-1 với lịch hẹn, kèm đơn thuốc. */
 @Getter
 @Setter
 @NoArgsConstructor
@@ -56,7 +50,7 @@ public class HoSoBenhAn extends CreatableEntity {
     @Column(name = "ly_do_kham", columnDefinition = "TEXT")
     private String lyDoKham;
 
-    // Sinh hiệu: mạch, nhịp thở lần/phút; nhiệt độ °C; huyết áp mmHg (có cả 2 số hoặc không số nào); cân nặng kg; chiều cao cm
+    // Sinh hiệu: mạch, nhịp thở (lần/phút), nhiệt độ (°C), huyết áp (mmHg), cân nặng (kg), chiều cao (cm)
     @Column(name = "mach")
     private Integer mach;
 

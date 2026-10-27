@@ -7,9 +7,7 @@ import org.springframework.data.repository.Repository;
 
 import iuh.fit.se.eclinic.common.entity.booking.LichSuCauHinh;
 
-/**
- * Lịch sử sửa cấu hình. Chỉ thêm và đọc: kế thừa {@link Repository} nên không có update / delete.
- */
+/** Lịch sử sửa cấu hình. */
 public interface LichSuCauHinhRepository extends Repository<LichSuCauHinh, Long> {
 
     LichSuCauHinh save(LichSuCauHinh lichSu);

@@ -8,11 +8,7 @@ import iuh.fit.se.eclinic.booking.service.NguoiThanDaLuuService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Lưu người thân sau khi lịch hẹn đã commit. Chạy đồng bộ (lần xem "thông tin đã lưu" ngay sau đó thấy luôn) trong
- * transaction riêng của {@link NguoiThanDaLuuService#ghiNho}. Mọi lỗi chỉ ghi log: lịch hẹn đã đặt xong, việc không
- * lưu được người thân không được làm request đặt lịch báo lỗi.
- */
+/** Lưu người thân sau khi lịch hẹn đã commit. */
 @Slf4j
 @Component
 @RequiredArgsConstructor

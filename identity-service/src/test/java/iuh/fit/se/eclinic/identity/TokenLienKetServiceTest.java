@@ -22,10 +22,7 @@ import iuh.fit.se.eclinic.identity.enums.MucDichLienKet;
 import iuh.fit.se.eclinic.identity.service.TokenLienKetService;
 import iuh.fit.se.eclinic.identity.service.TokenLienKetService.LienKetDaDung;
 
-/**
- * Token liên kết trên Redis thật. Context load thành công cũng có nghĩa là Flyway chạy được V1__init_schema.sql
- * và Hibernate validate khớp mọi entity.
- */
+/** Token liên kết trên Redis thật. */
 @SpringBootTest
 @Import({ MySqlTestcontainersConfiguration.class, RedisTestcontainersConfiguration.class })
 class TokenLienKetServiceTest {

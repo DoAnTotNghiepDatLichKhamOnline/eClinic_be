@@ -32,18 +32,13 @@ import iuh.fit.se.eclinic.identity.repository.TaiKhoanRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
 
-/**
- * Khởi động identity-service với app.du-lieu-mau.bat = true trên DB trống (MySQL + Redis thật): dữ liệu mẫu được tạo
- * đúng 1 lần, ca làm việc chỉ phủ 14 ngày tới và được bổ sung dần.
- * <p>
- * Các test dùng chung 1 DB và test sau thêm ca / đổi trạng thái, nên phải chạy theo thứ tự.
- */
+/** Khởi động với dữ liệu mẫu trên DB trống: tạo đúng 1 lần, ca phủ 14 ngày tới và được bổ sung dần. */
 @SpringBootTest(properties = "app.du-lieu-mau.bat=true")
 @Import({ MySqlTestcontainersConfiguration.class, RedisTestcontainersConfiguration.class })
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class DuLieuMauTest {
 
-    /** 14 ngày liền = mỗi thứ 2 lần: 8 bác sĩ nhóm CHINH làm 6 ca / tuần, 4 bác sĩ nhóm PHU làm 5 ca / tuần. */
+    /** 14 ngày = mỗi thứ 2 lần: 8 bác sĩ CHINH làm 6 ca / tuần, 4 bác sĩ PHU làm 5 ca / tuần. */
     private static final long SO_CA_14_NGAY = 8 * 12 + 4 * 10;
     private static final long SO_CA_7_NGAY = 8 * 6 + 4 * 5;
     /** Ca 3,5 giờ, N = 6, t = 10: 3 khung 1 giờ đủ 6 lượt + nửa giờ cuối 3 lượt. */

@@ -6,12 +6,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
-/**
- * Khai báo bệnh viện nghỉ các ngày [tuNgay, denNgay] (từ ngày mai, tối đa 42 ngày). Lý do hiện cho bệnh nhân trên trang
- * đặt lịch và nằm trong thông báo gửi bác sĩ / bệnh nhân có ca, lịch hẹn bị hủy.
- *
- * @param lyDoEn bản tiếng Anh; để trống thì người đọc tiếng Anh thấy câu tiếng Việt
- */
+/** Khai báo bệnh viện nghỉ các ngày [tuNgay, denNgay] (từ ngày mai, tối đa 42 ngày). */
 public record KhaiBaoNgayNghiRequest(
         @NotNull(message = "{kiemTra.ngayNghi.tuNgay.batBuoc}") LocalDate tuNgay,
         @NotNull(message = "{kiemTra.ngayNghi.denNgay.batBuoc}") LocalDate denNgay,

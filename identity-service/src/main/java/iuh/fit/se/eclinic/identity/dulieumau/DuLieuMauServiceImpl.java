@@ -52,9 +52,7 @@ import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * identity-service không có repository của catalog / booking nên dùng EntityManager trực tiếp.
- */
+/** identity-service không có repository của catalog / booking nên dùng EntityManager trực tiếp. */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -86,7 +84,7 @@ public class DuLieuMauServiceImpl implements DuLieuMauService {
         if (taiKhoanRepository.existsByVaiTro(VaiTro.BAC_SI)) {
             return false;
         }
-        // Mã hoá 1 lần rồi dùng chung: BCrypt chậm có chủ đích, 18 lần mã hoá làm khởi động chậm thêm vài giây
+        // Mã hoá 1 lần rồi dùng chung: BCrypt chậm có chủ đích
         String matKhauHash = passwordEncoder.encode(properties.matKhau());
 
         Map<String, ChuyenKhoa> chuyenKhoaTheoTen = new HashMap<>();
@@ -329,7 +327,7 @@ public class DuLieuMauServiceImpl implements DuLieuMauService {
     public int boSungThuoc() {
         int soThuoc = 0;
         for (ThuocMau mau : DuLieuMau.THUOC) {
-            // Cùng cách chuẩn hoá với medical-service (ThuocServiceImpl.normalize): khoá UNIQUE là tên + hàm lượng
+            // Cùng cách chuẩn hoá với medical-service: khoá UNIQUE là tên + hàm lượng
             String tenChuanHoa = chuanHoaThuoc(mau.ten());
             String hamLuongChuanHoa = chuanHoaThuoc(mau.hamLuong());
             boolean daCo = entityManager.createQuery("""
@@ -564,7 +562,7 @@ public class DuLieuMauServiceImpl implements DuLieuMauService {
         lichLamViec.setSoLuotToiDaMoiGio(DuLieuMau.SO_LUOT_MOI_GIO);
         lichLamViec.setThoiLuongLuotPhut(DuLieuMau.SO_PHUT_MOI_LUOT);
         entityManager.persist(lichLamViec);
-        // Dòng đầu của lịch sử ca (ca nào cũng bắt đầu bằng TAO, xem lich_su_ca_lam_viec)
+        // Dòng đầu của lịch sử ca: ca nào cũng bắt đầu bằng TAO
         entityManager.persist(
                 LichSuCaLamViec.anhCua(lichLamViec, HanhDongCa.TAO, NguonThayDoiCa.DU_LIEU_MAU, adminTao));
 

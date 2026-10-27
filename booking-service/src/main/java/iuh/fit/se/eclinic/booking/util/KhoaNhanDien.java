@@ -4,11 +4,7 @@ import java.time.LocalDate;
 
 import iuh.fit.se.eclinic.common.util.TokenNgauNhien;
 
-/**
- * Khoá nhận diện hồ sơ của bệnh nhân dưới 18 tuổi chưa có CCCD (quy tắc #10): cùng họ tên (không xét dấu, hoa/thường,
- * khoảng trắng thừa) + ngày sinh + CCCD người giám hộ thì cùng 1 khoá, tức cùng 1 hồ sơ. Lưu bản băm để cột có độ dài
- * cố định và đặt UNIQUE được.
- */
+/** Khoá nhận diện hồ sơ của trẻ chưa có CCCD: họ tên chuẩn hoá, ngày sinh và CCCD người giám hộ. */
 public final class KhoaNhanDien {
 
     private KhoaNhanDien() {

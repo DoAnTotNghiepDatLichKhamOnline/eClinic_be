@@ -21,12 +21,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * Người giám hộ khai khi đặt lịch cho bệnh nhân dưới 18 tuổi (BOOK-11, quy tắc #9).
- * <p>
- * Thuộc về 1 hồ sơ bệnh nhân; cùng CCCD chỉ lưu 1 lần cho 1 hồ sơ nên các lần đặt sau dùng lại.
- * {@link LichHen#getNguoiGiamHo()} trỏ tới người giám hộ của lượt khám đó.
- */
+/** Người giám hộ khai khi đặt lịch cho bệnh nhân dưới 18 tuổi. */
 @Getter
 @Setter
 @NoArgsConstructor

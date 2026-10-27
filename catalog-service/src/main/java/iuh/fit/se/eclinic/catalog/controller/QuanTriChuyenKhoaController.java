@@ -16,10 +16,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 
-/**
- * Danh mục chuyên khoa của quản trị viên: chữ đã lưu của cả 2 ngôn ngữ, để đổ vào form sửa. Thêm / sửa / xoá ở
- * {@link ChuyenKhoaController}.
- */
+/** Danh mục chuyên khoa của quản trị viên: chữ đã lưu của cả 2 ngôn ngữ, để đổ vào form sửa. */
 @Tag(name = "Quản trị chuyên khoa", description = "Danh mục chuyên khoa kèm bản tiếng Anh (quản trị viên)")
 @RestController
 @RequestMapping("/api/catalog/quan-tri/chuyen-khoa")
