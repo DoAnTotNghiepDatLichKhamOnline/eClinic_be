@@ -15,11 +15,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * 1 trường của {@link CauHinhHeThong} đổi giá trị trong 1 lần lưu: tên trường (như trong API), giá trị cũ, mới, ai lưu
- * ({@code quanTri}), lúc nào ({@code ngayTao}). CHỈ THÊM: {@link Immutable} nên Hibernate bỏ qua mọi thay đổi trên dòng
- * đã lưu.
- */
+/** 1 trường của {@link CauHinhHeThong} đổi giá trị trong 1 lần lưu: giá trị cũ, mới, ai lưu, lúc nào. */
 @Getter
 @Setter
 @NoArgsConstructor

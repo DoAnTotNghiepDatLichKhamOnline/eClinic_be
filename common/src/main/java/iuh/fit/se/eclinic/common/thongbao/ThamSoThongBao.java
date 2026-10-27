@@ -11,14 +11,7 @@ import java.util.Map;
 
 import tools.jackson.databind.json.JsonMapper;
 
-/**
- * Tham số của 1 mẫu thông báo, theo đúng thứ tự {0}, {1}... của mẫu. Lưu thành mảng JSON; {@link SoanThongBao} đọc lại
- * và viết từng tham số theo ngôn ngữ của người đọc.
- * <p>
- * 1 phần tử là chuỗi thường (chép nguyên văn: họ tên, mã tra cứu, lý do người dùng gõ) hoặc 1 object có kiểu:
- * {@code {"gn": ...}} giờ + ngày, {@code {"n": ...}} ngày, {@code {"g": ...}} giờ, {@code {"vi": ..., "en": ...}} chữ có
- * 2 ngôn ngữ (tên phòng, tầng), {@code {"k": ...}} khoá thông điệp (câu do hệ thống viết).
- */
+/** Tham số của 1 mẫu thông báo, theo đúng thứ tự {0}, {1}... của mẫu. */
 public final class ThamSoThongBao {
 
     static final String GIO_NGAY = "gn";

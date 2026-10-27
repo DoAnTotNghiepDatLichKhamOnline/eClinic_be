@@ -32,21 +32,7 @@ import tools.jackson.core.JacksonException;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
-/**
- * Các hàm tra cứu CỐ ĐỊNH mà mô hình được xin gọi. Mô hình chỉ đưa tên hàm và tham số (chuỗi JSON chưa đáng tin); ở đây
- * kiểm tra tham số rồi mới đọc dữ liệu. Quy tắc cho mọi hàm ở đây (docs/QUY-UOC-CODE.md mục 7):
- * <ul>
- * <li>chỉ ĐỌC; không hàm nào nhận tham số "của ai". 2 hàm đầu đọc dữ liệu CÔNG KHAI của phòng khám;</li>
- * <li>2 hàm sau ({@link #LICH_HEN_CUA_TOI}, {@link #LAN_KHAM_CUA_TOI}) đọc dữ liệu của CHÍNH người đang chat: không có
- * tham số nào (mô hình viết gì vào tham số cũng bị bỏ), "của ai" là JWT của request ({@link NguoiHoi}), chỉ chạy khi
- * bệnh nhân đã đồng ý trong phiên, và chỉ đưa cho mô hình ngày giờ, bác sĩ, chuyên khoa, phòng, trạng thái, ngày tái
- * khám; họ tên và các mã chỉ đi vào thẻ {@code goiY};</li>
- * <li>tham số sai, id không có thật, hàm lạ, service kia không trả lời: trả kết quả báo lỗi cho mô hình, không ném
- * exception;</li>
- * <li>kết quả vừa là JSON cho mô hình đọc, vừa là phần {@code goiY} trả cho người dùng, nên thứ người dùng thấy trên thẻ
- * luôn đúng với dữ liệu, kể cả khi mô hình viết sai.</li>
- * </ul>
- */
+/** Các hàm tra cứu CỐ ĐỊNH mà mô hình được xin gọi. */
 @Component
 @RequiredArgsConstructor
 public class TraCuuPhongKham {
@@ -96,18 +82,7 @@ public class TraCuuPhongKham {
     private final DuLieuCuaToiClient cuaToiClient;
     private final JsonMapper jsonMapper;
 
-    /**
-     * Kết quả 1 lần tra cứu.
-     *
-     * @param choMoHinh  JSON gửi lại cho mô hình
-     * @param chuyenKhoa phần đưa vào {@code goiY}; null khi lần tra cứu này không có phần đó (cũng vậy với 2 phần sau)
-     * @param bacSi      bác sĩ của chuyên khoa
-     * @param lichKham   các ca còn chỗ của 1 bác sĩ
-     * @param lichHenCuaToi lịch hẹn sắp tới của người chat (thẻ cho người dùng, có họ tên và mã)
-     * @param lanKham       các lượt đã khám của người chat
-     * @param canDongY      true: mô hình xin dữ liệu cá nhân nhưng bệnh nhân chưa đồng ý trong phiên; CHƯA đọc gì, người
-     *                      gọi phải dừng và hỏi ý bệnh nhân
-     */
+    /** Kết quả 1 lần tra cứu. */
     public record KetQua(String choMoHinh, GoiYResponse.ChuyenKhoa chuyenKhoa, List<GoiYResponse.BacSi> bacSi,
             List<GoiYResponse.LichKham> lichKham, List<GoiYResponse.LichHenCuaToi> lichHenCuaToi,
             List<GoiYResponse.LanKham> lanKham, boolean canDongY) {
@@ -118,15 +93,11 @@ public class TraCuuPhongKham {
         }
     }
 
-    /** Các hàm đưa cho mô hình: 2 hàm công khai, thêm 2 hàm "của tôi" khi người chat là bệnh nhân trong phiên của mình. */
+    /** Các hàm đưa cho mô hình: 2 hàm công khai, thêm 2 hàm "của tôi" khi người chat là bệnh nhân. */
     public List<CongCu> congCu(NguoiHoi nguoiHoi) {
         return nguoiHoi.duocTraCuuCaNhan() ? CONG_CU_DAY_DU : CONG_CU;
     }
 
-    /**
-     * @param thamSoJson tham số do mô hình viết
-     * @param nguoiHoi   người đang chat, lấy từ JWT của request (không từ {@code thamSoJson})
-     */
     public KetQua thucHien(String ten, String thamSoJson, NguoiHoi nguoiHoi) {
         if (LICH_HEN_CUA_TOI.equals(ten) || LAN_KHAM_CUA_TOI.equals(ten)) {
             // Tham số của 2 hàm này không được đọc: không có gì trong đó chọn được "của ai"

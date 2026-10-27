@@ -76,11 +76,7 @@ public class DatLichServiceImpl implements DatLichService {
     private record CaVaLuot(LichLamViec ca, LocalDateTime gioKetThucKhung, List<KhungGioKham> cacLuot) {
     }
 
-    /**
-     * Dòng đã lưu (hồ sơ bệnh nhân, người giám hộ) dùng cho lượt đặt này.
-     *
-     * @param khacThongTin true nếu dòng đã có từ trước và họ tên / ngày sinh nhập vào khác dòng đó
-     */
+    /** Dòng đã lưu (hồ sơ bệnh nhân, người giám hộ) dùng cho lượt đặt này. */
     private record DaTim<T>(T dong, boolean khacThongTin) {
     }
 
@@ -99,13 +95,7 @@ public class DatLichServiceImpl implements DatLichService {
     private final ThongBaoLichHenService thongBaoLichHenService;
     private final LichSuLichHenService lichSuLichHenService;
 
-    /**
-     * READ_COMMITTED chứ không dùng REPEATABLE READ mặc định của MySQL: request phải chờ khoá (2 người cùng đặt 1 khung,
-     * hoặc bấm đặt 2 lần) sau khi được khoá phải thấy lịch hẹn mà request trước vừa commit, không đọc lại snapshot cũ.
-     * <p>
-     * Thứ tự khoá cố định: các lượt của khung giờ trước (đặt "bác sĩ bất kỳ" thì khoá khung của mọi ca ứng viên theo id ca
-     * tăng dần), hồ sơ bệnh nhân sau. Mọi request đi cùng thứ tự nên không deadlock.
-     */
+    /** READ_COMMITTED: request chờ khoá xong phải thấy lịch hẹn request trước vừa commit. */
     @Override
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public DatLichResponse datLich(DatLichRequest request, Long idTaiKhoan) {
@@ -120,13 +110,7 @@ public class DatLichServiceImpl implements DatLichService {
         return dat(request, null, KenhDatLich.HOTLINE, NguoiThucHien.quanTri(quanTri), ngonNgu);
     }
 
-    /**
-     * Phần chung của khách / tài khoản đặt và quản trị viên đặt qua tổng đài.
-     *
-     * @param taiKhoanDat tài khoản bệnh nhân đã đặt; null = đặt như khách (khách, tổng đài)
-     * @param nguoiDat    người ghi vào nhật ký lịch hẹn (DAT_LICH)
-     * @param ngonNgu     ngôn ngữ lưu vào lịch hẹn, dùng cho email khi không có tài khoản đặt
-     */
+    /** Phần chung của khách / tài khoản đặt và quản trị viên đặt qua tổng đài. */
     private DatLichResponse dat(DatLichRequest request, TaiKhoan taiKhoanDat, KenhDatLich kenhDat,
             NguoiThucHien nguoiDat, NgonNgu ngonNgu) {
         LocalDateTime bayGio = LocalDateTime.now();
@@ -145,7 +129,7 @@ public class DatLichServiceImpl implements DatLichService {
         BenhNhanRequest benhNhan = request.benhNhan();
         String cccd = rongThanhNull(benhNhan.cccd());
         NguoiGiamHoRequest giamHo = nguoiGiamHoCanDung(benhNhan, cccd, request.nguoiGiamHo(), ngayKham);
-        // BOOK-11: liên hệ ưu tiên SĐT người giám hộ
+        // Liên hệ ưu tiên SĐT người giám hộ
         String soDienThoaiLienHe = giamHo != null ? giamHo.soDienThoai() : benhNhan.soDienThoai();
         boolean datChoBanThan = taiKhoanDat != null && Boolean.TRUE.equals(request.datChoBanThan());
         if (datChoBanThan && cccd == null) {
@@ -191,7 +175,7 @@ public class DatLichServiceImpl implements DatLichService {
         lichHen.setMaTokenPhieuKham(TokenNgauNhien.tao());
         luu(lichHen, luot);
         lichSuLichHenService.ghi(lichHen, SuKienLichHen.DAT_LICH, nguoiDat);
-        // Chỉ ở đặt lịch mới: đổi lịch (datLaiTuLichCu) do HuyDoiLichServiceImpl báo cho bác sĩ bằng 1 thông báo "đã đổi"
+        // Chỉ khi đặt mới: đổi lịch do HuyDoiLichServiceImpl báo bác sĩ bằng thông báo "đã đổi"
         thongBaoLichHenService.lichHenMoi(lichHen);
         thongBaoLichHenService.emailDaNhanLich(lichHen);
         // Đặt cho người thân khi đã đăng nhập: sau khi commit, lưu những gì vừa nhập để điền sẵn lần sau
@@ -287,10 +271,7 @@ public class DatLichServiceImpl implements DatLichService {
         return ca;
     }
 
-    /**
-     * "Bác sĩ bất kỳ": các ca đặt lịch được của chuyên khoa trong ngày có 1 khung bắt đầu đúng {@code gioBatDauKhung}
-     * (cùng khoá với 1 dòng của GET /api/booking/khung-gio/gop), theo id ca tăng dần (thứ tự khoá).
-     */
+    /** "Bác sĩ bất kỳ": các ca của chuyên khoa trong ngày có khung bắt đầu đúng giờ này, theo id tăng dần. */
     private List<LichLamViec> timCaUngVien(Long idChuyenKhoa, LocalDateTime gioBatDauKhung, LocalDate homNay) {
         LocalDate ngay = gioBatDauKhung.toLocalDate();
         if (ngay.isBefore(homNay) || ngay.isAfter(homNay.plusDays(cauHinhService.hienTai().soNgayDatTruocToiDa()))) {
@@ -306,11 +287,7 @@ public class DatLichServiceImpl implements DatLichService {
         return caUngVien;
     }
 
-    /**
-     * Khoá các lượt của khung giờ ở MỌI ca ứng viên (theo thứ tự trong danh sách) rồi chọn ca còn nhiều lượt trống kịp
-     * đặt nhất; bằng nhau thì ca đứng trước. Không ca nào còn lượt trống: trả ca đầu tiên có lượt đã đặt (để
-     * {@link #chonLuot} báo "đủ lượt"), không có thì ca đầu tiên (báo "không nhận đặt").
-     */
+    /** Khoá lượt của khung giờ ở mọi ca ứng viên rồi chọn ca còn nhiều lượt trống nhất. */
     private CaVaLuot khoaVaChonCa(List<LichLamViec> caUngVien, LocalDateTime gioBatDauKhung, LocalDateTime moc) {
         List<CaVaLuot> daKhoa = new ArrayList<>();
         for (LichLamViec ca : caUngVien) {
@@ -352,10 +329,7 @@ public class DatLichServiceImpl implements DatLichService {
                 && ChiaCaLamViec.gioBatDauKhung(ca.getGioBatDau(), gio).equals(gio);
     }
 
-    /**
-     * Mã tra cứu ngắn {@code ECL-<ngày khám>-<4 chữ số>}. Trùng mã đã có thì sinh lại; sau vài lần vẫn trùng (ngày có
-     * rất nhiều lịch hẹn) thì dùng 6 chữ số. UNIQUE của cột là chốt chặn cuối.
-     */
+    /** Mã tra cứu ngắn {@code ECL-<ngày khám>-<4 chữ số>}. */
     private String taoMaTraCuu(LocalDate ngayKham) {
         String dau = "ECL-" + ngayKham.format(NGAY_TRONG_MA_TRA_CUU) + "-";
         for (int lan = 0; lan < SO_LAN_THU_MA_TRA_CUU; lan++) {
@@ -367,11 +341,7 @@ public class DatLichServiceImpl implements DatLichService {
         return dau + "%06d".formatted(ThreadLocalRandom.current().nextInt(1_000_000));
     }
 
-    /**
-     * {@code gioBatDauKhung} phải đúng là giờ bắt đầu 1 khung 1 giờ của ca (khung tính từ giờ bắt đầu ca).
-     *
-     * @return giờ kết thúc khung đó
-     */
+    /** {@code gioBatDauKhung} phải đúng là giờ bắt đầu 1 khung 1 giờ của ca (khung tính từ giờ bắt đầu ca). */
     private static LocalDateTime gioKetThucKhung(LichLamViec ca, LocalDateTime gioBatDauKhung) {
         if (!laGioBatDauKhung(ca, gioBatDauKhung)) {
             throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE, "loi.DU_LIEU_KHONG_HOP_LE.khungGioNgoaiCa");
@@ -394,14 +364,7 @@ public class DatLichServiceImpl implements DatLichService {
         }
     }
 
-    /**
-     * BOOK-11: tuổi tính theo ngày khám. Dưới 18 tuổi phải có người giám hộ khác CCCD với người khám; ngày sinh người
-     * giám hộ không bắt buộc, có gửi thì phải từ đủ 18 tuổi (cũng theo ngày khám). Từ đủ 18 tuổi phải có CCCD; dưới 18
-     * tuổi được bỏ trống CCCD (quy tắc #10).
-     *
-     * @param cccd CCCD người khám, null nếu bỏ trống
-     * @return người giám hộ của lượt khám; null nếu người khám từ đủ 18 tuổi (phần người giám hộ gửi kèm bị bỏ qua)
-     */
+    /** Tuổi tính theo ngày khám. */
     private static NguoiGiamHoRequest nguoiGiamHoCanDung(BenhNhanRequest benhNhan, String cccd,
             NguoiGiamHoRequest giamHo, LocalDate ngayKham) {
         if (tuoi(benhNhan.ngaySinh(), ngayKham) >= TUOI_THANH_NIEN) {
@@ -428,11 +391,7 @@ public class DatLichServiceImpl implements DatLichService {
         return Period.between(ngaySinh, ngayTinh).getYears();
     }
 
-    /**
-     * Lượt trống sớm nhất của khung (quy tắc #12) trong các lượt còn kịp đặt (bắt đầu từ {@code moc} trở đi).
-     * Không có: các lượt còn kịp đặt đều đã có người đặt thì khung đã đủ lượt, còn lại là khung không nhận đặt nữa
-     * (đã qua hạn đặt, hoặc các lượt đã bị hủy).
-     */
+    /** Lượt trống sớm nhất của khung trong các lượt còn kịp đặt (từ {@code moc} trở đi). */
     private static KhungGioKham chonLuot(List<KhungGioKham> cacLuot, LocalDateTime moc) {
         boolean coLuotDaDat = false;
         for (KhungGioKham luot : cacLuot) {
@@ -447,7 +406,7 @@ public class DatLichServiceImpl implements DatLichService {
         throw new LoiNghiepVu(coLuotDaDat ? MaLoi.KHUNG_GIO_KHONG_CON_TRONG : MaLoi.KHUNG_GIO_KHONG_KHA_DUNG);
     }
 
-    /** BOOK-04: 1 bệnh nhân không giữ 2 lịch còn hiệu lực trong cùng khung giờ, và không quá số lịch sắp tới cho phép. */
+    /** 1 bệnh nhân không giữ 2 lịch cùng khung giờ, và không quá số lịch sắp tới cho phép. */
     private void kiemTraTrungGioVaGioiHanCuaHoSo(HoSoBenhNhan hoSo, LocalDateTime gioBatDauKhung,
             LocalDateTime gioKetThucKhung, LocalDateTime bayGio) {
         if (lichHenRepository.coLichTrongKhoang(hoSo.getId(), TRANG_THAI_CON_HIEU_LUC, gioBatDauKhung,
@@ -469,17 +428,12 @@ public class DatLichServiceImpl implements DatLichService {
         }
     }
 
-    /**
-     * Đặt cho bản thân (BOOK-02): đối chiếu CCCD nhập vào với hồ sơ bệnh nhân của tài khoản.
-     *
-     * @return true nếu tài khoản chưa có hồ sơ và CCCD cũng chưa có hồ sơ: lần đặt này tạo hồ sơ gắn vào tài khoản;
-     *         false nếu tài khoản đã có hồ sơ đúng CCCD này
-     */
+    /** Đặt cho bản thân: đối chiếu CCCD nhập vào với hồ sơ bệnh nhân của tài khoản. */
     private boolean canTaoHoSoCuaTaiKhoan(TaiKhoan taiKhoan, String cccd) {
         Optional<HoSoBenhNhan> cuaTaiKhoan = hoSoBenhNhanRepository.findByTaiKhoanId(taiKhoan.getId());
         if (cuaTaiKhoan.isEmpty()) {
             if (hoSoBenhNhanRepository.existsByCccd(cccd)) {
-                // Gắn hồ sơ đã có vào tài khoản phải qua xác minh (quy tắc #3), việc đặt lịch không tự gắn
+                // Gắn hồ sơ đã có vào tài khoản phải qua xác minh, việc đặt lịch không tự gắn
                 throw new LoiNghiepVu(MaLoi.CCCD_DA_CO_HO_SO, "loi.CCCD_DA_CO_HO_SO.datLich");
             }
             return true;
@@ -495,24 +449,15 @@ public class DatLichServiceImpl implements DatLichService {
         return false;
     }
 
-    /**
-     * BOOK-03: CCCD (hoặc khoá nhận diện của trẻ chưa có CCCD) chưa có hồ sơ thì tạo mới. Đã có thì dùng lại: số CCCD là
-     * khoá nhận diện duy nhất, họ tên / ngày sinh nhập khác hồ sơ KHÔNG bị từ chối mà được báo lại để lịch hẹn đánh dấu
-     * cần đối chiếu. Việc đặt lịch không sửa dữ liệu của hồ sơ (chủ tài khoản sửa hồ sơ của mình, quản trị viên sửa hồ
-     * sơ bất kỳ ở API riêng); chỉ khi thông tin nhập khớp hồ sơ mới điền các trường hồ sơ còn trống. Hồ sơ đã có được
-     * khoá để các lần đặt của cùng bệnh nhân chạy lần lượt.
-     *
-     * @param chuHoSoMoi khác null khi đặt cho bản thân mà tài khoản chưa có hồ sơ: hồ sơ tạo mới được gắn vào tài khoản
-     *                   này, còn nếu CCCD vừa có hồ sơ (request khác tạo sau lần kiểm tra không khoá) thì từ chối
-     */
+    /** CCCD (hoặc khoá nhận diện của trẻ chưa có CCCD) chưa có hồ sơ thì tạo mới. */
     private DaTim<HoSoBenhNhan> timHoacTaoHoSo(BenhNhanRequest benhNhan, String cccd, NguoiGiamHoRequest giamHo,
             TaiKhoan chuHoSoMoi, LocalDateTime gioBatDauKhung, LocalDateTime gioKetThucKhung, LocalDateTime bayGio) {
-        // Người khám dưới 18 tuổi (có người giám hộ): khoá nhận diện khi chưa có CCCD (quy tắc #10)
+        // Người khám dưới 18 tuổi chưa có CCCD: dùng khoá nhận diện
         String khoaNhanDien = giamHo == null ? null
                 : KhoaNhanDien.tao(benhNhan.hoTen(), benhNhan.ngaySinh(), giamHo.cccd());
         Optional<HoSoBenhNhan> daCo;
         if (cccd == null) {
-            // Chưa có CCCD: cùng họ tên + ngày sinh + CCCD người giám hộ là cùng 1 hồ sơ (kể cả hồ sơ đã được điền CCCD)
+            // Chưa có CCCD: cùng họ tên, ngày sinh và CCCD người giám hộ là cùng 1 hồ sơ
             daCo = hoSoBenhNhanRepository.findByKhoaNhanDienForUpdate(khoaNhanDien);
         } else {
             daCo = hoSoBenhNhanRepository.findByCccdForUpdate(cccd);
@@ -539,8 +484,7 @@ public class DatLichServiceImpl implements DatLichService {
                 hoSo.setTaiKhoan(chuHoSoMoi);
                 hoSo.setTrangThaiLienKet(TrangThaiLienKet.DA_LIEN_KET);
             }
-            // 2 request cùng lúc với cùng CCCD mới ở 2 khung khác nhau, hoặc 2 lần "đặt cho bản thân" đầu tiên của 1 tài
-            // khoản: request sau vi phạm UNIQUE cccd / khoa_nhan_dien / id_tai_khoan -> 409 XUNG_DOT_DU_LIEU
+            // 2 request cùng lúc tạo cùng hồ sơ: request sau vi phạm UNIQUE -> 409 XUNG_DOT_DU_LIEU
             return new DaTim<>(hoSoBenhNhanRepository.saveAndFlush(hoSo), false);
         }
         if (chuHoSoMoi != null) {
@@ -568,10 +512,7 @@ public class DatLichServiceImpl implements DatLichService {
         return new DaTim<>(hoSo, false);
     }
 
-    /**
-     * Người giám hộ đã khai cho hồ sơ (theo CCCD) thì dùng lại và không sửa dòng đã lưu; họ tên / ngày sinh nhập khác
-     * dòng đó thì báo lại để lịch hẹn đánh dấu cần đối chiếu.
-     */
+    /** Dùng lại người giám hộ đã khai cho hồ sơ; thông tin nhập khác thì đánh dấu cần đối chiếu. */
     private DaTim<NguoiGiamHo> timHoacTaoNguoiGiamHo(HoSoBenhNhan hoSo, NguoiGiamHoRequest giamHo) {
         Optional<NguoiGiamHo> daCo = nguoiGiamHoRepository.findByHoSoBenhNhanIdAndCccd(hoSo.getId(), giamHo.cccd());
         if (daCo.isEmpty()) {
@@ -594,13 +535,13 @@ public class DatLichServiceImpl implements DatLichService {
         return new DaTim<>(nguoiGiamHo, false);
     }
 
-    /** Họ tên giống nhau (không xét dấu, hoa/thường) và ngày sinh trùng; ngày sinh đang lưu còn trống thì coi là khớp. */
+    /** Họ tên giống nhau (không xét dấu, hoa thường) và ngày sinh trùng hoặc đang trống. */
     private static boolean khop(String hoTenDaLuu, LocalDate ngaySinhDaLuu, String hoTen, LocalDate ngaySinh) {
         return ChuanHoaTen.giongNhau(hoTenDaLuu, hoTen)
                 && (ngaySinhDaLuu == null || ngaySinh == null || ngaySinhDaLuu.equals(ngaySinh));
     }
 
-    /** Quy tắc #4, #12: số thứ tự = thứ hạng của lượt khám trong các lượt của phòng khám trong ngày, theo giờ khám. */
+    /** Số thứ tự = thứ hạng của lượt khám trong các lượt của phòng trong ngày, theo giờ khám. */
     private int soThuTu(LichLamViec ca, KhungGioKham luot) {
         return (int) khungGioKhamRepository.demLuotDungTruoc(ca.getPhongKham().getId(), ca.getNgayLamViec(),
                 luot.getGioBatDau(), luot.getId()) + 1;

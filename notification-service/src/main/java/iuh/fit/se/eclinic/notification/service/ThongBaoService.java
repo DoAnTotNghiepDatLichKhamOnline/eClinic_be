@@ -10,10 +10,7 @@ import iuh.fit.se.eclinic.notification.dto.response.KetQuaNhanThongBaoResponse;
 import iuh.fit.se.eclinic.notification.dto.response.SoChuaDocResponse;
 import iuh.fit.se.eclinic.notification.dto.response.ThongBaoResponse;
 
-/**
- * NOTI-01: thông báo trong ứng dụng. Mỗi tài khoản chỉ đọc và đánh dấu thông báo của chính mình; thông báo của tài khoản
- * khác coi như không có.
- */
+/** Thông báo trong ứng dụng. */
 public interface ThongBaoService {
 
     /** Thông báo của tài khoản, mới nhất trước. */
@@ -28,10 +25,7 @@ public interface ThongBaoService {
 
     DanhDauDaDocResponse danhDauDaDocTatCa(Long idTaiKhoan);
 
-    /**
-     * Nhận thông báo do service khác gửi sang. Gửi lại cùng {@code maNguon} không tạo thông báo thứ hai; tài khoản nhận
-     * không còn tồn tại thì bỏ qua dòng đó (không báo lỗi, để service nguồn không gửi lại mãi).
-     */
+    /** Nhận thông báo do service khác gửi sang. */
     KetQuaNhanThongBaoResponse nhan(List<TaoThongBaoRequest> danhSach);
 
 }

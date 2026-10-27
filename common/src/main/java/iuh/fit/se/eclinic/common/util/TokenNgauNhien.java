@@ -7,10 +7,7 @@ import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.HexFormat;
 
-/**
- * Sinh token ngẫu nhiên (liên kết email, refresh token, mã phiếu khám) và băm SHA-256. Token liên kết / refresh token
- * chỉ lưu bản băm; mã phiếu khám lưu nguyên vì phải tra được theo chính nó.
- */
+/** Sinh token ngẫu nhiên (liên kết email, refresh token, mã phiếu khám) và băm SHA-256. */
 public final class TokenNgauNhien {
 
     private static final SecureRandom RANDOM = new SecureRandom();

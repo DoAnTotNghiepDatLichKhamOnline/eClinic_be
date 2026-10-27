@@ -36,10 +36,7 @@ import iuh.fit.se.eclinic.identity.service.DangNhapService;
 import iuh.fit.se.eclinic.identity.service.MatKhauService;
 import iuh.fit.se.eclinic.identity.service.TokenLienKetService;
 
-/**
- * Quên / đặt lại mật khẩu và đổi mật khẩu khi đang đăng nhập, với MySQL + Redis thật. Không gửi email: token lấy từ
- * event đã phát (EmailService thật chạy ở chế độ console và chỉ ghi log).
- */
+/** Quên / đặt lại mật khẩu và đổi mật khẩu khi đang đăng nhập, với MySQL + Redis thật. */
 @SpringBootTest
 @Import({ MySqlTestcontainersConfiguration.class, RedisTestcontainersConfiguration.class })
 @RecordApplicationEvents
@@ -187,7 +184,7 @@ class MatKhauServiceTest {
 
     @Test
     void doiMatKhauKhongCoPhienHienTaiThiDangXuatTatCa() {
-        // Access token không có claim "phien" (maPhienHienTai = null): không biết giữ phiên nào nên thu hồi hết
+        // Access token không có claim "phien": không biết giữ phiên nào nên thu hồi hết
         TaiKhoan taiKhoan = taoTaiKhoan(TrangThaiTaiKhoan.DA_KICH_HOAT);
         DangNhapResponse mayA = dangNhap(taiKhoan.getEmail(), MAT_KHAU_CU);
         DangNhapResponse mayB = dangNhap(taiKhoan.getEmail(), MAT_KHAU_CU);
@@ -221,7 +218,7 @@ class MatKhauServiceTest {
         }
         doiMatKhau(taiKhoan, MAT_KHAU_CU, MAT_KHAU_MOI);
 
-        // Nếu bộ đếm còn 4 thì lần sai này là lần thứ 5 và lần đổi sau đó bị 429
+        // Bộ đếm còn 4 thì lần sai này là lần thứ 5 và lần đổi sau đó bị 429
         assertMaLoi(() -> doiMatKhau(taiKhoan, "sai-mat-khau", "matkhau-khac"), MaLoi.MAT_KHAU_CU_KHONG_DUNG);
         doiMatKhau(taiKhoan, MAT_KHAU_MOI, "matkhau-khac");
         assertThat(dangNhap(taiKhoan.getEmail(), "matkhau-khac").accessToken()).isNotBlank();

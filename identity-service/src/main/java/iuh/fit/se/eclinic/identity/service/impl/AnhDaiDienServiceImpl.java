@@ -19,10 +19,7 @@ import iuh.fit.se.eclinic.common.util.DinhDangAnh;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * CỐ Ý không có @Transactional ở class (khác các service khác): gọi kho ảnh có thể mất tới 20 giây, không được giữ
- * transaction / kết nối DB trong lúc đó. Mỗi lời gọi TaiKhoanService, HoSoCaNhanService tự mở transaction ngắn của nó.
- */
+/** Không @Transactional ở class: gọi kho ảnh có thể mất tới 20 giây, không giữ kết nối DB trong lúc đó. */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -47,7 +44,7 @@ public class AnhDaiDienServiceImpl implements AnhDaiDienService {
         }
         kiemTraSoLanTaiLen(idTaiKhoan);
 
-        // Cùng mã với ảnh cũ: kho ghi đè nên không phải xoá ảnh cũ. Ảnh Google (nếu đang dùng) không nằm trong kho.
+        // Cùng mã với ảnh cũ nên kho ghi đè, không phải xoá ảnh cũ
         String url = luuTruAnh.taiLen(maAnh(idTaiKhoan), noiDung);
         taiKhoanService.capNhatAnhDaiDien(idTaiKhoan, url);
         log.info("Đổi ảnh đại diện tài khoản id={} ({} byte)", idTaiKhoan, noiDung.length);
@@ -78,11 +75,7 @@ public class AnhDaiDienServiceImpl implements AnhDaiDienService {
         }
     }
 
-    /**
-     * Chỉ xoá ảnh của kho mình (không phải URL Google). Lỗi kho không ném ra, để không làm hỏng việc của bên gọi.
-     *
-     * @return false nếu kho báo lỗi (ảnh còn trong kho)
-     */
+    /** Chỉ xoá ảnh của kho mình (không phải URL Google). */
     private boolean xoaTrongKho(Long idTaiKhoan, String anhCu) {
         if (!luuTruAnh.laAnhCuaKho(anhCu)) {
             return true;

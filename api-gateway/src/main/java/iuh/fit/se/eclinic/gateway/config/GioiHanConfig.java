@@ -12,11 +12,7 @@ import org.springframework.web.servlet.HandlerExceptionResolver;
 import iuh.fit.se.eclinic.gateway.filter.GioiHanKichThuocFilter;
 import iuh.fit.se.eclinic.gateway.filter.GioiHanTanSuatFilter;
 
-/**
- * Đăng ký filter giới hạn tần suất (429) và giới hạn dung lượng request (413). Cả hai chạy SAU CorsFilter (xem
- * CorsConfig) để response lỗi vẫn có header CORS, nếu không trình duyệt chỉ báo lỗi CORS chứ không đọc được thông báo.
- * Giới hạn tần suất chạy trước: request vượt giới hạn bị từ chối mà không cần xét body.
- */
+/** Đăng ký filter giới hạn tần suất (429) và giới hạn dung lượng request (413). */
 @Configuration
 @EnableConfigurationProperties(GioiHanProperties.class)
 public class GioiHanConfig {

@@ -37,10 +37,7 @@ import iuh.fit.se.eclinic.identity.service.DangNhapService;
 import iuh.fit.se.eclinic.identity.service.DoiEmailService;
 import iuh.fit.se.eclinic.identity.service.MatKhauService;
 
-/**
- * Đổi email đăng nhập với MySQL + Redis thật. Không gửi email: token lấy từ event đã phát (EmailService thật chạy ở chế độ
- * console và chỉ ghi log).
- */
+/** Đổi email đăng nhập với MySQL + Redis thật. */
 @SpringBootTest
 @Import({ MySqlTestcontainersConfiguration.class, RedisTestcontainersConfiguration.class })
 @RecordApplicationEvents
@@ -113,7 +110,7 @@ class DoiEmailServiceTest {
         }
         yeuCau(taiKhoan, emailMoi(), MAT_KHAU);
 
-        // Nếu bộ đếm còn 4 thì lần sai này là lần thứ 5 và lần yêu cầu sau đó bị SAI_MAT_KHAU_QUA_NHIEU
+        // Bộ đếm còn 4 thì lần sai này là lần thứ 5 và lần sau bị SAI_MAT_KHAU_QUA_NHIEU
         assertMaLoi(() -> yeuCau(taiKhoan, emailMoi(), "sai-mat-khau"), MaLoi.MAT_KHAU_CU_KHONG_DUNG);
         assertMaLoi(() -> yeuCau(taiKhoan, emailMoi(), MAT_KHAU), MaLoi.GUI_LAI_QUA_NHANH);
     }

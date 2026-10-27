@@ -5,10 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
-/**
- * Sửa thông tin cơ bản của bác sĩ (ghi đè cả 4 trường; số điện thoại / số giấy phép bỏ trống là xoá). Email đăng nhập
- * không sửa ở đây: chủ tài khoản tự đổi bằng luồng đổi email.
- */
+/** Sửa thông tin cơ bản của bác sĩ (ghi đè cả 4 trường; số điện thoại / số giấy phép bỏ trống là xoá). */
 public record SuaBacSiRequest(
 
         @NotBlank(message = "{kiemTra.hoTen.batBuoc}")

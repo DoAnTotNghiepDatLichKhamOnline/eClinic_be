@@ -19,11 +19,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * Ảnh giới thiệu của bác sĩ (ảnh làm việc, chứng chỉ) hiện trong trang chi tiết bác sĩ. Chỉ Admin thêm / sửa / xoá.
- * <p>
- * Ảnh đại diện không nằm ở đây mà ở {@code TaiKhoan.anhDaiDien}.
- */
+/** Ảnh giới thiệu của bác sĩ (ảnh làm việc, chứng chỉ) hiện trong trang chi tiết bác sĩ. */
 @Getter
 @Setter
 @NoArgsConstructor
@@ -44,7 +40,7 @@ public class AnhBacSi extends CreatableEntity {
     @Column(name = "url", nullable = false, length = 500)
     private String url;
 
-    /** Mã ảnh trong kho ảnh, dùng để xoá. null = ảnh nằm ngoài kho (dữ liệu mẫu): xoá dòng là đủ. */
+    /** Mã ảnh trong kho ảnh, dùng để xoá; null = ảnh nằm ngoài kho (dữ liệu mẫu). */
     @Column(name = "ma_luu_tru", length = 150)
     private String maLuuTru;
 
@@ -58,7 +54,7 @@ public class AnhBacSi extends CreatableEntity {
     @Column(name = "thu_tu", nullable = false)
     private int thuTu;
 
-    // Chữ theo ngôn ngữ: bản tiếng Anh nếu được yêu cầu và đã nhập, không thì bản tiếng Việt (NgonNgu.chon).
+    // Chữ theo ngôn ngữ: bản tiếng Anh nếu có, không thì tiếng Việt
     public String chuThich(NgonNgu ngonNgu) {
         return ngonNgu.chon(chuThich, chuThichEn);
     }

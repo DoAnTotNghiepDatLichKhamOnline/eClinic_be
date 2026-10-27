@@ -5,7 +5,6 @@ import java.nio.charset.StandardCharsets;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
-import org.springframework.mail.MailException;
 import org.springframework.mail.MailPreparationException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -18,10 +17,7 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Đưa 1 email đã soạn tới máy chủ mail (chế độ SMTP), hoặc chỉ ghi ra log (chế độ CONSOLE, máy dev). Cùng 2 chế độ và
- * cùng biến môi trường với email tài khoản của identity-service.
- */
+/** Đưa 1 email đã soạn tới máy chủ mail (chế độ SMTP), hoặc chỉ ghi ra log (chế độ CONSOLE, máy dev). */
 @Slf4j
 @Component
 public class MayGuiEmail {
@@ -34,10 +30,7 @@ public class MayGuiEmail {
     private final CheDoEmail cheDo;
     private final String nguoiGui;
 
-    /**
-     * Kiểm tra cấu hình ngay khi khởi động: chế độ SMTP mà thiếu địa chỉ gửi (hoặc thiếu mật khẩu khi máy chủ đòi đăng
-     * nhập) thì không cho chạy, tránh chạy "bình thường" nhưng không email nào đi.
-     */
+    /** Kiểm tra cấu hình khi khởi động: chế độ SMTP thiếu địa chỉ gửi hoặc mật khẩu thì không cho chạy. */
     public MayGuiEmail(JavaMailSender mailSender, EmailProperties emailProperties,
             @Value("${spring.mail.username:}") String nguoiGui, @Value("${spring.mail.password:}") String matKhau) {
         this.mailSender = mailSender;
@@ -55,12 +48,7 @@ public class MayGuiEmail {
         }
     }
 
-    /**
-     * Trả về bình thường = máy chủ mail đã nhận (chế độ CONSOLE: đã ghi log).
-     *
-     * @param tepLich nội dung tệp .ics gửi kèm thành {@value #TEN_TEP_LICH}; null / rỗng = không kèm
-     * @throws MailException không gửi được; bên gọi quyết định thử lại
-     */
+    /** Trả về bình thường = máy chủ mail đã nhận (chế độ CONSOLE: đã ghi log). */
     public void gui(String nguoiNhan, NgonNgu ngonNgu, MauEmail.Thu thu, String tepLich) {
         boolean coTepLich = tepLich != null && !tepLich.isBlank();
         if (cheDo == CheDoEmail.CONSOLE) {

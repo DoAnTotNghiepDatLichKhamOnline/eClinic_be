@@ -17,25 +17,7 @@ import iuh.fit.se.eclinic.common.thongbao.KhungEmail;
 import iuh.fit.se.eclinic.common.thongbao.SoanThongBao;
 import lombok.RequiredArgsConstructor;
 
-/**
- * Soạn email lịch hẹn và email tái khám từ mẫu + tham số theo 1 ngôn ngữ. Câu chữ nằm trong thong-diep/notification*.properties: khoá của
- * mẫu ({@code email.datLich}, {@code email.doiLich}, {@code email.nhacLich}, {@code email.bacSiHuy}...) là tiêu đề, {@code <mau>.moDau} là đoạn mở đầu, các dòng chi tiết
- * và câu kết dùng chung ở {@code email.lichHen.*}.
- * <p>
- * Tham số (service nguồn ghi bằng {@code ThamSoThongBao}, đúng thứ tự): 0 họ tên bệnh nhân, 1 giờ khám, 2 họ tên bác sĩ,
- * 3 tên phòng, 4 tầng (rỗng nếu phòng không ghi tầng), 5 mã tra cứu, 6 link phiếu khám. Email không có lý do khám,
- * chuyên khoa, số điện thoại, CCCD. Lời chào không nêu tên: người nhận là người đặt, có thể không phải bệnh nhân.
- * Email cấp lại liên kết ({@code email.capLaiLienKet}, PAT-03) có thêm tham số 7: link sổ khám bệnh, rỗng khi chưa khám;
- * có link thì thêm 1 câu và 1 nút mở sổ khám.
- * <p>
- * Email tái khám ({@code email.taiKham}, {@code email.taiKhamDoiNgay}, {@code email.nhacTaiKham}) có 4 tham số: 0 họ tên
- * bệnh nhân, 1 ngày tái khám, 2 họ tên bác sĩ, 3 link trang đặt lịch. Tiêu đề không có tham số; không có chẩn đoán, ghi
- * chú, đơn thuốc; câu kết nói rõ chưa có lịch hẹn nào được đặt.
- * <p>
- * Email lịch làm việc gửi bác sĩ ({@code email.lichLamViec}): 6 tham số cố định (0 họ tên bác sĩ, 1 từ ngày, 2 đến ngày,
- * 3 tổng số ca, 4 số ca không liệt kê, 5 link trang Lịch làm việc), rồi mỗi ca 4 tham số (ngày, giờ bắt đầu, giờ kết
- * thúc, phòng kèm tầng) thành 1 dòng của bảng; tên thứ trong tuần suy ra từ ngày theo ngôn ngữ của email.
- */
+/** Soạn email lịch hẹn và email tái khám từ mẫu + tham số theo 1 ngôn ngữ. */
 @Component
 @RequiredArgsConstructor
 public class MauEmail {
@@ -44,7 +26,7 @@ public class MauEmail {
     public record Thu(String tieuDe, String html, String lienKet) {
     }
 
-    /** email.nhacLichChoXacNhan giữ cho email đã xếp hàng trước DOANTOTNGH-11 (không còn lịch hẹn chờ xác nhận). */
+    /** email.nhacLichChoXacNhan giữ cho email đã xếp hàng từ trước (không còn lịch hẹn chờ xác nhận). */
     private static final Set<String> CAC_MAU = Set.of("email.datLich", "email.doiLich", "email.nhacLich",
             "email.nhacLichChoXacNhan", "email.bacSiHuy", "email.doiBacSi", "email.canDoiLich",
             "email.quanTriHuy");

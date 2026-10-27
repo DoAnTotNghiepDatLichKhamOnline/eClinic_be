@@ -34,10 +34,7 @@ public class DangNhapGoogleServiceImpl implements DangNhapGoogleService {
     private final TokenLienKetService tokenLienKetService;
     private final DangNhapService dangNhapService;
 
-    /**
-     * 2 request đăng nhập lần đầu cùng lúc: request sau vi phạm UNIQUE (google_id / email) khi saveAndFlush
-     * -> 409 XUNG_DOT_DU_LIEU (XuLyLoiHandler), thử lại sẽ tìm thấy theo google_id.
-     */
+    /** 2 request đăng nhập lần đầu cùng lúc: request sau vi phạm UNIQUE -> 409, thử lại sẽ tìm thấy. */
     @Override
     @Transactional
     public DangNhapResponse dangNhap(String idToken, String thongTinThietBi) {
@@ -63,8 +60,7 @@ public class DangNhapGoogleServiceImpl implements DangNhapGoogleService {
         if (taiKhoan == null) {
             return taoMoi(google);
         }
-        // Kiểm tra trước vai trò / trạng thái: người Google không đảm bảo là chủ email không được biết thêm gì
-        // ngoài "email đã đăng ký" (điều mà đăng ký cũng đã cho biết)
+        // Kiểm tra vai trò / trạng thái trước: người chưa chắc là chủ email không được biết thêm gì
         if (taiKhoan.getGoogleId() != null || !google.laGoogleXacNhan()) {
             log.info("Từ chối liên kết Google với tài khoản id={}: {}", taiKhoan.getId(),
                     taiKhoan.getGoogleId() != null ? "đã liên kết tài khoản Google khác" : "Google không đảm bảo chủ email");
@@ -73,8 +69,7 @@ public class DangNhapGoogleServiceImpl implements DangNhapGoogleService {
         kiemTraDuocDangNhap(taiKhoan);
         taiKhoan.setGoogleId(google.sub());
         if (taiKhoan.getTrangThai() == TrangThaiTaiKhoan.CHO_XAC_NHAN) {
-            // Người đăng ký trước có thể không phải chủ email: bỏ mật khẩu, số điện thoại (chưa xác minh)
-            // và liên kết kích hoạt của họ; chủ email thật (Google đảm bảo) nhận tài khoản
+            // Người đăng ký trước có thể không phải chủ email: bỏ mật khẩu, SĐT và liên kết kích hoạt của họ
             taiKhoan.setTrangThai(TrangThaiTaiKhoan.DA_KICH_HOAT);
             taiKhoan.setMatKhauHash(null);
             taiKhoan.setSoDienThoai(null);
@@ -83,8 +78,7 @@ public class DangNhapGoogleServiceImpl implements DangNhapGoogleService {
             log.info("Kích hoạt tài khoản id={} bằng Google, bỏ mật khẩu và số điện thoại chưa xác minh",
                     taiKhoan.getId());
         } else {
-            // Đã kích hoạt: liên kết, giữ nguyên họ tên / mật khẩu. Ảnh: chỉ lấy ảnh Google khi tài khoản chưa có ảnh,
-            // và chỉ ở lần liên kết này (các lần đăng nhập Google sau không đụng tới ảnh, nên ảnh đã bỏ không quay lại)
+            // Đã kích hoạt: chỉ liên kết; ảnh Google chỉ lấy ở lần liên kết này, khi tài khoản chưa có ảnh
             if (taiKhoan.getAnhDaiDien() == null) {
                 taiKhoan.setAnhDaiDien(anhGoogle(google));
             }
@@ -118,7 +112,7 @@ public class DangNhapGoogleServiceImpl implements DangNhapGoogleService {
         }
     }
 
-    /** Họ tên lấy từ Google (không có thì lấy phần trước @ của email); ảnh quá dài thì bỏ qua. */
+    /** Họ tên lấy từ Google (không có thì lấy phần trước @ của email). */
     private static void ganHoSoGoogle(TaiKhoan taiKhoan, ThongTinGoogle google) {
         int viTriA = google.email().indexOf('@');
         String hoTen = google.ten() != null && !google.ten().isBlank()
@@ -128,10 +122,7 @@ public class DangNhapGoogleServiceImpl implements DangNhapGoogleService {
         taiKhoan.setAnhDaiDien(anhGoogle(google));
     }
 
-    /**
-     * Ảnh Google được lưu nguyên là URL của Google, không chép vào kho ảnh của mình (đăng nhập không phụ thuộc kho ảnh);
-     * URL quá dài so với cột thì bỏ qua.
-     */
+    /** Ảnh Google lưu nguyên URL của Google, không chép vào kho ảnh; URL quá dài thì bỏ qua. */
     private static String anhGoogle(ThongTinGoogle google) {
         return google.anh() != null && google.anh().length() <= DO_DAI_ANH_TOI_DA ? google.anh() : null;
     }

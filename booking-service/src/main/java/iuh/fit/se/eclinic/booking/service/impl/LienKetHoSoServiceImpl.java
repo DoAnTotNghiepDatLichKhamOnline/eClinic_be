@@ -29,10 +29,7 @@ import iuh.fit.se.eclinic.common.exception.LoiNghiepVu;
 import iuh.fit.se.eclinic.common.exception.MaLoi;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Không đặt {@code @Transactional} ở lớp: {@link #thuLienKet} tự mở transaction riêng bằng {@link TransactionTemplate}
- * để bắt được cả lỗi lúc commit; {@link #lienKet} chạy trong transaction của bên gọi.
- */
+/** Không đặt {@code @Transactional} ở lớp: thuLienKet tự mở transaction riêng để bắt cả lỗi lúc commit. */
 @Slf4j
 @Service
 public class LienKetHoSoServiceImpl implements LienKetHoSoService {
@@ -63,7 +60,7 @@ public class LienKetHoSoServiceImpl implements LienKetHoSoService {
         try {
             giaoDichRieng.executeWithoutResult(trangThai -> thuLienKetTrongGiaoDich(idTaiKhoan));
         } catch (RuntimeException e) {
-            // 2 request cùng lúc: request sau vi phạm UNIQUE id_tai_khoan; lần đọc kế tiếp thấy kết quả của request trước
+            // 2 request cùng lúc: request sau vi phạm UNIQUE id_tai_khoan
             log.warn("Không liên kết được hồ sơ bệnh nhân cho tài khoản id={}: {}", idTaiKhoan, e.toString());
         }
     }

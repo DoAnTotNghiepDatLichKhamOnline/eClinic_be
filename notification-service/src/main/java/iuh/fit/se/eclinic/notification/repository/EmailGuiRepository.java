@@ -30,12 +30,7 @@ public interface EmailGuiRepository extends JpaRepository<EmailGui, Long> {
             """)
     int danhDauDaGui(Long id, LocalDateTime bayGio);
 
-    /**
-     * Ghi 1 lần gửi lỗi.
-     *
-     * @param trangThai    CHO_GUI nếu còn được thử, THAT_BAI nếu bỏ
-     * @param lanThuKeTiep thời điểm sớm nhất của lần thử sau
-     */
+    /** Ghi 1 lần gửi lỗi. */
     @Transactional
     @Modifying
     @Query("""

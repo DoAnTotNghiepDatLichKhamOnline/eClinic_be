@@ -5,13 +5,7 @@ import java.util.List;
 
 import org.springframework.web.util.HtmlUtils;
 
-/**
- * Khung HTML của 1 email: lời chào, rồi các đoạn, dòng chi tiết, bảng và nút theo thứ tự gọi. Dùng chung cho email của
- * identity-service (tài khoản) và notification-service (lịch hẹn).
- * <p>
- * Câu chữ lấy qua {@link LayCau} (nơi gọi quyết định ngôn ngữ). Mọi giá trị chèn vào câu được đổi sang chữ và escape
- * trước; câu trong file thông điệp được phép chứa thẻ {@code <b>}.
- */
+/** Khung HTML của 1 email: lời chào, rồi các đoạn, dòng chi tiết, bảng và nút theo thứ tự gọi. */
 public final class KhungEmail {
 
     /** Lấy câu của 1 khoá thông điệp với các tham số đã escape. */
@@ -32,7 +26,7 @@ public final class KhungEmail {
     private final StringBuilder html = new StringBuilder(MO_KHUNG);
     private boolean dangMoDanhSach;
 
-    /** @param hoTen null = lời chào không nêu tên */
+    /** Bắt đầu email bằng lời chào; {@code hoTen} null thì không nêu tên. */
     public KhungEmail(LayCau layCau, String hoTen) {
         this.layCau = layCau;
         html.append("  <p>").append(hoTen == null ? cau("email.chaoKhongTen") : cau("email.chao", hoTen))
@@ -55,10 +49,7 @@ public final class KhungEmail {
         return this;
     }
 
-    /**
-     * Bảng: dòng tiêu đề lấy câu của các khoá {@code khoaCot}, rồi mỗi phần tử của {@code cacDong} là 1 dòng (giá trị
-     * được escape, không phải HTML).
-     */
+    /** Bảng: tiêu đề từ các khoá {@code khoaCot}, mỗi phần tử của {@code cacDong} là 1 dòng (đã escape). */
     public KhungEmail bang(String[] khoaCot, List<String[]> cacDong) {
         dongDanhSach();
         html.append("  <table style=\"").append(KIEU_BANG).append("\">\n    <tr>");

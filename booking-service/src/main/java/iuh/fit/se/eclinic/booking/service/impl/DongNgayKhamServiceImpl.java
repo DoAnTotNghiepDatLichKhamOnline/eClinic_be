@@ -11,10 +11,7 @@ import iuh.fit.se.eclinic.common.enums.TrangThaiHangDoi;
 import iuh.fit.se.eclinic.common.enums.TrangThaiLichHen;
 import lombok.RequiredArgsConstructor;
 
-/**
- * 1 lệnh UPDATE cho mọi lịch hẹn cần đóng: không gửi thông báo cho bệnh nhân (không phạt, không giới hạn đặt lịch khi
- * không đến).
- */
+/** 1 lệnh UPDATE cho mọi lịch hẹn cần đóng, không gửi thông báo cho bệnh nhân. */
 @Service
 @RequiredArgsConstructor
 public class DongNgayKhamServiceImpl implements DongNgayKhamService {

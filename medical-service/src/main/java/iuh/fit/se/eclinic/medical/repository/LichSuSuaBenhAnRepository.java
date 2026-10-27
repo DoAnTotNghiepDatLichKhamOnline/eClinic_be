@@ -7,10 +7,7 @@ import org.springframework.data.repository.Repository;
 
 import iuh.fit.se.eclinic.common.entity.medical.LichSuSuaBenhAn;
 
-/**
- * Lịch sử sửa hồ sơ bệnh án, CHỈ THÊM: kế thừa {@link Repository} nên chỉ có những hàm khai báo ở đây (không update /
- * delete), entity lại là {@code @Immutable}.
- */
+/** Lịch sử sửa hồ sơ bệnh án, chỉ thêm: kế thừa {@link Repository} nên không có update, delete. */
 public interface LichSuSuaBenhAnRepository extends Repository<LichSuSuaBenhAn, Long> {
 
     LichSuSuaBenhAn save(LichSuSuaBenhAn lanSua);

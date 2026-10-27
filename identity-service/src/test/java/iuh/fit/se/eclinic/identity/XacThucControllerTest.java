@@ -51,14 +51,11 @@ import iuh.fit.se.eclinic.identity.service.MatKhauService;
 import iuh.fit.se.eclinic.identity.service.XacThucService;
 import jakarta.servlet.http.Cookie;
 
-/**
- * Tầng web của /api/auth: công khai (không cần token), validate dữ liệu vào, định dạng JSON, cookie refresh token.
- * Service là mock.
- */
+/** Tầng web của /api/auth: công khai, validate dữ liệu vào, định dạng JSON, cookie refresh token. */
 @WebMvcTest(XacThucController.class)
 @AutoConfigureJson
 @Import({ BaoMatConfig.class, CookiePhien.class })
-// @WebMvcTest không quét @ConfigurationProperties: CookiePhien cần 2 record này (giá trị mặc định)
+// @WebMvcTest không quét @ConfigurationProperties: CookiePhien cần 2 record này
 @EnableConfigurationProperties({ CookiePhienProperties.class, DangNhapProperties.class })
 class XacThucControllerTest {
 
@@ -236,7 +233,7 @@ class XacThucControllerTest {
 
     @Test
     void matKhauDangNhapQua72ByteKhongBiChan400() throws Exception {
-        // Đăng nhập không kiểm tra quy tắc mật khẩu: mật khẩu dài phải ra 401 như sai mật khẩu, không phải 400
+        // Đăng nhập không kiểm tra quy tắc mật khẩu: mật khẩu dài ra 401 như sai mật khẩu, không 400
         when(dangNhapService.dangNhap(any(DangNhapRequest.class), any()))
                 .thenThrow(new LoiNghiepVu(MaLoi.SAI_THONG_TIN_DANG_NHAP));
 

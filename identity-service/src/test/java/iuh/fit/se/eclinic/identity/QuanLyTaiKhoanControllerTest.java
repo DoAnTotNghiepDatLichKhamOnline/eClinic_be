@@ -47,10 +47,7 @@ import iuh.fit.se.eclinic.identity.dto.response.HoSoBacSiResponse;
 import iuh.fit.se.eclinic.identity.dto.response.TaiKhoanQuanTriResponse;
 import iuh.fit.se.eclinic.identity.service.QuanLyTaiKhoanService;
 
-/**
- * Tầng web của /api/users (quản trị viên quản lý tài khoản): chỉ QUAN_TRI_VIEN gọi được, id quản trị viên lấy từ JWT,
- * validate tham số và body. Service là mock.
- */
+/** Tầng web của /api/users: chỉ QUAN_TRI_VIEN gọi được, validate tham số và body. */
 @WebMvcTest(QuanLyTaiKhoanController.class)
 @AutoConfigureJson
 @Import(BaoMatConfig.class)
@@ -254,7 +251,7 @@ class QuanLyTaiKhoanControllerTest {
         verify(quanLyTaiKhoanService).xoa(1L, 7L);
     }
 
-    /** @param nguoiDung null là không đăng nhập */
+    /** Request với người dùng giả lập; {@code nguoiDung} null là không đăng nhập. */
     private ResultActions doiTrangThai(RequestPostProcessor nguoiDung, Long id, String trangThai, String lyDo)
             throws Exception {
         String body = """

@@ -2,9 +2,7 @@ package iuh.fit.se.eclinic.common.enums;
 
 import java.util.List;
 
-/**
- * Trạng thái yêu cầu đổi lịch làm việc (SCHED-02, SCHED-03).
- */
+/** Trạng thái yêu cầu đổi lịch làm việc. */
 public enum TrangThaiYeuCau {
     /** NHUONG_CA vừa gửi: chờ bác sĩ nhận đồng ý; quản trị viên chưa duyệt được. */
     CHO_DONG_Y,

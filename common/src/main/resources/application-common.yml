@@ -1,15 +1,11 @@
-# Cấu hình dùng chung cho mọi service (dùng chung 1 MySQL + 1 Redis).
-# Mỗi service nạp file này bằng:  spring.config.import: classpath:application-common.yml
-# Biến môi trường: xem .env.example ở thư mục gốc.
+# Cấu hình dùng chung, mỗi service nạp bằng spring.config.import: classpath:application-common.yml
 spring:
-  # Chạy bằng IntelliJ: đọc thêm file .env ở thư mục làm việc (run config đặt là thư mục gốc dự án), không có file thì bỏ qua.
-  # Biến môi trường (docker-compose, run config) vẫn được ưu tiên hơn giá trị trong .env.
+  # Chạy bằng IntelliJ: đọc thêm .env ở thư mục gốc nếu có; biến môi trường vẫn được ưu tiên
   config:
     import: "optional:file:.env[.properties]"
 
   datasource:
-    # Không set serverTimezone/hibernate.jdbc.time_zone: DATETIME lưu đúng giờ "tường" (LocalDateTime),
-    # JVM được set mặc định Asia/Ho_Chi_Minh trong hàm main của mỗi service (AppTimeZone.apply()).
+    # Không đặt serverTimezone: DATETIME lưu giờ địa phương, JVM đặt Asia/Ho_Chi_Minh (AppTimeZone.apply())
     url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:eclinic}?characterEncoding=UTF-8
     username: ${DB_USERNAME:eclinic}
     password: ${DB_PASSWORD:eclinic}
@@ -17,11 +13,11 @@ spring:
   jpa:
     open-in-view: false
     hibernate:
-      # Schema do Flyway quản lý (common/src/main/resources/db/migration). Hibernate chỉ kiểm tra entity khớp schema.
+      # Schema do Flyway quản lý, Hibernate chỉ kiểm tra entity khớp schema
       ddl-auto: validate
 
   flyway:
-    # Bật ở mọi service: Flyway có khoá trên MySQL nên nhiều service khởi động cùng lúc vẫn an toàn.
+    # Bật ở mọi service: Flyway có khoá trên MySQL nên khởi động đồng thời vẫn an toàn
     enabled: true
     locations: classpath:db/migration
 
@@ -29,66 +25,53 @@ spring:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
-      # Mọi chỗ dùng Redis (đếm giới hạn, cache) đều có đường lui khi Redis lỗi, nên chờ ngắn rồi bỏ qua, không treo
-      # request. Đặt ở đây chứ không ở application.yml của service: file import đè lên file của service.
+      # Redis lỗi thì mọi chỗ dùng đều có đường lui, nên chờ ngắn (đặt ở đây vì file import đè file của service)
       timeout: 500ms
       connect-timeout: 500ms
 
-  # Thông điệp 2 ngôn ngữ (common/src/main/resources/thong-diep): <ten>.properties là tiếng Việt, <ten>_en.properties là
-  # tiếng Anh. Request chọn ngôn ngữ bằng header Accept-Language (xem NgonNgu, docs/QUY-UOC-CODE.md mục 4).
+  # Thông điệp 2 ngôn ngữ: <ten>.properties tiếng Việt, <ten>_en.properties tiếng Anh, chọn theo Accept-Language
   messages:
     basename: thong-diep/chung,thong-diep/identity,thong-diep/catalog,thong-diep/booking,thong-diep/medical,thong-diep/notification,thong-diep/chatbot,thong-diep/report
-    # Ngôn ngữ không có file riêng (vd "fr") dùng file tiếng Việt, không dùng ngôn ngữ của JVM
+    # Ngôn ngữ không có file riêng dùng tiếng Việt, không dùng ngôn ngữ của JVM
     fallback-to-system-locale: false
   web:
-    # Request không gửi Accept-Language: tiếng Việt (JVM trong container mặc định là tiếng Anh)
+    # Request không gửi Accept-Language: tiếng Việt
     locale: vi
 
 management:
   endpoints:
     web:
       exposure:
-        # /actuator/health (docker-compose healthcheck) và /actuator/info, không cần đăng nhập
         include: health,info
 
 app:
   benh-an:
-    # Bác sĩ sửa được hồ sơ bệnh án trong số ngày này kể từ lúc ghi nhận, sau đó chỉ xem. Đặt ở đây vì medical-service
-    # chặn sửa còn booking-service trả hạn sửa cho màn hình của bác sĩ (BenhAnProperties).
+    # Số ngày bác sĩ được sửa hồ sơ bệnh án kể từ lúc ghi nhận (medical-service và booking-service cùng đọc)
     so-ngay-duoc-sua: ${RECORD_EDIT_DAYS:7}
   so-kham:
-    # Sổ khám bệnh (SoKhamProperties): booking-service mở trang công khai, medical-service trả link cho bác sĩ.
-    # Link (cũng là nội dung mã QR) = frontend-url + duong-dan + mã sổ khám
+    # Link sổ khám (cũng là nội dung mã QR) = frontend-url + duong-dan + mã sổ khám
     frontend-url: ${FRONTEND_URL:http://localhost:5173}
     duong-dan: /so-kham/
-    # Cạnh ảnh QR (pixel) khi request không gửi kichThuoc
     kich-thuoc-qr: 300
-    # Nhập sai 4 số cuối SĐT đủ số lần này trong khoa-sau thì sổ khám bị khoá xem tới hết khoảng đó
+    # Nhập sai 4 số cuối SĐT đủ số lần này thì sổ khám bị khoá xem trong khoa-sau
     so-lan-sai-toi-da: 5
     khoa-sau: 15m
-  # Kho ảnh Cloudinary (gói miễn phí, không cần thẻ): xem .env.example. Chỉ service đặt app.cloudinary.bat: true mới tạo
-  # kho ảnh (identity-service: ảnh đại diện; catalog-service: ảnh giới thiệu bác sĩ). Thiếu 1 trong 3 giá trị đầu:
-  # các API tải ảnh lên trả 503, service vẫn khởi động bình thường.
+  # Kho ảnh Cloudinary; thiếu 1 trong 3 khoá thì API tải ảnh trả 503, service vẫn chạy
   cloudinary:
-    # KHÔNG đặt "bat" ở đây: file này được import nên giá trị ở đây đè lên application.yml của service
+    # KHÔNG đặt "bat" ở đây: file import đè lên application.yml của service
     cloud-name: ${CLOUDINARY_CLOUD_NAME:}
     api-key: ${CLOUDINARY_API_KEY:}
     api-secret: ${CLOUDINARY_API_SECRET:}
-    # Thư mục gốc của ảnh. 2 DB dùng chung 1 tài khoản Cloudinary thì đặt thư mục khác nhau (ảnh đặt tên theo id).
+    # 2 DB dùng chung 1 tài khoản Cloudinary thì đặt thư mục khác nhau (ảnh đặt tên theo id)
     thu-muc: ${CLOUDINARY_FOLDER:eclinic}
     url-api: https://api.cloudinary.com
     # Nhỏ hơn read-timeout của gateway (30s) để lỗi kho ảnh ra 503 chứ không ra 504
     thoi-gian-cho: 20s
   noi-bo:
-    # Khoá của các API nội bộ /noi-bo/** (service gọi service, không qua gateway), tối thiểu 32 ký tự, PHẢI giống nhau ở
-    # mọi service. Đổi giá trị mặc định thì đổi cả KhoaNoiBo.KHOA_DEV_MAC_DINH (dùng để cảnh báo khi khởi động).
+    # Khoá API nội bộ, giống nhau ở mọi service; đổi mặc định thì đổi cả KhoaNoiBo.KHOA_DEV_MAC_DINH
     khoa: ${INTERNAL_API_KEY:eclinic-dev-khoa-noi-bo-chi-dung-o-may-local-khong-dung-that}
   bao-mat:
-    # Khoá ký JWT (HS256), tối thiểu 32 ký tự, PHẢI giống nhau ở mọi service.
-    # Giá trị mặc định chỉ để chạy máy local; môi trường thật phải đặt JWT_SECRET.
-    # Đổi giá trị mặc định thì đổi cả JwtConfig.KHOA_DEV_MAC_DINH (dùng để cảnh báo khi khởi động).
+    # Khoá ký JWT, giống nhau ở mọi service; đổi mặc định thì đổi cả JwtConfig.KHOA_DEV_MAC_DINH
     jwt-secret: ${JWT_SECRET:eclinic-dev-secret-chi-dung-o-may-local-khong-dung-that-2026}
     thoi-han-access-token: ${JWT_TTL:30m}
-    # Mỗi service thêm đường dẫn không cần đăng nhập của mình trong application.yml, vd:
-    # duong-dan-cong-khai:
-    #   - GET /api/catalog/chuyen-khoa/**
+    # Đường dẫn công khai đặt trong application.yml của từng service (duong-dan-cong-khai)

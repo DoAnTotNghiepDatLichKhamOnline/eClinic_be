@@ -18,10 +18,7 @@ import iuh.fit.se.eclinic.common.security.NguoiDungHienTai;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
-/**
- * PAT-01: bệnh nhân xem, tạo, sửa hồ sơ bệnh nhân của tài khoản mình. Form đặt lịch "cho bản thân" lấy dữ liệu điền sẵn
- * từ đây.
- */
+/** Bệnh nhân xem, tạo, sửa hồ sơ bệnh nhân của tài khoản mình. */
 @Tag(name = "Hồ sơ bệnh nhân", description = "PAT-01: hồ sơ bệnh nhân của tài khoản đang đăng nhập")
 @RestController
 @RequestMapping("/api/booking/ho-so-benh-nhan")

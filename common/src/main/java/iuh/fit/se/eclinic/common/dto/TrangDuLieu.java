@@ -4,9 +4,7 @@ import java.util.List;
 
 import org.springframework.data.domain.Page;
 
-/**
- * Một trang dữ liệu, đặt trong "duLieu" của PhanHoiApi. Trang đánh số từ 0 (theo Spring Data).
- */
+/** Một trang dữ liệu, đặt trong "duLieu" của PhanHoiApi. */
 public record TrangDuLieu<T>(List<T> noiDung, int trang, int kichThuoc, long tongSoPhanTu, int tongSoTrang) {
 
     public static <T> TrangDuLieu<T> tu(Page<T> page) {

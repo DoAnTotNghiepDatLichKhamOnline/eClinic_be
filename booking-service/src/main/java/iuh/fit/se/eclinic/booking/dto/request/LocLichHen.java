@@ -1,8 +1,6 @@
 package iuh.fit.se.eclinic.booking.dto.request;
 
-/**
- * Bộ lọc "lịch hẹn của tôi" (UC-APPT-05: Tất cả / Sắp tới / Lịch sử).
- */
+/** Bộ lọc "lịch hẹn của tôi": tất cả, sắp tới, lịch sử. */
 public enum LocLichHen {
     TAT_CA,
     /** Lịch DA_XAC_NHAN mà lượt khám chưa kết thúc. */

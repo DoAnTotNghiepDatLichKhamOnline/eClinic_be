@@ -25,10 +25,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 
-/**
- * Danh mục thuốc của quản trị viên (màn hình Medical Catalog): thêm / sửa, xác minh thuốc bác sĩ đã tự thêm trước đây, cho
- * ngừng dùng. Bác sĩ chỉ kê thuốc đang dùng và đã xác minh; gợi ý thuốc cho bác sĩ ở {@link KhamBenhController}.
- */
+/** Danh mục thuốc của quản trị viên: thêm, sửa, xác minh thuốc bác sĩ đã thêm, cho ngừng dùng. */
 @Tag(name = "Quản trị danh mục thuốc", description = "Danh sách, thêm, sửa, xác minh, ngừng dùng / dùng lại (quản trị viên)")
 @RestController
 @RequestMapping("/api/medical/quan-tri/thuoc")

@@ -2,11 +2,7 @@ package iuh.fit.se.eclinic.booking.service;
 
 import iuh.fit.se.eclinic.common.enums.NguonThayDoiCa;
 
-/**
- * Thay đổi ca làm việc đến từ đâu: ghi vào lịch sử ca (lich_su_ca_lam_viec.nguon, id_yeu_cau).
- *
- * @param idYeuCau yêu cầu đổi ca / xin nghỉ đang được duyệt trong cùng transaction; null nếu không phải duyệt yêu cầu
- */
+/** Thay đổi ca làm việc đến từ đâu: ghi vào lịch sử ca (lich_su_ca_lam_viec.nguon, id_yeu_cau). */
 public record NguonThayDoi(NguonThayDoiCa nguon, Long idYeuCau) {
 
     public static final NguonThayDoi QUAN_TRI = new NguonThayDoi(NguonThayDoiCa.QUAN_TRI, null);

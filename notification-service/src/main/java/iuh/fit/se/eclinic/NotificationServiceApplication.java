@@ -6,11 +6,7 @@ import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 
 import iuh.fit.se.eclinic.common.config.AppTimeZone;
 
-/**
- * notification-service (cổng 8086): thông báo trong ứng dụng, gửi email — NOTI-01.
- * <p>
- * Đặt ở package gốc để scan được cả entity/config trong module common lẫn code trong package {@code notification}.
- */
+/** notification-service (cổng 8086): thông báo trong ứng dụng, gửi email. */
 @SpringBootApplication
 @ConfigurationPropertiesScan
 public class NotificationServiceApplication {

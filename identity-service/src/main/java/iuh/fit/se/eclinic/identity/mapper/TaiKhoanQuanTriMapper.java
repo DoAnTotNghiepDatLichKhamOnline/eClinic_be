@@ -12,24 +12,21 @@ import iuh.fit.se.eclinic.identity.dto.response.ChiTietTaiKhoanResponse;
 import iuh.fit.se.eclinic.identity.dto.response.TaiKhoanQuanTriResponse;
 import lombok.RequiredArgsConstructor;
 
-/**
- * Chuyển TaiKhoan -> dữ liệu cho màn hình quản lý tài khoản của quản trị viên. Viết tay, không bao giờ đưa matKhauHash
- * hay googleId ra ngoài (chỉ báo có / không), và không đưa dữ liệu y tế của hồ sơ bệnh nhân.
- */
+/** Chuyển TaiKhoan -> dữ liệu cho màn hình quản lý tài khoản của quản trị viên. */
 @Component
 @RequiredArgsConstructor
 public class TaiKhoanQuanTriMapper {
 
     private final HoSoCaNhanMapper hoSoCaNhanMapper;
 
-    /** @param ngaySinh ngày sinh từ hồ sơ bệnh nhân đã liên kết; null nếu không có */
+    /** Dòng danh sách; {@code ngaySinh} lấy từ hồ sơ bệnh nhân đã liên kết, null nếu không có. */
     public TaiKhoanQuanTriResponse toResponse(TaiKhoan taiKhoan, LocalDate ngaySinh) {
         return new TaiKhoanQuanTriResponse(taiKhoan.getId(), taiKhoan.getHoTen(), taiKhoan.getEmail(),
                 taiKhoan.getSoDienThoai(), taiKhoan.getAnhDaiDien(), taiKhoan.getVaiTro(), taiKhoan.getTrangThai(),
                 taiKhoan.getLyDoVoHieuHoa(), ngaySinh, taiKhoan.getNgayTao());
     }
 
-    /** @param bacSi null nếu không có; @param hoSoBenhNhan null nếu không có */
+    /** Chi tiết tài khoản; {@code bacSi}, {@code hoSoBenhNhan} null nếu không có. */
     public ChiTietTaiKhoanResponse toChiTiet(TaiKhoan taiKhoan, BacSi bacSi, HoSoBenhNhan hoSoBenhNhan) {
         return new ChiTietTaiKhoanResponse(taiKhoan.getId(), taiKhoan.getHoTen(), taiKhoan.getEmail(),
                 taiKhoan.getSoDienThoai(), taiKhoan.getAnhDaiDien(), taiKhoan.getVaiTro(), taiKhoan.getTrangThai(),

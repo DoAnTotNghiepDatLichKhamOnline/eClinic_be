@@ -24,14 +24,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * Hồ sơ bác sĩ (ERD: BacSi). Quản trị viên sửa mọi mục (DOC-01, ADM-02); bác sĩ tự sửa giới thiệu ngắn, tiểu sử, ngôn
- * ngữ khám, giải thưởng, công trình nghiên cứu (DOANTOTNGH-10 B7). Chuyên khoa, giấy phép, học vị, chức vụ, quá trình đào
- * tạo / công tác, lĩnh vực khám chữa, năm bắt đầu hành nghề, trạng thái: chỉ quản trị viên.
- * <p>
- * Khác ERD: bỏ {@code phiKham} (Q1 — không thanh toán ở MVP); thêm {@code hocVi} (DOC-01/DOC-03)
- * và {@code trangThai} "Đang/Ngừng công tác" (ADM-02).
- */
+/** Hồ sơ bác sĩ. */
 @Getter
 @Setter
 @NoArgsConstructor
@@ -133,10 +126,7 @@ public class BacSi extends BaseEntity {
     @Column(name = "cong_trinh_nghien_cuu_en", columnDefinition = "TEXT")
     private String congTrinhNghienCuuEn;
 
-    /**
-     * Tăng 1 mỗi lần lưu hồ sơ giới thiệu (quản trị viên hoặc bác sĩ); lần lưu gửi phiên bản cũ bị từ chối. Không dùng
-     * {@code @Version}: đổi trạng thái / chuyên khoa không được làm hỏng lần lưu hồ sơ đang mở.
-     */
+    /** Tăng 1 mỗi lần lưu hồ sơ giới thiệu (quản trị viên hoặc bác sĩ); lần lưu gửi phiên bản cũ bị từ chối. */
     @Column(name = "phien_ban_ho_so", nullable = false)
     private int phienBanHoSo = 1;
 
@@ -145,7 +135,7 @@ public class BacSi extends BaseEntity {
     @Column(name = "trang_thai", nullable = false, length = 20)
     private TrangThaiBacSi trangThai = TrangThaiBacSi.DANG_CONG_TAC;
 
-    // Chữ theo ngôn ngữ: bản tiếng Anh nếu được yêu cầu và đã nhập, không thì bản tiếng Việt (NgonNgu.chon).
+    // Chữ theo ngôn ngữ: bản tiếng Anh nếu có, không thì tiếng Việt
     public String chucVu(NgonNgu ngonNgu) {
         return ngonNgu.chon(chucVu, chucVuEn);
     }

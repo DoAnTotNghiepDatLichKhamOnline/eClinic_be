@@ -6,11 +6,7 @@ import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 
 import iuh.fit.se.eclinic.common.config.AppTimeZone;
 
-/**
- * identity-service (cổng 8081): tài khoản, xác thực, phiên đăng nhập — AUTH-01..04.
- * <p>
- * Đặt ở package gốc để scan được cả entity/config trong module common lẫn code trong package {@code identity}.
- */
+/** identity-service (cổng 8081): tài khoản, xác thực, phiên đăng nhập. */
 @SpringBootApplication
 @ConfigurationPropertiesScan
 public class IdentityServiceApplication {

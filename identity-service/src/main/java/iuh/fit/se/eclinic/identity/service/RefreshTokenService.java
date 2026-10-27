@@ -8,17 +8,13 @@ import java.util.Optional;
 import iuh.fit.se.eclinic.common.entity.identity.RefreshToken;
 import iuh.fit.se.eclinic.common.entity.identity.TaiKhoan;
 
-/**
- * Quản lý phiên đăng nhập. Token gốc chỉ nằm ở client; DB chỉ giữ SHA-256 của token.
- */
+/** Quản lý phiên đăng nhập. */
 public interface RefreshTokenService {
 
     /** SHA-256 hex của refresh token gốc. */
     String bamToken(String rawToken);
 
-    /**
-     * Phiên vừa tạo: token gốc để gửi cho client (chỉ lần này) và mã phiên để đưa vào access token.
-     */
+    /** Phiên vừa tạo: token gốc để gửi cho client (chỉ lần này) và mã phiên cho access token. */
     record PhienMoi(String refreshToken, String maPhien) {
 
         /** Không in token (tránh lộ khi bị log). */
@@ -32,10 +28,7 @@ public interface RefreshTokenService {
     /** Tạo phiên đăng nhập mới (mã phiên mới, thời điểm đăng nhập = bây giờ), lưu hash của token. */
     PhienMoi tao(TaiKhoan taiKhoan, String thongTinThietBi, Duration thoiHan);
 
-    /**
-     * Tạo dòng tiếp theo của 1 phiên đang có (làm mới phiên): giữ nguyên mã phiên và thời điểm đăng nhập.
-     * Người gọi PHẢI đã thu hồi dòng cũ. Trả về token gốc mới.
-     */
+    /** Tạo dòng tiếp theo của 1 phiên (làm mới): giữ nguyên mã phiên và thời điểm đăng nhập. */
     String taoTiepTheo(TaiKhoan taiKhoan, String maPhien, LocalDateTime ngayDangNhap, String thongTinThietBi,
             Duration thoiHan);
 
@@ -50,22 +43,16 @@ public interface RefreshTokenService {
 
     void thuHoi(Long refreshTokenId);
 
-    /** Thu hồi nguyên tử: true nếu lời gọi này là lời gọi thu hồi phiên (phiên còn hiệu lực trước đó). */
+    /** Thu hồi nguyên tử: true nếu lời gọi này là lời gọi thu hồi phiên. */
     boolean thuHoiNeuConHieuLuc(Long refreshTokenId);
 
-    /** Đăng xuất khỏi tất cả thiết bị (AUTH-03 sau khi đặt lại mật khẩu, ADM-03 khi vô hiệu hóa tài khoản). */
+    /** Đăng xuất khỏi tất cả thiết bị. */
     int thuHoiTatCaCuaTaiKhoan(Long taiKhoanId);
 
-    /**
-     * Đăng xuất 1 phiên của tài khoản theo mã phiên. false nếu tài khoản không có phiên nào còn hiệu lực với mã đó
-     * (mã sai, phiên của tài khoản khác, đã đăng xuất hoặc đã hết hạn).
-     */
+    /** Đăng xuất 1 phiên của tài khoản theo mã; false nếu không có phiên nào còn hiệu lực với mã đó. */
     boolean thuHoiPhien(Long taiKhoanId, String maPhien);
 
-    /**
-     * Đăng xuất mọi phiên của tài khoản trừ phiên {@code maPhienGiuLai}; null thì đăng xuất tất cả.
-     * Trả về số phiên đã thu hồi.
-     */
+    /** Đăng xuất mọi phiên của tài khoản trừ phiên {@code maPhienGiuLai}; null thì đăng xuất tất cả. */
     int thuHoiCacPhienKhac(Long taiKhoanId, String maPhienGiuLai);
 
     /** Xoá các phiên đã hết hạn; trả về số dòng đã xoá. */

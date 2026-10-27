@@ -1,15 +1,13 @@
 server:
   port: 8080
-  # Nén gzip response gửi cho trình duyệt (khi client gửi Accept-Encoding: gzip): JSON từ 2KB trở lên, giảm dung lượng
-  # truyền qua mạng thật. Danh sách kiểu mặc định đã có application/json; file Excel, PDF tải về không nằm trong đó.
+  # Nén gzip response JSON khi client gửi Accept-Encoding: gzip
   compression:
     enabled: true
 
 spring:
   application:
     name: api-gateway
-  # Chạy bằng IntelliJ: đọc thêm file .env ở thư mục làm việc (run config đặt là thư mục gốc dự án), không có file thì bỏ qua.
-  # Biến môi trường (docker-compose, run config) vẫn được ưu tiên hơn giá trị trong .env.
+  # Chạy bằng IntelliJ: đọc thêm .env ở thư mục gốc nếu có; biến môi trường vẫn được ưu tiên
   config:
     import: "optional:file:.env[.properties]"
 
@@ -17,16 +15,9 @@ spring:
     gateway:
       server:
         webmvc:
-          # Gateway chỉ ghi X-Forwarded-For (địa chỉ client) cho service phía sau khi có thuộc tính này. Giá trị là regex
-          # các proxy đứng TRƯỚC gateway được tin; mặc định tin tất cả, vì service chỉ đọc phần tử cuối của
-          # X-Forwarded-For (do chính gateway thêm). booking-service dùng nó để giới hạn số lần đặt lịch theo IP.
+          # Proxy đứng trước gateway được tin để ghi X-Forwarded-For; service chỉ đọc phần tử cuối
           trusted-proxies: ${GATEWAY_TRUSTED_PROXIES:.*}
-          # Mỗi service 1 route: request /api/<service>/** được chuyển tới service đó, GIỮ NGUYÊN đường dẫn
-          # (controller của service tự map đầy đủ /api/<service>/..., vd /api/catalog/chuyen-khoa).
-          # Thêm service mới = copy 1 route bên dưới, đổi id, Path và biến *_URL.
-          # Ngoại lệ: API xác thực và API tài khoản theo tài liệu API là /api/auth/**, /api/users/** (không có tên service)
-          # nên cũng về identity-service.
-          # Biến *_URL mặc định trỏ localhost (chạy bằng IntelliJ); docker-compose đặt http://<ten-service>:<cong>.
+          # /api/<service>/** về service đó, giữ nguyên đường dẫn; /api/auth, /api/users về identity-service
           routes:
             - id: identity-service
               uri: ${IDENTITY_URL:http://localhost:8081}
@@ -57,20 +48,18 @@ spring:
               predicates:
                 - Path=/api/report/**
 
-  # Thông điệp lỗi của gateway bằng 2 ngôn ngữ (thong-diep/gateway*.properties), chọn theo header Accept-Language:
-  # "en..." là tiếng Anh, không gửi hoặc ngôn ngữ khác là tiếng Việt. Header được chuyển nguyên cho các service.
+  # Thông điệp lỗi của gateway, chọn theo Accept-Language ("en..." tiếng Anh, còn lại tiếng Việt)
   messages:
     basename: thong-diep/gateway
     fallback-to-system-locale: false
 
-  # Thời gian chờ khi gateway gọi tới service (quá hạn -> 504, service chưa chạy -> 503)
+  # Gọi service: quá hạn -> 504, service chưa chạy -> 503
   http:
     clients:
       connect-timeout: 2s
       read-timeout: ${GATEWAY_READ_TIMEOUT:30s}
 
-  # Redis chỉ dùng để đếm request cho giới hạn tần suất (app.gioi-han bên dưới). Thời gian chờ ngắn: Redis lỗi thì
-  # request vẫn được chuyển tiếp (không giới hạn), không để mọi request phải chờ lâu.
+  # Redis chỉ để đếm giới hạn tần suất; lỗi thì request vẫn được chuyển tiếp
   data:
     redis:
       host: ${REDIS_HOST:localhost}
@@ -82,30 +71,21 @@ management:
   endpoints:
     web:
       exposure:
-        # /actuator/health cho healthcheck của docker-compose
         include: health,info
   health:
     redis:
-      # Redis lỗi thì gateway bỏ qua giới hạn tần suất và vẫn chạy, nên không được báo gateway DOWN
+      # Redis lỗi thì gateway vẫn chạy, nên không được báo DOWN
       enabled: false
 
 app:
   gioi-han:
-    # Body request tối đa (theo Content-Length); vượt -> gateway trả 413 YEU_CAU_QUA_LON, không chuyển tiếp
-    # (body tới 4 lần giới hạn được đọc bỏ trước khi trả lời để client chắc chắn nhận được thông báo, xem GioiHanKichThuocFilter).
-    # Gateway KHÔNG đọc multipart (Spring Cloud Gateway MVC tắt spring.servlet.multipart ở gateway) mà chuyển nguyên
-    # body cho service, nên đây là giới hạn duy nhất tại gateway. Phải NHỎ HƠN server.tomcat.max-swallow-size của
-    # các service nhận upload (identity-service, catalog-service: 10MB); giới hạn nghiệp vụ nhỏ hơn do từng service tự
-    # đặt (ảnh đại diện 2MB, ảnh giới thiệu bác sĩ 4MB).
+    # Body tối đa theo Content-Length (-> 413); phải nhỏ hơn max-swallow-size của service nhận upload (10MB)
     kich-thuoc-request-toi-da: ${GATEWAY_MAX_REQUEST_SIZE:5MB}
-    # Giới hạn tần suất: số request tối đa của 1 địa chỉ IP trong 1 phút (đếm trên Redis), vượt -> 429 QUA_NHIEU_YEU_CAU
-    # kèm header Retry-After (xem GioiHanTanSuatFilter). Mỗi request chỉ tính vào 1 nhóm. Mức mặc định rộng vì nhiều bệnh
-    # nhân ở cùng 1 mạng (bệnh viện, công ty) dùng chung 1 IP. Redis lỗi thì bỏ qua giới hạn, request vẫn được chuyển tiếp.
-    # Kiểm tra tải (scripts/load-test) gửi mọi request từ 1 IP: đặt cả 3 biến rất lớn, vd 1000000.
+    # Số request tối đa của 1 IP trong 1 phút (-> 429); kiểm tra tải thì đặt cả 3 rất lớn
     so-yeu-cau-moi-phut: ${GATEWAY_RATE_LIMIT:300}
-    # POST tới các đường dẫn đăng nhập / đăng ký / gửi email bên dưới
+    # POST tới các đường dẫn xác thực bên dưới
     so-yeu-cau-xac-thuc-moi-phut: ${GATEWAY_AUTH_RATE_LIMIT:20}
-    # POST /api/chatbot/** (gửi tin nhắn, mở phiên: tốn lượt gọi mô hình). GET (xem tin nhắn) tính vào nhóm chung.
+    # POST /api/chatbot/** (tốn lượt gọi mô hình)
     so-yeu-cau-chatbot-moi-phut: ${GATEWAY_CHATBOT_RATE_LIMIT:30}
     duong-dan-xac-thuc:
       - /api/auth/login
@@ -114,6 +94,5 @@ app:
       - /api/auth/forgot-password
       - /api/auth/resend-verification
   cors:
-    # Các địa chỉ frontend được gọi API (phân cách bằng dấu phẩy).
-    # CORS CHỈ cấu hình ở gateway, không cấu hình trong các service (tránh trùng header).
+    # Địa chỉ frontend được gọi API (phân cách bằng dấu phẩy); CORS chỉ cấu hình ở gateway
     nguon-duoc-phep: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:3000}

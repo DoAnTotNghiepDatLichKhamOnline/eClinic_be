@@ -10,9 +10,7 @@ import jakarta.persistence.EntityListeners;
 import jakarta.persistence.MappedSuperclass;
 import lombok.Getter;
 
-/**
- * Entity có cột ngay_tao (tự điền nhờ JPA auditing). Chỉ dùng cho bảng mà ERD có cột ngayTao.
- */
+/** Entity có cột ngay_tao (tự điền nhờ JPA auditing). */
 @Getter
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)

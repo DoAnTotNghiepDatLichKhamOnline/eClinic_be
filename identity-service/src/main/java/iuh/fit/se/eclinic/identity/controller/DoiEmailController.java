@@ -17,11 +17,7 @@ import iuh.fit.se.eclinic.identity.service.DoiEmailService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
-/**
- * Đổi email đăng nhập của người đang đăng nhập: gửi yêu cầu, xem yêu cầu đang chờ, huỷ yêu cầu. Mọi vai trò đều gọi được.
- * Email chỉ đổi khi token trong liên kết gửi tới địa chỉ mới được gửi về POST /api/auth/confirm-email-change
- * (XacThucController; không cần đăng nhập).
- */
+/** Đổi email đăng nhập của người đang đăng nhập: gửi yêu cầu, xem yêu cầu đang chờ, huỷ yêu cầu. */
 @Tag(name = "Đổi email", description = "Yêu cầu, xem và huỷ việc đổi email đăng nhập của người đang đăng nhập")
 @RestController
 @RequestMapping("/api/users/me/change-email")

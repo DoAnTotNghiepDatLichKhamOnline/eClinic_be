@@ -66,11 +66,7 @@ import iuh.fit.se.eclinic.identity.service.RefreshTokenService;
 import iuh.fit.se.eclinic.identity.service.XacThucService;
 import jakarta.persistence.EntityManager;
 
-/**
- * Quản trị viên quản lý tài khoản với MySQL + Redis thật. Người thực hiện là quản trị viên mặc định do KhoiTaoAdminRunner
- * tạo (KHÔNG tạo thêm quản trị viên trong test: KhoiTaoAdminTest đếm số quản trị viên). Dữ liệu mỗi test có hậu tố
- * ngẫu nhiên để không đụng nhau trong container dùng chung. Không gửi email: kiểm tra qua event đã phát.
- */
+/** Quản trị viên quản lý tài khoản với MySQL + Redis thật. */
 @SpringBootTest
 @Import({ MySqlTestcontainersConfiguration.class, RedisTestcontainersConfiguration.class })
 @RecordApplicationEvents
@@ -163,7 +159,7 @@ class QuanLyTaiKhoanServiceTest {
         assertThat(idTimDuoc(hauTo + " a_b", null, null)).containsExactly(gachDuoi.getId());
         assertThat(idTimDuoc(hauTo + " c!d", null, null)).containsExactly(chamThan.getId());
         assertThat(idTimDuoc(hauTo + " c!", null, null)).containsExactly(chamThan.getId());
-        // Gõ đúng 1 ký tự "%" hay "_": chỉ ra tài khoản thật sự chứa ký tự đó, không phải mọi tài khoản
+        // Gõ đúng 1 ký tự "%" hay "_": chỉ ra tài khoản thật sự chứa ký tự đó
         assertThat(idTimDuoc("%", null, null)).contains(phanTram.getId())
                 .doesNotContain(khongPhanTram.getId(), gachDuoi.getId(), khongGachDuoi.getId(), chamThan.getId());
         assertThat(idTimDuoc("_", null, null)).contains(gachDuoi.getId())
@@ -353,7 +349,7 @@ class QuanLyTaiKhoanServiceTest {
         quanLyTaiKhoanService.capNhatTrangThai(idAdmin, taiKhoan.getId(), voHieuHoa("Vi phạm"));
         quanLyTaiKhoanService.capNhatTrangThai(idAdmin, taiKhoan.getId(), kichHoatLai());
 
-        // Tài khoản đã hoạt động lại nên lỗi 410 là do liên kết đã bị huỷ, không phải do trạng thái tài khoản
+        // Tài khoản đã hoạt động lại nên 410 là do liên kết đã bị huỷ
         assertThat(doiEmailService.layYeuCauDangCho(taiKhoan.getId())).isNull();
         assertMaLoi(() -> doiEmailService.xacNhan(tokenDoiEmail), MaLoi.LIEN_KET_KHONG_HOP_LE);
         assertMaLoi(() -> matKhauService.datLaiMatKhau(tokenDatLai, "matkhau-moi"), MaLoi.LIEN_KET_KHONG_HOP_LE);
@@ -433,7 +429,7 @@ class QuanLyTaiKhoanServiceTest {
         assertThat(quanLyTaiKhoanService.layChiTiet(idAdmin, idAdmin).id()).isEqualTo(idAdmin);
     }
 
-    // ---------- Bác sĩ còn lịch hẹn (UC-DOCT-03) ----------
+    // ---------- Bác sĩ còn lịch hẹn ----------
 
     @Test
     void bacSiConLichHenSapToiKhongVoHieuHoaDuocChoToiKhiLichHenBiHuy() {
@@ -549,7 +545,7 @@ class QuanLyTaiKhoanServiceTest {
 
     // ---------- Hỗ trợ ----------
 
-    /** @param duLieuDangGiu tên các loại dữ liệu đang giữ tài khoản (tham số của thông điệp lỗi), tiếng Việt vì test không có request */
+    /** Xoá phải bị chặn, thông điệp nêu {@code duLieuDangGiu} (tiếng Việt vì test không có request). */
     private void assertKhongXoaDuoc(TaiKhoan taiKhoan, String duLieuDangGiu) {
         assertThatThrownBy(() -> quanLyTaiKhoanService.xoa(idAdmin, taiKhoan.getId()))
                 .isInstanceOf(LoiNghiepVu.class)
@@ -629,12 +625,7 @@ class QuanLyTaiKhoanServiceTest {
         return fixtures.persist(bacSi);
     }
 
-    /**
-     * 1 lịch hẹn của Khách với bác sĩ vào ngày {@code ngay} (ca 08:00–11:00, khung giờ 08:00–08:30). Dựng tay thay cho
-     * TestFixtures.taoCaLamViec (cái đó tạo thêm 1 tài khoản quản trị viên): ca do quản trị viên mặc định xếp.
-     *
-     * @return id lịch hẹn
-     */
+    /** 1 lịch hẹn của Khách với bác sĩ vào ngày {@code ngay} (ca 08:00–11:00, khung 08:00–08:30). */
     private Long taoLichHen(BacSi bacSi, LocalDate ngay, TrangThaiLichHen trangThai) {
         return transactionTemplate.execute(status -> {
             QuanTriVien quanTriVien = entityManager

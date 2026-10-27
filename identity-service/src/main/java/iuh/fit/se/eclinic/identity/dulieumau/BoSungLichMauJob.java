@@ -9,10 +9,7 @@ import org.springframework.stereotype.Component;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * 0 giờ 10 mỗi ngày bổ sung ca làm việc mẫu cho ngày mới nhất, để service chạy nhiều ngày liền vẫn luôn còn
- * khung giờ trống để đặt lịch.
- */
+/** 0 giờ 10 mỗi ngày bổ sung ca làm việc mẫu cho ngày mới nhất, để luôn còn khung giờ trống. */
 @Slf4j
 @Component
 @RequiredArgsConstructor

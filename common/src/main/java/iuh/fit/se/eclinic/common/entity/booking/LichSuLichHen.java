@@ -21,10 +21,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * 1 thao tác trên 1 lịch hẹn (V35): việc gì ({@code suKien}), ai làm, lúc nào ({@code ngayTao}), lý do. Ghi cùng
- * transaction với thao tác. CHỈ THÊM: {@link Immutable} nên Hibernate bỏ qua mọi thay đổi trên dòng đã lưu.
- */
+/** 1 thao tác trên 1 lịch hẹn: việc gì, ai làm, lúc nào, lý do. */
 @Getter
 @Setter
 @NoArgsConstructor

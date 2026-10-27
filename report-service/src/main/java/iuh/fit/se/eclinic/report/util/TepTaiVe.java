@@ -5,11 +5,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
-/**
- * Response tải tệp (báo cáo Excel): trình duyệt lưu thành tệp tên {@code tenTep}. API tải tệp không khai báo
- * {@code produces} để lỗi (kỳ sai...) vẫn trả JSON như các API khác. Gateway cho frontend đọc header
- * Content-Disposition (CorsConfig). Cùng cách làm với TepTaiVe của booking-service.
- */
+/** Response tải tệp (báo cáo Excel): trình duyệt lưu thành tệp tên {@code tenTep}. */
 public final class TepTaiVe {
 
     public static final MediaType XLSX = MediaType

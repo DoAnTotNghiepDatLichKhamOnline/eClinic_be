@@ -31,14 +31,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 
-/**
- * Bác sĩ đang đăng nhập xem hồ sơ giới thiệu của mình và tự sửa phần được phép (DOANTOTNGH-10 B7), có hiệu lực ngay:
- * giới thiệu ngắn, tiểu sử, ngôn ngữ khám, giải thưởng, công trình nghiên cứu (cả bản tiếng Anh) và ảnh làm việc. Học
- * vị, chức vụ, giấy phép, đào tạo, công tác, lĩnh vực khám chữa, năm bắt đầu hành nghề, ảnh chứng chỉ: quản trị viên sửa
- * ({@link QuanTriBacSiController}). Ảnh đại diện, số điện thoại: /api/users/me.
- * <p>
- * GET /api/catalog/bac-si/** là đường dẫn công khai nhưng @PreAuthorize vẫn chặn: không đăng nhập thì 401.
- */
+/** Bác sĩ đang đăng nhập xem và tự sửa phần được phép của hồ sơ giới thiệu, có hiệu lực ngay. */
 @Tag(name = "Hồ sơ của bác sĩ", description = "Bác sĩ xem và tự sửa 1 phần hồ sơ giới thiệu, ảnh làm việc")
 @RestController
 @RequestMapping("/api/catalog/bac-si/toi")

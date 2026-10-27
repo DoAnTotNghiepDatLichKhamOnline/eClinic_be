@@ -8,18 +8,7 @@ import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 
-/**
- * Sinh hiệu đo lúc khám; mọi trường đều không bắt buộc. Huyết áp gửi cả 2 số hoặc không số nào, tâm trương thấp hơn tâm
- * thu (kiểm tra trong service).
- *
- * @param mach             lần/phút
- * @param nhietDo          °C
- * @param huyetApTamThu    mmHg
- * @param huyetApTamTruong mmHg
- * @param nhipTho          lần/phút
- * @param canNang          kg
- * @param chieuCao         cm
- */
+/** Sinh hiệu đo lúc khám; mọi trường đều không bắt buộc. */
 public record SinhHieuRequest(
         @Min(value = 20, message = "{kiemTra.mach.khoang}")
         @Max(value = 250, message = "{kiemTra.mach.khoang}")

@@ -35,7 +35,7 @@ public class SuaHoSoBenhNhanServiceImpl implements SuaHoSoBenhNhanService {
     @Override
     @Transactional
     public HoSoBenhNhanQuanTriResponse sua(Long id, SuaHoSoBenhNhanRequest request, Long idNguoiSua) {
-        // Khoá dòng hồ sơ như lúc đặt lịch: lần đặt đang chạy của cùng bệnh nhân đối chiếu với dữ liệu trước hoặc sau khi sửa
+        // Khoá dòng hồ sơ như lúc đặt lịch để lần đặt đang chạy không đọc dữ liệu sửa dở
         HoSoBenhNhan hoSo = hoSoBenhNhanRepository.findByIdForUpdate(id)
                 .orElseThrow(() -> new LoiKhongTimThay("HoSoBenhNhan", id));
         String cccd = rongThanhNull(request.cccd());
@@ -52,8 +52,7 @@ public class SuaHoSoBenhNhanServiceImpl implements SuaHoSoBenhNhanService {
         hoSo.setDiaChi(rongThanhNull(request.diaChi()));
         hoSo.setSoBaoHiemYTe(rongThanhNull(request.soBaoHiemYTe()));
         if (hoSo.getCccd() == null) {
-            // Hồ sơ chưa có CCCD được tìm lại bằng khoá nhận diện: tính lại theo họ tên / ngày sinh mới và CCCD người
-            // giám hộ đã khai lúc tạo hồ sơ, để lần đặt sau với thông tin đã sửa vẫn về đúng hồ sơ này
+            // Hồ sơ chưa có CCCD: tính lại khoá nhận diện theo thông tin mới để lần đặt sau vẫn về đúng hồ sơ
             nguoiGiamHoRepository.findFirstByHoSoBenhNhanIdOrderByIdAsc(id)
                     .ifPresent(giamHo -> hoSo.setKhoaNhanDien(
                             KhoaNhanDien.tao(hoSo.getHoTen(), hoSo.getNgaySinh(), giamHo.getCccd())));

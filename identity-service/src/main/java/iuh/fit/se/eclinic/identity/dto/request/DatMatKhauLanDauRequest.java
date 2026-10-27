@@ -5,7 +5,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-/** Đặt mật khẩu ở lần đăng nhập đầu của tài khoản đang mang mật khẩu mặc định (đăng nhập trả PHAI_DOI_MAT_KHAU). */
+/** Đặt mật khẩu ở lần đăng nhập đầu của tài khoản đang mang mật khẩu mặc định. */
 public record DatMatKhauLanDauRequest(
 
         @NotBlank(message = "{kiemTra.email.batBuoc}")

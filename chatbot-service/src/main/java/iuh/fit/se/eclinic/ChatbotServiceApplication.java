@@ -6,12 +6,7 @@ import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 
 import iuh.fit.se.eclinic.common.config.AppTimeZone;
 
-/**
- * chatbot-service (cổng 8087): chatbot (trợ lý AI) hướng dẫn dùng trang và trả lời câu hỏi sức khỏe thông thường —
- * UC-CHAT-01. Mô hình ngôn ngữ gọi qua API kiểu OpenAI, cấu hình ở app.chatbot.
- * <p>
- * Đặt ở package gốc để scan được cả entity/config trong module common lẫn code trong package {@code chatbot}.
- */
+/** chatbot-service (cổng 8087): trợ lý AI hướng dẫn dùng trang và trả lời câu hỏi sức khỏe thông thường. */
 @SpringBootApplication
 @ConfigurationPropertiesScan
 public class ChatbotServiceApplication {

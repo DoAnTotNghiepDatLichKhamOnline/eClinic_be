@@ -22,12 +22,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * Phiên chat với chatbot (ERD: PhienChat — CHAT-01). Khách và Bệnh nhân dùng được, không cần đăng nhập.
- * <p>
- * Khác ERD: {@code taiKhoan} cho phép NULL (Khách); thêm {@code maDinhDanhKhach}: SHA-256 (hex) của mã bí mật server
- * cấp cho Khách khi mở phiên. Khách gửi lại mã gốc ở header X-Chat-Khach để dùng tiếp phiên; id phiên không mở được gì.
- */
+/** Phiên chat với chatbot. */
 @Getter
 @Setter
 @NoArgsConstructor
@@ -54,10 +49,7 @@ public class PhienChat extends BaseEntity {
     @Column(name = "trang_thai", nullable = false, length = 20)
     private TrangThaiPhienChat trangThai = TrangThaiPhienChat.DANG_MO;
 
-    /**
-     * Lúc bệnh nhân đồng ý cho chatbot đọc lịch hẹn, lượt khám của mình trong phiên này và gửi phần tối thiểu tới nhà
-     * cung cấp mô hình; null = chưa đồng ý hoặc đã rút lại. Chỉ phiên của tài khoản mới có.
-     */
+    /** Lúc bệnh nhân đồng ý cho chatbot đọc dữ liệu khám của mình; null = chưa đồng ý hoặc đã rút lại. */
     @Column(name = "dong_y_du_lieu_luc")
     private LocalDateTime dongYDuLieuLuc;
 

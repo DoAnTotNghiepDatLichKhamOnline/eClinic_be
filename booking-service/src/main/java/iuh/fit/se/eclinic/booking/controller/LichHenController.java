@@ -44,11 +44,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 
-/**
- * BOOK-01, BOOK-02, BOOK-11: đặt lịch khám. Công khai (app.bao-mat.duong-dan-cong-khai): khách không cần đăng nhập, bệnh
- * nhân đã đăng nhập gửi kèm token thì lịch được lưu vào tài khoản; số lần gọi từ 1 địa chỉ IP bị giới hạn
- * (GioiHanDatLichService). BOOK-07: lịch hẹn của tài khoản đang đăng nhập.
- */
+/** Đặt lịch khám và xem lịch hẹn của bệnh nhân. */
 @Tag(name = "Lịch hẹn", description = "BOOK-01..04, BOOK-07, BOOK-11: đặt lịch khám, lịch hẹn của tôi")
 @RestController
 @RequestMapping("/api/booking/lich-hen")
@@ -90,7 +86,7 @@ public class LichHenController {
             @RequestParam(defaultValue = "0") @Min(0) int trang,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int kichThuoc) {
         Long idTaiKhoan = NguoiDungHienTai.layIdTaiKhoan();
-        // Lịch đặt như khách bằng số CCCD đã khai khi đăng ký phải có trong danh sách ngay lần xem đầu tiên (quy tắc #3)
+        // Lịch đặt như khách bằng CCCD đã khai khi đăng ký phải hiện ngay lần xem đầu tiên
         lienKetHoSoService.thuLienKet(idTaiKhoan);
         return PhanHoiApi.ok(lichHenService.lichHenCuaToi(idTaiKhoan, loc, cuaAi, trang, kichThuoc));
     }

@@ -11,7 +11,7 @@ import iuh.fit.se.eclinic.booking.service.CauHinhService;
 import iuh.fit.se.eclinic.common.dto.PhanHoiApi;
 import lombok.RequiredArgsConstructor;
 
-/** Quy tắc đặt lịch cho trang đặt lịch / phiếu khám. Công khai (app.bao-mat.duong-dan-cong-khai). */
+/** Quy tắc đặt lịch cho trang đặt lịch và phiếu khám (công khai). */
 @Tag(name = "Quy tắc đặt lịch", description = "Đặt trước tối đa bao nhiêu ngày, hủy / đổi lịch trước giờ khám bao lâu")
 @RestController
 @RequestMapping("/api/booking/quy-tac-dat-lich")

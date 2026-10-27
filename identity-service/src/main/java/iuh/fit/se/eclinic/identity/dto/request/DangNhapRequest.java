@@ -3,10 +3,7 @@ package iuh.fit.se.eclinic.identity.dto.request;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-/**
- * Đăng nhập bằng email + mật khẩu (AUTH-02). Không dùng @MatKhauHopLe: mật khẩu sai quy tắc cũng chỉ là
- * "sai thông tin đăng nhập" (401), không phải lỗi dữ liệu (400).
- */
+/** Đăng nhập bằng email + mật khẩu. */
 public record DangNhapRequest(
 
         @NotBlank(message = "{kiemTra.email.batBuoc}")

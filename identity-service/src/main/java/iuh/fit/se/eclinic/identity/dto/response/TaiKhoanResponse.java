@@ -4,11 +4,7 @@ import iuh.fit.se.eclinic.common.enums.NgonNgu;
 import iuh.fit.se.eclinic.common.enums.TrangThaiTaiKhoan;
 import iuh.fit.se.eclinic.common.enums.VaiTro;
 
-/**
- * Thông tin tài khoản trả về cho frontend (không có mật khẩu).
- *
- * @param ngonNgu ngôn ngữ ưa dùng đã lưu của tài khoản (VI / EN)
- */
+/** Thông tin tài khoản trả về cho frontend (không có mật khẩu). */
 public record TaiKhoanResponse(
         Long id,
         String hoTen,

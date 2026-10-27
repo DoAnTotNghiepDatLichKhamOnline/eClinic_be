@@ -37,13 +37,7 @@ import iuh.fit.se.eclinic.common.exception.MaLoi;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * READ_COMMITTED như {@link DatLichServiceImpl#datLich}: đổi lịch chạy luôn phần chọn lượt khám của đặt lịch trong cùng
- * transaction này.
- * <p>
- * Thứ tự khoá: dòng lịch hẹn cũ, lượt khám cũ, rồi các lượt của khung giờ mới (như đặt lịch). 2 người đổi chéo khung giờ
- * của nhau cùng lúc có thể deadlock: MySQL huỷ 1 giao dịch, XuLyLoiHandler trả lỗi "thử lại".
- */
+/** READ_COMMITTED như đặt lịch: đổi lịch chạy phần chọn lượt khám trong cùng transaction. */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -114,8 +108,7 @@ public class HuyDoiLichServiceImpl implements HuyDoiLichService {
         LocalDateTime bayGio = LocalDateTime.now();
         kiemTraConHuyDoiDuoc(lichHen, bayGio);
         int toiDa = cauHinhService.hienTai().soLanDoiLichToiDa();
-        // Lịch đang chờ đổi vì ca khám bị hủy, hoặc ca vừa được nhường cho bác sĩ khác: không phải bệnh nhân muốn đổi,
-        // nên không tính vào giới hạn
+        // Ca bị hủy hoặc vừa được nhường: không tính vào giới hạn số lần đổi lịch
         if (!lichHen.isCanDoiLich() && !lichHen.isDoiBacSi() && soLanDaDoi(lichHen) >= toiDa) {
             throw new LoiNghiepVu(MaLoi.VUOT_SO_LAN_DOI_LICH,
                     "loi.VUOT_SO_LAN_DOI_LICH.soLan", String.valueOf(toiDa));
@@ -133,10 +126,7 @@ public class HuyDoiLichServiceImpl implements HuyDoiLichService {
         return moi;
     }
 
-    /**
-     * Khoá dòng lịch hẹn rồi mới kiểm tra, để bấm 2 lần (hoặc bác sĩ từ chối cùng lúc) thì lần sau thấy trạng thái mới.
-     * Mã sai dạng và mã không tồn tại trả cùng 1 lỗi.
-     */
+    /** Khoá dòng lịch hẹn rồi mới kiểm tra, để lần bấm sau thấy trạng thái mới. */
     private LichHen khoa(String maPhieuKham) {
         if (maPhieuKham == null || !DANG_MA_PHIEU_KHAM.matcher(maPhieuKham).matches()) {
             throw khongTimThay();
@@ -170,10 +160,7 @@ public class HuyDoiLichServiceImpl implements HuyDoiLichService {
         throw khongTimThay();
     }
 
-    /**
-     * SĐT liên hệ của lượt khám; lịch hẹn tạo trước khi có cột này thì lấy SĐT người giám hộ, rồi SĐT của hồ sơ. So sánh
-     * không phụ thuộc vị trí ký tự sai (không lộ thông tin qua thời gian phản hồi).
-     */
+    /** SĐT liên hệ của lượt khám; lịch hẹn tạo trước khi có cột này thì lấy SĐT người giám hộ, rồi SĐT của hồ sơ. */
     private static void kiemTraSoDienThoai(LichHen lichHen, String soDienThoai) {
         String daNhap = soDienThoai == null ? "" : soDienThoai.trim();
         if (!DANG_SO_DIEN_THOAI.matcher(daNhap).matches()) {

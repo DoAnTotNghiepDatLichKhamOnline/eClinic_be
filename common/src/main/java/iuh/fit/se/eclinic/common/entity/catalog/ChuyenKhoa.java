@@ -10,9 +10,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * Chuyên khoa (ERD: ChuyenKhoa). Phân cấp: Bệnh viện -> Chuyên khoa -> Phòng khám -> Bác sĩ.
- */
+/** Chuyên khoa. */
 @Getter
 @Setter
 @NoArgsConstructor
@@ -33,14 +31,14 @@ public class ChuyenKhoa extends BaseEntity {
     @Column(name = "mo_ta_en", columnDefinition = "TEXT")
     private String moTaEn;
 
-    /** Triệu chứng, vấn đề thường gặp mà chuyên khoa tiếp nhận: chỉ để chatbot chọn chuyên khoa, API công khai không trả. */
+    /** Triệu chứng thường gặp của chuyên khoa: chỉ để chatbot chọn chuyên khoa, API công khai không trả. */
     @Column(name = "trieu_chung", columnDefinition = "TEXT")
     private String trieuChung;
 
     @Column(name = "trieu_chung_en", columnDefinition = "TEXT")
     private String trieuChungEn;
 
-    // Chữ theo ngôn ngữ: bản tiếng Anh nếu được yêu cầu và đã nhập, không thì bản tiếng Việt (NgonNgu.chon).
+    // Chữ theo ngôn ngữ: bản tiếng Anh nếu có, không thì tiếng Việt
     public String ten(NgonNgu ngonNgu) {
         return ngonNgu.chon(tenChuyenKhoa, tenChuyenKhoaEn);
     }

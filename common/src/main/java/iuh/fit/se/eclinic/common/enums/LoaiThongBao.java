@@ -1,8 +1,6 @@
 package iuh.fit.se.eclinic.common.enums;
 
-/**
- * Loại thông báo — các sự kiện phát thông báo theo NOTI-01.
- */
+/** Loại thông báo: các sự kiện phát thông báo. */
 public enum LoaiThongBao {
     // Bác sĩ
     LICH_HEN_MOI,

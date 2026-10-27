@@ -18,13 +18,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * Email chờ gửi của notification-service (không có trong ERD; V19). Service khác gửi sang 1 mẫu + tham số, ở đây giữ lại
- * cho tới khi máy chủ mail nhận: gửi lỗi thì thử lại sau, không mất email khi máy chủ mail tạm ngừng.
- * <p>
- * Nội dung không lưu sẵn: soạn lúc gửi từ {@code khoaMau} + {@code thamSo} theo {@code ngonNgu}. {@code idLichHen} là số
- * thường, không phải quan hệ: bảng không có khoá ngoại tới miền khác.
- */
+/** Email chờ gửi của notification-service. */
 @Getter
 @Setter
 @NoArgsConstructor
@@ -33,7 +27,7 @@ import lombok.Setter;
 @AttributeOverride(name = "id", column = @Column(name = "id_email"))
 public class EmailGui extends CreatableEntity {
 
-    /** Mã của sự kiện ở service nguồn (vd {@code booking:15}), UNIQUE: gửi lại cùng mã thì không có email thứ hai. */
+    /** Mã sự kiện ở service nguồn (vd {@code booking:15}), UNIQUE: gửi lại cùng mã không tạo email thứ hai. */
     @Column(name = "ma_nguon", nullable = false, length = 64)
     private String maNguon;
 
@@ -49,7 +43,7 @@ public class EmailGui extends CreatableEntity {
     @Column(name = "khoa_mau", nullable = false, length = 80)
     private String khoaMau;
 
-    /** Tham số của mẫu, mảng JSON (xem {@code ThamSoThongBao}). */
+    /** Tham số của mẫu, mảng JSON ({@code ThamSoThongBao}). */
     @Column(name = "tham_so", columnDefinition = "TEXT")
     private String thamSo;
 

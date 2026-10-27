@@ -26,11 +26,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 
-/**
- * ADM-01: quản lý chuyên khoa. Xem: công khai (app.bao-mat.duong-dan-cong-khai); thêm/sửa/xoá: chỉ quản trị viên.
- * <p>
- * Controller mẫu: chỉ kiểm tra dữ liệu vào, gọi service, bọc kết quả trong PhanHoiApi. Lỗi do XuLyLoiHandler xử lý.
- */
+/** Quản lý chuyên khoa. */
 @Tag(name = "Chuyên khoa", description = "ADM-01: quản lý chuyên khoa")
 @RestController
 @RequestMapping("/api/catalog/chuyen-khoa")

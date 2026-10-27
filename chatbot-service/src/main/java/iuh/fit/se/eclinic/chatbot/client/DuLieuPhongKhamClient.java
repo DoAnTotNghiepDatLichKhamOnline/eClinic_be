@@ -21,14 +21,7 @@ import iuh.fit.se.eclinic.common.dto.TrangDuLieu;
 import iuh.fit.se.eclinic.common.enums.NgonNgu;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Đọc bác sĩ và khung giờ còn chỗ qua API CÔNG KHAI của catalog-service và booking-service (gọi thẳng, không qua
- * gateway): đúng những gì trang đặt lịch hiển thị cho khách chưa đăng nhập, nên không có email, số điện thoại hay dữ
- * liệu của bệnh nhân nào. Không gửi JWT, không gửi khoá nội bộ. Luật "bác sĩ nào hiển thị" và "khung giờ nào còn đặt
- * được" nằm ở 2 service đó, ở đây không tính lại.
- * <p>
- * Ngày giờ giữ nguyên dạng chuỗi ISO như API trả ({@code 2026-10-14}, {@code 2026-10-14T08:00:00}).
- */
+/** Đọc bác sĩ và khung giờ qua API công khai, nên không có dữ liệu cá nhân của ai. */
 @Slf4j
 @Component
 public class DuLieuPhongKhamClient {

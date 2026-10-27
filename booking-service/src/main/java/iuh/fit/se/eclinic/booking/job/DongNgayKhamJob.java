@@ -9,10 +9,7 @@ import iuh.fit.se.eclinic.booking.service.DongNgayKhamService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * 0 giờ 1 phút mỗi ngày đóng các ngày khám đã qua: lịch hẹn bệnh nhân chưa được khám thành KHONG_DEN. Chạy thêm 1 lần
- * khi service khởi động xong, để lần chạy bị lỡ lúc service tắt được đóng bù ngay.
- */
+/** 0 giờ 1 phút mỗi ngày đóng các ngày khám đã qua: lịch hẹn bệnh nhân chưa được khám thành KHONG_DEN. */
 @Slf4j
 @Component
 @RequiredArgsConstructor

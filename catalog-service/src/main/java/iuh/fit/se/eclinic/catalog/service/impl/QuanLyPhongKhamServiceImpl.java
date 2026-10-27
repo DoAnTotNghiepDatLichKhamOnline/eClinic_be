@@ -80,11 +80,11 @@ public class QuanLyPhongKhamServiceImpl implements QuanLyPhongKhamService {
     @Override
     @Transactional
     public PhongKhamQuanTriResponse sua(Long id, PhongKhamRequest request) {
-        // Khoá dòng phòng khám TRƯỚC mọi câu đọc khác: xem khoaVaDemCa
+        // Khoá dòng phòng khám trước mọi câu đọc khác
         PhongKham phong = khoa(id);
         long soCaSapToi = demCaSapToi(id);
         String tenPhong = request.tenPhong().trim();
-        // Kiểm tra trước khi sửa entity đang được quản lý (xem ChuyenKhoaServiceImpl.capNhat)
+        // Kiểm tra trước khi sửa entity đang được quản lý
         String tenPhongEn = rongThanhNull(request.tenPhongEn());
         if (phongKhamRepository.existsByTenPhongAndIdNot(tenPhong, id)) {
             throw new LoiNghiepVu(MaLoi.TEN_PHONG_DA_TON_TAI);
@@ -136,11 +136,7 @@ public class QuanLyPhongKhamServiceImpl implements QuanLyPhongKhamService {
         return toResponse(phong, soCaSapToi);
     }
 
-    /**
-     * booking-service khoá cùng dòng phòng khám này khi tạo ca / đổi phòng của ca, nên sau khi lấy được khoá thì không ca
-     * nào đang được xếp dở vào phòng. Phải là câu lệnh đầu tiên của transaction: câu đọc thường đầu tiên (đếm ca) chốt
-     * snapshot của transaction, đọc trước khi khoá thì không thấy ca vừa được commit trong lúc chờ khoá.
-     */
+    /** booking-service khoá cùng dòng này khi tạo ca, nên có khoá rồi thì không ca nào đang xếp dở vào phòng. */
     private PhongKham khoa(Long id) {
         return phongKhamRepository.findByIdForUpdate(id).orElseThrow(() -> new LoiKhongTimThay("PhongKham", id));
     }

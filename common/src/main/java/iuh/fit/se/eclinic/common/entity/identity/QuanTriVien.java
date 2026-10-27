@@ -18,9 +18,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * Quản trị viên (ERD: QuanTriVien). Bỏ {@code idCoSoQuanLy} vì hệ thống chỉ có 1 bệnh viện (Q4).
- */
+/** Quản trị viên. */
 @Getter
 @Setter
 @NoArgsConstructor

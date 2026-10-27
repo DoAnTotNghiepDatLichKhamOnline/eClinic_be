@@ -74,7 +74,7 @@ public class HoSoBenhNhanServiceImpl implements HoSoBenhNhanService {
             }
             Optional<HoSoBenhNhan> theoCccd = hoSoBenhNhanRepository.findByCccdForUpdate(cccd);
             if (theoCccd.isPresent()) {
-                // Gắn hồ sơ đã có (tạo khi đặt lịch như khách) vào tài khoản phải qua xác minh (quy tắc #3)
+                // Gắn hồ sơ đã có (tạo khi đặt lịch như khách) vào tài khoản phải qua xác minh
                 hoSo = theoCccd.get();
                 if (hoSo.getTaiKhoan() != null || lienKetHoSoService.daBiTuChoi(idTaiKhoan, hoSo.getId())) {
                     throw new LoiNghiepVu(MaLoi.CCCD_DA_CO_HO_SO);
@@ -109,7 +109,7 @@ public class HoSoBenhNhanServiceImpl implements HoSoBenhNhanService {
         hoSo.setDiaChi(rongThanhNull(request.diaChi()));
         hoSo.setSoBaoHiemYTe(rongThanhNull(request.soBaoHiemYTe()));
         hoSo.setTienSuBenhLy(rongThanhNull(request.tienSuBenhLy()));
-        // Flush ngay: 2 request tạo hồ sơ cùng lúc thì request sau vi phạm UNIQUE cccd / id_tai_khoan -> 409 XUNG_DOT_DU_LIEU
+        // Flush ngay: 2 request tạo cùng lúc thì request sau vi phạm UNIQUE -> 409
         return hoSoBenhNhanMapper.toHoSoCuaToi(hoSoBenhNhanRepository.saveAndFlush(hoSo));
     }
 

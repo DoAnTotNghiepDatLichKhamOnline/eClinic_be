@@ -32,10 +32,7 @@ import iuh.fit.se.eclinic.report.dto.response.BaoCaoThongKeResponse.TrangThai;
 import iuh.fit.se.eclinic.report.service.ExcelBaoCaoService;
 import lombok.RequiredArgsConstructor;
 
-/**
- * Dựng tệp từ báo cáo đã tính (không truy vấn lại). Độ rộng cột đặt cố định, không dùng autoSizeColumn: hàm đó cần font
- * của AWT, có thể không có trong image JRE không giao diện. Tỷ lệ là ô số với định dạng 0.0"%", để trống khi null.
- */
+/** Dựng tệp từ báo cáo đã tính (không truy vấn lại). */
 @Service
 @RequiredArgsConstructor
 public class ExcelBaoCaoServiceImpl implements ExcelBaoCaoService {

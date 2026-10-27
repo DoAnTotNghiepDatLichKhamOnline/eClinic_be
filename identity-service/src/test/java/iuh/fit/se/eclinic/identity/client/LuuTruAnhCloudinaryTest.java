@@ -34,10 +34,7 @@ import iuh.fit.se.eclinic.common.exception.MaLoi;
 import iuh.fit.se.eclinic.common.luutru.CloudinaryProperties;
 import iuh.fit.se.eclinic.common.luutru.LuuTruAnhCloudinary;
 
-/**
- * Kho ảnh Cloudinary với server giả (MockRestServiceServer), không gọi Cloudinary thật: kiểm tra request gửi đi
- * (đường dẫn, tham số, chữ ký, phần tệp) và cách đổi lỗi của Cloudinary thành mã lỗi của hệ thống.
- */
+/** Kho ảnh Cloudinary với server giả (MockRestServiceServer): request gửi đi và cách đổi lỗi. */
 class LuuTruAnhCloudinaryTest {
 
     private static final String SECRET = "bi-mat-test";

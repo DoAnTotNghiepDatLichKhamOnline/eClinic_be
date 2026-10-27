@@ -9,10 +9,7 @@ import org.springframework.data.repository.Repository;
 import iuh.fit.se.eclinic.common.entity.booking.HoSoBenhNhan;
 import iuh.fit.se.eclinic.common.enums.TrangThaiLienKet;
 
-/**
- * CHỈ ĐỌC hồ sơ bệnh nhân (bảng của booking-service) để hiển thị trong hồ sơ cá nhân và trong quản lý tài khoản. Kế thừa
- * {@link Repository} chứ không phải JpaRepository nên không có save / delete: identity-service không được ghi bảng này.
- */
+/** CHỈ ĐỌC hồ sơ bệnh nhân (bảng của booking-service) cho hồ sơ cá nhân và quản lý tài khoản. */
 public interface HoSoBenhNhanChiDocRepository extends Repository<HoSoBenhNhan, Long> {
 
     Optional<HoSoBenhNhan> findByTaiKhoanId(Long taiKhoanId);

@@ -15,7 +15,7 @@ public interface PhongKhamService {
     /** Các phòng khám đang hoạt động của 1 chuyên khoa. */
     List<PhongKham> layDangHoatDongTheoChuyenKhoa(Long chuyenKhoaId);
 
-    /** Các phòng khám đang hoạt động kèm tên chuyên khoa, theo tên phòng; {@code idChuyenKhoa} null = mọi chuyên khoa. */
+    /** Phòng khám đang hoạt động kèm tên chuyên khoa; {@code idChuyenKhoa} null là mọi chuyên khoa. */
     List<PhongKhamResponse> danhSachDangHoatDong(Long idChuyenKhoa);
 
 }

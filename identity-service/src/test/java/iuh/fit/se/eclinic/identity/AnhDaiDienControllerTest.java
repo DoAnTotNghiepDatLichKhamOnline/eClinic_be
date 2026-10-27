@@ -36,10 +36,7 @@ import iuh.fit.se.eclinic.identity.controller.AnhDaiDienController;
 import iuh.fit.se.eclinic.identity.dto.response.HoSoCaNhanResponse;
 import iuh.fit.se.eclinic.identity.service.AnhDaiDienService;
 
-/**
- * Tầng web của /api/users/me/avatar: phải đăng nhập, id tài khoản lấy từ JWT, nội dung tệp lấy từ phần 'anh' của
- * multipart, các lỗi tải tệp ra đúng mã lỗi. Service là mock.
- */
+/** Tầng web của /api/users/me/avatar: phải đăng nhập, đọc phần 'anh' của multipart, lỗi đúng mã. */
 @WebMvcTest(AnhDaiDienController.class)
 @AutoConfigureJson
 @Import(BaoMatConfig.class)
@@ -65,7 +62,7 @@ class AnhDaiDienControllerTest {
     void taiLenTruyenIdTuTokenVaNoiDungTep() throws Exception {
         when(anhDaiDienService.taiLen(12L, NOI_DUNG)).thenReturn(hoSo(12L, URL_ANH));
 
-        // Tên tệp và Content-Type khai sai cũng không sao: controller chỉ chuyển nội dung, service tự nhận định dạng
+        // Tên tệp và Content-Type khai sai cũng không sao: service tự nhận định dạng
         mockMvc.perform(multipart(URL)
                         .file(new MockMultipartFile("anh", "anh.txt", "text/plain", NOI_DUNG))
                         .with(NguoiDungGiaLap.benhNhan(12L)))
@@ -102,7 +99,7 @@ class AnhDaiDienControllerTest {
 
     @Test
     void tepQuaLonTraVe413() throws Exception {
-        // MockMvc không áp giới hạn multipart của servlet container; giả lập đúng exception mà Spring ném khi vượt
+        // MockMvc không áp giới hạn multipart: giả lập đúng exception mà Spring ném khi vượt
         when(anhDaiDienService.taiLen(anyLong(), any())).thenThrow(new MaxUploadSizeExceededException(2 * 1024 * 1024));
 
         mockMvc.perform(multipart(URL).file(tep("anh")).with(NguoiDungGiaLap.benhNhan(12L)))

@@ -1,10 +1,6 @@
 package iuh.fit.se.eclinic.chatbot.service;
 
-/**
- * Giới hạn dùng chatbot, đếm trên Redis (cửa sổ cố định). {@code chuThe} là tài khoản đang đăng nhập hoặc địa chỉ IP
- * của khách: mã bí mật của phiên khách tạo mới miễn phí nên không đếm theo nó được. Vượt giới hạn: CHAT_QUA_NHIEU (429).
- * Redis không dùng được thì bỏ qua giới hạn, như API đặt lịch.
- */
+/** Giới hạn dùng chatbot, đếm trên Redis (cửa sổ cố định). */
 public interface GioiHanChatService {
 
     /** {@code app.chatbot.so-phien-moi-gio}. */

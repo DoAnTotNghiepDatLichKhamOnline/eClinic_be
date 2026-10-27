@@ -9,12 +9,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * 1 mốc nhắc lịch khám đã được xử lý cho 1 lịch hẹn (không có trong ERD; V20). UNIQUE (lịch hẹn, mốc): ghi cùng
- * transaction với thông báo / email nhắc, nên 1 mốc không bao giờ được nhắc 2 lần.
- * <p>
- * {@code idLichHen} là số thường (DB có khoá ngoại, xoá lịch hẹn thì xoá theo): job nhắc lịch không cần tải quan hệ.
- */
+/** 1 mốc nhắc lịch khám đã được xử lý cho 1 lịch hẹn. */
 @Getter
 @Setter
 @NoArgsConstructor
@@ -30,7 +25,7 @@ public class NhacLichHen extends CreatableEntity {
     @Column(name = "so_phut_truoc", nullable = false)
     private int soPhutTruoc;
 
-    /** false = mốc được ghi nhận nhưng không nhắc (đặt lịch khi đã trong khoảng của mốc, hoặc nhường mốc gần hơn). */
+    /** false = mốc đã ghi nhận nhưng không nhắc (đặt lịch muộn, hoặc nhường mốc gần hơn). */
     @Column(name = "da_gui", nullable = false)
     private boolean daGui;
 

@@ -37,10 +37,7 @@ import iuh.fit.se.eclinic.identity.repository.TaiKhoanRepository;
 import iuh.fit.se.eclinic.identity.service.AnhDaiDienService;
 import iuh.fit.se.eclinic.identity.service.QuanLyTaiKhoanService;
 
-/**
- * Đổi / bỏ ảnh đại diện với MySQL + Redis thật, và việc dọn ảnh khi quản trị viên xoá tài khoản. Kho ảnh được giả lập
- * (LuuTruAnhCloudinaryTest kiểm tra riêng phần gọi Cloudinary): mỗi test quy định kho trả về gì.
- */
+/** Đổi / bỏ ảnh đại diện với MySQL + Redis thật, và việc dọn ảnh khi quản trị viên xoá tài khoản. */
 @SpringBootTest
 @Import({ MySqlTestcontainersConfiguration.class, RedisTestcontainersConfiguration.class })
 class AnhDaiDienServiceTest {
@@ -211,7 +208,7 @@ class AnhDaiDienServiceTest {
         verify(luuTruAnh, never()).xoa(anyString());
     }
 
-    // ---------- Quản trị viên xoá tài khoản: ảnh trong kho được dọn nền sau khi commit ----------
+    // ---------- Quản trị viên xoá tài khoản ----------
 
     @Test
     void xoaTaiKhoanCoAnhTrongKhoThiXoaAnhTrongKho() {
@@ -233,7 +230,7 @@ class AnhDaiDienServiceTest {
 
         assertThat(taiKhoanRepository.existsById(anhGoogle.getId())).isFalse();
         assertThat(taiKhoanRepository.existsById(khongAnh.getId())).isFalse();
-        // Việc dọn ảnh chạy nền: đợi tới khi kho được hỏi về ảnh Google rồi mới khẳng định không có lệnh xoá nào
+        // Dọn ảnh chạy nền: đợi kho được hỏi về ảnh Google rồi mới khẳng định không có lệnh xoá
         verify(luuTruAnh, timeout(5000)).laAnhCuaKho(ANH_GOOGLE);
         verify(luuTruAnh, after(300).never()).xoa(anyString());
     }

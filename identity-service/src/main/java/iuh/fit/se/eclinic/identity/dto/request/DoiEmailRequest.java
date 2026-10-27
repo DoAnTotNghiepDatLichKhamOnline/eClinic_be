@@ -4,10 +4,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-/**
- * Yêu cầu đổi email đăng nhập của người đang đăng nhập. Mật khẩu hiện tại không dùng @MatKhauHopLe (như
- * DoiMatKhauRequest): sai quy tắc cũng chỉ là "mật khẩu hiện tại không đúng".
- */
+/** Yêu cầu đổi email đăng nhập của người đang đăng nhập. */
 public record DoiEmailRequest(
 
         @NotBlank(message = "{kiemTra.emailMoi.batBuoc}")

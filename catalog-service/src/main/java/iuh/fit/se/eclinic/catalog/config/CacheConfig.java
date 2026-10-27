@@ -20,16 +20,7 @@ import iuh.fit.se.eclinic.common.dto.TrangDuLieu;
 import tools.jackson.databind.JavaType;
 import tools.jackson.databind.json.JsonMapper;
 
-/**
- * Cache trên Redis cho danh mục chuyên khoa công khai (ChuyenKhoaServiceImpl): danh sách không có từ khoá và chi tiết
- * 1 chuyên khoa. Khoá bắt đầu bằng ngôn ngữ của request vì tên và mô tả theo ngôn ngữ.
- * <ul>
- * <li>Chỉ ChuyenKhoaServiceImpl ghi bảng chuyen_khoa: mỗi lần thêm/sửa/xoá xoá hết 2 cache, SAU khi commit
- * (transactionAware), nên người xem không bao giờ thấy dữ liệu cũ. Hết hạn sau 10 phút chỉ để phòng hờ.</li>
- * <li>Giá trị lưu dạng JSON thường (không kèm tên class), mỗi cache 1 kiểu.</li>
- * <li>Redis lỗi: ghi log cảnh báo rồi đọc thẳng DB. Mất kết nối thì Lettuce từ chối lệnh ngay, không chờ timeout.</li>
- * </ul>
- */
+/** Cache trên Redis cho danh mục chuyên khoa công khai: danh sách không từ khoá và chi tiết. */
 @Configuration
 @EnableCaching
 public class CacheConfig implements CachingConfigurer {

@@ -6,11 +6,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 
 import iuh.fit.se.eclinic.common.exception.MaLoi;
 
-/**
- * Khung JSON chung cho mọi API.
- * Thành công: {thanhCong: true, thongDiep, duLieu}. Lỗi: {thanhCong: false, maLoi, thongDiep, chiTiet}.
- * Trường null không được ghi ra JSON.
- */
+/** Khung JSON chung cho mọi API. */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record PhanHoiApi<T>(boolean thanhCong, String maLoi, String thongDiep, T duLieu, List<ChiTietLoi> chiTiet) {
 

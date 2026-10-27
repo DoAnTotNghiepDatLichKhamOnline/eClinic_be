@@ -22,10 +22,7 @@ import iuh.fit.se.eclinic.common.security.NguoiDungHienTai;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
-/**
- * BOOK-02: thông tin điền sẵn form đặt lịch cho bệnh nhân đã đăng nhập. Luôn thao tác trên tài khoản của chính người
- * gọi. Người thân được lưu tự động khi đặt lịch (trừ khi request đặt lịch gửi {@code luuNguoiThan: false}).
- */
+/** Thông tin điền sẵn form đặt lịch cho bệnh nhân đã đăng nhập. */
 @Tag(name = "Thông tin đặt lịch đã lưu", description = "BOOK-02: điền sẵn form đặt lịch, người thân đã lưu")
 @RestController
 @RequestMapping("/api/booking/thong-tin-dat-lich/cua-toi")

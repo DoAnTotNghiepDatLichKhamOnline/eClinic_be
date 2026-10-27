@@ -10,16 +10,7 @@ import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
-/**
- * Thông tin người khám trên form đặt lịch (BOOK-01). Ngày sinh bắt buộc để tính tuổi theo ngày khám (BOOK-11).
- * Trường không bắt buộc: bỏ trống hoặc gửi chuỗi rỗng đều được.
- *
- * @param cccd         số CCCD 12 chữ số. Bắt buộc với người từ đủ 18 tuổi (tính theo ngày khám); người dưới 18 tuổi chưa
- *                     có CCCD thì bỏ trống, hồ sơ được nhận diện bằng họ tên + ngày sinh + CCCD người giám hộ (quy tắc #10)
- * @param email        email liên hệ của lượt khám (không bắt buộc), lưu theo lịch hẹn
- * @param soBaoHiemYTe số thẻ bảo hiểm y tế (không bắt buộc), ghi vào hồ sơ nếu hồ sơ chưa có
- * @param diaChi       địa chỉ (không bắt buộc), ghi vào hồ sơ nếu hồ sơ chưa có
- */
+/** Thông tin người khám trên form đặt lịch. */
 public record BenhNhanRequest(
         @NotBlank(message = "{kiemTra.hoTen.batBuoc}")
         @Size(max = 150, message = "{kiemTra.hoTen.toiDa}")

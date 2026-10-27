@@ -38,11 +38,7 @@ import iuh.fit.se.eclinic.common.exception.MaLoi;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Thao tác hàng đợi khoá dòng bác sĩ trước (cùng khoá với xếp ca của quản trị viên), nên các lần bấm cùng lúc của 1 bác
- * sĩ chạy lần lượt. READ_COMMITTED để sau khi chờ khoá, các câu đọc thấy lượt vừa được gọi ở transaction trước (với
- * REPEATABLE READ, ảnh chụp dữ liệu đã có từ câu đọc tài khoản trước khi khoá).
- */
+/** Thao tác hàng đợi khoá dòng bác sĩ trước, nên các lần bấm cùng lúc chạy lần lượt. */
 @Slf4j
 @Service
 @RequiredArgsConstructor

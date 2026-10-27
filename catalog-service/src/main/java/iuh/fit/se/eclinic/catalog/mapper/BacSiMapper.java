@@ -23,20 +23,11 @@ import iuh.fit.se.eclinic.common.enums.NgonNgu;
 import iuh.fit.se.eclinic.common.util.DiemDanhGia;
 import iuh.fit.se.eclinic.common.util.MaBacSi;
 
-/**
- * Chuyển entity bác sĩ sang DTO. Họ tên, ảnh đại diện lấy từ tài khoản của bác sĩ.
- * <p>
- * Các mục danh sách (đào tạo, công tác, lĩnh vực khám chữa, giải thưởng, nghiên cứu) lưu trong DB là văn bản mỗi dòng
- * 1 ý, DTO là mảng chuỗi. Ngôn ngữ khám lưu "vi,en", DTO là mảng mã.
- */
+/** Chuyển entity bác sĩ sang DTO. */
 @Component
 public class BacSiMapper {
 
-    /**
-     * Chữ của hồ sơ theo ngôn ngữ của request; họ tên, học vị không dịch.
-     *
-     * @param diem điểm đánh giá của bác sĩ; null nếu chưa có đánh giá nào
-     */
+    /** Chữ của hồ sơ theo ngôn ngữ của request; họ tên, học vị không dịch. */
     public BacSiResponse toResponse(BacSi bacSi, DiemTheoBacSi diem) {
         NgonNgu ngonNgu = NgonNgu.hienTai();
         return new BacSiResponse(bacSi.getId(), bacSi.getTaiKhoan().getHoTen(), bacSi.getTaiKhoan().getAnhDaiDien(),
@@ -110,10 +101,7 @@ public class BacSiMapper {
         return danhSachAnh.stream().map(this::toAnhQuanTriResponse).toList();
     }
 
-    /**
-     * Quản trị viên: ghi đè mọi trường của hồ sơ giới thiệu, cả 2 ngôn ngữ (chuỗi được bỏ khoảng trắng thừa, rỗng thành
-     * null). Không đổi phiên bản hồ sơ: service tăng sau khi kiểm tra.
-     */
+    /** Quản trị viên ghi đè mọi trường của hồ sơ giới thiệu ở cả 2 ngôn ngữ (rỗng thành null). */
     public void capNhatHoSo(BacSi bacSi, CapNhatHoSoBacSiRequest request) {
         ganPhanBacSiTuSua(bacSi, request.gioiThieuNgan(), request.gioiThieuNganEn(), request.tieuSu(),
                 request.tieuSuEn(), request.ngonNguKham(), request.giaiThuong(), request.giaiThuongEn(),

@@ -24,14 +24,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * Người thân mà 1 tài khoản đã đặt lịch cho, để điền sẵn form đặt lịch lần sau.
- * <p>
- * Lưu ĐÚNG những gì tài khoản đó nhập trên form lần đặt gần nhất, không đọc lại từ {@link HoSoBenhNhan}: hồ sơ gom dữ
- * liệu của nhiều người đặt khác nhau, trả hồ sơ cho tài khoản sẽ lộ dữ liệu người khác nhập. {@code hoSoBenhNhan} chỉ
- * là khoá để biết lần đặt sau là cùng 1 người. Các trường {@code giamHo*} null khi lần đặt gần nhất không có người
- * giám hộ.
- */
+/** Người thân mà 1 tài khoản đã đặt lịch cho, để điền sẵn form đặt lịch lần sau. */
 @Getter
 @Setter
 @NoArgsConstructor

@@ -5,9 +5,7 @@ import org.springframework.stereotype.Component;
 import iuh.fit.se.eclinic.common.entity.identity.TaiKhoan;
 import iuh.fit.se.eclinic.identity.dto.response.TaiKhoanResponse;
 
-/**
- * Chuyển TaiKhoan -> DTO. Viết tay, không bao giờ đưa matKhauHash ra ngoài.
- */
+/** Chuyển TaiKhoan -> DTO. */
 @Component
 public class TaiKhoanMapper {
 

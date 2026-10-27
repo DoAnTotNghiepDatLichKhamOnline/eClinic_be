@@ -20,21 +20,7 @@ import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
-/**
- * Hồ sơ giới thiệu của bác sĩ do quản trị viên sửa (DOC-01). Gửi đủ mọi trường: trường bỏ trống / null bị xoá trắng.
- * Chuyên khoa, số giấy phép, trạng thái không sửa ở đây. Các mục bác sĩ tự sửa được ({@link CapNhatHoSoCuaToiRequest})
- * cũng nằm ở đây: quản trị viên sửa được mọi mục.
- * <p>
- * Các mục danh sách: mỗi phần tử 1 ý, không chứa ký tự xuống dòng (lưu mỗi dòng 1 ý).
- * <p>
- * Các trường {@code ...En} là bản tiếng Anh, cùng giới hạn với bản tiếng Việt; bỏ trống thì người xem tiếng Anh thấy bản
- * tiếng Việt của trường đó. Học vị (chữ viết tắt) không có bản tiếng Anh.
- *
- * @param phienBan          phiên bản hồ sơ đã tải ({@code phienBanHoSo}); bác sĩ hoặc quản trị viên khác đã lưu trước
- *                          thì 409 DU_LIEU_DA_THAY_DOI
- * @param namBatDauHanhNghe số năm kinh nghiệm suy ra từ đây; không được sau năm nay (kiểm tra ở service)
- * @param ngonNguKham       mã ngôn ngữ ISO 639 (vd "vi", "en"), không phân biệt hoa thường, trùng thì gộp
- */
+/** Hồ sơ giới thiệu của bác sĩ do quản trị viên sửa. */
 public record CapNhatHoSoBacSiRequest(
 
         @NotNull(message = "{kiemTra.phienBan.batBuoc}")

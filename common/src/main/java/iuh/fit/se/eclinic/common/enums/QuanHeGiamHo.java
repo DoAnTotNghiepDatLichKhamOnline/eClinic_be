@@ -1,8 +1,6 @@
 package iuh.fit.se.eclinic.common.enums;
 
-/**
- * Quan hệ của người giám hộ với bệnh nhân dưới 18 tuổi (BOOK-11).
- */
+/** Quan hệ của người giám hộ với bệnh nhân dưới 18 tuổi. */
 public enum QuanHeGiamHo {
     CHA,
     ME,

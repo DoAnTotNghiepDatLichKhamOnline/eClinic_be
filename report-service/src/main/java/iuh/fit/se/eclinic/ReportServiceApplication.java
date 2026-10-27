@@ -5,11 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import iuh.fit.se.eclinic.common.config.AppTimeZone;
 
-/**
- * report-service (cổng 8088): thống kê, xuất báo cáo — DASH-01..04, ADM-05. Không sở hữu bảng nào, chỉ đọc DB chung.
- * <p>
- * Đặt ở package gốc để scan được cả entity/config trong module common lẫn code trong package {@code report}.
- */
+/** report-service (cổng 8088): thống kê, xuất báo cáo. */
 @SpringBootApplication
 public class ReportServiceApplication {
 

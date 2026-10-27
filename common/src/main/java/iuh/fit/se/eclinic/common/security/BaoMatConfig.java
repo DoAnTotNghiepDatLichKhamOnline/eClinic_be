@@ -15,13 +15,7 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy;
 
-/**
- * Bảo mật chung cho mọi service: stateless, xác thực bằng JWT (Bearer), phân quyền bằng @PreAuthorize.
- * Đường dẫn công khai = danh sách cố định bên dưới + app.bao-mat.duong-dan-cong-khai của từng service.
- * <p>
- * Test controller bằng @WebMvcTest chỉ cần {@code @Import(BaoMatConfig.class)} (+ {@code @AutoConfigureJson}):
- * JwtConfig và LoiBaoMatHandler được import kèm theo.
- */
+/** Bảo mật chung cho mọi service: stateless, xác thực bằng JWT (Bearer), phân quyền bằng @PreAuthorize. */
 @Configuration
 @EnableMethodSecurity
 @EnableConfigurationProperties(BaoMatProperties.class)
@@ -43,8 +37,7 @@ public class BaoMatConfig {
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                // Giữ các header mặc định (Cache-Control: no-store, X-Content-Type-Options...), thêm Referrer-Policy:
-                // token đặt lại mật khẩu nằm trên URL của frontend, không để lộ qua header Referer
+                // Thêm Referrer-Policy: token đặt lại mật khẩu nằm trên URL, không để lộ qua header Referer
                 .headers(h -> h.referrerPolicy(r -> r.policy(ReferrerPolicy.NO_REFERRER)))
                 .authorizeHttpRequests(auth -> {
                     auth.requestMatchers(DUONG_DAN_LUON_CONG_KHAI).permitAll();

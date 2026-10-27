@@ -45,10 +45,7 @@ import iuh.fit.se.eclinic.common.util.MauTimKiem;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Hủy / đổi chạy READ_COMMITTED như {@link HuyDoiLichServiceImpl}: đổi lịch chạy luôn phần chọn lượt khám của đặt lịch
- * trong cùng transaction. Thứ tự khoá như bệnh nhân đổi lịch: dòng lịch hẹn, lượt khám cũ, rồi lượt của khung giờ mới.
- */
+/** READ_COMMITTED như HuyDoiLichServiceImpl: đổi lịch chạy phần chọn lượt khám trong cùng transaction. */
 @Slf4j
 @Service
 @RequiredArgsConstructor

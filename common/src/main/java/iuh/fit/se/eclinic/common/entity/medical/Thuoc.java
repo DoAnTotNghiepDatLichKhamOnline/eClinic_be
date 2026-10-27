@@ -21,14 +21,7 @@ import lombok.Setter;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
-/**
- * Danh mục thuốc (ERD: Thuoc).
- * <p>
- * Danh mục do quản trị viên quản lý; bác sĩ chỉ kê thuốc đang dùng và đã xác minh (DOANTOTNGH-10). 1 thuốc = tên +
- * hàm lượng (UNIQUE trên 2 cột chuẩn hoá). Khác ERD: thêm {@code tenChuanHoa}, {@code hamLuongChuanHoa} và
- * {@code bacSiTao} — thuốc bác sĩ tự thêm khi kê đơn trước DOANTOTNGH-10 ({@code daXacMinh = false} tới khi quản trị viên
- * bổ sung hoạt chất, hàm lượng và xác minh).
- */
+/** Danh mục thuốc. */
 @Getter
 @Setter
 @NoArgsConstructor
@@ -96,7 +89,7 @@ public class Thuoc extends BaseEntity {
     @JoinColumn(name = "id_bac_si_tao")
     private BacSi bacSiTao;
 
-    // Chữ theo ngôn ngữ: bản tiếng Anh nếu được yêu cầu và đã nhập, không thì bản tiếng Việt (NgonNgu.chon).
+    // Chữ theo ngôn ngữ: bản tiếng Anh nếu có, không thì tiếng Việt
     public String donVi(NgonNgu ngonNgu) {
         return ngonNgu.chon(donVi, donViEn);
     }

@@ -24,14 +24,7 @@ import iuh.fit.se.eclinic.common.enums.NgonNgu;
 import iuh.fit.se.eclinic.common.thongbao.ThamSoThongBao;
 import lombok.RequiredArgsConstructor;
 
-/**
- * MANDATORY: gọi ngoài transaction là lỗi lập trình, vì khi đó thông báo có thể được ghi mà lịch hẹn không đổi (hoặc
- * ngược lại).
- * <p>
- * Không soạn câu ở đây: mỗi thông báo ghi khoá mẫu ({@code thongBao.<mau>} trong thong-diep/notification*.properties) và
- * tham số; notification-service soạn câu theo ngôn ngữ của người đọc. Họ tên, mã tra cứu, lý do người dùng gõ là tham
- * số chữ thường nên giữ nguyên văn ở mọi ngôn ngữ.
- */
+/** MANDATORY: phải gọi trong transaction để thông báo và lịch hẹn cùng được ghi hoặc cùng không. */
 @Service
 @RequiredArgsConstructor
 @Transactional(propagation = Propagation.MANDATORY)
@@ -42,10 +35,7 @@ public class ThongBaoLichHenServiceImpl implements ThongBaoLichHenService {
     private final NhacTaiKhamProperties nhacTaiKhamProperties;
     private final LichIcsService lichIcsService;
 
-    /**
-     * Email kèm tệp lịch .ics: các email tạo / đổi / hủy sự kiện trong lịch của bệnh nhân. Email nhắc lịch và tái khám
-     * không kèm (không đổi gì, nhập lại có thể thành 2 sự kiện ở vài ứng dụng lịch).
-     */
+    /** Email kèm tệp lịch .ics: các email tạo / đổi / hủy sự kiện trong lịch của bệnh nhân. */
     private static final Set<String> MAU_KEM_LICH = Set.of("email.datLich", "email.doiLich", "email.doiBacSi",
             "email.canDoiLich", "email.bacSiHuy", "email.quanTriHuy");
 
@@ -174,10 +164,7 @@ public class ThongBaoLichHenServiceImpl implements ThongBaoLichHenService {
         ghiTaiKham(benhAn, "thongBao.taiKham.nhac", "email.nhacTaiKham");
     }
 
-    /**
-     * Thứ tự tham số của mẫu thông báo tái khám: họ tên bệnh nhân, họ tên bác sĩ, ngày tái khám. Của mẫu email tái khám
-     * (notification-service: {@code MauEmail}): họ tên bệnh nhân, ngày tái khám, họ tên bác sĩ, link trang đặt lịch.
-     */
+    /** Thứ tự tham số của mẫu thông báo tái khám: họ tên bệnh nhân, họ tên bác sĩ, ngày tái khám. */
     private void ghiTaiKham(HoSoBenhAn benhAn, String khoaThongBao, String khoaEmail) {
         LichHen lichHen = benhAn.getLichHen();
         String tenBacSi = benhAn.getBacSi().getTaiKhoan().getHoTen();
@@ -197,11 +184,7 @@ public class ThongBaoLichHenServiceImpl implements ThongBaoLichHenService {
         suKienThongBaoRepository.save(email);
     }
 
-    /**
-     * Thứ tự tham số của mọi mẫu email lịch hẹn (notification-service: {@code MauEmail}): họ tên bệnh nhân, giờ khám,
-     * họ tên bác sĩ, tên phòng, tầng (chuỗi rỗng nếu phòng không ghi tầng), mã tra cứu, link phiếu khám. Email cấp lại
-     * liên kết thêm tham số thứ 8 (link sổ khám).
-     */
+    /** Thứ tự tham số của mọi mẫu email lịch hẹn, khớp {@code MauEmail} của notification-service. */
     private void ghiEmail(LichHen lichHen, String khoaMau) {
         SuKienThongBao suKien = emailCho(lichHen);
         if (suKien == null) {
@@ -224,13 +207,7 @@ public class ThongBaoLichHenServiceImpl implements ThongBaoLichHenService {
                 .chu(phieuKhamProperties.lienKet(lichHen.getMaTokenPhieuKham()));
     }
 
-    /**
-     * Dòng email chờ gửi cho người đã đặt lịch hẹn này, đã có địa chỉ nhận và ngôn ngữ, chưa có mẫu / tham số và chưa
-     * lưu. Địa chỉ: email liên hệ của lịch hẹn, để trống thì email của tài khoản đã đặt. Ngôn ngữ: của tài khoản đã
-     * đặt, khách thì của request đã tạo lịch hẹn.
-     *
-     * @return null nếu không có địa chỉ nào (khách đặt không nhập email)
-     */
+    /** Dòng email chờ gửi cho người đặt lịch hẹn này, đã có địa chỉ và ngôn ngữ, chưa có mẫu. */
     private static SuKienThongBao emailCho(LichHen lichHen) {
         TaiKhoan taiKhoanDat = lichHen.getTaiKhoanDat();
         String emailNhan = lichHen.getEmailLienHe();

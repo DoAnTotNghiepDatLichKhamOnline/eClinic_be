@@ -17,7 +17,7 @@ import iuh.fit.se.eclinic.common.entity.scheduling.LichLamViec;
 
 public interface LichLamViecRepository extends JpaRepository<LichLamViec, Long> {
 
-    /** Khoá dòng ca (SELECT ... FOR UPDATE) trước khi sửa / hủy ca hoặc duyệt yêu cầu của ca: các thao tác đó chạy lần lượt. */
+    /** Khoá dòng ca (FOR UPDATE) để sửa, hủy ca và duyệt yêu cầu của ca chạy lần lượt. */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select l from LichLamViec l where l.id = :id")
     Optional<LichLamViec> findByIdForUpdate(Long id);
@@ -25,13 +25,7 @@ public interface LichLamViecRepository extends JpaRepository<LichLamViec, Long> 
     List<LichLamViec> findByBacSiIdAndNgayLamViecBetweenOrderByNgayLamViecAscGioBatDauAsc(Long bacSiId,
             LocalDate tuNgay, LocalDate denNgay);
 
-    /**
-     * Các ca đặt lịch được của 1 ngày: ca còn hoạt động, bác sĩ đang công tác VÀ tài khoản bác sĩ đã kích hoạt
-     * (vô hiệu hoá tài khoản không đổi {@code bac_si.trang_thai}). Lấy sẵn bác sĩ, tài khoản, phòng khám.
-     *
-     * @param idBacSi      có giá trị = chỉ ca của bác sĩ này (bỏ qua idChuyenKhoa)
-     * @param idChuyenKhoa dùng khi idBacSi null: ca của mọi bác sĩ thuộc chuyên khoa
-     */
+    /** Ca đặt lịch được trong 1 ngày: ca hoạt động, bác sĩ công tác và tài khoản bác sĩ còn kích hoạt. */
     @Query("""
             select l from LichLamViec l
               join fetch l.bacSi b
@@ -47,10 +41,7 @@ public interface LichLamViecRepository extends JpaRepository<LichLamViec, Long> 
             """)
     List<LichLamViec> timCaDatLichDuoc(LocalDate ngay, Long idBacSi, Long idChuyenKhoa);
 
-    /**
-     * Ca theo id, lấy sẵn bác sĩ, tài khoản bác sĩ, phòng khám. Không lọc trạng thái: lúc đặt lịch service tự phân biệt
-     * "không có ca" (404) với "ca không còn nhận đặt lịch" (điều kiện như {@link #timCaDatLichDuoc}).
-     */
+    /** Ca theo id, lấy sẵn bác sĩ, tài khoản bác sĩ, phòng khám. */
     @Query("""
             select l from LichLamViec l
               join fetch l.bacSi b
@@ -68,10 +59,7 @@ public interface LichLamViecRepository extends JpaRepository<LichLamViec, Long> 
         Long getSoChoConLai();
     }
 
-    /**
-     * Mỗi ngày có ca đặt lịch được trong [tuNgay, denNgay] (điều kiện như {@link #timCaDatLichDuoc}) kèm số lượt
-     * còn trống bắt đầu từ {@code moc} trở đi. Ngày đã hết chỗ vẫn có trong kết quả với số 0.
-     */
+    /** Mỗi ngày có ca đặt lịch được trong khoảng, kèm số lượt còn trống từ {@code moc}. */
     @Query("""
             select l.ngayLamViec as ngay,
                    sum(case when k.trangThai = iuh.fit.se.eclinic.common.enums.TrangThaiKhungGio.CON_TRONG
@@ -92,10 +80,7 @@ public interface LichLamViecRepository extends JpaRepository<LichLamViec, Long> 
     List<SoChoTheoNgay> demChoTrongTheoNgay(LocalDate tuNgay, LocalDate denNgay, LocalDateTime moc, Long idBacSi,
             Long idChuyenKhoa);
 
-    /**
-     * Các ca đặt lịch được của 1 bác sĩ trong [tuNgay, denNgay], điều kiện như {@link #timCaDatLichDuoc}; theo ngày
-     * rồi giờ bắt đầu. Lấy sẵn bác sĩ, tài khoản, phòng khám.
-     */
+    /** Ca đặt lịch được của 1 bác sĩ trong khoảng ngày, theo ngày rồi giờ bắt đầu. */
     @Query("""
             select l from LichLamViec l
               join fetch l.bacSi b
@@ -110,10 +95,7 @@ public interface LichLamViecRepository extends JpaRepository<LichLamViec, Long> 
             """)
     List<LichLamViec> timCaDatLichDuocTrongKhoang(LocalDate tuNgay, LocalDate denNgay, Long idBacSi);
 
-    /**
-     * Lịch làm việc cho bác sĩ / quản trị viên: MỌI ca trong [tuNgay, denNgay] kể cả ca đã huỷ và ca của bác sĩ đã
-     * ngừng công tác. Bộ lọc null = không lọc. Lấy sẵn bác sĩ, tài khoản, chuyên khoa, phòng khám.
-     */
+    /** Mọi ca trong khoảng ngày, kể cả ca đã hủy và ca của bác sĩ đã ngừng công tác. */
     @Query("""
             select l from LichLamViec l
               join fetch l.bacSi b
@@ -166,10 +148,7 @@ public interface LichLamViecRepository extends JpaRepository<LichLamViec, Long> 
         Long getSoChoConLai();
     }
 
-    /**
-     * Mỗi (bác sĩ, ngày) CÒN chỗ của 1 chuyên khoa trong [tuNgay, denNgay], điều kiện như {@link #demChoTrongTheoNgay}.
-     * Sắp theo bác sĩ rồi theo ngày: dòng đầu tiên của mỗi bác sĩ là ngày còn chỗ sớm nhất.
-     */
+    /** Mỗi (bác sĩ, ngày) còn chỗ của 1 chuyên khoa trong khoảng ngày. */
     @Query("""
             select b.id as idBacSi, l.ngayLamViec as ngay, count(k) as soChoConLai
             from KhungGioKham k
@@ -189,11 +168,7 @@ public interface LichLamViecRepository extends JpaRepository<LichLamViec, Long> 
     List<SoChoCuaBacSiTheoNgay> demChoTrongTheoBacSiVaNgay(LocalDate tuNgay, LocalDate denNgay, LocalDateTime moc,
             Long idChuyenKhoa);
 
-    /**
-     * Bác sĩ đã có ca khác (còn hoạt động) chồng giờ trong cùng ngày? (2 khoảng [s1,e1) và [s2,e2) chồng nhau khi s1 < e2 và e1 > s2)
-     *
-     * @param excludeId id ca đang sửa (bỏ qua chính nó), truyền null khi tạo mới
-     */
+    /** Bác sĩ đã có ca khác còn hoạt động chồng giờ trong cùng ngày? */
     @Query("""
             select count(l) > 0 from LichLamViec l
             where l.bacSi.id = :bacSiId
@@ -219,10 +194,7 @@ public interface LichLamViecRepository extends JpaRepository<LichLamViec, Long> 
     boolean existsTrungCaCuaPhongKham(Long phongKhamId, LocalDate ngayLamViec, LocalTime gioBatDau,
             LocalTime gioKetThuc, Long excludeId);
 
-    /**
-     * Ca nguồn của 1 lần sao chép: ca CÒN HOẠT ĐỘNG có ngày trong [tuNgay, denNgay], theo ngày, giờ bắt đầu. Không lấy
-     * sẵn bác sĩ / phòng khám: các dòng đó được khoá rồi mới đọc, nên trạng thái đọc được là trạng thái mới nhất.
-     */
+    /** Ca nguồn của 1 lần sao chép: ca CÒN HOẠT ĐỘNG có ngày trong [tuNgay, denNgay], theo ngày, giờ bắt đầu. */
     @Query("""
             select l from LichLamViec l
             where l.ngayLamViec between :tuNgay and :denNgay
@@ -232,7 +204,7 @@ public interface LichLamViecRepository extends JpaRepository<LichLamViec, Long> 
             """)
     List<LichLamViec> timCaNguonSaoChep(LocalDate tuNgay, LocalDate denNgay, Long idChuyenKhoa);
 
-    /** Bác sĩ, ngày và giờ của 1 ca: đủ để cộng giờ làm theo tuần (SCHED-05). */
+    /** Bác sĩ, ngày và giờ của 1 ca, đủ để cộng giờ làm theo tuần. */
     interface GioCuaCa {
 
         Long getIdBacSi();
@@ -244,11 +216,7 @@ public interface LichLamViecRepository extends JpaRepository<LichLamViec, Long> 
         LocalTime getGioKetThuc();
     }
 
-    /**
-     * Giờ các ca CÒN HOẠT ĐỘNG có ngày trong [tuNgay, denNgay] (kể cả ca đã qua). Bộ lọc null = không lọc.
-     *
-     * @param excludeId ca đang sửa (không cộng giờ cũ của nó); null khi xếp ca mới hoặc khi tổng hợp
-     */
+    /** Giờ các ca CÒN HOẠT ĐỘNG có ngày trong [tuNgay, denNgay] (kể cả ca đã qua). */
     @Query("""
             select l.bacSi.id as idBacSi, l.ngayLamViec as ngay, l.gioBatDau as gioBatDau, l.gioKetThuc as gioKetThuc
             from LichLamViec l
@@ -261,10 +229,7 @@ public interface LichLamViecRepository extends JpaRepository<LichLamViec, Long> 
     List<GioCuaCa> timGioCaHoatDong(LocalDate tuNgay, LocalDate denNgay, Long idBacSi, Long idChuyenKhoa,
             Long excludeId);
 
-    /**
-     * Id các ca CÒN HOẠT ĐỘNG vào các ngày đã cho, theo id (thứ tự khoá như duyệt nhóm yêu cầu). Chỉ lấy id: nơi gọi khoá
-     * từng ca bằng {@link #findByIdForUpdate} nên đọc được trạng thái mới nhất, không phải bản đã nạp từ trước.
-     */
+    /** Id các ca CÒN HOẠT ĐỘNG vào các ngày đã cho, theo id (thứ tự khoá như duyệt nhóm yêu cầu). */
     @Query("""
             select l.id from LichLamViec l
             where l.ngayLamViec in :cacNgay

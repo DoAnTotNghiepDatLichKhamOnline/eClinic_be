@@ -29,7 +29,7 @@ public class PhienDangNhapServiceImpl implements PhienDangNhapService {
     @Override
     public List<PhienDangNhapResponse> layDanhSach(Long idTaiKhoan, String maPhienHienTai) {
         taiKhoanService.layDangHoatDong(idTaiKhoan);
-        // layPhienDangHoatDong đã xếp theo lần hoạt động gần nhất; sorted() ổn định nên chỉ đưa phiên hiện tại lên đầu
+        // Đã xếp theo lần hoạt động; sorted() ổn định nên chỉ đưa phiên hiện tại lên đầu
         return refreshTokenService.layPhienDangHoatDong(idTaiKhoan).stream()
                 .map(phien -> phienDangNhapMapper.toResponse(phien, maPhienHienTai))
                 .sorted(Comparator.comparing(PhienDangNhapResponse::hienTai).reversed())

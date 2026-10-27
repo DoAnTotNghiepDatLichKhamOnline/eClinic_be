@@ -24,12 +24,7 @@ import iuh.fit.se.eclinic.identity.config.GoogleProperties;
 import iuh.fit.se.eclinic.identity.util.ChuanHoa;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Kiểm tra ID token do Google Identity Services cấp cho frontend: chữ ký (khoá công khai của Google), iss, aud
- * (= Client ID của mình), hạn dùng, email_verified.
- * <p>
- * Decoder là field riêng, KHÔNG phải bean {@link JwtDecoder}: bean đó (JwtConfig) kiểm tra access token của hệ thống.
- */
+/** Kiểm tra ID token Google cấp cho frontend: chữ ký, iss, aud (= Client ID), hạn dùng, email_verified. */
 @Slf4j
 @Component
 public class XacMinhTokenGoogle {
@@ -57,10 +52,6 @@ public class XacMinhTokenGoogle {
         this.daCauHinh = daCauHinh;
     }
 
-    /**
-     * @throws LoiNghiepVu GOOGLE_TOKEN_KHONG_HOP_LE (401) khi token sai / hết hạn / không dành cho ứng dụng này;
-     *                     DANG_NHAP_GOOGLE_KHONG_KHA_DUNG (503) khi chưa cấu hình hoặc không lấy được khoá của Google
-     */
     public ThongTinGoogle xacMinh(String idToken) {
         if (!daCauHinh) {
             throw new LoiNghiepVu(MaLoi.DANG_NHAP_GOOGLE_KHONG_KHA_DUNG);
@@ -81,10 +72,7 @@ public class XacMinhTokenGoogle {
                 jwt.getClaimAsString("hd"), jwt.getClaimAsString("name"), jwt.getClaimAsString("picture"));
     }
 
-    /**
-     * Các điều kiện ID token phải thỏa (ngoài chữ ký). Tự ghép thay vì JwtValidators.createDefaultWithIssuer
-     * vì Google dùng 2 giá trị iss.
-     */
+    /** Các điều kiện ID token phải thỏa (ngoài chữ ký). */
     static OAuth2TokenValidator<Jwt> boKiemTra(String clientId) {
         return new DelegatingOAuth2TokenValidator<>(
                 new JwtTimestampValidator(),

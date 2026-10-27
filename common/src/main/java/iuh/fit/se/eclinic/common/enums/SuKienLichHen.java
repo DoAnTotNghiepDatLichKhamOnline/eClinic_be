@@ -1,9 +1,6 @@
 package iuh.fit.se.eclinic.common.enums;
 
-/**
- * 1 thao tác trên lịch hẹn, ghi ở lich_su_lich_hen (V35). Không có "đã khám" / "không đến": trạng thái lịch hẹn đã cho
- * biết.
- */
+/** 1 thao tác trên lịch hẹn, ghi ở lich_su_lich_hen. */
 public enum SuKienLichHen {
     /** Lịch hẹn được đặt. */
     DAT_LICH,
@@ -17,9 +14,6 @@ public enum SuKienLichHen {
     DOI_BAC_SI,
     /** Ca khám bị sửa phòng hoặc giờ. */
     CA_THAY_DOI,
-    /**
-     * Liên kết phiếu khám (và sổ khám bệnh nếu có) được cấp lại cho người đã mất link (PAT-03): cùng mã cũ, gửi email
-     * hoặc hiện trên màn hình của nhân viên; lý do ghi kênh gửi.
-     */
+    /** Liên kết phiếu khám được cấp lại (cùng mã cũ), qua email hoặc trên màn hình của nhân viên. */
     CAP_LAI_LIEN_KET
 }

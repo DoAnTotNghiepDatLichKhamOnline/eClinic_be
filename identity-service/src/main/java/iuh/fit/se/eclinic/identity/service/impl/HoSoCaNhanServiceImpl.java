@@ -45,12 +45,12 @@ public class HoSoCaNhanServiceImpl implements HoSoCaNhanService {
         String hoTen = request.hoTen().trim();
         String soDienThoai = request.soDienThoai();
 
-        // Tên bác sĩ hiển thị cho bệnh nhân khi đặt lịch và trên hồ sơ bệnh án: chỉ quản trị viên được đổi (DOC-01)
+        // Tên bác sĩ hiển thị cho bệnh nhân và trên bệnh án: chỉ quản trị viên được đổi
         if (taiKhoan.getVaiTro() == VaiTro.BAC_SI && !hoTen.equals(taiKhoan.getHoTen())) {
             throw new LoiNghiepVu(MaLoi.KHONG_CO_QUYEN,
                     "loi.KHONG_CO_QUYEN.hoTenBacSi");
         }
-        // Kiểm tra trùng TRƯỚC khi sửa entity (xem ChuyenKhoaServiceImpl.capNhat)
+        // Kiểm tra trùng TRƯỚC khi sửa entity
         if (soDienThoai != null && taiKhoanRepository.existsBySoDienThoaiAndIdNot(soDienThoai, idTaiKhoan)) {
             throw new LoiNghiepVu(MaLoi.SO_DIEN_THOAI_DA_TON_TAI);
         }

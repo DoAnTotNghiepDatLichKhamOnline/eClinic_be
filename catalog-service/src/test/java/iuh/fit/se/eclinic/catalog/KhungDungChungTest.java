@@ -23,10 +23,7 @@ import iuh.fit.se.eclinic.common.security.JwtService;
 import iuh.fit.se.eclinic.common.testsupport.MySqlTestcontainersConfiguration;
 import iuh.fit.se.eclinic.common.testsupport.NguoiDungGiaLap;
 
-/**
- * Kiểm tra khung dùng chung trong common (PhanHoiApi, XuLyLoiHandler, bảo mật JWT, actuator, OpenAPI)
- * qua controller mẫu ApiMauController chỉ có trong test.
- */
+/** Kiểm tra khung dùng chung trong common qua controller mẫu ApiMauController chỉ có trong test. */
 @SpringBootTest(properties = "app.bao-mat.duong-dan-cong-khai=GET /api/mau/cong-khai")
 @AutoConfigureMockMvc
 @Import(MySqlTestcontainersConfiguration.class)

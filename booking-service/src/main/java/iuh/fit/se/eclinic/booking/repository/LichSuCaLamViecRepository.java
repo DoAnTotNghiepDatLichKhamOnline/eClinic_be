@@ -7,9 +7,7 @@ import org.springframework.data.repository.Repository;
 
 import iuh.fit.se.eclinic.common.entity.scheduling.LichSuCaLamViec;
 
-/**
- * Lịch sử thay đổi ca làm việc. Chỉ thêm và đọc: kế thừa {@link Repository} nên không có update / delete.
- */
+/** Lịch sử thay đổi ca làm việc. */
 public interface LichSuCaLamViecRepository extends Repository<LichSuCaLamViec, Long> {
 
     LichSuCaLamViec save(LichSuCaLamViec lichSu);

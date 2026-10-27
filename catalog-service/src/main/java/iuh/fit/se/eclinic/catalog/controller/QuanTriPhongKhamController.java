@@ -25,10 +25,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 
-/**
- * Danh mục phòng khám của quản trị viên (màn hình Medical Catalog). Danh sách phòng đang hoạt động để chọn khi xếp ca
- * vẫn ở {@link PhongKhamController}.
- */
+/** Danh mục phòng khám của quản trị viên (màn hình Medical Catalog). */
 @Tag(name = "Quản trị phòng khám", description = "Danh mục phòng khám: danh sách, thêm, sửa, ngừng hoạt động / hoạt động lại (quản trị viên)")
 @RestController
 @RequestMapping("/api/catalog/quan-tri/phong-kham")

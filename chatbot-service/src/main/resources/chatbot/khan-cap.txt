@@ -1,8 +1,5 @@
-# Dấu hiệu cấp cứu (KiemTraKhanCap). Tin nhắn trúng 1 dòng thì chatbot trả câu "gọi 115" cố định, không gọi mô hình.
-# Mỗi dòng 1 dấu hiệu; nhiều phần nối bằng "+" thì tin nhắn phải có đủ mọi phần. Mỗi phần khớp từ đầu 1 từ.
-# Viết KHÔNG DẤU để người dùng gõ có dấu hay không đều trúng. Chỉ viết CÓ DẤU khi bỏ dấu thì trùng với từ thường gặp
-# (vd "tự tử" bỏ dấu thành "tu tu" = "từ từ"); phần có dấu chỉ khớp tin nhắn gõ đúng dấu.
-# Trúng nhầm chỉ làm người dùng nhận 1 câu khuyên gọi 115, nên thà rộng còn hơn sót.
+# Dấu hiệu cấp cứu: mỗi dòng 1 dấu hiệu, các phần nối bằng "+" phải có đủ, mỗi phần khớp từ đầu 1 từ.
+# Viết không dấu để khớp cả tin gõ có dấu; chỉ viết có dấu khi bỏ dấu sẽ trùng từ thường gặp ("tự tử").
 
 # --- Tiếng Việt: tim mạch, hô hấp ---
 dau nguc + kho tho

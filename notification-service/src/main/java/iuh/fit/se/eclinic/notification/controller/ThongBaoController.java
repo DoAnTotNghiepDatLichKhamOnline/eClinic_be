@@ -20,10 +20,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 
-/**
- * NOTI-01: chuông thông báo của tài khoản đang đăng nhập (mọi vai trò). Không nhận id tài khoản: lấy từ JWT. Không có
- * đẩy realtime: frontend hỏi lại {@code /so-chua-doc} định kỳ (khoảng 30 giây, tạm dừng khi tab bị ẩn).
- */
+/** Chuông thông báo của tài khoản đang đăng nhập (mọi vai trò). */
 @Tag(name = "Thông báo", description = "NOTI-01: danh sách, số chưa đọc, đánh dấu đã đọc")
 @RestController
 @RequestMapping("/api/notification/thong-bao")

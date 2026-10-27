@@ -11,13 +11,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
-/**
- * CORS cho frontend React — chỉ cấu hình ở đây, các service phía sau không cấu hình CORS.
- * Filter tự trả lời request preflight (OPTIONS), không chuyển tiếp tới service.
- * <p>
- * Chạy trước mọi filter khác của gateway: response do filter sau nó tự trả (vd 413 của GioiHanKichThuocFilter,
- * 429 của GioiHanTanSuatFilter) vẫn phải có header CORS thì trình duyệt mới đọc được.
- */
+/** CORS cho frontend React — chỉ cấu hình ở đây, các service phía sau không cấu hình CORS. */
 @Configuration
 @EnableConfigurationProperties(CorsProperties.class)
 public class CorsConfig {
@@ -28,8 +22,7 @@ public class CorsConfig {
         cauHinh.setAllowedOrigins(corsProperties.nguonDuocPhep());
         cauHinh.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         cauHinh.setAllowedHeaders(List.of("*"));
-        // Frontend đọc được tên tệp của các API tải tệp (Excel / PDF lịch làm việc, ảnh QR) và số giây phải chờ khi
-        // gateway trả 429 (Retry-After)
+        // Frontend đọc được tên tệp tải về, và Retry-After khi gateway trả 429
         cauHinh.setExposedHeaders(List.of("Content-Disposition", "Retry-After"));
         // Cho phép gửi cookie (refresh token eclinic_rt của /api/auth); yêu cầu origin cụ thể, không dùng "*"
         cauHinh.setAllowCredentials(true);

@@ -50,10 +50,7 @@ public class BacSiHuyLichHenServiceImpl implements BacSiHuyLichHenService {
         return toResponse(lichHen);
     }
 
-    /**
-     * Khoá dòng lịch hẹn rồi mới kiểm tra: bấm 2 lần, hoặc bác sĩ hủy cùng lúc bệnh nhân hủy / đổi, thì lần sau thấy lịch
-     * hẹn đã rời DA_XAC_NHAN. Lịch hẹn không có và lịch hẹn của bác sĩ khác trả cùng 1 lỗi.
-     */
+    /** Khoá dòng lịch hẹn rồi mới kiểm tra, để lần bấm sau thấy lịch đã rời DA_XAC_NHAN. */
     private LichHen khoaLichDaXacNhan(Long idTaiKhoanBacSi, Long idLichHen) {
         Long idBacSi = taiKhoanService.layBacSiDangHoatDong(idTaiKhoanBacSi).getId();
         LichHen lichHen = lichHenRepository.findByIdForUpdate(idLichHen)

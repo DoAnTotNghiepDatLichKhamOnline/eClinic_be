@@ -1,8 +1,6 @@
 package iuh.fit.se.eclinic.common.enums;
 
-/**
- * Đường dùng của thuốc trong danh mục. Nhãn hiển thị (tiếng Việt / tiếng Anh) do frontend đặt.
- */
+/** Đường dùng của thuốc trong danh mục. */
 public enum DuongDungThuoc {
     UONG,
     NGAM_DUOI_LUOI,

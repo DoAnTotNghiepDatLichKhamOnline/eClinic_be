@@ -19,10 +19,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 
-/**
- * Lịch sử khám của bệnh nhân đã đăng nhập: các lượt đã khám xong kèm kết quả. Luôn thao tác trên tài khoản của chính
- * người gọi.
- */
+/** Lịch sử khám của bệnh nhân đã đăng nhập: các lượt đã khám xong kèm kết quả. */
 @Tag(name = "Lịch sử khám", description = "Các lượt đã khám kèm chẩn đoán, lời dặn, đơn thuốc của bệnh nhân")
 @RestController
 @RequestMapping("/api/booking/lich-su-kham/cua-toi")
@@ -41,7 +38,7 @@ public class LichSuKhamController {
             @RequestParam(defaultValue = "0") @Min(0) int trang,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int kichThuoc) {
         Long idTaiKhoan = NguoiDungHienTai.layIdTaiKhoan();
-        // Lượt khám của hồ sơ đặt như khách bằng số CCCD đã khai khi đăng ký phải có ngay lần xem đầu tiên (quy tắc #3)
+        // Lượt khám đặt như khách bằng CCCD đã khai khi đăng ký phải hiện ngay lần xem đầu tiên
         lienKetHoSoService.thuLienKet(idTaiKhoan);
         return PhanHoiApi.ok(lichSuKhamService.cuaToi(idTaiKhoan, cuaAi, trang, kichThuoc));
     }

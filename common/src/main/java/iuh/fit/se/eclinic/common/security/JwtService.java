@@ -12,9 +12,7 @@ import org.springframework.stereotype.Service;
 import iuh.fit.se.eclinic.common.enums.VaiTro;
 import lombok.RequiredArgsConstructor;
 
-/**
- * Phát hành access token. Chỉ identity-service gọi khi đăng nhập (và test).
- */
+/** Phát hành access token. */
 @Service
 @RequiredArgsConstructor
 public class JwtService {
@@ -27,7 +25,7 @@ public class JwtService {
         return taoAccessToken(idTaiKhoan, email, vaiTro, null);
     }
 
-    /** @param maPhien mã phiên đăng nhập, đưa vào claim "phien"; null thì token không có claim này */
+    /** Access token; {@code maPhien} null thì token không có claim "phien". */
     public String taoAccessToken(Long idTaiKhoan, String email, VaiTro vaiTro, String maPhien) {
         Instant bayGio = Instant.now();
         JwtClaimsSet.Builder claims = JwtClaimsSet.builder()

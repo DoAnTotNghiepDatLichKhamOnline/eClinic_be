@@ -26,14 +26,7 @@ public interface BacSiRepository extends JpaRepository<BacSi, Long> {
 
     long countByChuyenKhoaId(Long chuyenKhoaId);
 
-    /**
-     * Bác sĩ hiển thị công khai (DOC-03): đang công tác VÀ tài khoản đã kích hoạt. Vô hiệu hoá tài khoản ở
-     * identity-service chỉ đổi trạng thái tài khoản, không đổi {@code bac_si.trang_thai}, nên phải kiểm cả hai.
-     * So sánh tên theo collation của cột (không phân biệt hoa/thường và dấu). Sắp xếp theo tên.
-     *
-     * @param idChuyenKhoa null = mọi chuyên khoa
-     * @param mauTen       mẫu LIKE đã escape bằng {@link #KY_TU_ESCAPE}, null = không lọc theo tên
-     */
+    /** Bác sĩ hiển thị công khai: đang công tác và tài khoản đã kích hoạt. */
     @Query(value = """
             select b from BacSi b
               join fetch b.taiKhoan t
@@ -53,11 +46,7 @@ public interface BacSiRepository extends JpaRepository<BacSi, Long> {
             """)
     Page<BacSi> timCongKhai(Long idChuyenKhoa, String mauTen, Pageable pageable);
 
-    /**
-     * Điều kiện "bác sĩ b còn ít nhất 1 lượt khám đặt được" của {@link #timCongKhaiConCho}: lượt còn trống của ca còn
-     * hoạt động, bắt đầu từ {@code :moc}, ngày trong [{@code :tuNgay}, {@code :denNgay}], giờ bắt đầu của LƯỢT (không phải
-     * của ca) trong [{@code :gioTu}, {@code :gioDen}). Ngày bệnh viện nghỉ không còn ca hoạt động nên không cần lọc riêng.
-     */
+    /** Điều kiện "bác sĩ b còn ít nhất 1 lượt khám đặt được" trong khoảng ngày và giờ của lượt. */
     String CON_LUOT_DAT_DUOC = """
               and exists (select 1 from KhungGioKham k join k.lichLamViec l
                           where l.bacSi = b
@@ -69,10 +58,7 @@ public interface BacSiRepository extends JpaRepository<BacSi, Long> {
                             and extract(hour from k.gioBatDau) < :gioDen)
             """;
 
-    /**
-     * Như {@link #timCongKhai}, chỉ giữ bác sĩ còn lượt khám đặt được theo {@link #CON_LUOT_DAT_DUOC} (DOC-03: tìm theo
-     * khung giờ rảnh).
-     */
+    /** Như {@link #timCongKhai}, chỉ giữ bác sĩ còn lượt khám đặt được. */
     @Query(value = """
             select b from BacSi b
               join fetch b.taiKhoan t
@@ -105,11 +91,7 @@ public interface BacSiRepository extends JpaRepository<BacSi, Long> {
             """)
     Optional<BacSi> timCongKhaiTheoId(Long id);
 
-    /**
-     * Danh bạ bác sĩ cho quản trị viên: mọi trạng thái, bác sĩ mới thêm đứng trước. Tham số null = không lọc.
-     *
-     * @param mau mẫu LIKE đã escape bằng {@link #KY_TU_ESCAPE}, so với họ tên, email, số điện thoại, số giấy phép
-     */
+    /** Danh bạ bác sĩ cho quản trị viên: mọi trạng thái, bác sĩ mới thêm đứng trước. */
     @Query(value = """
             select b from BacSi b
               join fetch b.taiKhoan t
@@ -129,10 +111,7 @@ public interface BacSiRepository extends JpaRepository<BacSi, Long> {
             """)
     Page<BacSi> timChoQuanTri(String mau, Long idChuyenKhoa, TrangThaiBacSi trangThai, Pageable pageable);
 
-    /**
-     * Khoá dòng bác sĩ khi đổi trạng thái / chuyên khoa. booking-service khoá cùng dòng này khi xếp ca, nên "ngừng công
-     * tác" và "xếp ca mới" chạy lần lượt. Không lấy sẵn tài khoản, chuyên khoa.
-     */
+    /** Khoá dòng bác sĩ khi đổi trạng thái, chuyên khoa; booking-service khoá cùng dòng khi xếp ca. */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select b from BacSi b where b.id = :id")
     Optional<BacSi> findByIdForUpdate(Long id);

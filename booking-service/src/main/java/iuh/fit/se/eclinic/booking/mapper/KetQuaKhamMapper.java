@@ -13,10 +13,7 @@ import iuh.fit.se.eclinic.common.entity.medical.Thuoc;
 import iuh.fit.se.eclinic.common.enums.NgonNgu;
 import lombok.RequiredArgsConstructor;
 
-/**
- * Chuyển hồ sơ bệnh án sang kết quả khám. Gọi trong transaction: đơn thuốc, thuốc và mã ICD-10 là quan hệ lazy (nơi gọi
- * nên tải sẵn bằng HoSoBenhAnChiDocRepository#timTheoLichHenKemDonThuoc).
- */
+/** Chuyển hồ sơ bệnh án sang kết quả khám. */
 @Component
 @RequiredArgsConstructor
 public class KetQuaKhamMapper {
@@ -24,15 +21,12 @@ public class KetQuaKhamMapper {
     private final BenhAnProperties benhAnProperties;
     private final SoKhamProperties soKhamProperties;
 
-    /**
-     * Cho bệnh nhân: chỉ biết hồ sơ đã sửa lúc nào, không có phiên bản / hạn sửa; kèm mã và link sổ khám bệnh (EXAM-04).
-     * @return null nếu chưa có hồ sơ bệnh án
-     */
+    /** Cho bệnh nhân: thời điểm sửa hồ sơ, kèm mã và link sổ khám bệnh. */
     public KetQuaKhamResponse toResponse(HoSoBenhAn benhAn) {
         return toResponse(benhAn, false);
     }
 
-    /** Cho bác sĩ (hồ sơ khám): kèm phiên bản và hạn sửa, không có link sổ khám. @return null nếu chưa có hồ sơ bệnh án */
+    /** Cho bác sĩ: kèm phiên bản và hạn sửa; null nếu chưa có hồ sơ bệnh án. */
     public KetQuaKhamResponse toResponseChoBacSi(HoSoBenhAn benhAn) {
         return toResponse(benhAn, true);
     }

@@ -8,16 +8,7 @@ import java.util.List;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.bind.DefaultValue;
 
-/**
- * Nhắc lịch khám, prefix {@code app.nhac-lich} trong application.yml.
- *
- * @param cacMoc      các mốc nhắc: trước giờ khám bao lâu thì nhắc (vd 3 ngày, 1 ngày); danh sách rỗng = không nhắc
- * @param chuKy       khoảng nghỉ giữa 2 lần job tìm lịch hẹn đến hạn nhắc
- * @param guiTu       chỉ nhắc từ giờ này trong ngày (giờ của phòng khám)...
- * @param guiDen      ...tới trước giờ này; ngoài khoảng đó job không làm gì, lịch đến hạn ban đêm được nhắc vào sáng
- * @param conToiThieu lượt khám còn cách ít hơn khoảng này thì không nhắc nữa
- * @param kichThuocLo số lịch hẹn tối đa xử lý cho mỗi mốc trong 1 lần chạy
- */
+/** Nhắc lịch khám, prefix {@code app.nhac-lich} trong application.yml. */
 @ConfigurationProperties("app.nhac-lich")
 public record NhacLichProperties(
         @DefaultValue({"3d", "1d"}) List<Duration> cacMoc,

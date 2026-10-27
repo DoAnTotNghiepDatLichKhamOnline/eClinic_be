@@ -20,22 +20,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Giới hạn số request của mỗi địa chỉ IP trong 1 phút, đếm trên Redis (dùng chung cho mọi instance gateway). Vượt giới
- * hạn: 429 QUA_NHIEU_YEU_CAU kèm header Retry-After, request không được chuyển tiếp. Chỉ áp dụng cho /api/**
- * (không chặn /actuator/health của docker-compose).
- * <p>
- * Mỗi request chỉ tính vào 1 nhóm, mỗi nhóm có mức riêng (app.gioi-han): POST đăng nhập / đăng ký / gửi email (nhóm
- * xac-thuc, chống dò mật khẩu và spam email), POST /api/chatbot/** (nhóm chatbot, mỗi lần gọi mô hình tốn tiền), còn lại
- * là nhóm chung. Các giới hạn riêng của từng service (đặt lịch theo IP, đăng nhập sai, chatbot theo người dùng) vẫn giữ.
- * <p>
- * Khoá đếm theo địa chỉ kết nối tới gateway ({@code getRemoteAddr}), KHÔNG theo X-Forwarded-For do client tự gửi được.
- * Nhiều bệnh nhân sau cùng 1 mạng (bệnh viện, công ty) dùng chung 1 IP nên mức mặc định rộng.
- * <p>
- * Cửa sổ cố định 1 phút: script Lua tăng bộ đếm và đặt hạn ở lần đầu trong 1 lần gọi Redis (nguyên tử, khoá luôn có
- * hạn). Redis lỗi thì cho request đi tiếp và bỏ qua Redis trong {@link #BO_QUA_SAU_LOI} để mỗi request không phải chờ
- * hết thời gian chờ của Redis.
- */
+/** Giới hạn số request của mỗi địa chỉ IP trong 1 phút, đếm trên Redis (dùng chung cho mọi instance gateway). */
 @Slf4j
 public class GioiHanTanSuatFilter extends OncePerRequestFilter {
 

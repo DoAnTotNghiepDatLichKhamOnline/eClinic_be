@@ -57,7 +57,7 @@ public class DoiEmailServiceImpl implements DoiEmailService {
         if (!tokenLienKetService.giuCho(idTaiKhoan, MucDichLienKet.DOI_EMAIL, lienKetProperties.thoiGianChoGuiLai())) {
             throw new LoiNghiepVu(MaLoi.GUI_LAI_QUA_NHANH);
         }
-        // Sau khi giữ được khoá chờ (quy ước của TokenLienKetService); liên kết của yêu cầu trước hết hiệu lực
+        // Sau khi giữ được khoá chờ; liên kết của yêu cầu trước hết hiệu lực
         String token = tokenLienKetService.tao(idTaiKhoan, MucDichLienKet.DOI_EMAIL, lienKetProperties.thoiHanDoiEmail(),
                 emailMoi);
         eventPublisher.publishEvent(new EmailXacNhanDoiEmailEvent(emailMoi, token, taiKhoan.getNgonNgu()));
@@ -99,7 +99,7 @@ public class DoiEmailServiceImpl implements DoiEmailService {
                 // Được đổi
             }
         }
-        // Token DOI_EMAIL luôn kèm email mới (xem yeuCau)
+        // Token DOI_EMAIL luôn kèm email mới
         if (emailMoi == null) {
             throw new LoiNghiepVu(MaLoi.LIEN_KET_KHONG_HOP_LE);
         }
@@ -112,7 +112,7 @@ public class DoiEmailServiceImpl implements DoiEmailService {
         String hoTen = taiKhoan.getHoTen();
         taiKhoan.setEmail(emailMoi);
         try {
-            // Flush ngay để 2 request cùng lấy 1 email (lọt qua existsByEmail) dừng ở uk_tai_khoan_email với mã lỗi đúng
+            // Flush ngay để 2 request cùng lấy 1 email dừng ở uk_tai_khoan_email với mã lỗi đúng
             taiKhoanRepository.saveAndFlush(taiKhoan);
         } catch (DataIntegrityViolationException e) {
             throw new LoiNghiepVu(MaLoi.EMAIL_DA_TON_TAI);
@@ -121,7 +121,7 @@ public class DoiEmailServiceImpl implements DoiEmailService {
         int soPhien = refreshTokenService.thuHoiTatCaCuaTaiKhoan(idTaiKhoan);
         // Liên kết đặt lại mật khẩu đang chờ đã được gửi tới email cũ
         tokenLienKetService.huy(idTaiKhoan, MucDichLienKet.DAT_LAI_MAT_KHAU);
-        // Ai đó từng thử đăng nhập sai bằng email mới (khi nó chưa thuộc tài khoản nào) không được khoá chủ tài khoản
+        // Bộ đếm sai mật khẩu của email mới (khi chưa thuộc ai) không được khoá chủ tài khoản
         gioiHanDangNhapService.xoa(emailMoi);
         eventPublisher.publishEvent(new EmailDaDoiEmailEvent(emailCu, hoTen, emailMoi, taiKhoan.getNgonNgu()));
         log.info("Đổi email đăng nhập id={}, thu hồi {} phiên", idTaiKhoan, soPhien);

@@ -8,18 +8,13 @@ import iuh.fit.se.eclinic.common.enums.VaiTro;
 import iuh.fit.se.eclinic.common.exception.LoiNghiepVu;
 import iuh.fit.se.eclinic.common.exception.MaLoi;
 
-/**
- * Lấy thông tin người đang gọi API từ JWT. Dùng trong controller/service: {@code NguoiDungHienTai.layIdTaiKhoan()}.
- */
+/** Lấy thông tin người đang gọi API từ JWT. */
 public final class NguoiDungHienTai {
 
     private NguoiDungHienTai() {
     }
 
-    /**
-     * Người gọi có gửi JWT hợp lệ không. Dùng ở đường dẫn công khai nhận cả khách lẫn người đã đăng nhập (vd đặt lịch
-     * khám); các hàm lấy thông tin bên dưới ném CHUA_DANG_NHAP khi không có JWT.
-     */
+    /** Người gọi có gửi JWT hợp lệ không. */
     public static boolean daDangNhap() {
         return SecurityContextHolder.getContext().getAuthentication() instanceof JwtAuthenticationToken;
     }
@@ -37,10 +32,7 @@ public final class NguoiDungHienTai {
         return layToken().getToken().getClaimAsString(JwtConfig.CLAIM_PHIEN);
     }
 
-    /**
-     * Chuỗi JWT của request đang xử lý, để gọi tiếp 1 service khác THAY MẶT chính người gọi (service kia tự kiểm tra
-     * token và tự biết là ai). Không ghi vào log, không lưu, không gửi ra ngoài hệ thống.
-     */
+    /** Chuỗi JWT của request đang xử lý, để gọi tiếp service khác thay mặt người gọi. */
     public static String layGiaTriToken() {
         return layToken().getToken().getTokenValue();
     }

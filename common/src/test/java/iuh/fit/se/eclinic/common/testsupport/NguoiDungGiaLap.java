@@ -8,12 +8,7 @@ import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import iuh.fit.se.eclinic.common.enums.VaiTro;
 import iuh.fit.se.eclinic.common.security.JwtConfig;
 
-/**
- * Giả lập người dùng đã đăng nhập trong test MockMvc (@WebMvcTest hoặc @SpringBootTest + @AutoConfigureMockMvc):
- * {@code mockMvc.perform(get("/api/...").with(NguoiDungGiaLap.bacSi(5L)))}.
- * <p>
- * jwt() bỏ qua bộ giải mã và JwtAuthenticationConverter, nên quyền ROLE_... được gán trực tiếp ở đây.
- */
+/** Giả lập người dùng đã đăng nhập trong test MockMvc: {@code .with(NguoiDungGiaLap.bacSi(5L))}. */
 public final class NguoiDungGiaLap {
 
     private NguoiDungGiaLap() {

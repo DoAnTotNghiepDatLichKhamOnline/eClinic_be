@@ -1,5 +1,4 @@
-# Build context của Dockerfile gốc: chỉ cần pom.xml + mã nguồn các module.
-# Không được lọt bí mật (.env, khoá API) hay công cụ nội bộ vào image.
+# Build context chỉ cần pom.xml và mã nguồn; không để bí mật hay công cụ nội bộ lọt vào image.
 
 # Git, IDE, kết quả build cũ
 .git

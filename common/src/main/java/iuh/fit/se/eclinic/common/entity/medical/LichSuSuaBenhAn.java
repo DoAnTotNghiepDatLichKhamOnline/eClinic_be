@@ -15,10 +15,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * 1 lần sửa hồ sơ bệnh án: ai sửa, lúc nào ({@code ngayTao}), lý do, nội dung trước và sau khi sửa (JSON). CHỈ THÊM:
- * {@link Immutable} nên Hibernate bỏ qua mọi thay đổi trên dòng đã lưu, và repository không có update / delete.
- */
+/** 1 lần sửa hồ sơ bệnh án: ai sửa, lúc nào ({@code ngayTao}), lý do, nội dung trước và sau khi sửa (JSON). */
 @Getter
 @Setter
 @NoArgsConstructor

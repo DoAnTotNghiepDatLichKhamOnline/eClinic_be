@@ -19,11 +19,7 @@ import iuh.fit.se.eclinic.common.dto.PhanHoiApi;
 import iuh.fit.se.eclinic.common.security.NguoiDungHienTai;
 import lombok.RequiredArgsConstructor;
 
-/**
- * Hàng đợi khám trong ngày theo ca trên trang chủ bác sĩ: xem, gọi bệnh nhân tiếp theo / gọi 1 bệnh nhân, đánh dấu vắng
- * mặt. Ghi nhận kết quả khám (medical-service) là xong lượt. Bác sĩ lấy từ tài khoản đang đăng nhập; lịch hẹn / ca của
- * bác sĩ khác coi như không có (404). Mỗi thao tác trả lại hàng đợi hôm nay.
- */
+/** Hàng đợi khám trong ngày theo ca: xem, gọi bệnh nhân tiếp theo, đánh dấu vắng mặt. */
 @Tag(name = "Hàng đợi khám", description = "Hàng đợi khám trong ngày theo ca của bác sĩ")
 @RestController
 @RequestMapping("/api/booking/bac-si/toi")

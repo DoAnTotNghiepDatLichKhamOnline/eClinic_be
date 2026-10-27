@@ -20,15 +20,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Lỗi phát sinh tại gateway (không phải lỗi do service trả về — lỗi đó được chuyển nguyên cho frontend):
- * service chưa chạy -> 503, service trả lời quá lâu -> 504, đường dẫn không thuộc route nào -> 404,
- * body request quá lớn -> 413, 1 địa chỉ IP gửi quá nhiều request -> 429.
- * Thông điệp theo ngôn ngữ của request (thong-diep/gateway*.properties).
- * <p>
- * Cố ý KHÔNG có @ExceptionHandler(Exception.class): lỗi khác rơi về trang lỗi 500 mặc định của Spring Boot
- * để lỗi lập trình thật vẫn lộ ra.
- */
+/** Lỗi phát sinh tại gateway: 503 service chưa chạy, 504 quá lâu, 404 không có route, 413, 429. */
 @Slf4j
 @RestControllerAdvice
 @RequiredArgsConstructor
@@ -38,7 +30,7 @@ public class XuLyLoiGatewayHandler {
 
     private final MessageSource messageSource;
 
-    /** Gateway gọi service thất bại ở tầng kết nối (bị bọc trong UncheckedIOException hoặc ResourceAccessException). */
+    /** Gateway gọi service thất bại ở tầng kết nối (UncheckedIOException / ResourceAccessException). */
     @ExceptionHandler({ UncheckedIOException.class, ResourceAccessException.class })
     ResponseEntity<PhanHoiLoiGateway> xuLyLoiKetNoi(RuntimeException loi, HttpServletRequest request) {
         HttpStatus trangThai;
@@ -58,14 +50,14 @@ public class XuLyLoiGatewayHandler {
         return ResponseEntity.status(trangThai).body(body);
     }
 
-    /** Body request vượt giới hạn của gateway (GioiHanKichThuocFilter gọi tới đây, request chưa được chuyển tiếp). */
+    /** Body request vượt giới hạn của gateway (gọi từ GioiHanKichThuocFilter). */
     @ExceptionHandler(YeuCauQuaLonException.class)
     ResponseEntity<PhanHoiLoiGateway> xuLyYeuCauQuaLon(YeuCauQuaLonException loi, HttpServletRequest request) {
         return ResponseEntity.status(HttpStatus.CONTENT_TOO_LARGE)
                 .body(loi("YEU_CAU_QUA_LON", request, String.valueOf(loi.getKichThuocToiDa().toMegabytes())));
     }
 
-    /** Địa chỉ IP vượt giới hạn tần suất (GioiHanTanSuatFilter gọi tới đây, request chưa được chuyển tiếp). */
+    /** Địa chỉ IP vượt giới hạn tần suất (gọi từ GioiHanTanSuatFilter). */
     @ExceptionHandler(QuaNhieuYeuCauException.class)
     ResponseEntity<PhanHoiLoiGateway> xuLyQuaNhieuYeuCau(QuaNhieuYeuCauException loi, HttpServletRequest request) {
         return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)

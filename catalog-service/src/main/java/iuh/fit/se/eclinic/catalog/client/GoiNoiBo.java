@@ -15,15 +15,7 @@ import iuh.fit.se.eclinic.common.exception.MaLoi;
 import iuh.fit.se.eclinic.common.security.KhoaNoiBo;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Phần chung của các client gọi API nội bộ: RestClient kèm khoá nội bộ và thời gian chờ, và cách đổi lỗi của service kia
- * thành lỗi của catalog-service.
- * <ul>
- * <li>4xx (trừ 401) có thân {@code PhanHoiApi}: lỗi nghiệp vụ của service kia (email đã tồn tại, không tìm thấy...) được
- * ném lại nguyên mã lỗi và thông điệp, để người dùng thấy đúng nguyên nhân.</li>
- * <li>Mọi lỗi còn lại (mất kết nối, quá thời gian chờ, 5xx, 401 vì sai khoá nội bộ): DICH_VU_NOI_BO_LOI (503).</li>
- * </ul>
- */
+/** Phần chung của client gọi API nội bộ: khoá nội bộ, thời gian chờ và đổi lỗi của service kia. */
 @Slf4j
 final class GoiNoiBo {
 

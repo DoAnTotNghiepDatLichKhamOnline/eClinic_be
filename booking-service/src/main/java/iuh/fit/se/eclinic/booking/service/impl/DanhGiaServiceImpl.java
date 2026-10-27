@@ -125,10 +125,7 @@ public class DanhGiaServiceImpl implements DanhGiaService {
                 .map(danhGiaMapper::toQuanTri));
     }
 
-    /**
-     * Lịch hẹn tài khoản nhìn thấy (như "lịch hẹn của tôi") VÀ được xem kết quả khám: chủ tài khoản là người khám, hoặc
-     * tài khoản đã đặt lịch. Tài khoản chỉ thấy lịch vì là người giám hộ theo CCCD thì không được đánh giá.
-     */
+    /** Lịch hẹn tài khoản nhìn thấy và được xem kết quả khám. */
     private LichHen lichHenDuocDanhGia(Long idTaiKhoan, String maPhieuKham) {
         HoSoBenhNhan hoSoCuaToi = hoSoBenhNhanService.timDaLienKetCuaTaiKhoan(idTaiKhoan).orElse(null);
         Long idHoSoCuaToi = hoSoCuaToi == null ? null : hoSoCuaToi.getId();

@@ -88,7 +88,7 @@ public class KhamBenhServiceImpl implements KhamBenhService {
         benhAn.setMaTokenSoKham(TokenNgauNhien.tao());
         ganNoiDung(benhAn, request);
         hoSoBenhAnRepository.saveAndFlush(benhAn);
-        // Ngoại lệ có chủ đích (xem LichHenKhamRepository): chỉ đổi trạng thái, cùng transaction với hồ sơ bệnh án
+        // Ngoại lệ có chủ đích: chỉ đổi trạng thái lịch hẹn, cùng transaction với hồ sơ bệnh án
         lichHen.setTrangThai(TrangThaiLichHen.DA_HOAN_THANH);
         log.info("Bác sĩ id={} ghi nhận kết quả khám cho lịch hẹn id={}", bacSi.getId(), idLichHen);
         return benhAnMapper.toResponse(benhAn, lichHen);
@@ -143,10 +143,7 @@ public class KhamBenhServiceImpl implements KhamBenhService {
                 .orElseThrow(() -> new LoiNghiepVu(MaLoi.KHONG_TIM_THAY, "loi.KHONG_TIM_THAY.benhAn"));
     }
 
-    /**
-     * Ghi lý do khám, sinh hiệu, khám lâm sàng, chẩn đoán, ghi chú, ngày tái khám và thay toàn bộ đơn thuốc bằng các dòng
-     * trong request. Gọi sau khi đã gán lịch hẹn và hồ sơ bệnh nhân.
-     */
+    /** Ghi kết quả khám và thay toàn bộ đơn thuốc bằng các dòng trong request. */
     private void ganNoiDung(HoSoBenhAn benhAn, BenhAnRequest request) {
         // Kiểm tra hết trước khi đụng tới hồ sơ bệnh án: dữ liệu không hợp lệ thì không đổi gì
         List<DonThuocRequest> cacDong = request.donThuoc() == null ? List.of() : request.donThuoc();
@@ -178,8 +175,7 @@ public class KhamBenhServiceImpl implements KhamBenhService {
         if ((tamThu == null) != (tamTruong == null) || (tamThu != null && tamTruong >= tamThu)) {
             throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE, "loi.DU_LIEU_KHONG_HOP_LE.huyetAp");
         }
-        // Thông tư 26/2025/TT-BYT điều 6: đơn thuốc của trẻ dưới 72 tháng ghi cân nặng (tên người đưa trẻ đi khám đã có
-        // từ lúc đặt lịch: người giám hộ)
+        // Thông tư 26/2025/TT-BYT điều 6: đơn thuốc của trẻ dưới 72 tháng ghi cân nặng
         if (!cacDong.isEmpty() && sinhHieu.canNang() == null && duoi72Thang(benhAn)) {
             throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE, "loi.DU_LIEU_KHONG_HOP_LE.canNangTreEm");
         }
@@ -191,7 +187,7 @@ public class KhamBenhServiceImpl implements KhamBenhService {
         }
         benhAn.setLyDoKham(rongThanhNull(request.lyDoKham()));
         benhAn.setMach(sinhHieu.mach());
-        // Đưa số thập phân về đúng số chữ số của cột: 37.50 và 37.5 là 1 giá trị, sửa hồ sơ không bị tính là đổi sinh hiệu
+        // Đưa số thập phân về đúng số chữ số của cột để 37.50 và 37.5 là 1 giá trị
         benhAn.setNhietDo(theoCot(sinhHieu.nhietDo(), 1));
         benhAn.setHuyetApTamThu(tamThu);
         benhAn.setHuyetApTamTruong(tamTruong);

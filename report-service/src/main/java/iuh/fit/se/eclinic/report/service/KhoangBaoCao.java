@@ -10,9 +10,7 @@ import iuh.fit.se.eclinic.common.exception.MaLoi;
 import iuh.fit.se.eclinic.report.dto.request.KyBaoCao;
 import iuh.fit.se.eclinic.report.dto.response.DonViThoiGian;
 
-/**
- * Khoảng ngày của 1 báo cáo (tính cả 2 đầu) và đơn vị gom của chuỗi theo thời gian.
- */
+/** Khoảng ngày của 1 báo cáo (tính cả 2 đầu) và đơn vị gom của chuỗi theo thời gian. */
 public record KhoangBaoCao(KyBaoCao ky, LocalDate tuNgay, LocalDate denNgay, DonViThoiGian donVi) {
 
     /** Khoảng tuỳ chọn dài nhất: đủ 1 năm nhuận. */
@@ -20,10 +18,7 @@ public record KhoangBaoCao(KyBaoCao ky, LocalDate tuNgay, LocalDate denNgay, Don
     private static final int SO_NGAY_THEO_NGAY_TOI_DA = 31;
     private static final int SO_NGAY_THEO_TUAN_TOI_DA = 184;
 
-    /**
-     * Khoảng của kỳ chứa ngày mốc ({@code ngay}, mặc định hôm nay). Kỳ TUY_CHON cần cả {@code tuNgay} và
-     * {@code denNgay}; các kỳ khác bỏ qua 2 giá trị này.
-     */
+    /** Khoảng của kỳ chứa ngày mốc ({@code ngay}, mặc định hôm nay). */
     public static KhoangBaoCao tu(KyBaoCao ky, LocalDate ngay, LocalDate tuNgay, LocalDate denNgay) {
         KyBaoCao kyDung = ky == null ? KyBaoCao.THANG : ky;
         LocalDate moc = ngay == null ? LocalDate.now() : ngay;

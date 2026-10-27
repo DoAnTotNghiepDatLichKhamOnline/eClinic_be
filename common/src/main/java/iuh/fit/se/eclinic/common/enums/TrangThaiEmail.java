@@ -1,8 +1,6 @@
 package iuh.fit.se.eclinic.common.enums;
 
-/**
- * Trạng thái của 1 email trong hàng chờ gửi email_gui (V19).
- */
+/** Trạng thái của 1 email trong hàng chờ gửi email_gui. */
 public enum TrangThaiEmail {
 
     /** Chưa gửi được, còn được thử (lần thử kế tiếp ở {@code lan_thu_ke_tiep}). */

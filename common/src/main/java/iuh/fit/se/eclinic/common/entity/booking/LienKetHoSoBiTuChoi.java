@@ -14,10 +14,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * Quản trị viên đã từ chối gắn 1 hồ sơ bệnh nhân vào 1 tài khoản (quy tắc #3). Có dòng này thì hệ thống không tự đưa
- * cặp (tài khoản, hồ sơ) đó vào hàng chờ xác minh nữa; người dùng phải liên hệ phòng khám.
- */
+/** Quản trị viên đã từ chối gắn 1 hồ sơ bệnh nhân vào 1 tài khoản. */
 @Getter
 @Setter
 @NoArgsConstructor

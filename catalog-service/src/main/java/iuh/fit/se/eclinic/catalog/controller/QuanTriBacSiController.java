@@ -46,13 +46,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 
-/**
- * DOC-01: quản trị viên sửa hồ sơ giới thiệu và ảnh giới thiệu của bác sĩ. Tách khỏi {@link BacSiController} (công khai)
- * vì quản trị viên xem / sửa được cả bác sĩ không hiển thị công khai (ngừng công tác, tài khoản bị vô hiệu hoá).
- * <p>
- * Ảnh tải lên bằng multipart/form-data, phần tệp tên {@code anh}: JPEG, PNG hoặc WebP, tối đa 4MB
- * (spring.servlet.multipart.max-file-size). Tên tệp và Content-Type của phần tệp không được dùng để kiểm tra.
- */
+/** Quản trị viên sửa hồ sơ giới thiệu và ảnh giới thiệu của bác sĩ. */
 @Tag(name = "Quản trị bác sĩ", description = "DOC-01: hồ sơ giới thiệu và ảnh giới thiệu của bác sĩ (quản trị viên)")
 @RestController
 @RequestMapping("/api/catalog/quan-tri/bac-si")

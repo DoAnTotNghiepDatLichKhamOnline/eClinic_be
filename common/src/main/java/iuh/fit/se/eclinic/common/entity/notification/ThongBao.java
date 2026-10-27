@@ -21,12 +21,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * Thông báo trong ứng dụng (ERD: ThongBao — NOTI-01). Chỉ gửi cho tài khoản đăng nhập, Khách không nhận.
- * <p>
- * Khác ERD: thêm {@code yeuCauDoiLich} để bấm vào thông báo chuyển tới yêu cầu đổi lịch (Admin/Bác sĩ), và
- * {@code maNguon} (V11).
- */
+/** Thông báo trong ứng dụng. */
 @Getter
 @Setter
 @NoArgsConstructor
@@ -47,18 +42,15 @@ public class ThongBao extends CreatableEntity {
     @JoinColumn(name = "id_yeu_cau")
     private YeuCauDoiLich yeuCauDoiLich;
 
-    /**
-     * Mã của sự kiện đã sinh ra thông báo (vd {@code booking:15}), UNIQUE: service nguồn gửi lại cùng 1 sự kiện thì không
-     * tạo thông báo thứ hai. Null với thông báo không sinh từ sự kiện.
-     */
+    /** Mã sự kiện đã sinh ra thông báo (vd {@code booking:15}), UNIQUE: gửi lại không tạo thông báo thứ hai. */
     @Column(name = "ma_nguon", length = 64)
     private String maNguon;
 
-    /** Khoá mẫu câu trong thong-diep/; có thì câu chữ được soạn theo ngôn ngữ người đọc lúc đọc (V18). Null = thông báo cũ. */
+    /** Khoá mẫu câu trong thong-diep/, câu soạn theo ngôn ngữ người đọc; null = thông báo cũ. */
     @Column(name = "khoa_mau", length = 80)
     private String khoaMau;
 
-    /** Tham số của mẫu, mảng JSON (xem {@code ThamSoThongBao}). */
+    /** Tham số của mẫu, mảng JSON ({@code ThamSoThongBao}). */
     @Column(name = "tham_so", columnDefinition = "TEXT")
     private String thamSo;
 

@@ -14,11 +14,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * Quy tắc đặt lịch / xếp ca do quản trị viên sửa (SCHED-05, quy tắc #13). Bảng chỉ có 1 dòng, id luôn là {@link #ID}
- * (CHECK của bảng). Không kế thừa {@code BaseEntity} vì khoá chính không tự tăng: dòng chỉ được thêm bằng câu lệnh
- * "thêm nếu chưa có" của booking-service, từ giá trị biến môi trường.
- */
+/** Quy tắc đặt lịch / xếp ca do quản trị viên sửa. */
 @Getter
 @Setter
 @NoArgsConstructor

@@ -16,7 +16,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 
-/** Quản trị viên đọc đánh giá của bệnh nhân, kèm tên bệnh nhân và bác sĩ. Chỉ đọc. */
+/** Quản trị viên xem đánh giá của bệnh nhân, kèm tên bệnh nhân và bác sĩ. */
 @Tag(name = "Quản trị đánh giá", description = "Quản trị viên xem đánh giá của bệnh nhân (kèm tên bệnh nhân, bác sĩ)")
 @RestController
 @RequestMapping("/api/booking/quan-tri/danh-gia")
