@@ -44,7 +44,7 @@ jobs:
           SHA: ${{ github.sha }}
         with:
           host: ${{ secrets.VM_HOST }}
-          username: ubuntu
+          username: huythanhyasuo
           key: ${{ secrets.VM_SSH_KEY }}
           fingerprint: ${{ secrets.VM_SSH_FINGERPRINT }}
           command_timeout: 40m
