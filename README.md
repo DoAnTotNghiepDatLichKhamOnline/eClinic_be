@@ -93,6 +93,8 @@ Lần chạy đủ gần nhất (21/10/2026): BUILD SUCCESS, 292 test, 0 lỗi.
 
 - **Tự động triển khai**: mỗi lần push vào `main`, GitHub Actions ([.github/workflows/deploy.yml](.github/workflows/deploy.yml))
   chạy toàn bộ test rồi cập nhật máy chủ đúng commit đó. Test lỗi thì không triển khai.
+- **Dự phòng trên laptop**: máy chủ gặp sự cố thì chạy bản sao trên laptop qua Cloudflare Tunnel, xem
+  [deploy/BACKUP.md](deploy/BACKUP.md).
 
 ## Lỗi thường gặp
 

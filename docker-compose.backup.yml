@@ -1,0 +1,28 @@
+# Laptop backup for when the VM is down: exposes api-gateway over a Cloudflare Tunnel. Use with docker-compose.yml only:
+#   docker compose -f docker-compose.yml -f docker-compose.backup.yml --profile app --profile quick up -d --wait
+# Profile "quick" gives a random https://*.trycloudflare.com URL (see its logs); "named" uses CF_TUNNEL_TOKEN from .env.
+
+x-tunnel: &tunnel
+  image: cloudflare/cloudflared:2026.7.3
+  restart: unless-stopped
+  mem_limit: 128m
+  depends_on:
+    api-gateway:
+      condition: service_healthy
+
+services:
+  tunnel-quick:
+    <<: *tunnel
+    profiles: [quick]
+    container_name: eclinic-tunnel-quick
+    command: tunnel --no-autoupdate --url http://api-gateway:8080
+
+  tunnel-named:
+    <<: *tunnel
+    profiles: [named]
+    container_name: eclinic-tunnel-named
+    command: tunnel --no-autoupdate run
+    environment:
+      # Public hostname -> http://api-gateway:8080 is set in the Cloudflare dashboard.
+      # Not ":?" because compose interpolates every service, so it would also block the quick profile.
+      TUNNEL_TOKEN: ${CF_TUNNEL_TOKEN:-}
