@@ -1,16 +1,13 @@
 package iuh.fit.se.eclinic.common.entity.booking;
 
-import org.hibernate.annotations.Immutable;
-
-import iuh.fit.se.eclinic.common.entity.CreatableEntity;
+import iuh.fit.se.eclinic.common.entity.LichSuThayDoi;
 import iuh.fit.se.eclinic.common.entity.identity.QuanTriVien;
-import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.Column;
+import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -20,22 +17,20 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @Entity
-@Immutable
-@Table(name = "lich_su_cau_hinh")
-@AttributeOverride(name = "id", column = @Column(name = "id_lich_su_cau_hinh"))
-public class LichSuCauHinh extends CreatableEntity {
+@DiscriminatorValue("CAU_HINH")
+public class LichSuCauHinh extends LichSuThayDoi {
 
-    @Column(name = "ten_truong", nullable = false, updatable = false, length = 60)
+    @Column(name = "ten_truong", updatable = false, length = 60)
     private String tenTruong;
 
-    @Column(name = "gia_tri_cu", nullable = false, updatable = false, length = 30)
+    @Column(name = "gia_tri_truoc", updatable = false, columnDefinition = "TEXT")
     private String giaTriCu;
 
-    @Column(name = "gia_tri_moi", nullable = false, updatable = false, length = 30)
+    @Column(name = "gia_tri_sau", updatable = false, columnDefinition = "TEXT")
     private String giaTriMoi;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "id_quan_tri_vien", nullable = false, updatable = false)
+    @JoinColumn(name = "id_quan_tri_vien", updatable = false)
     private QuanTriVien quanTri;
 
 }

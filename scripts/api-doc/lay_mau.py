@@ -474,8 +474,8 @@ def cua_toi(token, token_ad, toi_bn, id_ca, khung, ngay, ma_khach):
     goi("thong-bao-admin", "GET", tb, token=token_ad, mong=200)
 
     # --- Hết hạn sửa đánh giá: lùi ngày gửi đánh giá quá 7 ngày ---
-    sql("UPDATE danh_gia d JOIN lich_hen l ON l.id_lich_hen = d.id_lich_hen "
-        f"SET d.ngay_tao = d.ngay_tao - INTERVAL 8 DAY WHERE l.ma_tra_cuu = '{da_kham['maTraCuu']}'")
+    sql("UPDATE lich_hen SET danh_gia_ngay_tao = danh_gia_ngay_tao - INTERVAL 8 DAY "
+        f"WHERE ma_tra_cuu = '{da_kham['maTraCuu']}'")
     goi("loi-sua-danh-gia-het-han", "PUT", f"{lh}/{ma_kham}/danh-gia", danh_gia, token=token, mong=409)
 
 

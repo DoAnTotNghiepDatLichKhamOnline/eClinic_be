@@ -1,5 +1,6 @@
 package iuh.fit.se.eclinic.booking.service.impl;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import org.springframework.data.domain.PageRequest;
@@ -19,7 +20,6 @@ import iuh.fit.se.eclinic.booking.service.LienKetHoSoService;
 import iuh.fit.se.eclinic.booking.util.ChuanHoaTen;
 import iuh.fit.se.eclinic.common.dto.TrangDuLieu;
 import iuh.fit.se.eclinic.common.entity.booking.HoSoBenhNhan;
-import iuh.fit.se.eclinic.common.entity.booking.LienKetHoSoBiTuChoi;
 import iuh.fit.se.eclinic.common.entity.identity.TaiKhoan;
 import iuh.fit.se.eclinic.common.enums.TrangThaiLienKet;
 import iuh.fit.se.eclinic.common.enums.TrangThaiTaiKhoan;
@@ -102,7 +102,7 @@ public class LienKetHoSoServiceImpl implements LienKetHoSoService {
 
     @Override
     public boolean daBiTuChoi(Long idTaiKhoan, Long idHoSoBenhNhan) {
-        return lienKetHoSoBiTuChoiRepository.existsByTaiKhoanIdAndHoSoBenhNhanId(idTaiKhoan, idHoSoBenhNhan);
+        return lienKetHoSoBiTuChoiRepository.demTuChoi(idTaiKhoan, idHoSoBenhNhan) > 0;
     }
 
     @Override
@@ -129,11 +129,8 @@ public class LienKetHoSoServiceImpl implements LienKetHoSoService {
         HoSoBenhNhan hoSo = layDangChoXacMinh(idHoSoBenhNhan);
         TaiKhoan taiKhoan = hoSo.getTaiKhoan();
         // Ghi nhớ để lần đọc kế tiếp của tài khoản này không đưa hồ sơ trở lại hàng chờ
-        LienKetHoSoBiTuChoi biTuChoi = new LienKetHoSoBiTuChoi();
-        biTuChoi.setTaiKhoan(taiKhoan);
-        biTuChoi.setHoSoBenhNhan(hoSo);
-        biTuChoi.setLyDo(lyDo == null || lyDo.isBlank() ? null : lyDo.trim());
-        lienKetHoSoBiTuChoiRepository.save(biTuChoi);
+        lienKetHoSoBiTuChoiRepository.ghiTuChoi(hoSo.getId(), taiKhoan.getId(),
+                lyDo == null || lyDo.isBlank() ? null : lyDo.trim(), LocalDateTime.now());
         hoSo.setTaiKhoan(null);
         hoSo.setTrangThaiLienKet(TrangThaiLienKet.CHUA_LIEN_KET);
         log.info("Từ chối liên kết hồ sơ bệnh nhân id={} với tài khoản id={}", hoSo.getId(), taiKhoan.getId());

@@ -40,6 +40,8 @@ app:
     cac-lan-cho: ${NOTIFICATION_MAIL_RETRY_WAITS:1m,5m,30m,2h}
     kich-thuoc-lo: 20
     so-ngay-giu: 30
+    # Giờ xoá email đã gửi / đã bỏ quá so-ngay-giu (cron của Spring)
+    cron-don: ${NOTIFICATION_MAIL_CLEANUP_CRON:0 40 3 * * *}
   bao-mat:
     # API nội bộ tự kiểm tra khoá nội bộ (X-Khoa-Noi-Bo); gateway không chuyển tiếp đường dẫn này
     duong-dan-cong-khai:

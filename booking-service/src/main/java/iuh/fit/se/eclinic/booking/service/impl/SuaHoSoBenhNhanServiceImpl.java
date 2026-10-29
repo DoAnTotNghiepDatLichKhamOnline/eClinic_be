@@ -53,9 +53,9 @@ public class SuaHoSoBenhNhanServiceImpl implements SuaHoSoBenhNhanService {
         hoSo.setSoBaoHiemYTe(rongThanhNull(request.soBaoHiemYTe()));
         if (hoSo.getCccd() == null) {
             // Hồ sơ chưa có CCCD: tính lại khoá nhận diện theo thông tin mới để lần đặt sau vẫn về đúng hồ sơ
-            nguoiGiamHoRepository.findFirstByHoSoBenhNhanIdOrderByIdAsc(id)
-                    .ifPresent(giamHo -> hoSo.setKhoaNhanDien(
-                            KhoaNhanDien.tao(hoSo.getHoTen(), hoSo.getNgaySinh(), giamHo.getCccd())));
+            nguoiGiamHoRepository.findFirstByHoSoBenhNhanIdAndNguoiGiamHoCccdNotNullOrderByIdAsc(id)
+                    .ifPresent(lichHen -> hoSo.setKhoaNhanDien(KhoaNhanDien.tao(hoSo.getHoTen(), hoSo.getNgaySinh(),
+                            lichHen.getNguoiGiamHo().getCccd())));
         }
         // Flush ngay: số CCCD / khoá nhận diện trùng hồ sơ khác vi phạm UNIQUE -> 409 XUNG_DOT_DU_LIEU
         hoSoBenhNhanRepository.saveAndFlush(hoSo);

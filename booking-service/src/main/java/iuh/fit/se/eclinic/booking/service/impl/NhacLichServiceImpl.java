@@ -16,7 +16,6 @@ import iuh.fit.se.eclinic.booking.repository.NhacLichHenRepository;
 import iuh.fit.se.eclinic.booking.service.NhacLichService;
 import iuh.fit.se.eclinic.booking.service.ThongBaoLichHenService;
 import iuh.fit.se.eclinic.common.entity.booking.LichHen;
-import iuh.fit.se.eclinic.common.entity.booking.NhacLichHen;
 import iuh.fit.se.eclinic.common.enums.TrangThaiLichHen;
 import lombok.extern.slf4j.Slf4j;
 
@@ -76,21 +75,19 @@ public class NhacLichServiceImpl implements NhacLichService {
             return false;
         }
         LocalDateTime gioKham = lichHen.getKhungGio().getGioBatDau();
+        int soPhut = soPhut(moc);
+        // Đã xử lý mốc này, hoặc 1 mốc gần giờ khám hơn (các mốc xa hơn coi như đã xử lý)
+        Integer daXuLy = lichHen.getNhacMocDaXuLy();
         if (!gioKham.isAfter(bayGio.plus(properties.conToiThieu())) || gioKham.isAfter(bayGio.plus(moc))
-                || nhacLichHenRepository.existsByIdLichHenAndSoPhutTruoc(id, soPhut(moc))) {
+                || (daXuLy != null && daXuLy <= soPhut)) {
             return false;
         }
         // Đặt khi đã ở trong khoảng của mốc, hoặc đã nhắc ở mốc gần hơn: không nhắc mốc này
-        boolean nhac = !lichHen.getNgayTao().isAfter(gioKham.minus(moc))
-                && !nhacLichHenRepository.existsByIdLichHenAndSoPhutTruocLessThanAndDaGuiTrue(id, soPhut(moc));
-        nhacLichHenRepository.save(new NhacLichHen(id, soPhut(moc), nhac));
-        // Các mốc xa hơn cũng đã đến hạn mà chưa xử lý (ban đêm, service ngừng): ghi nhận, không nhắc thêm
-        for (Duration mocXaHon : properties.cacMoc()) {
-            if (mocXaHon.compareTo(moc) > 0
-                    && !nhacLichHenRepository.existsByIdLichHenAndSoPhutTruoc(id, soPhut(mocXaHon))) {
-                nhacLichHenRepository.save(new NhacLichHen(id, soPhut(mocXaHon), false));
-            }
-        }
+        Integer daGui = lichHen.getNhacMocDaGui();
+        boolean nhac = !lichHen.getNgayTao().isAfter(gioKham.minus(moc)) && !(daGui != null && daGui < soPhut);
+        // Ghi mốc này là mốc nhỏ nhất đã xử lý: các mốc xa hơn cũng đã đến hạn mà chưa xử lý (ban đêm, service ngừng)
+        // được ghi nhận luôn, không nhắc thêm
+        nhacLichHenRepository.ghiMoc(id, soPhut, nhac);
         if (nhac) {
             thongBaoLichHenService.nhacLich(lichHen);
         }
