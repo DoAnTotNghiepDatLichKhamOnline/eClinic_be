@@ -2,10 +2,8 @@ package iuh.fit.se.eclinic.identity.dulieumau;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -26,20 +24,13 @@ import iuh.fit.se.eclinic.common.entity.catalog.PhongKham;
 import iuh.fit.se.eclinic.common.entity.identity.QuanTriVien;
 import iuh.fit.se.eclinic.common.entity.identity.TaiKhoan;
 import iuh.fit.se.eclinic.common.entity.medical.Thuoc;
-import iuh.fit.se.eclinic.common.entity.scheduling.KhungGioKham;
-import iuh.fit.se.eclinic.common.entity.scheduling.LichLamViec;
-import iuh.fit.se.eclinic.common.entity.scheduling.LichSuCaLamViec;
-import iuh.fit.se.eclinic.common.enums.HanhDongCa;
 import iuh.fit.se.eclinic.common.enums.LoaiAnhBacSi;
-import iuh.fit.se.eclinic.common.enums.NguonThayDoiCa;
 import iuh.fit.se.eclinic.common.enums.TrangThaiBacSi;
-import iuh.fit.se.eclinic.common.enums.TrangThaiLichLamViec;
 import iuh.fit.se.eclinic.common.enums.TrangThaiLienKet;
 import iuh.fit.se.eclinic.common.enums.TrangThaiPhongKham;
 import iuh.fit.se.eclinic.common.enums.TrangThaiTaiKhoan;
 import iuh.fit.se.eclinic.common.enums.TrangThaiThuoc;
 import iuh.fit.se.eclinic.common.enums.VaiTro;
-import iuh.fit.se.eclinic.common.util.ChiaCaLamViec;
 import iuh.fit.se.eclinic.identity.dulieumau.DuLieuMau.BacSiMau;
 import iuh.fit.se.eclinic.identity.dulieumau.DuLieuMau.BenhNhanMau;
 import iuh.fit.se.eclinic.identity.dulieumau.DuLieuMau.Buoi;
@@ -47,6 +38,9 @@ import iuh.fit.se.eclinic.identity.dulieumau.DuLieuMau.ChuyenKhoaMau;
 import iuh.fit.se.eclinic.identity.dulieumau.DuLieuMau.ThuocMau;
 import iuh.fit.se.eclinic.identity.dulieumau.DuLieuMauTiengAnh.ChuyenKhoaEn;
 import iuh.fit.se.eclinic.identity.dulieumau.DuLieuMauTiengAnh.HoSoBacSiEn;
+import iuh.fit.se.eclinic.identity.dulieumau.XepCaMau.BacSiNgay;
+import iuh.fit.se.eclinic.identity.dulieumau.XepCaMau.KhoangGio;
+import iuh.fit.se.eclinic.identity.dulieumau.XepCaMau.PhongNgay;
 import iuh.fit.se.eclinic.identity.repository.TaiKhoanRepository;
 import iuh.fit.se.eclinic.identity.util.ChuanHoa;
 import jakarta.persistence.EntityManager;
@@ -64,20 +58,7 @@ public class DuLieuMauServiceImpl implements DuLieuMauService {
     private final TaiKhoanRepository taiKhoanRepository;
     private final PasswordEncoder passwordEncoder;
     private final DuLieuMauProperties properties;
-
-    /** Ca đang hoạt động của 1 phòng trong 1 ngày, để kiểm tra trùng giờ. */
-    private record KhoangGio(LocalTime gioBatDau, LocalTime gioKetThuc) {
-
-        boolean trung(Buoi buoi) {
-            return gioBatDau.isBefore(buoi.gioKetThuc()) && gioKetThuc.isAfter(buoi.gioBatDau());
-        }
-    }
-
-    private record PhongNgay(Long phongKhamId, LocalDate ngay) {
-    }
-
-    private record BacSiNgay(Long bacSiId, LocalDate ngay) {
-    }
+    private final XepCaMau xepCaMau;
 
     @Override
     @Transactional
@@ -458,9 +439,9 @@ public class DuLieuMauServiceImpl implements DuLieuMauService {
         }
 
         LocalDate denNgay = tuNgay.plusDays(properties.soNgay() - 1L);
-        Set<BacSiNgay> ngayDaCoCa = timNgayDaCoCa(phongCuaBacSi.keySet(), tuNgay, denNgay);
+        Set<BacSiNgay> ngayDaCoCa = xepCaMau.timNgayDaCoCa(phongCuaBacSi.keySet(), tuNgay, denNgay);
         Set<Long> idPhong = phongCuaBacSi.values().stream().map(PhongKham::getId).collect(Collectors.toSet());
-        Map<PhongNgay, List<KhoangGio>> caCuaPhong = timCaDangHoatDongCuaPhong(idPhong, tuNgay, denNgay);
+        Map<PhongNgay, List<KhoangGio>> caCuaPhong = xepCaMau.timCaDangHoatDongCuaPhong(idPhong, tuNgay, denNgay);
 
         int soCa = 0;
         for (LocalDate ngay = tuNgay; !ngay.isAfter(denNgay); ngay = ngay.plusDays(1)) {
@@ -475,7 +456,7 @@ public class DuLieuMauServiceImpl implements DuLieuMauService {
                 if (caTrongNgay.stream().anyMatch(ca -> ca.trung(buoi))) {
                     continue;
                 }
-                taoCa(bacSi, phongKham, adminTao, ngay, buoi);
+                xepCaMau.taoCa(bacSi, phongKham, adminTao, ngay, buoi);
                 caTrongNgay.add(new KhoangGio(buoi.gioBatDau(), buoi.gioKetThuc()));
                 soCa++;
             }
@@ -534,72 +515,6 @@ public class DuLieuMauServiceImpl implements DuLieuMauService {
         taiKhoan.setTrangThai(trangThai);
         entityManager.persist(taiKhoan);
         return taiKhoan;
-    }
-
-    /** Ngày bác sĩ đã có ca, tính cả ca đã huỷ: ca bị huỷ (xin nghỉ) không được tạo lại. */
-    private Set<BacSiNgay> timNgayDaCoCa(Set<Long> idBacSi, LocalDate tuNgay, LocalDate denNgay) {
-        List<Object[]> dong = entityManager.createQuery("""
-                select l.bacSi.id, l.ngayLamViec from LichLamViec l
-                where l.bacSi.id in :idBacSi and l.ngayLamViec between :tuNgay and :denNgay
-                """, Object[].class)
-                .setParameter("idBacSi", idBacSi)
-                .setParameter("tuNgay", tuNgay)
-                .setParameter("denNgay", denNgay)
-                .getResultList();
-        Set<BacSiNgay> ngayDaCoCa = new HashSet<>();
-        for (Object[] cot : dong) {
-            ngayDaCoCa.add(new BacSiNgay((Long) cot[0], (LocalDate) cot[1]));
-        }
-        return ngayDaCoCa;
-    }
-
-    private Map<PhongNgay, List<KhoangGio>> timCaDangHoatDongCuaPhong(Set<Long> idPhong, LocalDate tuNgay,
-            LocalDate denNgay) {
-        List<Object[]> dong = entityManager.createQuery("""
-                select l.phongKham.id, l.ngayLamViec, l.gioBatDau, l.gioKetThuc from LichLamViec l
-                where l.phongKham.id in :idPhong and l.ngayLamViec between :tuNgay and :denNgay
-                  and l.trangThai = :trangThai
-                """, Object[].class)
-                .setParameter("idPhong", idPhong)
-                .setParameter("tuNgay", tuNgay)
-                .setParameter("denNgay", denNgay)
-                .setParameter("trangThai", TrangThaiLichLamViec.HOAT_DONG)
-                .getResultList();
-        Map<PhongNgay, List<KhoangGio>> caCuaPhong = new HashMap<>();
-        for (Object[] cot : dong) {
-            caCuaPhong.computeIfAbsent(new PhongNgay((Long) cot[0], (LocalDate) cot[1]), k -> new ArrayList<>())
-                    .add(new KhoangGio((LocalTime) cot[2], (LocalTime) cot[3]));
-        }
-        return caCuaPhong;
-    }
-
-    /** 1 ca + các lượt khám của ca: mỗi khung 1 giờ N lượt, mỗi lượt t phút, mỗi lượt là 1 dòng khung giờ. */
-    private void taoCa(BacSi bacSi, PhongKham phongKham, QuanTriVien adminTao, LocalDate ngay, Buoi buoi) {
-        List<LocalTime> gioBatDauCacLuot = ChiaCaLamViec.gioBatDauCacLuot(buoi.gioBatDau(), buoi.gioKetThuc(),
-                DuLieuMau.SO_LUOT_MOI_GIO, DuLieuMau.SO_PHUT_MOI_LUOT);
-
-        LichLamViec lichLamViec = new LichLamViec();
-        lichLamViec.setBacSi(bacSi);
-        lichLamViec.setPhongKham(phongKham);
-        lichLamViec.setAdminTao(adminTao);
-        lichLamViec.setNgayLamViec(ngay);
-        lichLamViec.setGioBatDau(buoi.gioBatDau());
-        lichLamViec.setGioKetThuc(buoi.gioKetThuc());
-        lichLamViec.setSoBenhNhanToiDa(gioBatDauCacLuot.size());
-        lichLamViec.setSoLuotToiDaMoiGio(DuLieuMau.SO_LUOT_MOI_GIO);
-        lichLamViec.setThoiLuongLuotPhut(DuLieuMau.SO_PHUT_MOI_LUOT);
-        entityManager.persist(lichLamViec);
-        // Dòng đầu của lịch sử ca: ca nào cũng bắt đầu bằng TAO
-        entityManager.persist(
-                LichSuCaLamViec.anhCua(lichLamViec, HanhDongCa.TAO, NguonThayDoiCa.DU_LIEU_MAU, adminTao));
-
-        for (LocalTime gio : gioBatDauCacLuot) {
-            KhungGioKham khungGio = new KhungGioKham();
-            khungGio.setLichLamViec(lichLamViec);
-            khungGio.setGioBatDau(ngay.atTime(gio));
-            khungGio.setGioKetThuc(ngay.atTime(gio.plusMinutes(DuLieuMau.SO_PHUT_MOI_LUOT)));
-            entityManager.persist(khungGio);
-        }
     }
 
 }

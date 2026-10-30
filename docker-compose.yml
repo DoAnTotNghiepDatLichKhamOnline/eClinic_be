@@ -112,6 +112,8 @@ services:
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Admin@123}
       # Dữ liệu mẫu để demo; triển khai thật đặt SEED_DATA=false
       SEED_DATA: ${SEED_DATA:-true}
+      # Thêm khoảng 100 dòng mỗi bảng; chỉ có tác dụng khi SEED_DATA=true
+      SEED_VOLUME: ${SEED_VOLUME:-true}
       SEED_PASSWORD: ${SEED_PASSWORD:-Demo@123}
       # Email kích hoạt / đặt lại mật khẩu; console chỉ ghi liên kết ra log
       MAIL_MODE: ${MAIL_MODE:-console}

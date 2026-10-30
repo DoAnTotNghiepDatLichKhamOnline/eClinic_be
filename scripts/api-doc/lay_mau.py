@@ -77,9 +77,9 @@ def xoa_gioi_han_ip(mau="dat-lich:ip:*"):
 
 def sql(cau):
     """Chạy 1 câu SQL trên MySQL của stack thử (chỉ để dựng tình huống mà API không tạo được trong 1 lần chạy)."""
-    subprocess.run(["docker", "exec", "eclinic-mysql", "sh", "-c",
-                    'mysql -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE" -e "$0"', cau],
-                   capture_output=True, text=True, check=True)
+    return subprocess.run(["docker", "exec", "eclinic-mysql", "sh", "-c",
+                           'mysql -N -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE" -e "$0"', cau],
+                          capture_output=True, text=True, check=True).stdout.strip()
 
 
 def doi_ngay_luot_kham(ma_tra_cuu, so_ngay):
@@ -327,20 +327,16 @@ def cua_toi(token, token_ad, toi_bn, id_ca, khung, ngay, ma_khach):
 
     # --- Bác sĩ của ca: hủy 1 lịch, ghi kết quả khám (các route này không nằm trong tài liệu) ---
     # Từ bản 2.3 lịch đặt xong là DA_XAC_NHAN ngay; bác sĩ không còn bước xác nhận / từ chối.
-    token_bs = id_lich = None
-    for so in range(1, 13):
-        token_bs = dang_nhap("dang-nhap-bac-si", f"bacsi{so:02d}@eclinic.local", "Demo@123")
-        status, tra = goi("bac-si-tra-cuu", "GET", f"/api/booking/bac-si/toi/lich-hen/tra-cuu?ma={da_kham['maTraCuu']}",
-                          token=token_bs)
-        if status == 200:
-            id_lich = tra["duLieu"]["id"]
-            break
-    assert id_lich, "Không tìm thấy tài khoản bác sĩ của ca khám"
+    email_bs = sql("SELECT t.email FROM lich_lam_viec c JOIN bac_si b ON b.id_bac_si = c.id_bac_si "
+                   f"JOIN tai_khoan t ON t.id_tai_khoan = b.id_tai_khoan WHERE c.id_lich_lam_viec = {id_ca}")
+    assert email_bs, "Không tìm thấy tài khoản bác sĩ của ca khám"
+    token_bs = dang_nhap("dang-nhap-bac-si", email_bs, "Demo@123")
 
     def id_cua(ma_tra_cuu):
         return goi("bac-si-tra-cuu", "GET", f"/api/booking/bac-si/toi/lich-hen/tra-cuu?ma={ma_tra_cuu}",
                    token=token_bs, mong=200)[1]["duLieu"]["id"]
 
+    id_lich = id_cua(da_kham["maTraCuu"])
     goi("bac-si-huy", "POST", f"/api/booking/bac-si/toi/lich-hen/{id_cua(bi_tu_choi['maTraCuu'])}/huy",
         {"lyDo": "Bác sĩ có lịch hội chẩn đột xuất, mời bạn đặt khung giờ khác"}, token=token_bs, mong=200)
 
