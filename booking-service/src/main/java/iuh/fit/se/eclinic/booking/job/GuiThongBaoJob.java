@@ -25,7 +25,7 @@ public class GuiThongBaoJob {
         }
     }
 
-    @Scheduled(cron = "0 30 3 * * *")
+    @Scheduled(cron = "${app.thong-bao.cron-don}")
     public void don() {
         try {
             int soDong = guiThongBaoService.donDaGui();

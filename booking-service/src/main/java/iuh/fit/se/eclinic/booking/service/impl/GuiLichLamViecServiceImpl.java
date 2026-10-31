@@ -27,7 +27,7 @@ import iuh.fit.se.eclinic.common.exception.MaLoi;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-/** Chỉ ghi các dòng chờ gửi vào su_kien_thong_bao; GuiThongBaoJob chuyển sang notification-service. */
+/** Chỉ ghi các dòng chờ gửi vào hàng chờ gửi (SuKienThongBao); GuiThongBaoJob chuyển sang notification-service. */
 @Slf4j
 @Service
 @RequiredArgsConstructor

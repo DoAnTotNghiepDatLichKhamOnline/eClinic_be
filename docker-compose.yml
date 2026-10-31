@@ -112,6 +112,8 @@ services:
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Admin@123}
       # Dữ liệu mẫu để demo; triển khai thật đặt SEED_DATA=false
       SEED_DATA: ${SEED_DATA:-true}
+      # Thêm khoảng 100 dòng mỗi bảng; chỉ có tác dụng khi SEED_DATA=true
+      SEED_VOLUME: ${SEED_VOLUME:-true}
       SEED_PASSWORD: ${SEED_PASSWORD:-Demo@123}
       # Email kích hoạt / đặt lại mật khẩu; console chỉ ghi liên kết ra log
       MAIL_MODE: ${MAIL_MODE:-console}
@@ -206,6 +208,7 @@ services:
       # Gửi sự kiện thẳng sang notification-service; không depends_on vì thông báo nằm chờ được
       NOTIFICATION_URL: http://notification-service:8086
       BOOKING_NOTIFY_INTERVAL: ${BOOKING_NOTIFY_INTERVAL:-5s}
+      BOOKING_NOTIFY_CLEANUP_CRON: ${BOOKING_NOTIFY_CLEANUP_CRON:-0 30 3 * * *}
     healthcheck:
       <<: *kiem-tra
       test: ["CMD", "curl", "-fsS", "http://localhost:8084/actuator/health"]
@@ -252,6 +255,7 @@ services:
       MAIL_SMTP_STARTTLS: ${MAIL_SMTP_STARTTLS:-true}
       NOTIFICATION_MAIL_INTERVAL: ${NOTIFICATION_MAIL_INTERVAL:-5s}
       NOTIFICATION_MAIL_RETRY_WAITS: ${NOTIFICATION_MAIL_RETRY_WAITS:-1m,5m,30m,2h}
+      NOTIFICATION_MAIL_CLEANUP_CRON: ${NOTIFICATION_MAIL_CLEANUP_CRON:-0 40 3 * * *}
     healthcheck:
       <<: *kiem-tra
       test: ["CMD", "curl", "-fsS", "http://localhost:8086/actuator/health"]

@@ -47,10 +47,12 @@ app:
     # Link trong email gửi lịch = phieu-kham.frontend-url + đường dẫn này
     duong-dan-lich-bac-si: ${DOCTOR_SCHEDULE_PATH:/doctor/work-schedule}
   thong-bao:
-    # booking-service ghi sự kiện vào su_kien_thong_bao, job gửi sang notification-service
+    # booking-service ghi sự kiện vào hàng chờ gửi (hang_cho_gui), job gửi sang notification-service
     url: ${NOTIFICATION_URL:http://localhost:8086}
     # Khoảng nghỉ giữa 2 lần job gửi (cũng là độ trễ tối đa của 1 thông báo)
     chu-ky-gui: ${BOOKING_NOTIFY_INTERVAL:5s}
+    # Giờ xoá sự kiện đã gửi quá 7 ngày (cron của Spring)
+    cron-don: ${BOOKING_NOTIFY_CLEANUP_CRON:0 30 3 * * *}
     # Thời gian chờ kết nối / chờ phản hồi của notification-service
     thoi-gian-cho: 5s
   nhac-lich:

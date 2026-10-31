@@ -26,7 +26,7 @@ import iuh.fit.se.eclinic.notification.service.EmailService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-/** Log ở đây chỉ ghi id của dòng email_gui và tên loại lỗi, không ghi địa chỉ nhận, tiêu đề hay nội dung. */
+/** Log ở đây chỉ ghi id của dòng email trong hang_cho_gui và tên loại lỗi, không ghi địa chỉ nhận, tiêu đề hay nội dung. */
 @Slf4j
 @Service
 @RequiredArgsConstructor

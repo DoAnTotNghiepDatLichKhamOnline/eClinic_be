@@ -5,51 +5,49 @@ import java.time.LocalDate;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
-import iuh.fit.se.eclinic.common.entity.CreatableEntity;
 import iuh.fit.se.eclinic.common.enums.QuanHeGiamHo;
-import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
+import jakarta.persistence.Embeddable;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/** Người giám hộ khai khi đặt lịch cho bệnh nhân dưới 18 tuổi. */
+/**
+ * Người giám hộ khai khi đặt lịch cho bệnh nhân dưới 18 tuổi: các cột giam_ho_* của lịch hẹn. Ghi cùng dòng lịch hẹn lúc
+ * đặt; sau đó chỉ {@code NguoiGiamHoRepository.ghiNgaySinh} được ghi (cột {@code updatable = false}).
+ */
 @Getter
 @Setter
 @NoArgsConstructor
-@Entity
-@Table(name = "nguoi_giam_ho", uniqueConstraints = @UniqueConstraint(name = "uk_nguoi_giam_ho_ho_so_cccd",
-        columnNames = { "id_ho_so_benh_nhan", "cccd" }))
-@AttributeOverride(name = "id", column = @Column(name = "id_nguoi_giam_ho"))
-public class NguoiGiamHo extends CreatableEntity {
+@Embeddable
+public class NguoiGiamHo {
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "id_ho_so_benh_nhan", nullable = false)
-    private HoSoBenhNhan hoSoBenhNhan;
-
-    @Column(name = "ho_ten", nullable = false, length = 150)
+    @Column(name = "giam_ho_ho_ten", length = 150, updatable = false)
     private String hoTen;
 
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.VARCHAR)
-    @Column(name = "quan_he", nullable = false, length = 30)
+    @Column(name = "giam_ho_quan_he", length = 30, updatable = false)
     private QuanHeGiamHo quanHe;
 
-    @Column(name = "so_dien_thoai", nullable = false, length = 20)
+    @Column(name = "giam_ho_so_dien_thoai", length = 20, updatable = false)
     private String soDienThoai;
 
-    @Column(name = "cccd", nullable = false, length = 12)
+    @Column(name = "giam_ho_cccd", length = 12, updatable = false)
     private String cccd;
 
-    @Column(name = "ngay_sinh")
+    @Column(name = "giam_ho_ngay_sinh", updatable = false)
     private LocalDate ngaySinh;
+
+    /** Bản sao cho lịch hẹn khác: 2 entity không dùng chung 1 đối tượng embeddable. */
+    public NguoiGiamHo(NguoiGiamHo khac) {
+        this.hoTen = khac.hoTen;
+        this.quanHe = khac.quanHe;
+        this.soDienThoai = khac.soDienThoai;
+        this.cccd = khac.cccd;
+        this.ngaySinh = khac.ngaySinh;
+    }
 
 }

@@ -1,0 +1,14 @@
+[
+ {"route": "GET /api/booking/quan-tri/danh-gia*", "duongDan": "than.duLieu.noiDung.*.id",
+  "lyDo": "mã đánh giá từ nay là id lịch hẹn: danh_gia gộp vào lich_hen (DOANTOTNGH-19 p1); route không nhận mã này"},
+ {"route": "GET /api/booking/quan-tri/cau-hinh/lich-su*", "duongDan": "than.duLieu.noiDung.[0-9].id",
+  "lyDo": "id lịch sử cấu hình đánh lại khi gộp 4 bảng lịch sử vào lich_su_thay_doi (DOANTOTNGH-19 p3), thứ tự giữ nguyên; route không nhận id này"},
+ {"route": "GHI", "duongDan": "than.buoc.11-lich-su-cau-hinh.than.duLieu.noiDung.[0-9].id",
+  "lyDo": "như trên: id lịch sử cấu hình (dòng cũ đánh lại, dòng mới lấy id chung của lich_su_thay_doi)"},
+ {"route": "GHI", "duongDan": "than.buoc.10-lich-su-ca-*.than.duLieu.[0-9].id",
+  "lyDo": "dòng lịch sử ca mới lấy id chung của lich_su_thay_doi (dòng cũ giữ id), thứ tự giữ nguyên (DOANTOTNGH-19 p3); route không nhận id này"},
+ {"route": "GHI", "duongDan": "than.buoc.14-them-anh.than.duLieu.id",
+  "lyDo": "ảnh mới lấy id theo từng bác sĩ (bộ đếm bac_si.anh_id_cuoi), không còn id tự tăng của cả bảng: anh_bac_si gộp vào bac_si (DOANTOTNGH-19 p5); mọi route ảnh đều theo bác sĩ"},
+ {"route": "GHI", "duongDan": "than.buoc.14-sap-xep-anh.than.duLieu.0.id",
+  "lyDo": "như trên: ảnh vừa tải đứng đầu sau khi đảo thứ tự"}
+]

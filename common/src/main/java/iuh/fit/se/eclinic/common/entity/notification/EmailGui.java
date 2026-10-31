@@ -5,42 +5,40 @@ import java.time.LocalDateTime;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
-import iuh.fit.se.eclinic.common.entity.CreatableEntity;
+import iuh.fit.se.eclinic.common.entity.HangChoGui;
 import iuh.fit.se.eclinic.common.enums.NgonNgu;
 import iuh.fit.se.eclinic.common.enums.TrangThaiEmail;
-import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.Column;
+import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/** Email chờ gửi của notification-service. */
+/** Email chờ gửi của notification-service (hàng EMAIL_GUI của hang_cho_gui). */
 @Getter
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "email_gui")
-@AttributeOverride(name = "id", column = @Column(name = "id_email"))
-public class EmailGui extends CreatableEntity {
+@DiscriminatorValue("EMAIL_GUI")
+public class EmailGui extends HangChoGui {
 
     /** Mã sự kiện ở service nguồn (vd {@code booking:15}), UNIQUE: gửi lại cùng mã không tạo email thứ hai. */
-    @Column(name = "ma_nguon", nullable = false, length = 64)
+    @Column(name = "ma_nguon", length = 64)
     private String maNguon;
 
-    @Column(name = "nguoi_nhan", nullable = false, length = 255)
+    @Column(name = "email_nhan", length = 255)
     private String nguoiNhan;
 
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.VARCHAR)
-    @Column(name = "ngon_ngu", nullable = false, length = 5)
+    @Column(name = "ngon_ngu", length = 5)
     private NgonNgu ngonNgu;
 
     /** Mẫu email (vd {@code email.datLich}); câu chữ trong thong-diep/notification*.properties. */
-    @Column(name = "khoa_mau", nullable = false, length = 80)
+    @Column(name = "khoa_mau", length = 80)
     private String khoaMau;
 
     /** Tham số của mẫu, mảng JSON ({@code ThamSoThongBao}). */
@@ -52,15 +50,15 @@ public class EmailGui extends CreatableEntity {
 
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.VARCHAR)
-    @Column(name = "trang_thai", nullable = false, length = 10)
+    @Column(name = "trang_thai", length = 10)
     private TrangThaiEmail trangThai = TrangThaiEmail.CHO_GUI;
 
     /** Số lần gửi đã lỗi. */
-    @Column(name = "so_lan_thu", nullable = false)
+    @Column(name = "so_lan_loi", nullable = false)
     private int soLanThu;
 
     /** Không gửi trước thời điểm này. */
-    @Column(name = "lan_thu_ke_tiep", nullable = false)
+    @Column(name = "lan_thu_ke_tiep")
     private LocalDateTime lanThuKeTiep;
 
     /** Tên loại lỗi của lần gửi gần nhất; không chứa địa chỉ hay nội dung email. */

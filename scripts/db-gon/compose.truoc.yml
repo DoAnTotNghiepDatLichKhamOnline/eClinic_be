@@ -1,0 +1,27 @@
+# Chạy stack bằng image đã đóng băng ở commit trước khi gộp bảng (DOANTOTNGH-19, 0901c02), không build lại.
+# Dùng qua scripts/db-gon/chup.py --truoc; image tạo bằng `docker tag eclinicdbgon-<service> eclinic-truoc/<service>:0901c02`.
+services:
+  identity-service:
+    image: eclinic-truoc/identity-service:0901c02
+    pull_policy: never
+  catalog-service:
+    image: eclinic-truoc/catalog-service:0901c02
+    pull_policy: never
+  booking-service:
+    image: eclinic-truoc/booking-service:0901c02
+    pull_policy: never
+  medical-service:
+    image: eclinic-truoc/medical-service:0901c02
+    pull_policy: never
+  notification-service:
+    image: eclinic-truoc/notification-service:0901c02
+    pull_policy: never
+  chatbot-service:
+    image: eclinic-truoc/chatbot-service:0901c02
+    pull_policy: never
+  report-service:
+    image: eclinic-truoc/report-service:0901c02
+    pull_policy: never
+  api-gateway:
+    image: eclinic-truoc/api-gateway:0901c02
+    pull_policy: never
