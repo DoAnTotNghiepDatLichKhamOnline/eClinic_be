@@ -22,7 +22,7 @@ import iuh.fit.se.eclinic.booking.repository.HoSoBenhAnChiDocRepository;
 import iuh.fit.se.eclinic.booking.repository.LichHenRepository;
 import iuh.fit.se.eclinic.booking.service.HoSoKhamService;
 import iuh.fit.se.eclinic.booking.service.LichHenService;
-import iuh.fit.se.eclinic.booking.service.SuaHoSoBenhNhanService;
+import iuh.fit.se.eclinic.booking.service.QuanLyHoSoBenhNhanService;
 import iuh.fit.se.eclinic.booking.service.TaiKhoanService;
 import iuh.fit.se.eclinic.common.entity.booking.HoSoBenhNhan;
 import iuh.fit.se.eclinic.common.entity.booking.LichHen;
@@ -41,7 +41,7 @@ public class HoSoKhamServiceImpl implements HoSoKhamService {
     private final LichHenService lichHenService;
     private final LichHenRepository lichHenRepository;
     private final HoSoBenhAnChiDocRepository hoSoBenhAnChiDocRepository;
-    private final SuaHoSoBenhNhanService suaHoSoBenhNhanService;
+    private final QuanLyHoSoBenhNhanService quanLyHoSoBenhNhanService;
     private final LichHenMapper lichHenMapper;
     private final CaKhamMapper caKhamMapper;
     private final KetQuaKhamMapper ketQuaKhamMapper;
@@ -61,7 +61,7 @@ public class HoSoKhamServiceImpl implements HoSoKhamService {
     public HoSoKhamResponse suaBenhNhan(Long idTaiKhoanBacSi, Long idLichHen, SuaHoSoBenhNhanRequest request) {
         LichHen lichHen = layCuaBacSi(idTaiKhoanBacSi, lichHenRepository.timTheoIdKemChiTiet(idLichHen));
         // Cùng transaction: hồ sơ của lichHen chính là dòng vừa được sửa
-        suaHoSoBenhNhanService.sua(lichHen.getHoSoBenhNhan().getId(), request, idTaiKhoanBacSi);
+        quanLyHoSoBenhNhanService.sua(lichHen.getHoSoBenhNhan().getId(), request, idTaiKhoanBacSi);
         return toResponse(lichHen);
     }
 

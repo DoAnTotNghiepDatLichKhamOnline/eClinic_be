@@ -16,7 +16,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import iuh.fit.se.eclinic.catalog.dto.request.PhongKhamRequest;
 import iuh.fit.se.eclinic.catalog.dto.response.PhongKhamQuanTriResponse;
-import iuh.fit.se.eclinic.catalog.service.QuanLyPhongKhamService;
+import iuh.fit.se.eclinic.catalog.service.PhongKhamService;
 import iuh.fit.se.eclinic.common.dto.PhanHoiApi;
 import iuh.fit.se.eclinic.common.dto.TrangDuLieu;
 import iuh.fit.se.eclinic.common.enums.TrangThaiPhongKham;
@@ -33,7 +33,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class QuanTriPhongKhamController {
 
-    private final QuanLyPhongKhamService quanLyPhongKhamService;
+    private final PhongKhamService phongKhamService;
 
     @Operation(summary = "Mọi phòng khám theo tên (phân trang, kể cả phòng ngừng hoạt động) kèm số ca sắp tới; lọc theo từ"
             + " khoá (tên phòng, tầng), chuyên khoa, trạng thái")
@@ -44,14 +44,14 @@ public class QuanTriPhongKhamController {
             @RequestParam(required = false) TrangThaiPhongKham trangThai,
             @RequestParam(defaultValue = "0") @Min(0) int trang,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int kichThuoc) {
-        return PhanHoiApi.ok(quanLyPhongKhamService.danhSach(tuKhoa, idChuyenKhoa, trangThai, trang, kichThuoc));
+        return PhanHoiApi.ok(phongKhamService.danhSach(tuKhoa, idChuyenKhoa, trangThai, trang, kichThuoc));
     }
 
     @Operation(summary = "Thêm phòng khám (409 TEN_PHONG_DA_TON_TAI nếu trùng tên)")
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public PhanHoiApi<PhongKhamQuanTriResponse> them(@Valid @RequestBody PhongKhamRequest request) {
-        return PhanHoiApi.ok(quanLyPhongKhamService.them(request), "thanhCong.themPhongKham");
+        return PhanHoiApi.ok(phongKhamService.them(request), "thanhCong.themPhongKham");
     }
 
     @Operation(summary = "Sửa tên phòng, tầng, chuyên khoa (đổi chuyên khoa khi phòng còn ca sắp tới: 409"
@@ -59,19 +59,19 @@ public class QuanTriPhongKhamController {
     @PutMapping("/{id}")
     public PhanHoiApi<PhongKhamQuanTriResponse> sua(@PathVariable Long id,
             @Valid @RequestBody PhongKhamRequest request) {
-        return PhanHoiApi.ok(quanLyPhongKhamService.sua(id, request), "thanhCong.capNhatPhongKham");
+        return PhanHoiApi.ok(phongKhamService.sua(id, request), "thanhCong.capNhatPhongKham");
     }
 
     @Operation(summary = "Cho phòng ngừng hoạt động: không xếp ca mới vào phòng được nữa (409 PHONG_CON_CA_LAM_VIEC nếu"
             + " phòng còn ca sắp tới, chuyển các ca đó sang phòng khác trước)")
     @PostMapping("/{id}/ngung-hoat-dong")
     public PhanHoiApi<PhongKhamQuanTriResponse> ngungHoatDong(@PathVariable Long id) {
-        return PhanHoiApi.ok(quanLyPhongKhamService.ngungHoatDong(id), "thanhCong.phongNgungHoatDong");
+        return PhanHoiApi.ok(phongKhamService.ngungHoatDong(id), "thanhCong.phongNgungHoatDong");
     }
 
     @Operation(summary = "Cho phòng hoạt động lại")
     @PostMapping("/{id}/hoat-dong-lai")
     public PhanHoiApi<PhongKhamQuanTriResponse> hoatDongLai(@PathVariable Long id) {
-        return PhanHoiApi.ok(quanLyPhongKhamService.hoatDongLai(id), "thanhCong.phongHoatDongLai");
+        return PhanHoiApi.ok(phongKhamService.hoatDongLai(id), "thanhCong.phongHoatDongLai");
     }
 }
