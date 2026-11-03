@@ -1,6 +1,6 @@
 package iuh.fit.se.eclinic.common.enums;
 
-/** Thay đổi ca làm việc đến từ đâu (lich_su_ca_lam_viec.nguon). */
+/** Thay đổi ca làm việc đến từ đâu (lich_su_thay_doi.nguon, loai = CA_LAM_VIEC). */
 public enum NguonThayDoiCa {
     /** Quản trị viên xếp / sửa / hủy trực tiếp. */
     QUAN_TRI,

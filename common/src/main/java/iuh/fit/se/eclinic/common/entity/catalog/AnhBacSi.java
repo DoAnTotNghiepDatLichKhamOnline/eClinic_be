@@ -1,61 +1,71 @@
 package iuh.fit.se.eclinic.common.entity.catalog;
 
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 
-import iuh.fit.se.eclinic.common.entity.CreatableEntity;
 import iuh.fit.se.eclinic.common.enums.LoaiAnhBacSi;
 import iuh.fit.se.eclinic.common.enums.NgonNgu;
-import jakarta.persistence.AttributeOverride;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.json.JsonMapper;
 
-/** Ảnh giới thiệu của bác sĩ (ảnh làm việc, chứng chỉ) hiện trong trang chi tiết bác sĩ. */
+/**
+ * Ảnh giới thiệu của bác sĩ (ảnh làm việc, chứng chỉ) hiện trong trang chi tiết bác sĩ. Không phải bảng: cả danh sách ảnh
+ * của 1 bác sĩ là 1 mảng JSON ở cột bac_si.anh_gioi_thieu (V45), đọc / ghi bằng {@link #docDanhSach} /
+ * {@link #vietDanhSach}. id duy nhất trong từng bác sĩ (cấp từ bac_si.anh_id_cuoi).
+ */
 @Getter
 @Setter
 @NoArgsConstructor
-@Entity
-@Table(name = "anh_bac_si")
-@AttributeOverride(name = "id", column = @Column(name = "id_anh_bac_si"))
-public class AnhBacSi extends CreatableEntity {
+public class AnhBacSi {
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "id_bac_si", nullable = false)
-    private BacSi bacSi;
+    private static final JsonMapper JSON = JsonMapper.builder().build();
+    private static final Comparator<AnhBacSi> THU_TU_HIEN_THI = Comparator.comparingInt(AnhBacSi::getThuTu)
+            .thenComparing(AnhBacSi::getId);
 
-    @Enumerated(EnumType.STRING)
-    @JdbcTypeCode(SqlTypes.VARCHAR)
-    @Column(name = "loai", nullable = false, length = 20)
+    private Long id;
+
     private LoaiAnhBacSi loai;
 
-    @Column(name = "url", nullable = false, length = 500)
     private String url;
 
     /** Mã ảnh trong kho ảnh, dùng để xoá; null = ảnh nằm ngoài kho (dữ liệu mẫu). */
-    @Column(name = "ma_luu_tru", length = 150)
     private String maLuuTru;
 
-    @Column(name = "chu_thich", length = 200)
     private String chuThich;
 
-    @Column(name = "chu_thich_en", length = 200)
     private String chuThichEn;
 
     /** Thứ tự hiển thị, nhỏ đứng trước. */
-    @Column(name = "thu_tu", nullable = false)
     private int thuTu;
+
+    private LocalDateTime ngayTao;
 
     // Chữ theo ngôn ngữ: bản tiếng Anh nếu có, không thì tiếng Việt
     public String chuThich(NgonNgu ngonNgu) {
         return ngonNgu.chon(chuThich, chuThichEn);
+    }
+
+    /** Danh sách ảnh từ JSON của cột, theo thứ tự hiển thị; null = chưa có ảnh. */
+    public static List<AnhBacSi> docDanhSach(String json) {
+        if (json == null) {
+            return new ArrayList<>();
+        }
+        List<AnhBacSi> danhSach = new ArrayList<>(JSON.readValue(json, new TypeReference<List<AnhBacSi>>() {
+        }));
+        danhSach.sort(THU_TU_HIEN_THI);
+        return danhSach;
+    }
+
+    /** JSON để ghi vào cột, theo thứ tự hiển thị; danh sách rỗng thành null. */
+    public static String vietDanhSach(List<AnhBacSi> danhSach) {
+        if (danhSach.isEmpty()) {
+            return null;
+        }
+        return JSON.writeValueAsString(danhSach.stream().sorted(THU_TU_HIEN_THI).toList());
     }
 }

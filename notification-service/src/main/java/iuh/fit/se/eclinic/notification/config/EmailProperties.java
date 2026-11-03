@@ -6,7 +6,7 @@ import java.util.List;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.bind.DefaultValue;
 
-/** Gửi email từ hàng chờ email_gui, prefix {@code app.email} trong application.yml. */
+/** Gửi email từ hàng chờ email (hàng EMAIL_GUI của hang_cho_gui), prefix {@code app.email} trong application.yml. */
 @ConfigurationProperties("app.email")
 public record EmailProperties(
         @DefaultValue("CONSOLE") CheDoEmail cheDo,

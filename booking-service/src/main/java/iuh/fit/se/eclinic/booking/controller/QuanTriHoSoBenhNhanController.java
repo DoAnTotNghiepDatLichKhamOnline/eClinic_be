@@ -20,7 +20,6 @@ import iuh.fit.se.eclinic.booking.dto.response.HoSoChoXacMinhResponse;
 import iuh.fit.se.eclinic.booking.dto.response.LichHenTrongCaResponse;
 import iuh.fit.se.eclinic.booking.service.LienKetHoSoService;
 import iuh.fit.se.eclinic.booking.service.QuanLyHoSoBenhNhanService;
-import iuh.fit.se.eclinic.booking.service.SuaHoSoBenhNhanService;
 import iuh.fit.se.eclinic.common.dto.PhanHoiApi;
 import iuh.fit.se.eclinic.common.dto.TrangDuLieu;
 import iuh.fit.se.eclinic.common.enums.TrangThaiLienKet;
@@ -39,7 +38,6 @@ import lombok.RequiredArgsConstructor;
 public class QuanTriHoSoBenhNhanController {
 
     private final LienKetHoSoService lienKetHoSoService;
-    private final SuaHoSoBenhNhanService suaHoSoBenhNhanService;
     private final QuanLyHoSoBenhNhanService quanLyHoSoBenhNhanService;
 
     @Operation(summary = "Danh sách hồ sơ bệnh nhân (phân trang, hồ sơ mới tạo trước, số CCCD chỉ còn 4 số cuối); từ khoá"
@@ -88,7 +86,7 @@ public class QuanTriHoSoBenhNhanController {
     @Operation(summary = "Xem 1 hồ sơ bệnh nhân (số CCCD không che), id lấy từ idHoSoBenhNhan của lịch hẹn")
     @GetMapping("/{id}")
     public PhanHoiApi<HoSoBenhNhanQuanTriResponse> xem(@PathVariable Long id) {
-        return PhanHoiApi.ok(suaHoSoBenhNhanService.xem(id));
+        return PhanHoiApi.ok(quanLyHoSoBenhNhanService.xem(id));
     }
 
     @Operation(summary = "Sửa hồ sơ bệnh nhân sau khi đối chiếu giấy tờ; số CCCD chỉ điền được khi hồ sơ chưa có"
@@ -96,7 +94,7 @@ public class QuanTriHoSoBenhNhanController {
     @PutMapping("/{id}")
     public PhanHoiApi<HoSoBenhNhanQuanTriResponse> sua(@PathVariable Long id,
             @Valid @RequestBody SuaHoSoBenhNhanRequest request) {
-        return PhanHoiApi.ok(suaHoSoBenhNhanService.sua(id, request, NguoiDungHienTai.layIdTaiKhoan()),
+        return PhanHoiApi.ok(quanLyHoSoBenhNhanService.sua(id, request, NguoiDungHienTai.layIdTaiKhoan()),
                 "thanhCong.capNhatHoSoBenhNhan");
     }
 

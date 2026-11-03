@@ -238,7 +238,7 @@ public class DatLichServiceImpl implements DatLichService {
         LichHen lichHen = new LichHen();
         lichHen.setLichHenCu(cu);
         lichHen.setHoSoBenhNhan(hoSo);
-        lichHen.setNguoiGiamHo(cu.getNguoiGiamHo());
+        lichHen.setNguoiGiamHo(cu.getNguoiGiamHo() == null ? null : new NguoiGiamHo(cu.getNguoiGiamHo()));
         lichHen.setTaiKhoanDat(cu.getTaiKhoanDat());
         lichHen.setKenhDat(cu.getKenhDat());
         lichHen.setBacSi(ca.getBacSi());
@@ -512,24 +512,29 @@ public class DatLichServiceImpl implements DatLichService {
         return new DaTim<>(hoSo, false);
     }
 
-    /** Dùng lại người giám hộ đã khai cho hồ sơ; thông tin nhập khác thì đánh dấu cần đối chiếu. */
+    /**
+     * Dùng lại người giám hộ đã khai cho hồ sơ (bản sao thông tin ở lịch hẹn sớm nhất cùng hồ sơ + CCCD); thông tin nhập
+     * khác thì đánh dấu cần đối chiếu. Lần đặt đang giữ khoá dòng hồ sơ nên không có lần đặt nào khác chen vào nhóm này.
+     */
     private DaTim<NguoiGiamHo> timHoacTaoNguoiGiamHo(HoSoBenhNhan hoSo, NguoiGiamHoRequest giamHo) {
-        Optional<NguoiGiamHo> daCo = nguoiGiamHoRepository.findByHoSoBenhNhanIdAndCccd(hoSo.getId(), giamHo.cccd());
+        Optional<NguoiGiamHo> daCo = nguoiGiamHoRepository
+                .findFirstByHoSoBenhNhanIdAndNguoiGiamHoCccdOrderByIdAsc(hoSo.getId(), giamHo.cccd())
+                .map(lichHen -> new NguoiGiamHo(lichHen.getNguoiGiamHo()));
         if (daCo.isEmpty()) {
             NguoiGiamHo nguoiGiamHo = new NguoiGiamHo();
-            nguoiGiamHo.setHoSoBenhNhan(hoSo);
             nguoiGiamHo.setHoTen(ChuanHoaTen.gon(giamHo.hoTen()));
             nguoiGiamHo.setQuanHe(giamHo.quanHe());
             nguoiGiamHo.setSoDienThoai(giamHo.soDienThoai());
             nguoiGiamHo.setCccd(giamHo.cccd());
             nguoiGiamHo.setNgaySinh(giamHo.ngaySinh());
-            return new DaTim<>(nguoiGiamHoRepository.save(nguoiGiamHo), false);
+            return new DaTim<>(nguoiGiamHo, false);
         }
         NguoiGiamHo nguoiGiamHo = daCo.get();
         if (!khop(nguoiGiamHo.getHoTen(), nguoiGiamHo.getNgaySinh(), giamHo.hoTen(), giamHo.ngaySinh())) {
             return new DaTim<>(nguoiGiamHo, true);
         }
-        if (nguoiGiamHo.getNgaySinh() == null) {
+        if (nguoiGiamHo.getNgaySinh() == null && giamHo.ngaySinh() != null) {
+            nguoiGiamHoRepository.ghiNgaySinh(hoSo.getId(), giamHo.cccd(), giamHo.ngaySinh());
             nguoiGiamHo.setNgaySinh(giamHo.ngaySinh());
         }
         return new DaTim<>(nguoiGiamHo, false);

@@ -99,5 +99,7 @@ app:
   # Dữ liệu mẫu để thử / demo: 8 chuyên khoa, 12 bác sĩ, 6 bệnh nhân, ca cho so-ngay ngày tới
   du-lieu-mau:
     bat: ${SEED_DATA:false}
+    # Thêm khoảng 100 dòng mỗi bảng (DuLieuMauLon), chỉ có tác dụng khi bat = true
+    lon: ${SEED_VOLUME:false}
     mat-khau: ${SEED_PASSWORD:Demo@123}
     so-ngay: 14

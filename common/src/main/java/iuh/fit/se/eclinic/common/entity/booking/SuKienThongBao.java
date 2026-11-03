@@ -5,32 +5,30 @@ import java.time.LocalDateTime;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
-import iuh.fit.se.eclinic.common.entity.CreatableEntity;
+import iuh.fit.se.eclinic.common.entity.HangChoGui;
 import iuh.fit.se.eclinic.common.enums.KenhThongBao;
 import iuh.fit.se.eclinic.common.enums.LoaiThongBao;
 import iuh.fit.se.eclinic.common.enums.NgonNgu;
-import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.Column;
+import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/** Thông báo chờ gửi sang notification-service (bảng outbox của booking-service). */
+/** Thông báo chờ gửi sang notification-service (outbox của booking-service, hàng SU_KIEN của hang_cho_gui). */
 @Getter
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "su_kien_thong_bao")
-@AttributeOverride(name = "id", column = @Column(name = "id_su_kien"))
-public class SuKienThongBao extends CreatableEntity {
+@DiscriminatorValue("SU_KIEN")
+public class SuKienThongBao extends HangChoGui {
 
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.VARCHAR)
-    @Column(name = "kenh", nullable = false, length = 10)
+    @Column(name = "kenh", length = 10)
     private KenhThongBao kenh = KenhThongBao.CHUONG;
 
     /** Null với dòng kênh EMAIL. */

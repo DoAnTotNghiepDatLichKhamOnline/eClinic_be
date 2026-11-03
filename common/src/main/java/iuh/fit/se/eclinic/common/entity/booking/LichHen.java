@@ -18,6 +18,7 @@ import iuh.fit.se.eclinic.common.enums.TrangThaiHangDoi;
 import iuh.fit.se.eclinic.common.enums.TrangThaiLichHen;
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -26,6 +27,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -43,9 +45,8 @@ public class LichHen extends AuditableEntity {
     @JoinColumn(name = "id_ho_so_benh_nhan", nullable = false)
     private HoSoBenhNhan hoSoBenhNhan;
 
-    /** Người giám hộ của lượt khám này, bắt buộc khi bệnh nhân dưới 18 tuổi. */
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_nguoi_giam_ho")
+    /** Người giám hộ của lượt khám này, bắt buộc khi bệnh nhân dưới 18 tuổi; null = không có. */
+    @Embedded
     private NguoiGiamHo nguoiGiamHo;
 
     /** Tài khoản đã đặt lịch; null = Khách đặt. */
@@ -76,6 +77,8 @@ public class LichHen extends AuditableEntity {
     @Column(name = "so_thu_tu", nullable = false)
     private Integer soThuTu;
 
+    /** Chỉ đổi qua {@link #chuyenTrangThai}. */
+    @Setter(AccessLevel.NONE)
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.VARCHAR)
     @Column(name = "trang_thai", nullable = false, length = 30)
@@ -158,6 +161,27 @@ public class LichHen extends AuditableEntity {
     @Version
     @Column(name = "version", nullable = false)
     private Long version;
+
+    /**
+     * Mốc nhắc lịch nhỏ nhất (phút trước giờ khám) đã xử lý; mọi mốc lớn hơn cũng coi như đã xử lý. Chỉ đọc: job nhắc lịch
+     * ghi bằng câu UPDATE riêng ({@code NhacLichHenRepository}), để không tăng version của lịch hẹn và lần lưu lịch hẹn
+     * khác không ghi đè.
+     */
+    @Column(name = "nhac_moc_da_xu_ly", insertable = false, updatable = false)
+    private Integer nhacMocDaXuLy;
+
+    /** Mốc nhắc lịch nhỏ nhất đã thật sự gửi nhắc; null = chưa nhắc. Chỉ đọc, như {@link #nhacMocDaXuLy}. */
+    @Column(name = "nhac_moc_da_gui", insertable = false, updatable = false)
+    private Integer nhacMocDaGui;
+
+    /** Service kiểm tra trước và ném mã lỗi của mình; ngoại lệ ở đây chỉ xảy ra khi code gọi sai. */
+    public void chuyenTrangThai(TrangThaiLichHen moi) {
+        if (!trangThai.choPhepChuyenSang(moi)) {
+            throw new IllegalStateException(
+                    "Lịch hẹn id=%s không chuyển được từ %s sang %s".formatted(getId(), trangThai, moi));
+        }
+        trangThai = moi;
+    }
 
     /** Trạng thái hàng đợi để hiển thị: DA_KHAM khi đã có kết quả, VANG_MAT khi không đến, còn lại giá trị đã lưu. */
     public TrangThaiHangDoi hangDoiHienThi() {

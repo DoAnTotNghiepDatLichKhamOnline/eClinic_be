@@ -14,10 +14,9 @@ import iuh.fit.se.eclinic.common.entity.medical.HoSoBenhAn;
 /** Chỉ đọc hồ sơ bệnh án (bảng của medical-service) cho hồ sơ khám, sổ khám và nhắc tái khám. */
 public interface HoSoBenhAnChiDocRepository extends Repository<HoSoBenhAn, Long> {
 
-    /** Hồ sơ bệnh án của các lịch hẹn cho trước, kèm các dòng đơn thuốc, thuốc và mã ICD-10. */
+    /** Hồ sơ bệnh án của các lịch hẹn cho trước, kèm các dòng đơn thuốc, thuốc. */
     @Query("""
             select distinct b from HoSoBenhAn b
-            left join fetch b.icdChinh
             left join fetch b.chiTietDonThuoc c
             left join fetch c.thuoc
             where b.lichHen.id in :lichHenIds
@@ -31,7 +30,6 @@ public interface HoSoBenhAnChiDocRepository extends Repository<HoSoBenhAn, Long>
             select b from HoSoBenhAn b
             join fetch b.lichHen l
             join fetch l.hoSoBenhNhan
-            left join fetch l.nguoiGiamHo
             join fetch l.bacSi bs
             join fetch bs.taiKhoan
             join fetch bs.chuyenKhoa
@@ -54,16 +52,15 @@ public interface HoSoBenhAnChiDocRepository extends Repository<HoSoBenhAn, Long>
     @Query("""
             select b.id from HoSoBenhAn b
             where b.ngayTaiKhamDeXuat > :homNay
-              and not exists (select 1 from NhacTaiKham n
-                              where n.idHoSoBenhAn = b.id and n.ngayDaBao = b.ngayTaiKhamDeXuat)
+              and (b.taiKhamNgayDaBao is null or b.taiKhamNgayDaBao <> b.ngayTaiKhamDeXuat)
             order by b.id asc
             """)
     List<Long> timIdCanBaoTaiKham(LocalDate homNay, Limit gioiHan);
 
     /** Id hồ sơ bệnh án đến hạn nhắc trước ngày tái khám, ngày tái khám trong ({@code homNay}, {@code den}]. */
     @Query("""
-            select b.id from HoSoBenhAn b, NhacTaiKham n
-            where n.idHoSoBenhAn = b.id and n.ngayDaBao = b.ngayTaiKhamDeXuat and n.daNhacTruoc = false
+            select b.id from HoSoBenhAn b
+            where b.taiKhamNgayDaBao = b.ngayTaiKhamDeXuat and b.taiKhamDaNhacTruoc = false
               and b.ngayTaiKhamDeXuat > :homNay and b.ngayTaiKhamDeXuat <= :den
             order by b.ngayTaiKhamDeXuat asc, b.id asc
             """)

@@ -5,7 +5,7 @@ import java.util.List;
 import iuh.fit.se.eclinic.notification.dto.request.TaoEmailRequest;
 import iuh.fit.se.eclinic.notification.dto.response.KetQuaNhanThongBaoResponse;
 
-/** Hàng chờ gửi email (bảng email_gui): nhận email từ service khác, rồi job gửi dần (xem {@code GuiEmailJob}). */
+/** Hàng chờ gửi email (hàng EMAIL_GUI của bảng hang_cho_gui): nhận email từ service khác, rồi job gửi dần (xem {@code GuiEmailJob}). */
 public interface EmailService {
 
     /** Đưa email vào hàng chờ; {@code maNguon} đã có thì bỏ qua. */

@@ -1,0 +1,192 @@
+ma	ten	ten_en	man_tinh
+A08.0	Viêm ruột do Rotavirus	Rotaviral enteritis	0
+A09.9	Viêm dạ dày ruột và viêm đại tràng không rõ nguồn gốc	Gastroenteritis and colitis of unspecified origin	0
+A90	Sốt Dengue [sốt xuất huyết Dengue cổ điển]	Dengue fever [classical dengue]	0
+A91	Sốt xuất huyết Dengue	Dengue haemorrhagic fever	0
+B01.9	Thủy đậu không có biến chứng	Varicella without complication	0
+B02.9	Zona không có biến chứng	Zoster without complication	0
+B05.9	Sởi không có biến chứng	Measles without complication	0
+B07	Mụn cóc do virus	Viral warts	0
+B08.4	Bệnh tay chân miệng (viêm miệng có mụn nước do Enterovirus kèm ban)	Enteroviral vesicular stomatitis with exanthem	0
+B18.1	Viêm gan virus B mạn tính, không có tác nhân delta	Chronic viral hepatitis B without delta-agent	1
+B18.2	Viêm gan virus C mạn tính	Chronic viral hepatitis C	0
+B34.9	Nhiễm virus, không đặc hiệu	Viral infection, unspecified	0
+B35.4	Nấm thân	Tinea corporis	0
+B36.0	Lang ben	Pityriasis versicolor	0
+B37.0	Viêm miệng do Candida (tưa miệng)	Candidal stomatitis	0
+B82.9	Bệnh ký sinh trùng đường ruột, không đặc hiệu	Intestinal parasitism, unspecified	0
+B86	Bệnh ghẻ	Scabies	0
+D50.9	Thiếu máu thiếu sắt, không đặc hiệu	Iron deficiency anaemia, unspecified	0
+D56.9	Bệnh Thalassemia, không đặc hiệu	Thalassaemia, unspecified	1
+D64.9	Thiếu máu, không đặc hiệu	Anaemia, unspecified	0
+E03.9	Suy giáp, không đặc hiệu	Hypothyroidism, unspecified	1
+E04.1	Nhân giáp đơn độc không độc	Nontoxic single thyroid nodule	0
+E05.0	Nhiễm độc giáp có bướu giáp lan tỏa	Thyrotoxicosis with diffuse goitre	1
+E05.9	Nhiễm độc giáp, không đặc hiệu	Thyrotoxicosis, unspecified	1
+E10.9	Đái tháo đường phụ thuộc insulin, không có biến chứng	Insulin-dependent diabetes mellitus without complications	1
+E11.2	Đái tháo đường không phụ thuộc insulin, có biến chứng thận	Non-insulin-dependent diabetes mellitus with renal complications	1
+E11.4	Đái tháo đường không phụ thuộc insulin, có biến chứng thần kinh	Non-insulin-dependent diabetes mellitus with neurological complications	1
+E11.9	Đái tháo đường không phụ thuộc insulin, không có biến chứng	Non-insulin-dependent diabetes mellitus without complications	1
+E14.9	Đái tháo đường không đặc hiệu, không có biến chứng	Unspecified diabetes mellitus without complications	1
+E46	Suy dinh dưỡng protein - năng lượng không đặc hiệu	Unspecified protein-energy malnutrition	0
+E55.9	Thiếu vitamin D, không đặc hiệu	Vitamin D deficiency, unspecified	0
+E66.9	Béo phì, không đặc hiệu	Obesity, unspecified	0
+E78.0	Tăng cholesterol máu đơn thuần	Pure hypercholesterolaemia	0
+E78.1	Tăng glycerid máu đơn thuần	Pure hyperglyceridaemia	0
+E78.2	Tăng lipid máu hỗn hợp	Mixed hyperlipidaemia	0
+E78.5	Tăng lipid máu, không đặc hiệu	Hyperlipidaemia, unspecified	0
+E79.0	Tăng acid uric máu không có dấu hiệu viêm khớp và bệnh hạt tophi	Hyperuricaemia without signs of inflammatory arthritis and tophaceous disease	0
+E86	Giảm thể tích dịch (mất nước)	Volume depletion	0
+F20.9	Tâm thần phân liệt, không biệt định	Schizophrenia, unspecified	1
+F32.9	Giai đoạn trầm cảm, không biệt định	Depressive episode, unspecified	1
+F41.1	Rối loạn lo âu lan tỏa	Generalized anxiety disorder	1
+F41.9	Rối loạn lo âu, không biệt định	Anxiety disorder, unspecified	1
+F51.0	Mất ngủ không thực tổn	Nonorganic insomnia	0
+G20	Bệnh Parkinson	Parkinson disease	1
+G30.9	Bệnh Alzheimer, không đặc hiệu	Alzheimer disease, unspecified	1
+G40.9	Động kinh, không đặc hiệu	Epilepsy, unspecified	1
+G43.9	Migraine, không đặc hiệu	Migraine, unspecified	0
+G44.2	Đau đầu dạng căng thẳng	Tension-type headache	0
+G47.0	Rối loạn khởi phát và duy trì giấc ngủ [mất ngủ]	Disorders of initiating and maintaining sleep [insomnias]	0
+G51.0	Liệt Bell	Bell palsy	0
+G56.0	Hội chứng ống cổ tay	Carpal tunnel syndrome	0
+H00.0	Lẹo và viêm sâu khác của mi mắt	Hordeolum and other deep inflammation of eyelid	0
+H04.1	Rối loạn khác của tuyến lệ (khô mắt)	Other disorders of lacrimal gland	1
+H10.1	Viêm kết mạc dị ứng cấp	Acute atopic conjunctivitis	0
+H10.9	Viêm kết mạc, không đặc hiệu	Conjunctivitis, unspecified	0
+H25.9	Đục thủy tinh thể tuổi già, không đặc hiệu	Senile cataract, unspecified	0
+H40.1	Glôcôm góc mở nguyên phát	Primary open-angle glaucoma	1
+H52.1	Cận thị	Myopia	0
+H52.4	Lão thị	Presbyopia	0
+H60.9	Viêm tai ngoài, không đặc hiệu	Otitis externa, unspecified	0
+H61.2	Nút ráy tai	Impacted cerumen	0
+H65.9	Viêm tai giữa không mưng mủ, không đặc hiệu	Nonsuppurative otitis media, unspecified	0
+H66.9	Viêm tai giữa, không đặc hiệu	Otitis media, unspecified	0
+H81.1	Chóng mặt kịch phát lành tính	Benign paroxysmal vertigo	0
+I10	Tăng huyết áp vô căn (nguyên phát)	Essential (primary) hypertension	1
+I11.9	Bệnh tim do tăng huyết áp, không có suy tim (sung huyết)	Hypertensive heart disease without (congestive) heart failure	0
+I20.9	Cơn đau thắt ngực, không đặc hiệu	Angina pectoris, unspecified	1
+I25.1	Bệnh tim xơ vữa động mạch	Atherosclerotic heart disease	1
+I25.9	Bệnh tim thiếu máu cục bộ mạn, không đặc hiệu	Chronic ischaemic heart disease, unspecified	1
+I42.0	Bệnh cơ tim giãn	Dilated cardiomyopathy	1
+I48.9	Rung nhĩ và cuồng nhĩ, không đặc hiệu	Atrial fibrillation and atrial flutter, unspecified	0
+I49.9	Rối loạn nhịp tim, không đặc hiệu	Cardiac arrhythmia, unspecified	0
+I50.0	Suy tim sung huyết	Congestive heart failure	0
+I50.9	Suy tim, không đặc hiệu	Heart failure, unspecified	0
+I63.9	Nhồi máu não, không đặc hiệu	Cerebral infarction, unspecified	0
+I69.3	Di chứng nhồi máu não	Sequelae of cerebral infarction	1
+I83.9	Giãn tĩnh mạch chi dưới không loét hoặc viêm	Varicose veins of lower extremities without ulcer or inflammation	0
+I95.9	Hạ huyết áp, không đặc hiệu	Hypotension, unspecified	0
+J00	Viêm mũi họng cấp [cảm thường]	Acute nasopharyngitis [common cold]	0
+J01.9	Viêm xoang cấp, không đặc hiệu	Acute sinusitis, unspecified	0
+J02.9	Viêm họng cấp, không đặc hiệu	Acute pharyngitis, unspecified	0
+J03.9	Viêm amidan cấp, không đặc hiệu	Acute tonsillitis, unspecified	0
+J04.0	Viêm thanh quản cấp	Acute laryngitis	0
+J05.0	Viêm thanh quản tắc nghẽn cấp [croup]	Acute obstructive laryngitis [croup]	0
+J06.9	Nhiễm trùng đường hô hấp trên cấp, không đặc hiệu	Acute upper respiratory infection, unspecified	0
+J11.1	Cúm có biểu hiện hô hấp khác, virus không được định danh	Influenza with other respiratory manifestations, virus not identified	0
+J12.9	Viêm phổi do virus, không đặc hiệu	Viral pneumonia, unspecified	0
+J18.9	Viêm phổi, không đặc hiệu	Pneumonia, unspecified	0
+J20.9	Viêm phế quản cấp, không đặc hiệu	Acute bronchitis, unspecified	0
+J21.9	Viêm tiểu phế quản cấp, không đặc hiệu	Acute bronchiolitis, unspecified	0
+J30.4	Viêm mũi dị ứng, không đặc hiệu	Allergic rhinitis, unspecified	0
+J31.0	Viêm mũi mạn tính	Chronic rhinitis	0
+J31.2	Viêm họng mạn tính	Chronic pharyngitis	0
+J32.9	Viêm xoang mạn tính, không đặc hiệu	Chronic sinusitis, unspecified	0
+J34.2	Vẹo vách ngăn mũi	Deviated nasal septum	0
+J35.0	Viêm amidan mạn tính	Chronic tonsillitis	0
+J40	Viêm phế quản, không xác định cấp hay mạn	Bronchitis, not specified as acute or chronic	0
+J42	Viêm phế quản mạn tính không đặc hiệu	Unspecified chronic bronchitis	0
+J44.9	Bệnh phổi tắc nghẽn mạn tính, không đặc hiệu	Chronic obstructive pulmonary disease, unspecified	0
+J45.0	Hen phế quản chủ yếu do dị ứng	Predominantly allergic asthma	1
+J45.9	Hen phế quản, không đặc hiệu	Asthma, unspecified	1
+K02.9	Sâu răng, không đặc hiệu	Dental caries, unspecified	0
+K05.1	Viêm lợi mạn tính	Chronic gingivitis	0
+K12.0	Loét áp-tơ miệng tái phát	Recurrent oral aphthae	0
+K21.0	Bệnh trào ngược dạ dày - thực quản có viêm thực quản	Gastro-oesophageal reflux disease with oesophagitis	1
+K21.9	Bệnh trào ngược dạ dày - thực quản không có viêm thực quản	Gastro-oesophageal reflux disease without oesophagitis	0
+K25.9	Loét dạ dày, không xác định cấp hay mạn, không chảy máu hoặc thủng	Gastric ulcer, unspecified as acute or chronic, without haemorrhage or perforation	1
+K26.9	Loét tá tràng, không xác định cấp hay mạn, không chảy máu hoặc thủng	Duodenal ulcer, unspecified as acute or chronic, without haemorrhage or perforation	1
+K29.5	Viêm dạ dày mạn, không đặc hiệu	Chronic gastritis, unspecified	0
+K29.7	Viêm dạ dày, không đặc hiệu	Gastritis, unspecified	0
+K30	Khó tiêu chức năng	Functional dyspepsia	0
+K40.9	Thoát vị bẹn một bên hoặc không xác định, không tắc, không hoại tử	Unilateral or unspecified inguinal hernia, without obstruction or gangrene	0
+K52.9	Viêm dạ dày ruột và viêm đại tràng không nhiễm trùng, không đặc hiệu	Noninfective gastroenteritis and colitis, unspecified	0
+K58.9	Hội chứng ruột kích thích không có tiêu chảy	Irritable bowel syndrome without diarrhoea	0
+K59.0	Táo bón	Constipation	1
+K64.9	Trĩ, không đặc hiệu	Haemorrhoids, unspecified	0
+K74.6	Xơ gan khác và không đặc hiệu	Other and unspecified cirrhosis of liver	0
+K76.0	Gan nhiễm mỡ, không phân loại nơi khác	Fatty (change of) liver, not elsewhere classified	1
+K80.2	Sỏi túi mật không có viêm túi mật	Calculus of gallbladder without cholecystitis	1
+L01.0	Chốc	Impetigo	0
+L02.9	Áp xe da, nhọt và nhọt cụm, không đặc hiệu	Cutaneous abscess, furuncle and carbuncle, unspecified	0
+L03.9	Viêm mô tế bào, không đặc hiệu	Cellulitis, unspecified	0
+L20.9	Viêm da cơ địa, không đặc hiệu	Atopic dermatitis, unspecified	1
+L21.9	Viêm da dầu, không đặc hiệu	Seborrhoeic dermatitis, unspecified	0
+L23.9	Viêm da tiếp xúc dị ứng, không rõ nguyên nhân	Allergic contact dermatitis, unspecified cause	0
+L30.9	Viêm da, không đặc hiệu	Dermatitis, unspecified	1
+L40.0	Vảy nến thông thường	Psoriasis vulgaris	1
+L50.9	Mày đay, không đặc hiệu	Urticaria, unspecified	1
+L60.0	Móng quặp	Ingrowing nail	0
+L70.0	Trứng cá thông thường	Acne vulgaris	0
+L80	Bạch biến	Vitiligo	0
+M05.9	Viêm khớp dạng thấp huyết thanh dương tính, không đặc hiệu	Seropositive rheumatoid arthritis, unspecified	1
+M06.9	Viêm khớp dạng thấp, không đặc hiệu	Rheumatoid arthritis, unspecified	1
+M10.9	Bệnh Gút, không đặc hiệu	Gout, unspecified	1
+M15.9	Thoái hóa nhiều khớp, không đặc hiệu	Polyarthrosis, unspecified	1
+M16.9	Thoái hóa khớp háng, không đặc hiệu	Coxarthrosis, unspecified	1
+M17.9	Thoái hóa khớp gối, không đặc hiệu	Gonarthrosis, unspecified	1
+M19.9	Thoái hóa khớp, không đặc hiệu	Arthrosis, unspecified	1
+M25.5	Đau khớp	Pain in joint	0
+M47.8	Thoái hóa cột sống khác	Other spondylosis	1
+M47.9	Thoái hóa cột sống, không đặc hiệu	Spondylosis, unspecified	1
+M51.2	Thoát vị đĩa đệm đặc hiệu khác	Other specified intervertebral disc displacement	1
+M54.2	Đau vùng cổ	Cervicalgia	1
+M54.4	Đau thắt lưng kèm đau thần kinh tọa	Lumbago with sciatica	1
+M54.5	Đau vùng thắt lưng	Low back pain	1
+M65.4	Viêm bao gân mỏm trâm quay [de Quervain]	Radial styloid tenosynovitis [de Quervain]	1
+M75.0	Viêm quanh khớp vai thể đông cứng	Adhesive capsulitis of shoulder	1
+M77.1	Viêm lồi cầu ngoài xương cánh tay	Lateral epicondylitis	0
+M79.1	Đau cơ	Myalgia	0
+M81.0	Loãng xương sau mãn kinh	Postmenopausal osteoporosis	1
+M81.9	Loãng xương, không đặc hiệu	Osteoporosis, unspecified	1
+N10	Viêm thận kẽ - ống thận cấp	Acute tubulo-interstitial nephritis	0
+N18.9	Bệnh thận mạn, không đặc hiệu	Chronic kidney disease, unspecified	1
+N20.0	Sỏi thận	Calculus of kidney	1
+N20.1	Sỏi niệu quản	Calculus of ureter	1
+N30.0	Viêm bàng quang cấp	Acute cystitis	0
+N39.0	Nhiễm trùng đường tiết niệu, vị trí không xác định	Urinary tract infection, site not specified	0
+N40	Tăng sản tuyến tiền liệt	Hyperplasia of prostate	0
+N76.0	Viêm âm đạo cấp	Acute vaginitis	0
+N94.6	Đau bụng kinh, không đặc hiệu	Dysmenorrhoea, unspecified	0
+N95.1	Tình trạng mãn kinh và tiền mãn kinh ở phụ nữ	Menopausal and female climacteric states	0
+O21.0	Nôn nghén nhẹ	Mild hyperemesis gravidarum	0
+R00.2	Đánh trống ngực	Palpitations	0
+R05	Ho	Cough	0
+R06.0	Khó thở	Dyspnoea	0
+R07.4	Đau ngực, không đặc hiệu	Chest pain, unspecified	0
+R10.4	Đau bụng khác và không đặc hiệu	Other and unspecified abdominal pain	0
+R11	Buồn nôn và nôn	Nausea and vomiting	0
+R21	Ban và phát ban da không đặc hiệu khác	Rash and other nonspecific skin eruption	0
+R30.0	Tiểu khó	Dysuria	0
+R42	Chóng mặt và choáng váng	Dizziness and giddiness	0
+R50.9	Sốt, không đặc hiệu	Fever, unspecified	0
+R51	Đau đầu	Headache	0
+R53	Khó ở và mệt mỏi	Malaise and fatigue	0
+R59.0	Hạch to khu trú	Localized enlarged lymph nodes	0
+R63.4	Sụt cân bất thường	Abnormal weight loss	0
+R73.9	Tăng đường huyết, không đặc hiệu	Hyperglycaemia, unspecified	0
+S93.4	Bong gân và căng dây chằng cổ chân	Sprain and strain of ankle	0
+T14.0	Tổn thương nông ở vùng cơ thể không xác định	Superficial injury of unspecified body region	0
+T78.4	Dị ứng, không đặc hiệu	Allergy, unspecified	0
+U07.1	COVID-19, đã xác định virus	COVID-19, virus identified	0
+Z00.0	Khám sức khỏe tổng quát	General medical examination	0
+Z00.1	Khám sức khỏe định kỳ trẻ em	Routine child health examination	0
+Z01.0	Khám mắt và thị lực	Examination of eyes and vision	0
+Z01.2	Khám răng	Dental examination	0
+Z01.4	Khám phụ khoa (tổng quát) (định kỳ)	Gynaecological examination (general)(routine)	0
+Z09.9	Khám theo dõi sau điều trị bệnh khác, không đặc hiệu	Follow-up examination after unspecified treatment for other conditions	0
+Z30.0	Tư vấn chung về tránh thai	General counselling and advice on contraception	0
+Z34.9	Theo dõi thai bình thường, không đặc hiệu	Supervision of normal pregnancy, unspecified	0
+Z71.3	Tư vấn và theo dõi chế độ ăn	Dietary counselling and surveillance	0
+Z76.0	Cấp lại đơn thuốc	Issue of repeat prescription	0

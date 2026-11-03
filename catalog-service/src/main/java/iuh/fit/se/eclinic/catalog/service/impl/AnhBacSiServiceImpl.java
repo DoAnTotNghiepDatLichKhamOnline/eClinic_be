@@ -1,5 +1,6 @@
 package iuh.fit.se.eclinic.catalog.service.impl;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -26,7 +27,10 @@ import iuh.fit.se.eclinic.common.util.TokenNgauNhien;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-/** Không có @Transactional ở class: gọi kho ảnh có thể mất 20 giây, không được giữ kết nối DB. */
+/**
+ * Không có @Transactional ở class: gọi kho ảnh có thể mất 20 giây, không được giữ kết nối DB. Ảnh là 1 danh sách JSON trên
+ * dòng bac_si ({@link AnhBacSiRepository}): mỗi lần sửa khoá dòng, đọc, sửa danh sách rồi ghi lại trong 1 transaction.
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -52,22 +56,26 @@ public class AnhBacSiServiceImpl implements AnhBacSiService {
             throw new LoiNghiepVu(MaLoi.LUU_TRU_ANH_KHONG_KHA_DUNG);
         }
         // Kiểm tra trước khi tải lên để không tốn hạn mức kho ảnh; kiểm tra lại lúc ghi DB
-        kiemTraConChoTrong(idBacSi);
+        kiemTraConChoTrong(anhBacSiRepository.countByBacSiId(idBacSi));
 
         String ma = "bac-si/" + idBacSi + "/" + TokenNgauNhien.tao();
         String url = luuTruAnh.taiLen(ma, noiDung, CANH_TOI_DA);
         try {
             AnhBacSi anh = transactionTemplate.execute(trangThai -> {
-                kiemTraConChoTrong(idBacSi);
+                List<AnhBacSi> danhSach = anhBacSiRepository.khoa(idBacSi);
+                kiemTraConChoTrong(danhSach.size());
                 AnhBacSi moi = new AnhBacSi();
-                moi.setBacSi(bacSiRepository.getReferenceById(idBacSi));
+                moi.setId(anhBacSiRepository.idMoi(idBacSi));
                 moi.setLoai(loai);
                 moi.setUrl(url);
                 moi.setMaLuuTru(ma);
                 moi.setChuThich(bacSiMapper.chuanHoa(chuThich));
                 moi.setChuThichEn(bacSiMapper.chuanHoa(chuThichEn));
-                moi.setThuTu(anhBacSiRepository.timThuTuLonNhat(idBacSi) + 1);
-                return anhBacSiRepository.save(moi);
+                moi.setThuTu(danhSach.stream().mapToInt(AnhBacSi::getThuTu).max().orElse(0) + 1);
+                moi.setNgayTao(LocalDateTime.now());
+                danhSach.add(moi);
+                anhBacSiRepository.ghi(idBacSi, danhSach);
+                return moi;
             });
             log.info("Thêm ảnh giới thiệu id={} cho bác sĩ id={} ({} byte)", anh.getId(), idBacSi, noiDung.length);
             return bacSiMapper.toAnhQuanTriResponse(anh);
@@ -81,10 +89,12 @@ public class AnhBacSiServiceImpl implements AnhBacSiService {
     @Override
     public AnhBacSiQuanTriResponse capNhat(Long idBacSi, Long idAnh, CapNhatAnhBacSiRequest request) {
         return transactionTemplate.execute(trangThai -> {
-            AnhBacSi anh = timAnh(idBacSi, idAnh);
+            List<AnhBacSi> danhSach = anhBacSiRepository.khoa(idBacSi);
+            AnhBacSi anh = timAnh(danhSach, idAnh);
             anh.setLoai(request.loai());
             anh.setChuThich(bacSiMapper.chuanHoa(request.chuThich()));
             anh.setChuThichEn(bacSiMapper.chuanHoa(request.chuThichEn()));
+            anhBacSiRepository.ghi(idBacSi, danhSach);
             return bacSiMapper.toAnhQuanTriResponse(anh);
         });
     }
@@ -93,7 +103,8 @@ public class AnhBacSiServiceImpl implements AnhBacSiService {
     public List<AnhBacSiQuanTriResponse> sapXep(Long idBacSi, List<Long> idAnh) {
         kiemTraCoBacSi(idBacSi);
         return transactionTemplate.execute(trangThai -> {
-            Map<Long, AnhBacSi> anhTheoId = anhBacSiRepository.findByBacSiIdOrderByThuTuAscIdAsc(idBacSi).stream()
+            List<AnhBacSi> danhSach = anhBacSiRepository.khoa(idBacSi);
+            Map<Long, AnhBacSi> anhTheoId = danhSach.stream()
                     .collect(Collectors.toMap(AnhBacSi::getId, Function.identity()));
             if (idAnh.size() != anhTheoId.size() || !new HashSet<>(idAnh).equals(anhTheoId.keySet())) {
                 throw new LoiNghiepVu(MaLoi.DU_LIEU_KHONG_HOP_LE,
@@ -103,6 +114,7 @@ public class AnhBacSiServiceImpl implements AnhBacSiService {
             for (Long id : idAnh) {
                 anhTheoId.get(id).setThuTu(thuTu++);
             }
+            anhBacSiRepository.ghi(idBacSi, danhSach);
             return idAnh.stream().map(anhTheoId::get).map(bacSiMapper::toAnhQuanTriResponse).toList();
         });
     }
@@ -111,9 +123,11 @@ public class AnhBacSiServiceImpl implements AnhBacSiService {
     public AnhBacSiQuanTriResponse capNhatChuThichAnhCongViec(Long idBacSi, Long idAnh, String chuThich,
             String chuThichEn) {
         return transactionTemplate.execute(trangThai -> {
-            AnhBacSi anh = timAnhCongViec(idBacSi, idAnh);
+            List<AnhBacSi> danhSach = anhBacSiRepository.khoa(idBacSi);
+            AnhBacSi anh = timAnhCongViec(danhSach, idAnh);
             anh.setChuThich(bacSiMapper.chuanHoa(chuThich));
             anh.setChuThichEn(bacSiMapper.chuanHoa(chuThichEn));
+            anhBacSiRepository.ghi(idBacSi, danhSach);
             return bacSiMapper.toAnhQuanTriResponse(anh);
         });
     }
@@ -130,8 +144,10 @@ public class AnhBacSiServiceImpl implements AnhBacSiService {
 
     private void xoa(Long idBacSi, Long idAnh, boolean chiAnhCongViec) {
         String ma = transactionTemplate.execute(trangThai -> {
-            AnhBacSi anh = chiAnhCongViec ? timAnhCongViec(idBacSi, idAnh) : timAnh(idBacSi, idAnh);
-            anhBacSiRepository.delete(anh);
+            List<AnhBacSi> danhSach = anhBacSiRepository.khoa(idBacSi);
+            AnhBacSi anh = chiAnhCongViec ? timAnhCongViec(danhSach, idAnh) : timAnh(danhSach, idAnh);
+            danhSach.remove(anh);
+            anhBacSiRepository.ghi(idBacSi, danhSach);
             return anh.getMaLuuTru();
         });
         log.info("Xoá ảnh giới thiệu id={} của bác sĩ id={}", idAnh, idBacSi);
@@ -147,21 +163,22 @@ public class AnhBacSiServiceImpl implements AnhBacSiService {
         }
     }
 
-    private void kiemTraConChoTrong(Long idBacSi) {
-        if (anhBacSiRepository.countByBacSiId(idBacSi) >= SO_ANH_TOI_DA) {
+    private void kiemTraConChoTrong(long soAnh) {
+        if (soAnh >= SO_ANH_TOI_DA) {
             throw new LoiNghiepVu(MaLoi.VUOT_SO_ANH_BAC_SI,
                     "loi.VUOT_SO_ANH_BAC_SI.toiDa", String.valueOf(SO_ANH_TOI_DA));
         }
     }
 
-    private AnhBacSi timAnh(Long idBacSi, Long idAnh) {
-        return anhBacSiRepository.findByIdAndBacSiId(idAnh, idBacSi)
+    /** Ảnh trong danh sách của đúng bác sĩ này; ảnh của bác sĩ khác coi như không có. */
+    private AnhBacSi timAnh(List<AnhBacSi> danhSach, Long idAnh) {
+        return danhSach.stream().filter(anh -> anh.getId().equals(idAnh)).findFirst()
                 .orElseThrow(() -> new LoiKhongTimThay("AnhBacSi", idAnh));
     }
 
     /** Ảnh chứng chỉ: bác sĩ xem được nhưng chỉ quản trị viên sửa / xoá. */
-    private AnhBacSi timAnhCongViec(Long idBacSi, Long idAnh) {
-        AnhBacSi anh = timAnh(idBacSi, idAnh);
+    private AnhBacSi timAnhCongViec(List<AnhBacSi> danhSach, Long idAnh) {
+        AnhBacSi anh = timAnh(danhSach, idAnh);
         if (anh.getLoai() != LoaiAnhBacSi.ANH_CONG_VIEC) {
             throw new LoiNghiepVu(MaLoi.KHONG_CO_QUYEN, "loi.KHONG_CO_QUYEN.anhChungChi");
         }

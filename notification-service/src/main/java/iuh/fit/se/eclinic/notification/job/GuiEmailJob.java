@@ -25,7 +25,7 @@ public class GuiEmailJob {
         }
     }
 
-    @Scheduled(cron = "0 40 3 * * *")
+    @Scheduled(cron = "${app.email.cron-don}")
     public void don() {
         try {
             int soDong = emailService.donDaXong();

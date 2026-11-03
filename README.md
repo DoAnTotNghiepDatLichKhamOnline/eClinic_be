@@ -87,12 +87,19 @@ MSYS_NO_PATHCONV=1 docker run --rm -v "$PWD":/workspace -w /workspace \
   maven:3.9-eclipse-temurin-17 mvn -B -ntp clean verify
 ```
 
-Lần chạy đủ gần nhất (21/10/2026): BUILD SUCCESS, 292 test, 0 lỗi.
+Lần chạy đủ gần nhất (29/10/2026): BUILD SUCCESS, 292 test, 0 lỗi.
 
 ## Triển khai
 
 - **Tự động triển khai**: mỗi lần push vào `main`, GitHub Actions ([.github/workflows/deploy.yml](.github/workflows/deploy.yml))
   chạy toàn bộ test rồi cập nhật máy chủ đúng commit đó. Test lỗi thì không triển khai.
+- **Migration xoá bảng (V37–V45, gộp 33 → 22 bảng)**: lần đầu `main` có các migration này, service khởi động sẽ chép dữ
+  liệu sang chỗ mới rồi xoá 11 bảng cũ trên DB máy chủ. Sau đó triển khai lại commit cũ sẽ không chạy được (Hibernate
+  `validate` báo thiếu bảng). Trước khi merge: lấy bản dump của VM bằng `deploy\backup-restore.ps1 -Pull`, nên chạy thử
+  bản dump đó với commit mới (`deploy\backup-up.ps1 -Restore`, mở `/actuator/health`). Cần quay lại: nạp lại bản dump đó
+  rồi triển khai commit cũ.
+- **Dự phòng trên laptop**: máy chủ gặp sự cố thì chạy bản sao trên laptop qua Cloudflare Tunnel, xem
+  [deploy/BACKUP.md](deploy/BACKUP.md).
 
 ## Lỗi thường gặp
 

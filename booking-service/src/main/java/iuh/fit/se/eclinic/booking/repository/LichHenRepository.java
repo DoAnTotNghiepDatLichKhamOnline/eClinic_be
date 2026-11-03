@@ -26,7 +26,6 @@ public interface LichHenRepository extends JpaRepository<LichHen, Long> {
     String LICH_HEN_KEM_CHI_TIET = """
             select l from LichHen l
             join fetch l.hoSoBenhNhan
-            left join fetch l.nguoiGiamHo g
             join fetch l.bacSi b
             join fetch b.taiKhoan
             join fetch b.chuyenKhoa
@@ -45,10 +44,11 @@ public interface LichHenRepository extends JpaRepository<LichHen, Long> {
     @Query(LICH_HEN_KEM_CHI_TIET + "where l.maTokenPhieuKham = :maPhieuKham")
     Optional<LichHen> timTheoMaPhieuKham(String maPhieuKham);
 
-    /** Điều kiện "lịch hẹn của tài khoản" dùng chung cho 3 truy vấn bên dưới; {@code g} là người giám hộ. */
-    String CUA_TAI_KHOAN = "(l.taiKhoanDat.id = :idTaiKhoan or l.hoSoBenhNhan.id = :idHoSoCuaToi or g.cccd = :cccdCuaToi)";
+    /** Điều kiện "lịch hẹn của tài khoản" dùng chung cho 3 truy vấn bên dưới (kể cả lịch tài khoản là người giám hộ). */
+    String CUA_TAI_KHOAN = "(l.taiKhoanDat.id = :idTaiKhoan or l.hoSoBenhNhan.id = :idHoSoCuaToi"
+            + " or l.nguoiGiamHo.cccd = :cccdCuaToi)";
 
-    String DEM_LICH_HEN = "select count(l) from LichHen l left join l.nguoiGiamHo g ";
+    String DEM_LICH_HEN = "select count(l) from LichHen l ";
 
     /** Lọc theo người khám, nối sau {@link #CUA_TAI_KHOAN}: chỉ bản thân hoặc chỉ người khác. */
     String THEO_NGUOI_KHAM = " and (:chiBanThan = false or l.hoSoBenhNhan.id = :idHoSoCuaToi)"
@@ -136,9 +136,9 @@ public interface LichHenRepository extends JpaRepository<LichHen, Long> {
               and (:canDoiLich is null or l.canDoiLich = :canDoiLich)
               and (:canDoiChieu is null or l.canDoiChieu = :canDoiChieu)
               and (:ma is null or l.maTraCuu = :ma)
-              and (:cccd is null or h.cccd = :cccd or g.cccd = :cccd)
+              and (:cccd is null or h.cccd = :cccd or l.nguoiGiamHo.cccd = :cccd)
               and (:mau is null or l.hoTenDaNhap like :mau escape '!' or h.hoTen like :mau escape '!'
-                   or l.soDienThoaiLienHe like :mau escape '!' or g.soDienThoai like :mau escape '!'
+                   or l.soDienThoaiLienHe like :mau escape '!' or l.nguoiGiamHo.soDienThoai like :mau escape '!'
                    or l.emailLienHe like :mau escape '!')
             """;
 
@@ -146,7 +146,6 @@ public interface LichHenRepository extends JpaRepository<LichHen, Long> {
     @Query(value = """
             select l from LichHen l
             join fetch l.hoSoBenhNhan h
-            left join fetch l.nguoiGiamHo g
             join fetch l.bacSi b
             join fetch b.taiKhoan
             join fetch b.chuyenKhoa
@@ -156,7 +155,6 @@ public interface LichHenRepository extends JpaRepository<LichHen, Long> {
             """ + LOC_QUAN_TRI + " order by k.gioBatDau asc, l.id asc", countQuery = """
             select count(l) from LichHen l
             join l.hoSoBenhNhan h
-            left join l.nguoiGiamHo g
             join l.bacSi b
             join l.khungGio k
             """ + LOC_QUAN_TRI)
@@ -167,7 +165,7 @@ public interface LichHenRepository extends JpaRepository<LichHen, Long> {
     /** Lịch hẹn của 1 bác sĩ mà người khám hoặc người giám hộ có CCCD này, mới nhất trước. */
     @Query(LICH_HEN_KEM_CHI_TIET + """
             where b.id = :idBacSi
-              and (l.hoSoBenhNhan.cccd = :cccd or g.cccd = :cccd)
+              and (l.hoSoBenhNhan.cccd = :cccd or l.nguoiGiamHo.cccd = :cccd)
             order by k.gioBatDau desc, l.id desc
             """)
     List<LichHen> timCuaBacSiTheoCccd(Long idBacSi, String cccd, Limit limit);
@@ -364,7 +362,7 @@ public interface LichHenRepository extends JpaRepository<LichHen, Long> {
             select l.id from LichHen l join l.khungGio k
             where l.trangThai in :trangThai and l.canDoiLich = false
               and k.gioBatDau > :tu and k.gioBatDau <= :den
-              and not exists (select 1 from NhacLichHen n where n.idLichHen = l.id and n.soPhutTruoc = :soPhutTruoc)
+              and (l.nhacMocDaXuLy is null or l.nhacMocDaXuLy > :soPhutTruoc)
             order by k.gioBatDau asc, l.id asc
             """)
     List<Long> timIdCanNhac(Collection<TrangThaiLichHen> trangThai, LocalDateTime tu, LocalDateTime den,

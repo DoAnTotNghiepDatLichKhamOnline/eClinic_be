@@ -19,7 +19,7 @@ import iuh.fit.se.eclinic.common.dto.TrangDuLieu;
 import iuh.fit.se.eclinic.common.enums.TrangThaiThuoc;
 import iuh.fit.se.eclinic.medical.dto.request.ThuocRequest;
 import iuh.fit.se.eclinic.medical.dto.response.ThuocQuanTriResponse;
-import iuh.fit.se.eclinic.medical.service.QuanLyThuocService;
+import iuh.fit.se.eclinic.medical.service.ThuocService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -33,7 +33,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class QuanTriThuocController {
 
-    private final QuanLyThuocService quanLyThuocService;
+    private final ThuocService thuocService;
 
     @Operation(summary = "Danh mục thuốc (phân trang, thuốc chưa xác minh đứng trước rồi theo tên, hàm lượng) kèm số lần đã"
             + " kê; lọc theo tên hoặc hoạt chất, đã xác minh, trạng thái")
@@ -44,7 +44,7 @@ public class QuanTriThuocController {
             @RequestParam(required = false) TrangThaiThuoc trangThai,
             @RequestParam(defaultValue = "0") @Min(0) int trang,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int kichThuoc) {
-        return PhanHoiApi.ok(quanLyThuocService.danhSach(tuKhoa, daXacMinh, trangThai, trang, kichThuoc));
+        return PhanHoiApi.ok(thuocService.danhSach(tuKhoa, daXacMinh, trangThai, trang, kichThuoc));
     }
 
     @Operation(summary = "Thêm thuốc đã xác minh; hoạt chất, hàm lượng bắt buộc (409 TEN_THUOC_DA_TON_TAI nếu trùng tên +"
@@ -52,32 +52,32 @@ public class QuanTriThuocController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public PhanHoiApi<ThuocQuanTriResponse> them(@Valid @RequestBody ThuocRequest request) {
-        return PhanHoiApi.ok(quanLyThuocService.them(request), "thanhCong.themThuoc");
+        return PhanHoiApi.ok(thuocService.them(request), "thanhCong.themThuoc");
     }
 
     @Operation(summary = "Sửa thuốc (thuốc đã có trong đơn thuốc mà đổi tên, hoạt chất, hàm lượng, dạng bào chế, đường dùng:"
             + " 409 THUOC_DA_DUOC_KE; đơn vị, mô tả luôn sửa được)")
     @PutMapping("/{id}")
     public PhanHoiApi<ThuocQuanTriResponse> sua(@PathVariable Long id, @Valid @RequestBody ThuocRequest request) {
-        return PhanHoiApi.ok(quanLyThuocService.sua(id, request), "thanhCong.capNhatThuoc");
+        return PhanHoiApi.ok(thuocService.sua(id, request), "thanhCong.capNhatThuoc");
     }
 
     @Operation(summary = "Xác minh thuốc do bác sĩ thêm khi kê đơn trước đây (409 THUOC_THIEU_THONG_TIN nếu chưa có hoạt"
             + " chất hoặc hàm lượng)")
     @PostMapping("/{id}/xac-minh")
     public PhanHoiApi<ThuocQuanTriResponse> xacMinh(@PathVariable Long id) {
-        return PhanHoiApi.ok(quanLyThuocService.xacMinh(id), "thanhCong.xacMinhThuoc");
+        return PhanHoiApi.ok(thuocService.xacMinh(id), "thanhCong.xacMinhThuoc");
     }
 
     @Operation(summary = "Ngừng dùng: thuốc không còn được gợi ý và không kê mới được; đơn thuốc cũ vẫn hiển thị")
     @PostMapping("/{id}/ngung-dung")
     public PhanHoiApi<ThuocQuanTriResponse> ngungDung(@PathVariable Long id) {
-        return PhanHoiApi.ok(quanLyThuocService.ngungDung(id), "thanhCong.thuocNgungDung");
+        return PhanHoiApi.ok(thuocService.ngungDung(id), "thanhCong.thuocNgungDung");
     }
 
     @Operation(summary = "Dùng lại thuốc đã ngừng dùng")
     @PostMapping("/{id}/dung-lai")
     public PhanHoiApi<ThuocQuanTriResponse> dungLai(@PathVariable Long id) {
-        return PhanHoiApi.ok(quanLyThuocService.dungLai(id), "thanhCong.thuocDungLai");
+        return PhanHoiApi.ok(thuocService.dungLai(id), "thanhCong.thuocDungLai");
     }
 }

@@ -50,9 +50,6 @@ import lombok.extern.slf4j.Slf4j;
 @Transactional(readOnly = true)
 public class KhamBenhServiceImpl implements KhamBenhService {
 
-    /** Lịch hẹn còn chờ khám. */
-    private static final List<TrangThaiLichHen> TRANG_THAI_KHAM_DUOC = List.of(TrangThaiLichHen.DA_XAC_NHAN);
-
     /** Số ngày dùng tối đa của 1 thuốc; {@link #SO_NGAY_DUNG_MAN_TINH} khi chẩn đoán chính mạn tính (TT 26/2025). */
     private static final int SO_NGAY_DUNG_TOI_DA = 30;
     private static final int SO_NGAY_DUNG_MAN_TINH = 90;
@@ -75,7 +72,7 @@ public class KhamBenhServiceImpl implements KhamBenhService {
         BacSi bacSi = bacSiDangNhapService.layBacSiDangHoatDong(idTaiKhoanBacSi);
         // Khoá dòng lịch hẹn rồi mới kiểm tra: bấm lưu 2 lần thì lần sau thấy lịch hẹn đã hoàn thành
         LichHen lichHen = cuaBacSi(bacSi, lichHenKhamRepository.findByIdForUpdate(idLichHen));
-        if (!TRANG_THAI_KHAM_DUOC.contains(lichHen.getTrangThai())) {
+        if (!lichHen.getTrangThai().choPhepChuyenSang(TrangThaiLichHen.DA_HOAN_THANH)) {
             throw new LoiNghiepVu(MaLoi.LICH_HEN_KHONG_KHAM_DUOC);
         }
         if (lichHen.getKhungGio().getGioBatDau().toLocalDate().isAfter(LocalDate.now())) {
@@ -89,7 +86,7 @@ public class KhamBenhServiceImpl implements KhamBenhService {
         ganNoiDung(benhAn, request);
         hoSoBenhAnRepository.saveAndFlush(benhAn);
         // Ngoại lệ có chủ đích: chỉ đổi trạng thái lịch hẹn, cùng transaction với hồ sơ bệnh án
-        lichHen.setTrangThai(TrangThaiLichHen.DA_HOAN_THANH);
+        lichHen.chuyenTrangThai(TrangThaiLichHen.DA_HOAN_THANH);
         log.info("Bác sĩ id={} ghi nhận kết quả khám cho lịch hẹn id={}", bacSi.getId(), idLichHen);
         return benhAnMapper.toResponse(benhAn, lichHen);
     }

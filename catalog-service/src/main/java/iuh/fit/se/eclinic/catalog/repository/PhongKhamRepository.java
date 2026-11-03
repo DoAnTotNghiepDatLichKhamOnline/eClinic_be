@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 
@@ -16,6 +17,7 @@ import jakarta.persistence.LockModeType;
 
 public interface PhongKhamRepository extends JpaRepository<PhongKham, Long> {
 
+    @EntityGraph(attributePaths = "chuyenKhoa")
     List<PhongKham> findByTrangThaiOrderByTenPhongAsc(TrangThaiPhongKham trangThai);
 
     List<PhongKham> findByChuyenKhoaIdAndTrangThaiOrderByTenPhongAsc(Long chuyenKhoaId, TrangThaiPhongKham trangThai);

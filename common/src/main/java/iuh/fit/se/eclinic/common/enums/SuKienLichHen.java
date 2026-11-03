@@ -1,6 +1,6 @@
 package iuh.fit.se.eclinic.common.enums;
 
-/** 1 thao tác trên lịch hẹn, ghi ở lich_su_lich_hen. */
+/** 1 thao tác trên lịch hẹn, ghi ở lich_su_thay_doi (loai = LICH_HEN, cột hanh_dong). */
 public enum SuKienLichHen {
     /** Lịch hẹn được đặt. */
     DAT_LICH,

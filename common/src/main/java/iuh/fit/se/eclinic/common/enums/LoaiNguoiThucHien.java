@@ -1,6 +1,6 @@
 package iuh.fit.se.eclinic.common.enums;
 
-/** Ai làm 1 thao tác trên lịch hẹn (lich_su_lich_hen). */
+/** Ai làm 1 thao tác trên lịch hẹn (lich_su_thay_doi, loai = LICH_HEN). */
 public enum LoaiNguoiThucHien {
     /** Người cầm link phiếu khám (nhập đúng SĐT liên hệ), hoặc khách đặt lịch không đăng nhập. */
     KHACH,

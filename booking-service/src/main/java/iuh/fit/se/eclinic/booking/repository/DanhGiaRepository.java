@@ -1,20 +1,43 @@
 package iuh.fit.se.eclinic.booking.repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.Repository;
 
 import iuh.fit.se.eclinic.common.entity.booking.DanhGia;
 
-public interface DanhGiaRepository extends JpaRepository<DanhGia, Long> {
+/**
+ * Đánh giá là các cột danh_gia_* của lịch hẹn ({@link DanhGia} chỉ đọc). Gửi / sửa bằng câu UPDATE chỉ đụng các cột đó:
+ * lịch hẹn không bị tăng version, không đổi ngay_cap_nhat.
+ */
+public interface DanhGiaRepository extends Repository<DanhGia, Long> {
 
     Optional<DanhGia> findByLichHenId(Long lichHenId);
 
-    boolean existsByLichHenId(Long lichHenId);
+    /** Ghi đánh giá cho lịch hẹn chưa có đánh giá; trả 0 nếu lịch hẹn đã được đánh giá. */
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query(value = """
+            update lich_hen
+            set danh_gia_so_sao = :soSao, danh_gia_nhan_xet = :nhanXet, danh_gia_id_tai_khoan = :idTaiKhoan,
+                danh_gia_ngay_tao = :bayGio, danh_gia_ngay_cap_nhat = :bayGio
+            where id_lich_hen = :idLichHen and danh_gia_so_sao is null
+            """, nativeQuery = true)
+    int gui(Long idLichHen, int soSao, String nhanXet, Long idTaiKhoan, LocalDateTime bayGio);
+
+    /** Thay số sao và nhận xét của đánh giá đã có. */
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query(value = """
+            update lich_hen
+            set danh_gia_so_sao = :soSao, danh_gia_nhan_xet = :nhanXet, danh_gia_ngay_cap_nhat = :bayGio
+            where id_lich_hen = :idLichHen and danh_gia_so_sao is not null
+            """, nativeQuery = true)
+    int sua(Long idLichHen, int soSao, String nhanXet, LocalDateTime bayGio);
 
     interface SoDanhGiaTheoSao {
 

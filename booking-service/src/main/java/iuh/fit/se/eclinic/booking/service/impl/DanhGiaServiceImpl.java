@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.TreeMap;
 
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,7 +25,6 @@ import iuh.fit.se.eclinic.common.dto.TrangDuLieu;
 import iuh.fit.se.eclinic.common.entity.booking.DanhGia;
 import iuh.fit.se.eclinic.common.entity.booking.HoSoBenhNhan;
 import iuh.fit.se.eclinic.common.entity.booking.LichHen;
-import iuh.fit.se.eclinic.common.entity.identity.TaiKhoan;
 import iuh.fit.se.eclinic.common.enums.TrangThaiLichHen;
 import iuh.fit.se.eclinic.common.exception.LoiNghiepVu;
 import iuh.fit.se.eclinic.common.exception.MaLoi;
@@ -50,28 +48,18 @@ public class DanhGiaServiceImpl implements DanhGiaService {
     @Override
     @Transactional
     public DanhGiaCuaToiResponse gui(Long idTaiKhoan, String maPhieuKham, DanhGiaRequest request) {
-        TaiKhoan taiKhoan = taiKhoanService.layBenhNhanDangHoatDong(idTaiKhoan);
+        taiKhoanService.layBenhNhanDangHoatDong(idTaiKhoan);
         LichHen lichHen = lichHenDuocDanhGia(idTaiKhoan, maPhieuKham);
         if (lichHen.getTrangThai() != TrangThaiLichHen.DA_HOAN_THANH) {
             throw new LoiNghiepVu(MaLoi.LICH_HEN_CHUA_KHAM_XONG);
         }
-        if (danhGiaRepository.existsByLichHenId(lichHen.getId())) {
-            throw new LoiNghiepVu(MaLoi.DA_DANH_GIA);
-        }
-        DanhGia danhGia = new DanhGia();
-        danhGia.setLichHen(lichHen);
-        danhGia.setBacSi(lichHen.getBacSi());
-        danhGia.setTaiKhoan(taiKhoan);
-        danhGia.setSoSao(request.soSao());
-        danhGia.setNhanXet(rongThanhNull(request.nhanXet()));
-        try {
-            danhGiaRepository.saveAndFlush(danhGia);
-        } catch (DataIntegrityViolationException e) {
-            // 2 request gửi cùng lúc: request sau vi phạm UNIQUE(id_lich_hen)
+        // Chỉ ghi khi lịch hẹn chưa có đánh giá: 2 request gửi cùng lúc thì request sau không ghi được dòng nào
+        if (danhGiaRepository.gui(lichHen.getId(), request.soSao(), rongThanhNull(request.nhanXet()), idTaiKhoan,
+                LocalDateTime.now()) == 0) {
             throw new LoiNghiepVu(MaLoi.DA_DANH_GIA);
         }
         log.info("Tài khoản id={} đánh giá lịch hẹn id={}: {} sao", idTaiKhoan, lichHen.getId(), request.soSao());
-        return danhGiaMapper.toCuaToi(danhGia);
+        return danhGiaMapper.toCuaToi(docLai(lichHen.getId()));
     }
 
     @Override
@@ -85,12 +73,10 @@ public class DanhGiaServiceImpl implements DanhGiaService {
         if (LocalDateTime.now().isAfter(danhGia.getNgayTao().plusDays(soNgayDuocSua))) {
             throw new LoiNghiepVu(MaLoi.HET_HAN_SUA_DANH_GIA);
         }
-        danhGia.setSoSao(request.soSao());
-        danhGia.setNhanXet(rongThanhNull(request.nhanXet()));
-        danhGiaRepository.saveAndFlush(danhGia);
+        danhGiaRepository.sua(lichHen.getId(), request.soSao(), rongThanhNull(request.nhanXet()), LocalDateTime.now());
         log.info("Tài khoản id={} sửa đánh giá của lịch hẹn id={}: {} sao", idTaiKhoan, lichHen.getId(),
                 request.soSao());
-        return danhGiaMapper.toCuaToi(danhGia);
+        return danhGiaMapper.toCuaToi(docLai(lichHen.getId()));
     }
 
     @Override
@@ -141,6 +127,11 @@ public class DanhGiaServiceImpl implements DanhGiaService {
             throw new LoiNghiepVu(MaLoi.KHONG_CO_QUYEN, "loi.KHONG_CO_QUYEN.danhGia");
         }
         return lichHen;
+    }
+
+    /** Đánh giá vừa ghi bằng câu UPDATE (persistence context đã được xoá sau câu đó). */
+    private DanhGia docLai(Long idLichHen) {
+        return danhGiaRepository.findByLichHenId(idLichHen).orElseThrow();
     }
 
     private static String rongThanhNull(String chuoi) {

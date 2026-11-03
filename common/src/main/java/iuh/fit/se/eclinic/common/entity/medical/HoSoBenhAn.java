@@ -10,6 +10,7 @@ import iuh.fit.se.eclinic.common.entity.CreatableEntity;
 import iuh.fit.se.eclinic.common.entity.booking.HoSoBenhNhan;
 import iuh.fit.se.eclinic.common.entity.booking.LichHen;
 import iuh.fit.se.eclinic.common.entity.catalog.BacSi;
+import iuh.fit.se.eclinic.common.util.DanhMucIcd10;
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -80,10 +81,14 @@ public class HoSoBenhAn extends CreatableEntity {
     @Column(name = "chan_doan", columnDefinition = "TEXT")
     private String chanDoan;
 
-    /** Mã ICD-10 của chẩn đoán chính (không bắt buộc); mã mạn tính cho kê thuốc tối đa 90 ngày thay vì 30. */
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "ma_icd_chinh")
-    private Icd10 icdChinh;
+    /**
+     * Mã ICD-10 của chẩn đoán chính (không bắt buộc); mã mạn tính cho kê thuốc tối đa 90 ngày thay vì 30. Danh mục nằm
+     * trong tệp ({@link DanhMucIcd10}), không phải bảng: đọc / ghi qua {@link #getIcdChinh()} / {@link #setIcdChinh}.
+     */
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
+    @Column(name = "ma_icd_chinh", length = 10)
+    private String maIcdChinh;
 
     /** Các bệnh kèm theo, chữ tự do. */
     @Column(name = "chan_doan_kem_theo", columnDefinition = "TEXT")
@@ -95,6 +100,17 @@ public class HoSoBenhAn extends CreatableEntity {
     /** Gợi ý ngày tái khám. KHÔNG tự tạo lịch hẹn. */
     @Column(name = "ngay_tai_kham_de_xuat")
     private LocalDate ngayTaiKhamDeXuat;
+
+    /**
+     * Ngày tái khám đã báo cho bệnh nhân; null = chưa báo, hoặc bác sĩ đã xoá ngày. Chỉ đọc: chỉ job nhắc tái khám của
+     * booking-service ghi, bằng câu UPDATE riêng ({@code NhacTaiKhamRepository}), nên lần lưu hồ sơ của bác sĩ không ghi đè.
+     */
+    @Column(name = "tai_kham_ngay_da_bao", insertable = false, updatable = false)
+    private LocalDate taiKhamNgayDaBao;
+
+    /** Lần nhắc trước {@link #taiKhamNgayDaBao} đã được xử lý: đã nhắc, hoặc bỏ qua. Chỉ đọc, như cột trên. */
+    @Column(name = "tai_kham_da_nhac_truoc", insertable = false, updatable = false)
+    private boolean taiKhamDaNhacTruoc;
 
     @Column(name = "ma_token_so_kham", nullable = false, unique = true, length = 64)
     private String maTokenSoKham;
@@ -110,6 +126,15 @@ public class HoSoBenhAn extends CreatableEntity {
     @Setter(AccessLevel.NONE)
     @OneToMany(mappedBy = "hoSoBenhAn", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ChiTietDonThuoc> chiTietDonThuoc = new ArrayList<>();
+
+    /** null nếu chưa chọn mã (hoặc mã cũ đã bị bỏ khỏi tệp danh mục). */
+    public Icd10 getIcdChinh() {
+        return maIcdChinh == null ? null : DanhMucIcd10.tim(maIcdChinh).orElse(null);
+    }
+
+    public void setIcdChinh(Icd10 icdChinh) {
+        this.maIcdChinh = icdChinh == null ? null : icdChinh.getMa();
+    }
 
     public void addChiTietDonThuoc(ChiTietDonThuoc chiTiet) {
         chiTietDonThuoc.add(chiTiet);

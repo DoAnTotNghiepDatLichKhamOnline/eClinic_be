@@ -57,7 +57,7 @@ class SchemaConstraintsTest {
         assertThatThrownBy(() -> lichHenRepository.saveAndFlush(newLichHen(ca, hoSo, 2)))
                 .isInstanceOf(DataIntegrityViolationException.class);
 
-        first.setTrangThai(TrangThaiLichHen.DA_HUY);
+        first.chuyenTrangThai(TrangThaiLichHen.DA_HUY);
         lichHenRepository.saveAndFlush(first);
 
         assertThatCode(() -> lichHenRepository.saveAndFlush(newLichHen(ca, hoSo, 3))).doesNotThrowAnyException();

@@ -18,7 +18,6 @@ import iuh.fit.se.eclinic.booking.repository.LichHenRepository;
 import iuh.fit.se.eclinic.booking.repository.NhacTaiKhamRepository;
 import iuh.fit.se.eclinic.booking.service.NhacTaiKhamService;
 import iuh.fit.se.eclinic.booking.service.ThongBaoLichHenService;
-import iuh.fit.se.eclinic.common.entity.booking.NhacTaiKham;
 import iuh.fit.se.eclinic.common.entity.medical.HoSoBenhAn;
 import iuh.fit.se.eclinic.common.enums.TrangThaiLichHen;
 import lombok.extern.slf4j.Slf4j;
@@ -85,35 +84,28 @@ public class NhacTaiKhamServiceImpl implements NhacTaiKhamService {
 
     /** @return true = đã ghi thông báo / email báo ngày tái khám */
     private boolean bao(Long id, LocalDate homNay) {
-        NhacTaiKham daBao = nhacTaiKhamRepository.timDeKhoa(id).orElse(null);
-        HoSoBenhAn benhAn = hoSoBenhAnRepository.findById(id).orElse(null);
+        HoSoBenhAn benhAn = nhacTaiKhamRepository.timDeKhoa(id).orElse(null);
         LocalDate ngay = benhAn == null ? null : benhAn.getNgayTaiKhamDeXuat();
-        if (ngay == null || !ngay.isAfter(homNay) || (daBao != null && ngay.equals(daBao.getNgayDaBao()))) {
+        if (ngay == null || !ngay.isAfter(homNay) || ngay.equals(benhAn.getTaiKhamNgayDaBao())) {
             return false;
         }
-        boolean doiNgay = daBao != null && daBao.getNgayDaBao() != null;
-        if (daBao == null) {
-            daBao = new NhacTaiKham(id);
-        }
-        daBao.setNgayDaBao(ngay);
+        boolean doiNgay = benhAn.getTaiKhamNgayDaBao() != null;
         // Hẹn khi đã ở trong khoảng nhắc trước: bệnh nhân vừa được báo, không nhắc thêm
-        daBao.setDaNhacTruoc(!ngay.isAfter(homNay.plusDays(properties.truocNgay())));
-        nhacTaiKhamRepository.save(daBao);
+        nhacTaiKhamRepository.ghiDaBao(id, ngay, !ngay.isAfter(homNay.plusDays(properties.truocNgay())));
         thongBaoLichHenService.taiKhamDaHen(benhAn, doiNgay);
         return true;
     }
 
     /** @return true = đã ghi thông báo / email nhắc; false = không nhắc (đã có lịch hẹn sắp tới, hoặc ngày vừa đổi) */
     private boolean nhac(Long id, LocalDateTime bayGio) {
-        NhacTaiKham daBao = nhacTaiKhamRepository.timDeKhoa(id).orElse(null);
-        HoSoBenhAn benhAn = hoSoBenhAnRepository.findById(id).orElse(null);
+        HoSoBenhAn benhAn = nhacTaiKhamRepository.timDeKhoa(id).orElse(null);
         LocalDate homNay = bayGio.toLocalDate();
         LocalDate ngay = benhAn == null ? null : benhAn.getNgayTaiKhamDeXuat();
-        if (daBao == null || daBao.isDaNhacTruoc() || ngay == null || !ngay.equals(daBao.getNgayDaBao())
+        if (ngay == null || benhAn.isTaiKhamDaNhacTruoc() || !ngay.equals(benhAn.getTaiKhamNgayDaBao())
                 || !ngay.isAfter(homNay) || ngay.isAfter(homNay.plusDays(properties.truocNgay()))) {
             return false;
         }
-        daBao.setDaNhacTruoc(true);
+        nhacTaiKhamRepository.ghiDaNhacTruoc(id);
         // Đã tự đặt lịch với bác sĩ cùng chuyên khoa: không nhắc "hãy đặt lịch tái khám" nữa
         if (lichHenRepository.coLichSapToi(benhAn.getHoSoBenhNhan().getId(), CON_HIEU_LUC, bayGio,
                 benhAn.getBacSi().getChuyenKhoa().getId())) {
