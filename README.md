@@ -91,13 +91,58 @@ Lần chạy đủ gần nhất (29/10/2026): BUILD SUCCESS, 292 test, 0 lỗi.
 
 ## Triển khai
 
+- **CI**: mỗi PR vào `main` và mỗi lần push lên nhánh khác, GitHub Actions ([.github/workflows/ci.yml](.github/workflows/ci.yml))
+  chạy toàn bộ test (job **Test**). Test lỗi thì tải báo cáo surefire ở mục *Artifacts* của lần chạy đó (giữ 7 ngày).
+- **Bắt buộc CI xanh trước khi merge** (làm tay một lần, cần quyền admin repo): *Settings → Rules → Rulesets → New branch
+  ruleset* → *Target branches*: thêm `main` → bật *Require a pull request before merging* và *Require status checks to
+  pass*, thêm check **Test** → *Enforcement status*: Active → *Create*. Repo chưa dùng Rulesets thì làm tương tự ở
+  *Settings → Branches → Add branch protection rule*.
+- **Cập nhật thư viện (Dependabot)**: mỗi thứ Hai, [.github/dependabot.yml](.github/dependabot.yml) mở PR cập nhật
+  Maven (minor/patch gộp một PR, mỗi bản major một PR riêng), GitHub Actions (gộp một PR), image trong `Dockerfile` và
+  các file compose (không đề xuất bản major, ví dụ giữ JDK 17, MySQL 8.4). CI chạy test trên từng PR. Không tự merge:
+  merge vào `main` là triển khai lên máy chủ, nên xem PR rồi merge tay. Nên bật thêm *Settings → Code security →
+  Dependabot alerts* và *Dependabot security updates*.
+- **Môi trường `production`** (làm tay một lần, cần quyền admin repo): job triển khai và rollback chạy trong environment
+  `production` (GitHub tự tạo ở lần chạy đầu). Vào *Settings → Environments → production*:
+  1. *Deployment branches and tags* → *Selected branches and tags* → thêm `main`.
+  2. (Tuỳ chọn) *Required reviewers*: mỗi lần triển khai phải có người bấm duyệt.
+  3. Chuyển secret: thêm `VM_HOST`, `VM_SSH_KEY`, `VM_SSH_FINGERPRINT` vào *Environment secrets* của `production`
+     **trước**, rồi mới xoá 3 secret đó ở *Settings → Secrets and variables → Actions → Repository secrets*. Làm ngược thứ
+     tự thì lần triển khai ở giữa sẽ thiếu secret.
+
+  Workflow cũng tự chặn: Deploy chạy tay từ nhánh khác `main` chỉ chạy test, Rollback từ nhánh khác `main` báo lỗi.
 - **Tự động triển khai**: mỗi lần push vào `main`, GitHub Actions ([.github/workflows/deploy.yml](.github/workflows/deploy.yml))
-  chạy toàn bộ test rồi cập nhật máy chủ đúng commit đó. Test lỗi thì không triển khai.
+  chạy toàn bộ test (gọi lại `ci.yml`) rồi cập nhật máy chủ đúng commit đó. Test lỗi thì không triển khai.
+- **Image build trên CI, VM chỉ pull**: song song với test, job **Build images** build 8 image theo
+  [docker-bake.hcl](docker-bake.hcl) (Maven chạy một lần cho cả 8) và đẩy lên GHCR:
+  `ghcr.io/doantotnghiepdatlichkhamonline/eclinic-<service>:<commit SHA đầy đủ>`. VM chỉ pull 8 image ứng dụng (không pull
+  lại mysql/redis/caddy/phpmyadmin), chạy `up --no-build`, rồi xoá image của commit cũ. Tag đang chạy nằm ở dòng
+  `IMAGE_TAG=` trong `.env` trên VM (deploy tự ghi), nên lệnh tay trên VM vẫn chạy như cũ:
+  `docker compose -f docker-compose.yml -f docker-compose.prod.yml --profile app ps`. Báo lỗi
+  `IMAGE_TAG is not set` nghĩa là `.env` thiếu dòng đó: thêm `IMAGE_TAG=$(git rev-parse HEAD)`.
+  Dọn một lần trên VM sau lần triển khai đầu theo cách mới (image build tại chỗ và cache build cũ):
+  `docker image rm $(docker images --format '{{.Repository}}' | grep -xE 'eclinic-([a-z]+-service|api-gateway)' | sort -u)` rồi
+  `docker builder prune -af`.
+- **Tự động sao lưu DB trước mỗi lần triển khai**: trước khi khởi động lại stack (Flyway chạy lúc khởi động),
+  [deploy/vm-backup.sh](deploy/vm-backup.sh) dump MySQL trên VM vào `~/eclinic-backups/eclinic-<giờ UTC>-<commit đang
+  chạy>-to-<commit mới>.sql.gz`, giữ 10 bản mới nhất. Dump lỗi thì VM quay về commit cũ và dừng triển khai. Không cần tự
+  dump trước khi merge nữa. Lấy một bản về laptop:
+  `scp -i $HOME\.ssh\eclinic_gcp huythanhyasuo@<IP_VM>:~/eclinic-backups/<file> backups\` rồi
+  `deploy\backup-restore.ps1 -Dump backups\<file>`.
+- **Quay lại bản cũ (Rollback)**: *Actions → Rollback → Run workflow* ([.github/workflows/rollback.yml](.github/workflows/rollback.yml)),
+  nhập `sha` là một commit trên `main` (SHA ngắn hoặc đầy đủ). Workflow kiểm tra commit nằm trên `main` và đủ 8 image trên
+  GHCR (chỉ các commit triển khai sau khi image chuyển sang build trên CI mới có), dump DB hiện tại, rồi chạy lại image của
+  commit đó. Nếu giữa hai commit có migration đổi schema thì phải bật `restore_db` và gõ `restore-db` vào `confirm`:
+  workflow dừng các service, xoá và tạo lại DB, nạp bản dump `…-<commit đó>-to-…` (chụp lúc commit đó đang chạy), rồi xoá
+  Redis (cache, giới hạn tần suất, token liên kết). Dữ liệu phát sinh sau thời điểm dump sẽ mất, nhưng vẫn còn trong bản
+  dump vừa chụp trước khi rollback. Không bật `restore_db` mà schema khác thì service không khởi động được (Hibernate
+  `validate`). Lần push vào `main` tiếp theo sẽ triển khai lại `main`: muốn giữ bản cũ thì `git revert` commit lỗi trên
+  `main`.
 - **Migration xoá bảng (V37–V45, gộp 33 → 22 bảng)**: lần đầu `main` có các migration này, service khởi động sẽ chép dữ
   liệu sang chỗ mới rồi xoá 11 bảng cũ trên DB máy chủ. Sau đó triển khai lại commit cũ sẽ không chạy được (Hibernate
-  `validate` báo thiếu bảng). Trước khi merge: lấy bản dump của VM bằng `deploy\backup-restore.ps1 -Pull`, nên chạy thử
-  bản dump đó với commit mới (`deploy\backup-up.ps1 -Restore`, mở `/actuator/health`). Cần quay lại: nạp lại bản dump đó
-  rồi triển khai commit cũ.
+  `validate` báo thiếu bảng). Với migration rủi ro như vậy, nên chạy thử trước: lấy dump mới của VM
+  (`deploy\backup-restore.ps1 -Pull`), chạy với commit mới (`deploy\backup-up.ps1 -Restore`, mở `/actuator/health`).
+  Cần quay lại: chạy workflow Rollback với `restore_db` (xem mục trên).
 - **Dự phòng trên laptop**: máy chủ gặp sự cố thì chạy bản sao trên laptop qua Cloudflare Tunnel, xem
   [deploy/BACKUP.md](deploy/BACKUP.md).
 
