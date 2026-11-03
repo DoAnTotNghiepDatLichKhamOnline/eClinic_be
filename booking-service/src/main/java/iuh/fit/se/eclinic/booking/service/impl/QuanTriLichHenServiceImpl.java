@@ -94,8 +94,8 @@ public class QuanTriLichHenServiceImpl implements QuanTriLichHenService {
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public LichHenQuanTriChiTietResponse huy(Long idTaiKhoan, Long idLichHen, QuanTriHuyLichHenRequest request) {
         QuanTriVien quanTri = quanLyCaService.layQuanTriVien(idTaiKhoan);
-        LichHen lichHen = khoaConHuyDoiDuoc(idLichHen);
-        lichHen.setTrangThai(TrangThaiLichHen.QUAN_TRI_HUY);
+        LichHen lichHen = khoaConHuyDoiDuoc(idLichHen, TrangThaiLichHen.QUAN_TRI_HUY);
+        lichHen.chuyenTrangThai(TrangThaiLichHen.QUAN_TRI_HUY);
         lichHen.setLyDoHuy(request.lyDo().trim());
         // QUAN_TRI_HUY không còn chiếm khung giờ; lượt của ca đã bị hủy (canDoiLich) giữ DA_HUY
         luotKhamService.traLuot(lichHen);
@@ -111,8 +111,8 @@ public class QuanTriLichHenServiceImpl implements QuanTriLichHenService {
     public LichHenQuanTriChiTietResponse doiLich(Long idTaiKhoan, Long idLichHen, QuanTriDoiLichRequest request) {
         LocalDateTime bayGio = LocalDateTime.now();
         QuanTriVien quanTri = quanLyCaService.layQuanTriVien(idTaiKhoan);
-        LichHen cu = khoaConHuyDoiDuoc(idLichHen);
-        cu.setTrangThai(TrangThaiLichHen.DA_HUY_DO_DOI_LICH);
+        LichHen cu = khoaConHuyDoiDuoc(idLichHen, TrangThaiLichHen.DA_HUY_DO_DOI_LICH);
+        cu.chuyenTrangThai(TrangThaiLichHen.DA_HUY_DO_DOI_LICH);
         luotKhamService.traLuot(cu);
         // Ghi xuống trước khi chọn lượt mới: lịch cũ không còn tính vào trùng giờ và giới hạn số lịch đang giữ
         lichHenRepository.flush();
@@ -143,10 +143,10 @@ public class QuanTriLichHenServiceImpl implements QuanTriLichHenService {
     }
 
     /** Khoá dòng lịch hẹn rồi mới kiểm tra, như bệnh nhân / bác sĩ hủy: thao tác cùng lúc thấy trạng thái mới. */
-    private LichHen khoaConHuyDoiDuoc(Long idLichHen) {
+    private LichHen khoaConHuyDoiDuoc(Long idLichHen, TrangThaiLichHen moi) {
         LichHen lichHen = lichHenRepository.findByIdForUpdate(idLichHen)
                 .orElseThrow(QuanTriLichHenServiceImpl::khongTimThay);
-        if (lichHen.getTrangThai() != TrangThaiLichHen.DA_XAC_NHAN) {
+        if (!lichHen.getTrangThai().choPhepChuyenSang(moi)) {
             throw new LoiNghiepVu(MaLoi.LICH_HEN_KHONG_HUY_DOI_DUOC);
         }
         if (!conTruocGioKham(lichHen)) {
@@ -172,7 +172,8 @@ public class QuanTriLichHenServiceImpl implements QuanTriLichHenService {
                 moi = lichHenRepository.findByLichHenCuId(moi.getId()).orElse(null)) {
             chuoi.add(moi);
         }
-        boolean duocHuyDoi = lichHen.getTrangThai() == TrangThaiLichHen.DA_XAC_NHAN && conTruocGioKham(lichHen);
+        boolean duocHuyDoi = lichHen.getTrangThai().choPhepChuyenSang(TrangThaiLichHen.QUAN_TRI_HUY)
+                && conTruocGioKham(lichHen);
         return lichSuLichHenMapper.toChiTiet(lichHen, duocHuyDoi, chuoi,
                 lichSuLichHenRepository.timTheoLichHen(chuoi.stream().map(LichHen::getId).toList()));
     }

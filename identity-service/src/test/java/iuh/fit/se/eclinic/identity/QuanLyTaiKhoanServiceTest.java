@@ -434,7 +434,7 @@ class QuanLyTaiKhoanServiceTest {
     @Test
     void bacSiConLichHenSapToiKhongVoHieuHoaDuocChoToiKhiLichHenBiHuy() {
         TaiKhoan taiKhoan = taoTaiKhoan(VaiTro.BAC_SI, TrangThaiTaiKhoan.DA_KICH_HOAT, "BS " + hauTo());
-        Long idLichHen = taoLichHen(taoBacSi(taiKhoan), LocalDate.now().plusDays(1), TrangThaiLichHen.DA_XAC_NHAN);
+        Long idLichHen = taoLichHen(taoBacSi(taiKhoan), LocalDate.now().plusDays(1));
 
         assertThatThrownBy(() -> quanLyTaiKhoanService.capNhatTrangThai(idAdmin, taiKhoan.getId(), voHieuHoa("Nghỉ việc")))
                 .isInstanceOf(LoiNghiepVu.class)
@@ -442,7 +442,6 @@ class QuanLyTaiKhoanServiceTest {
                 .satisfies(e -> assertThat(((LoiNghiepVu) e).getThamSo()).containsExactly("1"))
                 .extracting(e -> ((LoiNghiepVu) e).getMaLoi())
                 .isEqualTo(MaLoi.BAC_SI_CON_LICH_HEN);
-        doiTrangThaiLichHen(idLichHen, TrangThaiLichHen.DA_XAC_NHAN);
         assertMaLoi(() -> quanLyTaiKhoanService.capNhatTrangThai(idAdmin, taiKhoan.getId(), voHieuHoa("Nghỉ việc")),
                 MaLoi.BAC_SI_CON_LICH_HEN);
         assertThat(trongDb(taiKhoan).getTrangThai()).isEqualTo(TrangThaiTaiKhoan.DA_KICH_HOAT);
@@ -456,7 +455,7 @@ class QuanLyTaiKhoanServiceTest {
     @Test
     void bacSiChiConLichHenDaQuaHoacKhongCoLichHenVanVoHieuHoaDuoc() {
         TaiKhoan coLichDaQua = taoTaiKhoan(VaiTro.BAC_SI, TrangThaiTaiKhoan.DA_KICH_HOAT, "BS " + hauTo());
-        taoLichHen(taoBacSi(coLichDaQua), LocalDate.now().minusDays(1), TrangThaiLichHen.DA_XAC_NHAN);
+        taoLichHen(taoBacSi(coLichDaQua), LocalDate.now().minusDays(1));
         TaiKhoan khongLichHen = taoTaiKhoan(VaiTro.BAC_SI, TrangThaiTaiKhoan.DA_KICH_HOAT, "BS " + hauTo());
         taoBacSi(khongLichHen);
 
@@ -626,7 +625,7 @@ class QuanLyTaiKhoanServiceTest {
     }
 
     /** 1 lịch hẹn của Khách với bác sĩ vào ngày {@code ngay} (ca 08:00–11:00, khung 08:00–08:30). */
-    private Long taoLichHen(BacSi bacSi, LocalDate ngay, TrangThaiLichHen trangThai) {
+    private Long taoLichHen(BacSi bacSi, LocalDate ngay) {
         return transactionTemplate.execute(status -> {
             QuanTriVien quanTriVien = entityManager
                     .createQuery("select q from QuanTriVien q where q.taiKhoan.id = :id", QuanTriVien.class)
@@ -667,7 +666,6 @@ class QuanLyTaiKhoanServiceTest {
             lichHen.setKhungGio(khungGio);
             lichHen.setPhongKham(phongKham);
             lichHen.setSoThuTu(1);
-            lichHen.setTrangThai(trangThai);
             lichHen.setMaTokenPhieuKham(UUID.randomUUID().toString().replace("-", ""));
             lichHen.setMaTraCuu(UUID.randomUUID().toString().substring(0, 20));
             entityManager.persist(lichHen);
@@ -678,7 +676,7 @@ class QuanLyTaiKhoanServiceTest {
 
     private void doiTrangThaiLichHen(Long idLichHen, TrangThaiLichHen trangThai) {
         transactionTemplate.executeWithoutResult(status -> entityManager.find(LichHen.class, idLichHen)
-                .setTrangThai(trangThai));
+                .chuyenTrangThai(trangThai));
     }
 
     private static void assertMaLoi(Runnable hanhDong, MaLoi maLoi) {

@@ -27,6 +27,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -76,6 +77,8 @@ public class LichHen extends AuditableEntity {
     @Column(name = "so_thu_tu", nullable = false)
     private Integer soThuTu;
 
+    /** Chỉ đổi qua {@link #chuyenTrangThai}. */
+    @Setter(AccessLevel.NONE)
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.VARCHAR)
     @Column(name = "trang_thai", nullable = false, length = 30)
@@ -170,6 +173,15 @@ public class LichHen extends AuditableEntity {
     /** Mốc nhắc lịch nhỏ nhất đã thật sự gửi nhắc; null = chưa nhắc. Chỉ đọc, như {@link #nhacMocDaXuLy}. */
     @Column(name = "nhac_moc_da_gui", insertable = false, updatable = false)
     private Integer nhacMocDaGui;
+
+    /** Service kiểm tra trước và ném mã lỗi của mình; ngoại lệ ở đây chỉ xảy ra khi code gọi sai. */
+    public void chuyenTrangThai(TrangThaiLichHen moi) {
+        if (!trangThai.choPhepChuyenSang(moi)) {
+            throw new IllegalStateException(
+                    "Lịch hẹn id=%s không chuyển được từ %s sang %s".formatted(getId(), trangThai, moi));
+        }
+        trangThai = moi;
+    }
 
     /** Trạng thái hàng đợi để hiển thị: DA_KHAM khi đã có kết quả, VANG_MAT khi không đến, còn lại giá trị đã lưu. */
     public TrangThaiHangDoi hangDoiHienThi() {

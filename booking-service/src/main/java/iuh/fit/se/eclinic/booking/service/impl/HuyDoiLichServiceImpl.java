@@ -3,7 +3,6 @@ package iuh.fit.se.eclinic.booking.service.impl;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.regex.Pattern;
 
 import org.springframework.stereotype.Service;
@@ -46,8 +45,6 @@ public class HuyDoiLichServiceImpl implements HuyDoiLichService {
     /** Dạng của TokenNgauNhien.tao(), như PhieuKhamServiceImpl. */
     private static final Pattern DANG_MA_PHIEU_KHAM = Pattern.compile("[A-Za-z0-9_-]{43}");
     private static final Pattern DANG_SO_DIEN_THOAI = Pattern.compile("0\\d{9}");
-
-    private static final List<TrangThaiLichHen> TRANG_THAI_HUY_DOI_DUOC = List.of(TrangThaiLichHen.DA_XAC_NHAN);
 
     private final LichHenRepository lichHenRepository;
     private final LuotKhamService luotKhamService;
@@ -92,8 +89,8 @@ public class HuyDoiLichServiceImpl implements HuyDoiLichService {
     }
 
     private PhieuKhamResponse huy(LichHen lichHen, String lyDo, NguoiThucHien nguoi, String nguoiLam) {
-        kiemTraConHuyDoiDuoc(lichHen, LocalDateTime.now());
-        lichHen.setTrangThai(TrangThaiLichHen.DA_HUY);
+        kiemTraConHuyDoiDuoc(lichHen, TrangThaiLichHen.DA_HUY, LocalDateTime.now());
+        lichHen.chuyenTrangThai(TrangThaiLichHen.DA_HUY);
         lichHen.setLyDoHuy(lyDo == null || lyDo.isBlank() ? null : lyDo.trim());
         traLuotKham(lichHen);
         lichSuLichHenService.ghi(lichHen, SuKienLichHen.HUY, nguoi, lichHen.getLyDoHuy(), null);
@@ -106,14 +103,14 @@ public class HuyDoiLichServiceImpl implements HuyDoiLichService {
 
     private DatLichResponse doi(LichHen lichHen, DoiLichRequest request, NguoiThucHien nguoi, String nguoiLam) {
         LocalDateTime bayGio = LocalDateTime.now();
-        kiemTraConHuyDoiDuoc(lichHen, bayGio);
+        kiemTraConHuyDoiDuoc(lichHen, TrangThaiLichHen.DA_HUY_DO_DOI_LICH, bayGio);
         int toiDa = cauHinhService.hienTai().soLanDoiLichToiDa();
         // Ca bị hủy hoặc vừa được nhường: không tính vào giới hạn số lần đổi lịch
         if (!lichHen.isCanDoiLich() && !lichHen.isDoiBacSi() && soLanDaDoi(lichHen) >= toiDa) {
             throw new LoiNghiepVu(MaLoi.VUOT_SO_LAN_DOI_LICH,
                     "loi.VUOT_SO_LAN_DOI_LICH.soLan", String.valueOf(toiDa));
         }
-        lichHen.setTrangThai(TrangThaiLichHen.DA_HUY_DO_DOI_LICH);
+        lichHen.chuyenTrangThai(TrangThaiLichHen.DA_HUY_DO_DOI_LICH);
         traLuotKham(lichHen);
         // Ghi xuống trước khi chọn lượt mới: lịch cũ không còn tính vào trùng giờ và giới hạn số lịch đang giữ
         lichHenRepository.flush();
@@ -180,8 +177,8 @@ public class HuyDoiLichServiceImpl implements HuyDoiLichService {
         }
     }
 
-    private void kiemTraConHuyDoiDuoc(LichHen lichHen, LocalDateTime bayGio) {
-        if (!TRANG_THAI_HUY_DOI_DUOC.contains(lichHen.getTrangThai())) {
+    private void kiemTraConHuyDoiDuoc(LichHen lichHen, TrangThaiLichHen moi, LocalDateTime bayGio) {
+        if (!lichHen.getTrangThai().choPhepChuyenSang(moi)) {
             throw new LoiNghiepVu(MaLoi.LICH_HEN_KHONG_HUY_DOI_DUOC);
         }
         if (!bayGio.isBefore(lichHenMapper.hanHuyDoi(lichHen))) {

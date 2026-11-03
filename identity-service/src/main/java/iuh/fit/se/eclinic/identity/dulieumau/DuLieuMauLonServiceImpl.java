@@ -725,7 +725,9 @@ public class DuLieuMauLonServiceImpl implements DuLieuMauLonService {
         lichHen.setKhungGio(entityManager.getReference(KhungGioKham.class, luot.id()));
         lichHen.setPhongKham(entityManager.getReference(PhongKham.class, luot.idPhong()));
         lichHen.setSoThuTu(soThuTu);
-        lichHen.setTrangThai(trangThai);
+        if (trangThai != TrangThaiLichHen.DA_XAC_NHAN) {
+            lichHen.chuyenTrangThai(trangThai);
+        }
         lichHen.setLyDoKham(lyDoKham);
         lichHen.setSoDienThoaiLienHe(benhNhan.soDienThoai());
         lichHen.setEmailLienHe(benhNhan.email());

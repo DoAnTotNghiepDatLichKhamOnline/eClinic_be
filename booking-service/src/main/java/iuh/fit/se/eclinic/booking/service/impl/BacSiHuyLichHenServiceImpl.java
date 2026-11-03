@@ -39,7 +39,7 @@ public class BacSiHuyLichHenServiceImpl implements BacSiHuyLichHenService {
     @Transactional
     public LichHenTrongCaResponse huy(Long idTaiKhoanBacSi, Long idLichHen, String lyDo) {
         LichHen lichHen = khoaLichDaXacNhan(idTaiKhoanBacSi, idLichHen);
-        lichHen.setTrangThai(TrangThaiLichHen.BI_TU_CHOI);
+        lichHen.chuyenTrangThai(TrangThaiLichHen.BI_TU_CHOI);
         lichHen.setLyDoHuy(lyDo.trim());
         // BI_TU_CHOI không còn chiếm khung giờ (TrangThaiLichHen#chiemKhungGio)
         luotKhamService.traLuot(lichHen);
@@ -56,7 +56,7 @@ public class BacSiHuyLichHenServiceImpl implements BacSiHuyLichHenService {
         LichHen lichHen = lichHenRepository.findByIdForUpdate(idLichHen)
                 .filter(timThay -> timThay.getBacSi().getId().equals(idBacSi))
                 .orElseThrow(() -> new LoiNghiepVu(MaLoi.KHONG_TIM_THAY, "loi.KHONG_TIM_THAY.lichHen"));
-        if (lichHen.getTrangThai() != TrangThaiLichHen.DA_XAC_NHAN) {
+        if (!lichHen.getTrangThai().choPhepChuyenSang(TrangThaiLichHen.BI_TU_CHOI)) {
             throw new LoiNghiepVu(MaLoi.LICH_HEN_KHONG_HUY_DOI_DUOC);
         }
         if (lichHen.isCanDoiLich()) {
