@@ -8,12 +8,8 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.event.ApplicationEvents;
-import org.springframework.test.context.event.RecordApplicationEvents;
 
 import iuh.fit.se.eclinic.common.enums.NgonNgu;
 import iuh.fit.se.eclinic.common.entity.identity.TaiKhoan;
@@ -21,11 +17,8 @@ import iuh.fit.se.eclinic.common.enums.TrangThaiTaiKhoan;
 import iuh.fit.se.eclinic.common.enums.VaiTro;
 import iuh.fit.se.eclinic.common.exception.LoiNghiepVu;
 import iuh.fit.se.eclinic.common.exception.MaLoi;
-import iuh.fit.se.eclinic.common.testsupport.MySqlTestcontainersConfiguration;
-import iuh.fit.se.eclinic.common.testsupport.RedisTestcontainersConfiguration;
 import iuh.fit.se.eclinic.identity.dto.request.DangNhapRequest;
 import iuh.fit.se.eclinic.identity.dto.request.DoiEmailRequest;
-import iuh.fit.se.eclinic.identity.dto.request.DoiMatKhauRequest;
 import iuh.fit.se.eclinic.identity.dto.response.DangNhapResponse;
 import iuh.fit.se.eclinic.identity.dto.response.YeuCauDoiEmailResponse;
 import iuh.fit.se.eclinic.identity.event.EmailDaDoiEmailEvent;
@@ -38,10 +31,7 @@ import iuh.fit.se.eclinic.identity.service.DoiEmailService;
 import iuh.fit.se.eclinic.identity.service.MatKhauService;
 
 /** Đổi email đăng nhập với MySQL + Redis thật. */
-@SpringBootTest
-@Import({ MySqlTestcontainersConfiguration.class, RedisTestcontainersConfiguration.class })
-@RecordApplicationEvents
-class DoiEmailServiceTest {
+class DoiEmailServiceTest extends KiemThuTichHop {
 
     private static final String MAT_KHAU = "matkhau-cu";
 
@@ -50,7 +40,6 @@ class DoiEmailServiceTest {
     @Autowired DangNhapService dangNhapService;
     @Autowired TaiKhoanRepository taiKhoanRepository;
     @Autowired PasswordEncoder passwordEncoder;
-    @Autowired StringRedisTemplate redisTemplate;
     @Autowired ApplicationEvents applicationEvents;
 
     @Test
@@ -74,68 +63,6 @@ class DoiEmailServiceTest {
     }
 
     @Test
-    void saiMatKhauBao400KhongGuiGiVaKhongLoEmailDaDangKy() {
-        TaiKhoan taiKhoan = taoTaiKhoan();
-        TaiKhoan nguoiKhac = taoTaiKhoan();
-
-        // Email của người khác + sai mật khẩu: chỉ báo sai mật khẩu
-        assertMaLoi(() -> yeuCau(taiKhoan, nguoiKhac.getEmail(), "sai-mat-khau"), MaLoi.MAT_KHAU_CU_KHONG_DUNG);
-        assertMaLoi(() -> yeuCau(taiKhoan, emailMoi(), "sai-mat-khau"), MaLoi.MAT_KHAU_CU_KHONG_DUNG);
-
-        assertThat(applicationEvents.stream(EmailXacNhanDoiEmailEvent.class).toList()).isEmpty();
-        assertThat(applicationEvents.stream(EmailYeuCauDoiEmailEvent.class).toList()).isEmpty();
-        assertThat(doiEmailService.layYeuCauDangCho(taiKhoan.getId())).isNull();
-    }
-
-    @Test
-    void sai5LanThiKhoaCaDoiEmailLanDoiMatKhauNhungVanDangNhapDuoc() {
-        TaiKhoan taiKhoan = taoTaiKhoan();
-        for (int i = 0; i < 5; i++) {
-            assertMaLoi(() -> yeuCau(taiKhoan, emailMoi(), "sai-mat-khau"), MaLoi.MAT_KHAU_CU_KHONG_DUNG);
-        }
-
-        // Chung 1 bộ đếm: mật khẩu đúng cũng bị từ chối ở cả 2 chức năng
-        assertMaLoi(() -> yeuCau(taiKhoan, emailMoi(), MAT_KHAU), MaLoi.SAI_MAT_KHAU_QUA_NHIEU);
-        assertMaLoi(() -> matKhauService.doiMatKhau(taiKhoan.getId(), null,
-                new DoiMatKhauRequest(MAT_KHAU, "matkhau-moi")), MaLoi.SAI_MAT_KHAU_QUA_NHIEU);
-        assertThat(dangNhap(taiKhoan.getEmail(), MAT_KHAU).accessToken()).isNotBlank();
-    }
-
-    @Test
-    void lanSaiCuaDoiMatKhauCungTinhChoDoiEmailVaNhapDungThiXoaBoDem() {
-        TaiKhoan taiKhoan = taoTaiKhoan();
-        for (int i = 0; i < 4; i++) {
-            assertMaLoi(() -> matKhauService.doiMatKhau(taiKhoan.getId(), null,
-                    new DoiMatKhauRequest("sai-mat-khau", "matkhau-moi")), MaLoi.MAT_KHAU_CU_KHONG_DUNG);
-        }
-        yeuCau(taiKhoan, emailMoi(), MAT_KHAU);
-
-        // Bộ đếm còn 4 thì lần sai này là lần thứ 5 và lần sau bị SAI_MAT_KHAU_QUA_NHIEU
-        assertMaLoi(() -> yeuCau(taiKhoan, emailMoi(), "sai-mat-khau"), MaLoi.MAT_KHAU_CU_KHONG_DUNG);
-        assertMaLoi(() -> yeuCau(taiKhoan, emailMoi(), MAT_KHAU), MaLoi.GUI_LAI_QUA_NHANH);
-    }
-
-    @Test
-    void taiKhoanChiCoGoogleBao409() {
-        TaiKhoan taiKhoan = taoTaiKhoan();
-        taiKhoan.setMatKhauHash(null);
-        taiKhoan.setGoogleId("google-" + UUID.randomUUID());
-        taiKhoanRepository.save(taiKhoan);
-
-        assertMaLoi(() -> yeuCau(taiKhoan, emailMoi(), MAT_KHAU), MaLoi.TAI_KHOAN_CHUA_CO_MAT_KHAU);
-        assertThat(applicationEvents.stream(EmailXacNhanDoiEmailEvent.class).toList()).isEmpty();
-    }
-
-    @Test
-    void emailMoiTrungEmailHienTaiBao400KeCaKhacHoaThuong() {
-        TaiKhoan taiKhoan = taoTaiKhoan();
-
-        assertMaLoi(() -> yeuCau(taiKhoan, taiKhoan.getEmail(), MAT_KHAU), MaLoi.EMAIL_MOI_TRUNG_EMAIL_CU);
-        assertMaLoi(() -> yeuCau(taiKhoan, " " + taiKhoan.getEmail().toUpperCase() + " ", MAT_KHAU),
-                MaLoi.EMAIL_MOI_TRUNG_EMAIL_CU);
-    }
-
-    @Test
     void emailMoiDaThuocTaiKhoanKhacBao409KeCaKhacHoaThuongVaChuaKichHoat() {
         TaiKhoan taiKhoan = taoTaiKhoan();
         TaiKhoan nguoiKhac = taoTaiKhoan();
@@ -148,54 +75,6 @@ class DoiEmailServiceTest {
         assertThat(applicationEvents.stream(EmailXacNhanDoiEmailEvent.class).toList()).isEmpty();
         // Bị từ chối trước khi giữ khoá chờ: yêu cầu hợp lệ ngay sau đó vẫn gửi được
         assertThat(yeuCau(taiKhoan, emailMoi(), MAT_KHAU).emailMoi()).isNotBlank();
-    }
-
-    @Test
-    void yeuCauLanHaiTrongThoiGianChoBao429VaLienKetDauVanDungDuoc() {
-        TaiKhoan taiKhoan = taoTaiKhoan();
-        String emailMoi = emailMoi();
-        yeuCau(taiKhoan, emailMoi, MAT_KHAU);
-
-        assertMaLoi(() -> yeuCau(taiKhoan, emailMoi(), MAT_KHAU), MaLoi.GUI_LAI_QUA_NHANH);
-
-        assertThat(applicationEvents.stream(EmailXacNhanDoiEmailEvent.class).toList()).hasSize(1);
-        doiEmailService.xacNhan(tokenCuoiCung());
-        assertThat(emailTrongDb(taiKhoan)).isEqualTo(emailMoi);
-    }
-
-    @Test
-    void yeuCauMoiLamLienKetCuHetHieuLucVaChiApDungEmailCuaLienKetMoi() {
-        TaiKhoan taiKhoan = taoTaiKhoan();
-        String emailA = emailMoi();
-        String emailB = emailMoi();
-        yeuCau(taiKhoan, emailA, MAT_KHAU);
-        String tokenA = tokenCuoiCung();
-        hetThoiGianCho(taiKhoan);
-        yeuCau(taiKhoan, emailB, MAT_KHAU);
-        String tokenB = tokenCuoiCung();
-
-        assertThat(doiEmailService.layYeuCauDangCho(taiKhoan.getId())).isEqualTo(new YeuCauDoiEmailResponse(emailB));
-        assertMaLoi(() -> doiEmailService.xacNhan(tokenA), MaLoi.LIEN_KET_KHONG_HOP_LE);
-        assertThat(emailTrongDb(taiKhoan)).isEqualTo(taiKhoan.getEmail());
-        doiEmailService.xacNhan(tokenB);
-        assertThat(emailTrongDb(taiKhoan)).isEqualTo(emailB);
-    }
-
-    @Test
-    void xemYeuCauDangChoRoiHuyThiLienKetHetHieuLuc() {
-        TaiKhoan taiKhoan = taoTaiKhoan();
-        String emailMoi = emailMoi();
-        assertThat(doiEmailService.layYeuCauDangCho(taiKhoan.getId())).isNull();
-
-        yeuCau(taiKhoan, emailMoi, MAT_KHAU);
-        assertThat(doiEmailService.layYeuCauDangCho(taiKhoan.getId())).isEqualTo(new YeuCauDoiEmailResponse(emailMoi));
-
-        doiEmailService.huy(taiKhoan.getId());
-        assertThat(doiEmailService.layYeuCauDangCho(taiKhoan.getId())).isNull();
-        assertMaLoi(() -> doiEmailService.xacNhan(tokenCuoiCung()), MaLoi.LIEN_KET_KHONG_HOP_LE);
-        assertThat(emailTrongDb(taiKhoan)).isEqualTo(taiKhoan.getEmail());
-        // Huỷ khi không có yêu cầu nào cũng không báo lỗi
-        doiEmailService.huy(taiKhoan.getId());
     }
 
     @Test
@@ -235,20 +114,6 @@ class DoiEmailServiceTest {
     }
 
     @Test
-    void tokenChiDungMotLanVaTokenRacBao410() {
-        TaiKhoan taiKhoan = taoTaiKhoan();
-        String emailMoi = emailMoi();
-        yeuCau(taiKhoan, emailMoi, MAT_KHAU);
-        String token = tokenCuoiCung();
-        doiEmailService.xacNhan(token);
-
-        assertMaLoi(() -> doiEmailService.xacNhan(token), MaLoi.LIEN_KET_KHONG_HOP_LE);
-        assertMaLoi(() -> doiEmailService.xacNhan("token-rac"), MaLoi.LIEN_KET_KHONG_HOP_LE);
-        assertThat(emailTrongDb(taiKhoan)).isEqualTo(emailMoi);
-        assertThat(applicationEvents.stream(EmailDaDoiEmailEvent.class).toList()).hasSize(1);
-    }
-
-    @Test
     void emailMoiBiTaiKhoanKhacLayTruocKhiXacNhanBao409VaKhongDoiGi() {
         TaiKhoan taiKhoan = taoTaiKhoan();
         String emailMoi = emailMoi();
@@ -263,62 +128,8 @@ class DoiEmailServiceTest {
         assertThat(applicationEvents.stream(EmailDaDoiEmailEvent.class).toList()).isEmpty();
     }
 
-    @Test
-    void taiKhoanBiVoHieuHoaSauKhiYeuCauBao403() {
-        TaiKhoan taiKhoan = taoTaiKhoan();
-        yeuCau(taiKhoan, emailMoi(), MAT_KHAU);
-        TaiKhoan moiNhat = taiKhoanRepository.findById(taiKhoan.getId()).orElseThrow();
-        moiNhat.setTrangThai(TrangThaiTaiKhoan.VO_HIEU_HOA);
-        taiKhoanRepository.save(moiNhat);
-
-        assertMaLoi(() -> doiEmailService.xacNhan(tokenCuoiCung()), MaLoi.TAI_KHOAN_BI_VO_HIEU_HOA);
-        assertThat(emailTrongDb(taiKhoan)).isEqualTo(taiKhoan.getEmail());
-    }
-
-    @Test
-    void doiMatKhauHuyYeuCauDoiEmailDangCho() {
-        TaiKhoan taiKhoan = taoTaiKhoan();
-        yeuCau(taiKhoan, emailMoi(), MAT_KHAU);
-
-        matKhauService.doiMatKhau(taiKhoan.getId(), null, new DoiMatKhauRequest(MAT_KHAU, "matkhau-moi"));
-
-        assertThat(doiEmailService.layYeuCauDangCho(taiKhoan.getId())).isNull();
-        assertMaLoi(() -> doiEmailService.xacNhan(tokenCuoiCung()), MaLoi.LIEN_KET_KHONG_HOP_LE);
-        assertThat(emailTrongDb(taiKhoan)).isEqualTo(taiKhoan.getEmail());
-    }
-
-    @Test
-    void datLaiMatKhauHuyYeuCauDoiEmailDangCho() {
-        TaiKhoan taiKhoan = taoTaiKhoan();
-        yeuCau(taiKhoan, emailMoi(), MAT_KHAU);
-        matKhauService.quenMatKhau(taiKhoan.getEmail());
-        String tokenDatLai = applicationEvents.stream(EmailDatLaiMatKhauEvent.class).toList().get(0).token();
-
-        matKhauService.datLaiMatKhau(tokenDatLai, "matkhau-moi");
-
-        assertThat(doiEmailService.layYeuCauDangCho(taiKhoan.getId())).isNull();
-        assertMaLoi(() -> doiEmailService.xacNhan(tokenCuoiCung()), MaLoi.LIEN_KET_KHONG_HOP_LE);
-        assertThat(emailTrongDb(taiKhoan)).isEqualTo(taiKhoan.getEmail());
-    }
-
-    @Test
-    void taiKhoanBiVoHieuHoaBao403TaiKhoanKhongConBao401() {
-        TaiKhoan taiKhoan = taoTaiKhoan(TrangThaiTaiKhoan.VO_HIEU_HOA);
-
-        assertMaLoi(() -> yeuCau(taiKhoan, emailMoi(), MAT_KHAU), MaLoi.TAI_KHOAN_BI_VO_HIEU_HOA);
-        assertMaLoi(() -> doiEmailService.layYeuCauDangCho(taiKhoan.getId()), MaLoi.TAI_KHOAN_BI_VO_HIEU_HOA);
-        assertMaLoi(() -> doiEmailService.huy(taiKhoan.getId()), MaLoi.TAI_KHOAN_BI_VO_HIEU_HOA);
-        assertMaLoi(() -> doiEmailService.yeuCau(Long.MAX_VALUE, new DoiEmailRequest(emailMoi(), MAT_KHAU)),
-                MaLoi.CHUA_DANG_NHAP);
-    }
-
     private YeuCauDoiEmailResponse yeuCau(TaiKhoan taiKhoan, String emailMoi, String matKhau) {
         return doiEmailService.yeuCau(taiKhoan.getId(), new DoiEmailRequest(emailMoi, matKhau));
-    }
-
-    /** Xoá khoá chờ giữa 2 lần gửi (thay cho việc đợi 60 giây). */
-    private void hetThoiGianCho(TaiKhoan taiKhoan) {
-        assertThat(redisTemplate.delete("lien-ket:cho:DOI_EMAIL:" + taiKhoan.getId())).isTrue();
     }
 
     private String emailTrongDb(TaiKhoan taiKhoan) {

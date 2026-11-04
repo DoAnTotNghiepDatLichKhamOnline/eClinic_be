@@ -87,7 +87,7 @@ MSYS_NO_PATHCONV=1 docker run --rm -v "$PWD":/workspace -w /workspace \
   maven:3.9-eclipse-temurin-17 mvn -B -ntp clean verify
 ```
 
-Lần chạy đủ gần nhất (29/10/2026): BUILD SUCCESS, 292 test, 0 lỗi.
+Lần chạy đủ gần nhất (04/11/2026): BUILD SUCCESS, 75 test, 0 lỗi, khoảng 8 phút.
 
 ## Triển khai
 

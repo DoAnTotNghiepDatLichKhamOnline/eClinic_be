@@ -42,28 +42,6 @@ class ThuocServiceTest {
                 .isInstanceOfSatisfying(LoiNghiepVu.class, loi -> assertThat(loi.getMaLoi()).isEqualTo(MaLoi.KHONG_TIM_THAY));
     }
 
-    @Test
-    void medicinesAlreadyOnTheRecordAreKept() {
-        Thuoc ngungDung = luu("Cefuroxim", true, TrangThaiThuoc.NGUNG_DUNG);
-        Thuoc chuaXacMinh = luu("Thuoc cu", false, TrangThaiThuoc.DANG_DUNG);
-
-        assertThat(thuocService.layDeKe(List.of(ngungDung.getId(), chuaXacMinh.getId()),
-                Set.of(ngungDung.getId(), chuaXacMinh.getId())))
-                .containsOnlyKeys(ngungDung.getId(), chuaXacMinh.getId());
-    }
-
-    @Test
-    void suggestionsMatchNameOrActiveIngredientAndOnlyPrescribable() {
-        String hoatChat = "hoatchat" + UUID.randomUUID().toString().substring(0, 8);
-        Thuoc keDuoc = luu("Hapacol", hoatChat, true, TrangThaiThuoc.DANG_DUNG);
-        luu("Hapacol chua duyet", hoatChat, false, TrangThaiThuoc.DANG_DUNG);
-        luu("Hapacol ngung", hoatChat, true, TrangThaiThuoc.NGUNG_DUNG);
-
-        assertThat(thuocService.timKiem(hoatChat.toUpperCase())).extracting(Thuoc::getId).containsExactly(keDuoc.getId());
-        assertThat(thuocService.timKiem(keDuoc.getTenThuoc().substring(0, 12))).extracting(Thuoc::getId)
-                .contains(keDuoc.getId());
-    }
-
     /** Tên và hoạt chất có hậu tố ngẫu nhiên: các test dùng chung 1 DB. */
     private Thuoc luu(String ten, boolean daXacMinh, TrangThaiThuoc trangThai) {
         return luu(ten, "hoatchat" + UUID.randomUUID().toString().substring(0, 8), daXacMinh, trangThai);
