@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import iuh.fit.se.eclinic.booking.dto.response.QuyTacDatLichResponse;
 import iuh.fit.se.eclinic.booking.service.CauHinhService;
 import iuh.fit.se.eclinic.common.dto.PhanHoiApi;
+import iuh.fit.se.eclinic.common.web.CacheCongKhai;
 import lombok.RequiredArgsConstructor;
 
 /** Quy tắc đặt lịch cho trang đặt lịch và phiếu khám (công khai). */
@@ -23,6 +24,7 @@ public class QuyTacDatLichController {
     @Operation(summary = "Quy tắc bệnh nhân cần biết: đặt trước tối thiểu (phút) / tối đa (ngày), hạn hủy / đổi lịch"
             + " (phút trước giờ khám), số lần đổi lịch, số lịch còn hiệu lực của 1 người khám. Không cần đăng nhập")
     @GetMapping
+    @CacheCongKhai
     public PhanHoiApi<QuyTacDatLichResponse> xem() {
         return PhanHoiApi.ok(cauHinhService.quyTacCongKhai());
     }

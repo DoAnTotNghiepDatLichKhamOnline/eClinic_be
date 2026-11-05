@@ -32,6 +32,8 @@ services:
       - "443:443"
     environment:
       API_DOMAIN: ${API_DOMAIN}
+      # Bí mật Vercel gắn vào mỗi request /api (X-Origin-Secret); để trống thì Caddy tin X-Real-IP của mọi request
+      ORIGIN_SECRET: ${ORIGIN_SECRET:-}
     volumes:
       - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data

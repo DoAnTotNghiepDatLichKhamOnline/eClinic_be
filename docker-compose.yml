@@ -35,6 +35,9 @@ x-moi-truong-chung: &moi-truong-chung
   # Mặc định giống application-common.yml; không để trống vì biến rỗng ghi đè mặc định của Spring
   JWT_SECRET: ${JWT_SECRET:-eclinic-dev-secret-chi-dung-o-may-local-khong-dung-that-2026}
   JWT_TTL: ${JWT_TTL:-30m}
+  # Thời gian trình duyệt / CDN Vercel dùng lại API công khai (@CacheCongKhai); 0 = tắt; cdn=false chỉ trình duyệt
+  PUBLIC_CACHE_SECONDS: ${PUBLIC_CACHE_SECONDS:-60}
+  PUBLIC_CACHE_CDN: ${PUBLIC_CACHE_CDN:-true}
   # Khoá của API nội bộ /noi-bo/**, giống nhau ở mọi service
   INTERNAL_API_KEY: ${INTERNAL_API_KEY:-eclinic-dev-khoa-noi-bo-chi-dung-o-may-local-khong-dung-that}
 

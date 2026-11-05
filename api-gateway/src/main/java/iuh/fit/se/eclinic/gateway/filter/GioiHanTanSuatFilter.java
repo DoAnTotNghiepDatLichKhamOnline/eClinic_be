@@ -62,6 +62,7 @@ public class GioiHanTanSuatFilter extends OncePerRequestFilter {
             return;
         }
         String nhom = nhom(request);
+        // getRemoteAddr là IP thật của người dùng: Tomcat lấy từ X-Forwarded-For do Caddy ghi (forward-headers-strategy)
         String khoa = "gioi-han:" + nhom + ":" + request.getRemoteAddr();
         long soLan;
         long giayChoLai = 0;

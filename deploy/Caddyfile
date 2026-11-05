@@ -1,5 +1,23 @@
 # HTTPS reverse proxy for the API. Caddy gets and renews the Let's Encrypt certificate itself.
+# Client IP: Vercel sends the visitor's IP in X-Real-IP. Caddy passes it to the gateway as X-Forwarded-For when
+# ORIGIN_SECRET is unset, or when the request carries the matching X-Origin-Secret (set by the frontend's vercel.json,
+# see docs/GHI-CHU-FE-TOC-DO.md). Otherwise the gateway sees the direct caller's IP. The secret never reaches the gateway.
 {$API_DOMAIN} {
 	encode gzip
-	reverse_proxy api-gateway:8080
+
+	@ip_tu_vercel {
+		header X-Real-IP *
+		expression `{env.ORIGIN_SECRET} == "" || {header.X-Origin-Secret} == {env.ORIGIN_SECRET}`
+	}
+	handle @ip_tu_vercel {
+		reverse_proxy api-gateway:8080 {
+			header_up X-Forwarded-For {header.X-Real-IP}
+			header_up -X-Origin-Secret
+		}
+	}
+	handle {
+		reverse_proxy api-gateway:8080 {
+			header_up -X-Origin-Secret
+		}
+	}
 }

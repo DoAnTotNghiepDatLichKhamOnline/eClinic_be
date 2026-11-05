@@ -11,6 +11,8 @@
 //          -e BASE_URL=http://api-gateway:8080 -e NHAN=baseline grafana/k6:1.8.1 run /scripts/kiem-tra-tai.js
 // Chạy thử nhanh: thêm -e VUS=10 -e HOLD=30s (bỏ giai đoạn tăng tải).
 // Chạy dồn (tìm giới hạn): -e VUS=1000 -e HOLD=2m -e NGHI=0.5 (nghỉ trung bình 0,5 giây thay vì 3-8 giây).
+// Stack giống máy thật (2 CPU, qua Caddy; DOANTOTNGH-25, xem docker-compose.prod-shape.yml): project eclinicsmoke,
+//   docker run ... --cpuset-cpus 4-11 --network eclinicsmoke_default ... -e BASE_URL=https://caddy ...
 // Kết quả: ket-qua/<NHAN>.json (không commit; tạo thư mục trước: mkdir -p scripts/load-test/ket-qua).
 //
 // Mỗi người dùng ảo lặp 1 hành trình chọn ngẫu nhiên theo tỉ lệ, nghỉ 3-8 giây giữa các bước như người thật:
@@ -51,6 +53,8 @@ export const options = {
     discardResponseBodies: true,
     summaryTrendStats: ['avg', 'med', 'p(90)', 'p(95)', 'p(99)', 'max'],
     setupTimeout: '120s',
+    // Caddy của stack giống máy thật dùng chứng chỉ tự cấp
+    insecureSkipTLSVerify: BASE_URL.startsWith('https'),
 };
 
 const TIEU_DE = { 'Accept-Language': 'vi', 'Content-Type': 'application/json' };

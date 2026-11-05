@@ -21,6 +21,7 @@ import iuh.fit.se.eclinic.catalog.dto.response.ChuyenKhoaResponse;
 import iuh.fit.se.eclinic.catalog.service.ChuyenKhoaService;
 import iuh.fit.se.eclinic.common.dto.PhanHoiApi;
 import iuh.fit.se.eclinic.common.dto.TrangDuLieu;
+import iuh.fit.se.eclinic.common.web.CacheCongKhai;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -37,6 +38,7 @@ public class ChuyenKhoaController {
 
     @Operation(summary = "Tìm kiếm chuyên khoa theo tên, tiếng Việt hoặc tiếng Anh (phân trang, sắp xếp theo tên); tên và mô tả theo ngôn ngữ của request")
     @GetMapping
+    @CacheCongKhai
     public PhanHoiApi<TrangDuLieu<ChuyenKhoaResponse>> timKiem(
             @RequestParam(required = false) String tuKhoa,
             @RequestParam(defaultValue = "0") @Min(0) int trang,
@@ -46,6 +48,7 @@ public class ChuyenKhoaController {
 
     @Operation(summary = "Xem chi tiết chuyên khoa")
     @GetMapping("/{id}")
+    @CacheCongKhai
     public PhanHoiApi<ChuyenKhoaResponse> layTheoId(@PathVariable Long id) {
         return PhanHoiApi.ok(chuyenKhoaService.layTheoId(id));
     }

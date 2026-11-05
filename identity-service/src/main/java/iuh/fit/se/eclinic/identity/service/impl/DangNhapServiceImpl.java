@@ -27,9 +27,9 @@ import iuh.fit.se.eclinic.identity.service.RefreshTokenService.PhienMoi;
 import iuh.fit.se.eclinic.identity.util.ChuanHoa;
 import lombok.extern.slf4j.Slf4j;
 
+/** Không đặt @Transactional ở mức class: dangNhap phải chạy ngoài mọi transaction (xem dangNhap). */
 @Slf4j
 @Service
-@Transactional(readOnly = true)
 public class DangNhapServiceImpl implements DangNhapService {
 
     /** BCrypt chỉ đọc 72 byte đầu: "mật khẩu đúng + ký tự bất kỳ" cũng khớp, nên phải chặn trước. */
@@ -62,8 +62,13 @@ public class DangNhapServiceImpl implements DangNhapService {
         this.hashGia = passwordEncoder.encode(TokenNgauNhien.tao());
     }
 
+    /**
+     * Không có @Transactional (kể cả NOT_SUPPORTED): BCrypt (hàng trăm ms, vài giây khi CPU quá tải) không được giữ kết nối
+     * DB. Tìm tài khoản và tạo phiên mỗi bước tự mở rồi trả kết nối (repository, RefreshTokenService.tao).
+     * NOT_SUPPORTED vẫn mở 1 phạm vi "transaction rỗng": kết nối của lần tìm tài khoản bị giữ tới cuối phương thức, còn
+     * tạo phiên lấy thêm kết nối thứ 2, nên nhiều lượt đăng nhập cùng lúc làm cạn pool (đã đo, DOANTOTNGH-25 phase 4).
+     */
     @Override
-    @Transactional
     public DangNhapResponse dangNhap(DangNhapRequest request, String thongTinThietBi) {
         TaiKhoan taiKhoan = xacMinhMatKhau(request.email(), request.matKhau());
         if (taiKhoan.isPhaiDoiMatKhau()) {

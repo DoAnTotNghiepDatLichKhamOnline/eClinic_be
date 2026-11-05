@@ -11,14 +11,24 @@ import org.springframework.web.servlet.HandlerExceptionResolver;
 
 import iuh.fit.se.eclinic.gateway.filter.GioiHanKichThuocFilter;
 import iuh.fit.se.eclinic.gateway.filter.GioiHanTanSuatFilter;
+import iuh.fit.se.eclinic.gateway.filter.ThoiGianXuLyFilter;
 
-/** Đăng ký filter giới hạn tần suất (429) và giới hạn dung lượng request (413). */
+/** Đăng ký filter đo thời gian (Server-Timing), giới hạn tần suất (429) và giới hạn dung lượng request (413). */
 @Configuration
 @EnableConfigurationProperties(GioiHanProperties.class)
 public class GioiHanConfig {
 
+    // Sau CORS, trước giới hạn tần suất: thời gian đo gồm cả lượt gọi Redis của bộ đếm
+    static final int THU_TU_FILTER_THOI_GIAN = Ordered.HIGHEST_PRECEDENCE + 1;
     static final int THU_TU_FILTER_TAN_SUAT = Ordered.HIGHEST_PRECEDENCE + 5;
     static final int THU_TU_FILTER = Ordered.HIGHEST_PRECEDENCE + 10;
+
+    @Bean
+    FilterRegistrationBean<ThoiGianXuLyFilter> thoiGianXuLyFilter() {
+        FilterRegistrationBean<ThoiGianXuLyFilter> dangKy = new FilterRegistrationBean<>(new ThoiGianXuLyFilter());
+        dangKy.setOrder(THU_TU_FILTER_THOI_GIAN);
+        return dangKy;
+    }
 
     @Bean
     FilterRegistrationBean<GioiHanTanSuatFilter> gioiHanTanSuatFilter(StringRedisTemplate redisTemplate,
