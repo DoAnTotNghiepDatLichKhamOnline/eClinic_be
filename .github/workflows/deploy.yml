@@ -15,7 +15,6 @@ jobs:
 
   images:
     name: Build images
-    # workflow_dispatch can run from any branch; only main is built and deployed.
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -36,7 +35,6 @@ jobs:
       - name: Set up Buildx
         uses: docker/setup-buildx-action@v4
 
-      # docker-bake.hcl: 8 app images, one shared Maven build stage, tagged with the commit SHA.
       - name: Build and push
         uses: docker/bake-action@v7
         with:
@@ -73,27 +71,38 @@ jobs:
           host: ${{ secrets.VM_HOST }}
           username: huythanhyasuo
           key: ${{ secrets.VM_SSH_KEY }}
-          fingerprint: ${{ secrets.VM_SSH_FINGERPRINT }}
           command_timeout: 40m
           envs: GH_TOKEN,ACTOR,REPO,SHA
           script: |
             set -e
+
+            # Tự động quét và chấp nhận Host Key của VM/DuckDNS để tránh lỗi fingerprint mismatch
+            mkdir -p ~/.ssh
+            ssh-keyscan -H ${{ secrets.VM_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
+            chmod 600 ~/.ssh/known_hosts
+
             cd ~/eClinic_be
             prev=$(git rev-parse HEAD)
             git -c credential.helper= fetch "https://x-access-token:${GH_TOKEN}@github.com/${REPO}.git" main
             git reset --hard "$SHA"
+
             # Dump the DB before compose up (Flyway runs at startup). A failed dump puts the old checkout back and stops.
             bash deploy/vm-backup.sh "$prev" "$SHA" || { git reset --hard "$prev"; exit 1; }
+
             dc="docker compose -f docker-compose.yml -f docker-compose.prod.yml --profile app"
             apps="identity-service catalog-service booking-service medical-service notification-service chatbot-service report-service api-gateway"
+
             # Pull only the app images CI just pushed; mysql/redis/caddy/phpmyadmin keep their current image.
             echo "$GH_TOKEN" | docker login ghcr.io -u "$ACTOR" --password-stdin
             IMAGE_TAG="$SHA" $dc pull --quiet $apps || { docker logout ghcr.io; git reset --hard "$prev"; exit 1; }
             docker logout ghcr.io
+
             # Keep the deployed tag in .env so manual "docker compose" commands on the VM use the same images.
             (umask 077; { grep -v '^IMAGE_TAG=' .env || true; echo "IMAGE_TAG=$SHA"; } > .env.tmp)
             cat .env.tmp > .env && rm -f .env.tmp
+
             $dc up -d --no-build --wait --wait-timeout 900
+
             # Drop app images of older commits (a rollback pulls them again from GHCR).
             docker images --format '{{.Repository}}:{{.Tag}}' | grep '^ghcr.io/doantotnghiepdatlichkhamonline/eclinic-' | grep -v ":$SHA\$" | xargs -r docker rmi || true
             docker image prune -f
