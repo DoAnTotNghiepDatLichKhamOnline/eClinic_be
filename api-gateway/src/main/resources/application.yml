@@ -3,6 +3,9 @@ server:
   # Nén gzip response JSON khi client gửi Accept-Encoding: gzip
   compression:
     enabled: true
+  # IP thật của client = phần tử ngoài cùng bên phải của X-Forwarded-For không phải IP nội bộ (Tomcat RemoteIpValve).
+  # Chỉ tin header này khi request đến từ IP nội bộ (Caddy, cloudflared trong mạng Docker); Caddy ghi IP của người dùng
+  forward-headers-strategy: native
 
 spring:
   application:

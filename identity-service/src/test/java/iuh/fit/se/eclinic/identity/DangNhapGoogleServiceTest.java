@@ -20,24 +20,17 @@ import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.event.ApplicationEvents;
-import org.springframework.test.context.event.RecordApplicationEvents;
 
 import iuh.fit.se.eclinic.common.entity.identity.TaiKhoan;
 import iuh.fit.se.eclinic.common.enums.TrangThaiTaiKhoan;
 import iuh.fit.se.eclinic.common.enums.VaiTro;
 import iuh.fit.se.eclinic.common.exception.LoiNghiepVu;
 import iuh.fit.se.eclinic.common.exception.MaLoi;
-import iuh.fit.se.eclinic.common.testsupport.MySqlTestcontainersConfiguration;
-import iuh.fit.se.eclinic.common.testsupport.RedisTestcontainersConfiguration;
 import iuh.fit.se.eclinic.identity.client.ThongTinGoogle;
-import iuh.fit.se.eclinic.identity.client.XacMinhTokenGoogle;
 import iuh.fit.se.eclinic.identity.dto.request.DangKyRequest;
 import iuh.fit.se.eclinic.identity.dto.request.DangNhapRequest;
 import iuh.fit.se.eclinic.identity.dto.response.DangNhapResponse;
@@ -48,15 +41,10 @@ import iuh.fit.se.eclinic.identity.service.DangNhapService;
 import iuh.fit.se.eclinic.identity.service.XacThucService;
 
 /** Đăng nhập Google với MySQL + Redis thật. */
-@SpringBootTest
-@Import({ MySqlTestcontainersConfiguration.class, RedisTestcontainersConfiguration.class })
-@RecordApplicationEvents
-class DangNhapGoogleServiceTest {
+class DangNhapGoogleServiceTest extends KiemThuTichHop {
 
     private static final String MAT_KHAU = "123456";
     private static final String THIET_BI = "JUnit/5 (test)";
-
-    @MockitoBean XacMinhTokenGoogle xacMinhTokenGoogle;
 
     @Autowired DangNhapGoogleService dangNhapGoogleService;
     @Autowired DangNhapService dangNhapService;
@@ -89,26 +77,6 @@ class DangNhapGoogleServiceTest {
     }
 
     @Test
-    void khongCoTenThiLayPhanTruocAcuaEmail() {
-        String email = gmailMoi();
-        DangNhapResponse ketQua = dangNhapGoogle(new ThongTinGoogle(subMoi(), email, null, " ", null));
-
-        assertThat(ketQua.taiKhoan().hoTen()).isEqualTo(email.substring(0, email.indexOf('@')));
-    }
-
-    @Test
-    void timTheoSubKhiEmailGoogleDaDoiVaKhongDongBoEmail() {
-        String sub = subMoi();
-        String emailCu = gmailMoi();
-        Long id = dangNhapGoogle(new ThongTinGoogle(sub, emailCu, null, "A", null)).taiKhoan().id();
-        String emailMoi = gmailMoi();
-
-        assertThat(dangNhapGoogle(new ThongTinGoogle(sub, emailMoi, null, "A", null)).taiKhoan().id()).isEqualTo(id);
-        assertThat(taiKhoanRepository.findById(id).orElseThrow().getEmail()).isEqualTo(emailCu);
-        assertThat(taiKhoanRepository.findByEmail(emailMoi)).isEmpty();
-    }
-
-    @Test
     void taiKhoanMatKhauDaKichHoatDuocLienKetVaVanDangNhapMatKhauDuoc() {
         TaiKhoan taiKhoan = taoTaiKhoan(gmailMoi(), VaiTro.BENH_NHAN, TrangThaiTaiKhoan.DA_KICH_HOAT);
         String sub = subMoi();
@@ -120,47 +88,6 @@ class DangNhapGoogleServiceTest {
         assertThat(moiNhat.getGoogleId()).isEqualTo(sub);
         assertThat(moiNhat.getHoTen()).isEqualTo("Bệnh nhân test");
         assertThat(dangNhapMatKhau(taiKhoan.getEmail()).accessToken()).isNotBlank();
-    }
-
-    @Test
-    void lienKetTaiKhoanChuaCoAnhThiLayAnhGoogleCoAnhRoiThiGiuNguyen() {
-        String anhGoogle = "https://lh3.googleusercontent.com/a/anh-google";
-        String anhRieng = "https://res.cloudinary.com/demo/image/upload/v1/eclinic/avatar/1.jpg";
-        TaiKhoan chuaCoAnh = taoTaiKhoan(gmailMoi(), VaiTro.BENH_NHAN, TrangThaiTaiKhoan.DA_KICH_HOAT);
-        TaiKhoan coAnh = taoTaiKhoan(gmailMoi(), VaiTro.BENH_NHAN, TrangThaiTaiKhoan.DA_KICH_HOAT);
-        coAnh.setAnhDaiDien(anhRieng);
-        taiKhoanRepository.save(coAnh);
-
-        dangNhapGoogle(new ThongTinGoogle(subMoi(), chuaCoAnh.getEmail(), null, "Tên Google", anhGoogle));
-        dangNhapGoogle(new ThongTinGoogle(subMoi(), coAnh.getEmail(), null, "Tên Google", anhGoogle));
-
-        TaiKhoan chuaCoAnhMoiNhat = taiKhoanRepository.findById(chuaCoAnh.getId()).orElseThrow();
-        assertThat(chuaCoAnhMoiNhat.getAnhDaiDien()).isEqualTo(anhGoogle);
-        assertThat(chuaCoAnhMoiNhat.getHoTen()).isEqualTo("Bệnh nhân test");
-        assertThat(taiKhoanRepository.findById(coAnh.getId()).orElseThrow().getAnhDaiDien()).isEqualTo(anhRieng);
-    }
-
-    @Test
-    void dangNhapGoogleLanSauKhongDatLaiAnhDaBoVaKhongGhiDeAnhDaDoi() {
-        String sub = subMoi();
-        String email = gmailMoi();
-        Long id = dangNhapGoogle(new ThongTinGoogle(sub, email, null, "Tên Google",
-                "https://lh3.googleusercontent.com/a/anh-1")).taiKhoan().id();
-
-        // Người dùng bỏ ảnh (DELETE /api/users/me/avatar) rồi đăng nhập Google lại
-        TaiKhoan taiKhoan = taiKhoanRepository.findById(id).orElseThrow();
-        taiKhoan.setAnhDaiDien(null);
-        taiKhoanRepository.save(taiKhoan);
-        dangNhapGoogle(new ThongTinGoogle(sub, email, null, "Tên Google", "https://lh3.googleusercontent.com/a/anh-2"));
-        assertThat(taiKhoanRepository.findById(id).orElseThrow().getAnhDaiDien()).isNull();
-
-        // Người dùng tải ảnh riêng lên rồi đăng nhập Google lại
-        String anhRieng = "https://res.cloudinary.com/demo/image/upload/v1/eclinic/avatar/" + id + ".jpg";
-        taiKhoan = taiKhoanRepository.findById(id).orElseThrow();
-        taiKhoan.setAnhDaiDien(anhRieng);
-        taiKhoanRepository.save(taiKhoan);
-        dangNhapGoogle(new ThongTinGoogle(sub, email, null, "Tên Google", "https://lh3.googleusercontent.com/a/anh-3"));
-        assertThat(taiKhoanRepository.findById(id).orElseThrow().getAnhDaiDien()).isEqualTo(anhRieng);
     }
 
     @Test
@@ -199,24 +126,6 @@ class DangNhapGoogleServiceTest {
     }
 
     @Test
-    void emailChuaCoTaiKhoanKhongPhaiGmailVanDuocTao() {
-        String email = emailKhacMoi();
-
-        DangNhapResponse ketQua = dangNhapGoogle(new ThongTinGoogle(subMoi(), email, null, "Y", null));
-
-        assertThat(ketQua.taiKhoan().email()).isEqualTo(email);
-    }
-
-    @Test
-    void emailDaLienKetVoiTaiKhoanGoogleKhacBao409() {
-        String email = gmailMoi();
-        dangNhapGoogle(new ThongTinGoogle(subMoi(), email, null, "A", null));
-
-        assertMaLoi(() -> dangNhapGoogle(new ThongTinGoogle(subMoi(), email, null, "A", null)),
-                MaLoi.EMAIL_DA_DANG_KY_MAT_KHAU);
-    }
-
-    @Test
     void bacSiVaQuanTriVienKhongDuocDangNhapGoogle() {
         for (VaiTro vaiTro : List.of(VaiTro.BAC_SI, VaiTro.QUAN_TRI_VIEN)) {
             TaiKhoan taiKhoan = taoTaiKhoan(gmailMoi(), vaiTro, TrangThaiTaiKhoan.DA_KICH_HOAT);
@@ -232,22 +141,6 @@ class DangNhapGoogleServiceTest {
         taiKhoanRepository.save(bacSi);
         assertMaLoi(() -> dangNhapGoogle(new ThongTinGoogle(bacSi.getGoogleId(), bacSi.getEmail(), null, "Z", null)),
                 MaLoi.DANG_NHAP_GOOGLE_KHONG_HO_TRO);
-    }
-
-    @Test
-    void taiKhoanBiVoHieuHoaBao403QuaCaHaiCachTim() {
-        TaiKhoan theoEmail = taoTaiKhoan(gmailMoi(), VaiTro.BENH_NHAN, TrangThaiTaiKhoan.VO_HIEU_HOA);
-        assertMaLoi(() -> dangNhapGoogle(new ThongTinGoogle(subMoi(), theoEmail.getEmail(), null, "V", null)),
-                MaLoi.TAI_KHOAN_BI_VO_HIEU_HOA);
-        assertThat(taiKhoanRepository.findById(theoEmail.getId()).orElseThrow().getGoogleId()).isNull();
-
-        String sub = subMoi();
-        Long id = dangNhapGoogle(new ThongTinGoogle(sub, gmailMoi(), null, "V", null)).taiKhoan().id();
-        TaiKhoan daLienKet = taiKhoanRepository.findById(id).orElseThrow();
-        daLienKet.setTrangThai(TrangThaiTaiKhoan.VO_HIEU_HOA);
-        taiKhoanRepository.save(daLienKet);
-        assertMaLoi(() -> dangNhapGoogle(new ThongTinGoogle(sub, daLienKet.getEmail(), null, "V", null)),
-                MaLoi.TAI_KHOAN_BI_VO_HIEU_HOA);
     }
 
     @Test

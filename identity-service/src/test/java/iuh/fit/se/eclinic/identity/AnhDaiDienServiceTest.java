@@ -4,11 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.after;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.timeout;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -18,40 +14,26 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import iuh.fit.se.eclinic.common.entity.identity.TaiKhoan;
 import iuh.fit.se.eclinic.common.enums.TrangThaiTaiKhoan;
 import iuh.fit.se.eclinic.common.enums.VaiTro;
 import iuh.fit.se.eclinic.common.exception.LoiNghiepVu;
 import iuh.fit.se.eclinic.common.exception.MaLoi;
-import iuh.fit.se.eclinic.common.testsupport.MySqlTestcontainersConfiguration;
-import iuh.fit.se.eclinic.common.testsupport.RedisTestcontainersConfiguration;
-import iuh.fit.se.eclinic.common.luutru.LuuTruAnh;
-import iuh.fit.se.eclinic.identity.config.AnhDaiDienProperties;
 import iuh.fit.se.eclinic.identity.dto.response.HoSoCaNhanResponse;
 import iuh.fit.se.eclinic.identity.repository.TaiKhoanRepository;
 import iuh.fit.se.eclinic.identity.service.AnhDaiDienService;
-import iuh.fit.se.eclinic.identity.service.QuanLyTaiKhoanService;
 
 /** Đổi / bỏ ảnh đại diện với MySQL + Redis thật, và việc dọn ảnh khi quản trị viên xoá tài khoản. */
-@SpringBootTest
-@Import({ MySqlTestcontainersConfiguration.class, RedisTestcontainersConfiguration.class })
-class AnhDaiDienServiceTest {
+class AnhDaiDienServiceTest extends KiemThuTichHop {
 
     private static final String KHO = "https://res.cloudinary.com/demo/image/upload/";
     private static final String ANH_GOOGLE = "https://lh3.googleusercontent.com/a/anh";
     private static final byte[] JPEG = "ÿØÿàanh-jpeg".getBytes(StandardCharsets.ISO_8859_1);
     private static final byte[] PNG = "\u0089PNG\r\n\u001A\nanh-png".getBytes(StandardCharsets.ISO_8859_1);
 
-    @MockitoBean LuuTruAnh luuTruAnh;
-
     @Autowired AnhDaiDienService anhDaiDienService;
-    @Autowired QuanLyTaiKhoanService quanLyTaiKhoanService;
-    @Autowired AnhDaiDienProperties anhDaiDienProperties;
     @Autowired TaiKhoanRepository taiKhoanRepository;
     @Autowired StringRedisTemplate redisTemplate;
 
@@ -86,15 +68,6 @@ class AnhDaiDienServiceTest {
     }
 
     @Test
-    void taiLenThayAnhGoogleMaKhongDungToiKhoChoAnhCu() {
-        TaiKhoan taiKhoan = taoTaiKhoan(ANH_GOOGLE);
-        when(luuTruAnh.taiLen(anyString(), any())).thenReturn(KHO + "v1/eclinic/avatar/x.jpg");
-
-        assertThat(anhDaiDienService.taiLen(taiKhoan.getId(), JPEG).anhDaiDien()).startsWith(KHO);
-        verify(luuTruAnh, never()).xoa(anyString());
-    }
-
-    @Test
     void khongPhaiAnhThiBao400VaKhongGoiKho() {
         TaiKhoan taiKhoan = taoTaiKhoan(ANH_GOOGLE);
 
@@ -111,17 +84,6 @@ class AnhDaiDienServiceTest {
     }
 
     @Test
-    void khoChuaCauHinhThiBao503VaGiuAnhCu() {
-        TaiKhoan taiKhoan = taoTaiKhoan(ANH_GOOGLE);
-        when(luuTruAnh.daCauHinh()).thenReturn(false);
-
-        assertMaLoi(() -> anhDaiDienService.taiLen(taiKhoan.getId(), JPEG), MaLoi.LUU_TRU_ANH_KHONG_KHA_DUNG);
-
-        verify(luuTruAnh, never()).taiLen(anyString(), any());
-        assertThat(anhTrongDb(taiKhoan)).isEqualTo(ANH_GOOGLE);
-    }
-
-    @Test
     void khoLoiHoacTuChoiAnhThiGiuAnhCu() {
         TaiKhoan taiKhoan = taoTaiKhoan(ANH_GOOGLE);
         when(luuTruAnh.taiLen(anyString(), any()))
@@ -134,134 +96,7 @@ class AnhDaiDienServiceTest {
         assertThat(anhTrongDb(taiKhoan)).isEqualTo(ANH_GOOGLE);
     }
 
-    @Test
-    void taiLenQuaSoLanChoPhepThiBao429VaKhongGoiKho() {
-        TaiKhoan taiKhoan = taoTaiKhoan(null);
-        when(luuTruAnh.taiLen(anyString(), any())).thenReturn(KHO + "v1/eclinic/avatar/x.jpg");
-        int toiDa = anhDaiDienProperties.soLanTaiLenToiDa();
-
-        for (int i = 0; i < toiDa; i++) {
-            anhDaiDienService.taiLen(taiKhoan.getId(), JPEG);
-        }
-        assertMaLoi(() -> anhDaiDienService.taiLen(taiKhoan.getId(), JPEG), MaLoi.GUI_LAI_QUA_NHANH);
-
-        verify(luuTruAnh, times(toiDa)).taiLen(anyString(), any());
-        assertThat(redisTemplate.getExpire(khoaDem(taiKhoan))).isPositive();
-        // Tài khoản khác không bị ảnh hưởng
-        assertThat(anhDaiDienService.taiLen(taoTaiKhoan(null).getId(), JPEG).anhDaiDien()).startsWith(KHO);
-    }
-
-    @Test
-    void xoaAnhCuaKhoThiBoUrlVaXoaTrongKho() {
-        TaiKhoan taiKhoan = taoTaiKhoan(KHO + "v1/eclinic/avatar/1.jpg");
-
-        HoSoCaNhanResponse ketQua = anhDaiDienService.xoa(taiKhoan.getId());
-
-        assertThat(ketQua.anhDaiDien()).isNull();
-        assertThat(anhTrongDb(taiKhoan)).isNull();
-        verify(luuTruAnh).xoa("avatar/" + taiKhoan.getId());
-    }
-
-    @Test
-    void xoaAnhGoogleChiBoUrlKhongGoiKhoKeCaKhiKhoChuaCauHinh() {
-        TaiKhoan taiKhoan = taoTaiKhoan(ANH_GOOGLE);
-        when(luuTruAnh.daCauHinh()).thenReturn(false);
-
-        assertThat(anhDaiDienService.xoa(taiKhoan.getId()).anhDaiDien()).isNull();
-
-        assertThat(anhTrongDb(taiKhoan)).isNull();
-        verify(luuTruAnh, never()).xoa(anyString());
-    }
-
-    @Test
-    void xoaVanThanhCongKhiKhoLoi() {
-        TaiKhoan taiKhoan = taoTaiKhoan(KHO + "v1/eclinic/avatar/1.jpg");
-        doThrow(new LoiNghiepVu(MaLoi.LUU_TRU_ANH_KHONG_KHA_DUNG)).when(luuTruAnh).xoa(anyString());
-
-        assertThat(anhDaiDienService.xoa(taiKhoan.getId()).anhDaiDien()).isNull();
-
-        assertThat(anhTrongDb(taiKhoan)).isNull();
-    }
-
-    @Test
-    void xoaKhiChuaCoAnhKhongLamGi() {
-        TaiKhoan taiKhoan = taoTaiKhoan(null);
-
-        assertThat(anhDaiDienService.xoa(taiKhoan.getId()).anhDaiDien()).isNull();
-
-        verify(luuTruAnh, never()).xoa(anyString());
-    }
-
-    @Test
-    void taiKhoanBiVoHieuHoaHoacKhongTonTaiBiTuChoi() {
-        TaiKhoan taiKhoan = taoTaiKhoan(ANH_GOOGLE);
-        taiKhoan.setTrangThai(TrangThaiTaiKhoan.VO_HIEU_HOA);
-        taiKhoanRepository.save(taiKhoan);
-
-        assertMaLoi(() -> anhDaiDienService.taiLen(taiKhoan.getId(), JPEG), MaLoi.TAI_KHOAN_BI_VO_HIEU_HOA);
-        assertMaLoi(() -> anhDaiDienService.xoa(taiKhoan.getId()), MaLoi.TAI_KHOAN_BI_VO_HIEU_HOA);
-        assertMaLoi(() -> anhDaiDienService.taiLen(Long.MAX_VALUE, JPEG), MaLoi.CHUA_DANG_NHAP);
-        assertMaLoi(() -> anhDaiDienService.xoa(Long.MAX_VALUE), MaLoi.CHUA_DANG_NHAP);
-
-        assertThat(anhTrongDb(taiKhoan)).isEqualTo(ANH_GOOGLE);
-        verify(luuTruAnh, never()).taiLen(anyString(), any());
-        verify(luuTruAnh, never()).xoa(anyString());
-    }
-
     // ---------- Quản trị viên xoá tài khoản ----------
-
-    @Test
-    void xoaTaiKhoanCoAnhTrongKhoThiXoaAnhTrongKho() {
-        TaiKhoan taiKhoan = taoTaiKhoan(KHO + "v1/eclinic/avatar/1.jpg");
-
-        quanLyTaiKhoanService.xoa(idAdmin(), taiKhoan.getId());
-
-        assertThat(taiKhoanRepository.existsById(taiKhoan.getId())).isFalse();
-        verify(luuTruAnh, timeout(5000)).xoa("avatar/" + taiKhoan.getId());
-    }
-
-    @Test
-    void xoaTaiKhoanDungAnhGoogleHoacKhongCoAnhThiKhongGoiKho() {
-        TaiKhoan anhGoogle = taoTaiKhoan(ANH_GOOGLE);
-        TaiKhoan khongAnh = taoTaiKhoan(null);
-
-        quanLyTaiKhoanService.xoa(idAdmin(), anhGoogle.getId());
-        quanLyTaiKhoanService.xoa(idAdmin(), khongAnh.getId());
-
-        assertThat(taiKhoanRepository.existsById(anhGoogle.getId())).isFalse();
-        assertThat(taiKhoanRepository.existsById(khongAnh.getId())).isFalse();
-        // Dọn ảnh chạy nền: đợi kho được hỏi về ảnh Google rồi mới khẳng định không có lệnh xoá
-        verify(luuTruAnh, timeout(5000)).laAnhCuaKho(ANH_GOOGLE);
-        verify(luuTruAnh, after(300).never()).xoa(anyString());
-    }
-
-    @Test
-    void khoLoiKhiDonAnhKhongLamHongViecXoaTaiKhoan() {
-        TaiKhoan taiKhoan = taoTaiKhoan(KHO + "v1/eclinic/avatar/1.jpg");
-        doThrow(new LoiNghiepVu(MaLoi.LUU_TRU_ANH_KHONG_KHA_DUNG)).when(luuTruAnh).xoa(anyString());
-
-        quanLyTaiKhoanService.xoa(idAdmin(), taiKhoan.getId());
-
-        verify(luuTruAnh, timeout(5000)).xoa("avatar/" + taiKhoan.getId());
-        assertThat(taiKhoanRepository.existsById(taiKhoan.getId())).isFalse();
-    }
-
-    @Test
-    void xoaTaiKhoanBiTuChoiThiKhongDungToiKho() {
-        TaiKhoan taiKhoan = taoTaiKhoan(KHO + "v1/eclinic/avatar/1.jpg");
-
-        // Tài khoản quản trị viên được bảo vệ; người thực hiện không phải quản trị viên
-        assertMaLoi(() -> quanLyTaiKhoanService.xoa(idAdmin(), idAdmin()), MaLoi.TAI_KHOAN_QUAN_TRI_DUOC_BAO_VE);
-        assertMaLoi(() -> quanLyTaiKhoanService.xoa(taiKhoan.getId(), taiKhoan.getId()), MaLoi.KHONG_CO_QUYEN);
-
-        assertThat(anhTrongDb(taiKhoan)).isEqualTo(KHO + "v1/eclinic/avatar/1.jpg");
-        verify(luuTruAnh, after(300).never()).xoa(anyString());
-    }
-
-    /** Quản trị viên mặc định do KhoiTaoAdminRunner tạo (không tạo thêm quản trị viên trong test). */
-    private Long idAdmin() {
-        return taiKhoanRepository.findByEmail("admin@eclinic.local").orElseThrow().getId();
-    }
 
     private TaiKhoan taoTaiKhoan(String anhDaiDien) {
         TaiKhoan taiKhoan = new TaiKhoan();

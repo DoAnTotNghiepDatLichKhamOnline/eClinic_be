@@ -1,0 +1,150 @@
+name: Rollback
+
+# Manual: run an older main commit on the VM again, using its GHCR images (only commits built by deploy.yml have them).
+# restore_db also loads the DB dump taken while that commit was running (needed across schema-changing migrations).
+# The next push to main deploys main again; revert the bad commit on main to make a rollback stick.
+on:
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: Commit on main to roll back to (short or full SHA)
+        required: true
+        type: string
+      restore_db:
+        description: Also restore the DB dump taken while that commit was running (overwrites current data)
+        type: boolean
+        default: false
+      confirm:
+        description: Type restore-db to confirm a DB restore
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Check target
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      packages: read
+    outputs:
+      target: ${{ steps.resolve.outputs.target }}
+    steps:
+      # Run from main only: a branch's own copy of this workflow must not reach production.
+      - name: Require main
+        env:
+          REF: ${{ github.ref }}
+        run: |
+          if [ "$REF" != refs/heads/main ]; then
+            echo "::error::Run Rollback from main (Use workflow from: main), not $REF"; exit 1
+          fi
+
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Resolve the commit and check it is on main
+        id: resolve
+        env:
+          SHA: ${{ inputs.sha }}
+          RESTORE_DB: ${{ inputs.restore_db }}
+          CONFIRM: ${{ inputs.confirm }}
+        run: |
+          target=$(git rev-parse --verify --quiet "${SHA}^{commit}") || { echo "::error::Unknown commit: $SHA"; exit 1; }
+          git merge-base --is-ancestor "$target" origin/main || { echo "::error::$target is not on main"; exit 1; }
+          if [ "$RESTORE_DB" = true ] && [ "$CONFIRM" != restore-db ]; then
+            echo "::error::restore_db is set: type restore-db in confirm"; exit 1
+          fi
+          echo "target=$target" >> "$GITHUB_OUTPUT"
+          echo "Rolling back to $target (restore_db=$RESTORE_DB)"
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check the images exist
+        env:
+          TARGET: ${{ steps.resolve.outputs.target }}
+        run: |
+          for app in identity-service catalog-service booking-service medical-service notification-service chatbot-service report-service api-gateway; do
+            docker buildx imagetools inspect "ghcr.io/doantotnghiepdatlichkhamonline/eclinic-$app:$TARGET" > /dev/null \
+              || { echo "::error::No image eclinic-$app:$TARGET in GHCR (commit built before images moved to CI?)"; exit 1; }
+          done
+
+  rollback:
+    name: Roll back the VM
+    needs: check
+    environment: production
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      packages: read
+    concurrency:
+      group: deploy-vm
+      cancel-in-progress: false
+    steps:
+      - name: Switch the stack over SSH
+        uses: appleboy/ssh-action@v1
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ACTOR: ${{ github.actor }}
+          REPO: ${{ github.repository }}
+          TARGET: ${{ needs.check.outputs.target }}
+          RESTORE_DB: ${{ inputs.restore_db }}
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: huythanhyasuo
+          key: ${{ secrets.VM_SSH_KEY }}
+          fingerprint: ${{ secrets.VM_SSH_FINGERPRINT }}
+          command_timeout: 40m
+          envs: GH_TOKEN,ACTOR,REPO,TARGET,RESTORE_DB
+          script: |
+            set -e
+            cd ~/eClinic_be
+            prev=$(git rev-parse HEAD)
+            git -c credential.helper= fetch "https://x-access-token:${GH_TOKEN}@github.com/${REPO}.git" main
+            # Scripts come from main: an older target may have older ones, or none.
+            tools=$(mktemp -d)
+            git archive FETCH_HEAD deploy/vm-backup.sh deploy/vm-restore.sh | tar -x -C "$tools"
+            dump=
+            if [ "$RESTORE_DB" = true ]; then
+              t7=$(printf %.7s "$TARGET")
+              # shellcheck disable=SC2012
+              src=$(ls -1t "$HOME"/eclinic-backups/eclinic-*-"$t7"-to-*.sql.gz 2>/dev/null | head -n 1)
+              if [ -z "$src" ]; then echo "No dump in ~/eclinic-backups taken while $t7 was running." >&2; exit 1; fi
+              # Copy it out first: the backup below rotates old dumps away.
+              dump="$tools/$(basename "$src")"
+              cp "$src" "$dump"
+              echo "Will restore $src"
+            fi
+            git reset --hard "$TARGET"
+            bash "$tools/deploy/vm-backup.sh" "$prev" "$TARGET" || { git reset --hard "$prev"; exit 1; }
+            dc="docker compose -f docker-compose.yml -f docker-compose.prod.yml --profile app"
+            apps="identity-service catalog-service booking-service medical-service notification-service chatbot-service report-service api-gateway"
+            echo "$GH_TOKEN" | docker login ghcr.io -u "$ACTOR" --password-stdin
+            IMAGE_TAG="$TARGET" $dc pull --quiet $apps || { docker logout ghcr.io; git reset --hard "$prev"; exit 1; }
+            docker logout ghcr.io
+            (umask 077; { grep -v '^IMAGE_TAG=' .env || true; echo "IMAGE_TAG=$TARGET"; } > .env.tmp)
+            cat .env.tmp > .env && rm -f .env.tmp
+            if [ -n "$dump" ]; then
+              $dc stop $apps
+              bash "$tools/deploy/vm-restore.sh" "$dump" || {
+                echo "Restore failed; the DB may be partial. The newest dump in ~/eclinic-backups is the state before this rollback." >&2
+                exit 1
+              }
+              # Caches, rate limits and link tokens in Redis belong to the data that was just replaced.
+              docker exec eclinic-redis redis-cli FLUSHALL
+            fi
+            $dc up -d --no-build --wait --wait-timeout 900
+            docker images --format '{{.Repository}}:{{.Tag}}' | grep '^ghcr.io/doantotnghiepdatlichkhamonline/eclinic-' | grep -v ":$TARGET\$" | xargs -r docker rmi || true
+            docker image prune -f
+            rm -rf "$tools"
+            $dc ps

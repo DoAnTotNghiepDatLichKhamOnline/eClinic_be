@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import iuh.fit.se.eclinic.booking.dto.response.NgayNghiResponse;
 import iuh.fit.se.eclinic.booking.service.NgayNghiService;
 import iuh.fit.se.eclinic.common.dto.PhanHoiApi;
+import iuh.fit.se.eclinic.common.web.CacheCongKhai;
 import lombok.RequiredArgsConstructor;
 
 /** Ngày bệnh viện nghỉ cho lịch của trang đặt lịch (công khai). */
@@ -28,6 +29,7 @@ public class NgayNghiController {
     @Operation(summary = "Ngày bệnh viện nghỉ trong khoảng (mặc định từ hôm nay, 1 năm; tối đa 366 ngày), lý do theo"
             + " ngôn ngữ của request. Ngày nghỉ không có lượt khám nào để đặt. Không cần đăng nhập")
     @GetMapping
+    @CacheCongKhai
     public PhanHoiApi<List<NgayNghiResponse>> danhSach(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate tuNgay,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate denNgay) {

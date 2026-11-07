@@ -17,6 +17,7 @@ import iuh.fit.se.eclinic.catalog.service.BacSiService;
 import iuh.fit.se.eclinic.common.dto.PhanHoiApi;
 import iuh.fit.se.eclinic.common.dto.TrangDuLieu;
 import iuh.fit.se.eclinic.common.enums.BuoiKham;
+import iuh.fit.se.eclinic.common.web.CacheCongKhai;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +35,8 @@ public class BacSiController {
             + " buoi (SANG trước 12:00, CHIEU 12:00-17:00, TOI từ 17:00, theo giờ bắt đầu của lượt khám): chỉ bác sĩ còn ít"
             + " nhất 1 lượt khám đặt được; ngày ngoài khoảng đặt lịch được cho trang rỗng")
     @GetMapping
+    // Lọc theo ngày / buổi phụ thuộc lượt khám còn trống: không cache
+    @CacheCongKhai(boQuaKhiCo = { "ngay", "buoi" })
     public PhanHoiApi<TrangDuLieu<BacSiResponse>> timKiem(
             @RequestParam(required = false) Long idChuyenKhoa,
             @RequestParam(required = false) String tuKhoa,
@@ -46,6 +49,7 @@ public class BacSiController {
 
     @Operation(summary = "Xem chi tiết bác sĩ")
     @GetMapping("/{id}")
+    @CacheCongKhai
     public PhanHoiApi<BacSiChiTietResponse> layChiTiet(@PathVariable Long id) {
         return PhanHoiApi.ok(bacSiService.layChiTiet(id));
     }

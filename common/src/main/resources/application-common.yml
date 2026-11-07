@@ -45,6 +45,11 @@ management:
         include: health,info
 
 app:
+  # Route có @CacheCongKhai (chuyên khoa, bác sĩ, quy tắc đặt lịch, ngày nghỉ): trình duyệt và CDN Vercel dùng lại response
+  # trong "giay" giây (0 = tắt, trả no-store như route khác); cdn=false chỉ cho trình duyệt cache (private, không s-maxage)
+  cache-cong-khai:
+    giay: ${PUBLIC_CACHE_SECONDS:60}
+    cdn: ${PUBLIC_CACHE_CDN:true}
   benh-an:
     # Số ngày bác sĩ được sửa hồ sơ bệnh án kể từ lúc ghi nhận (medical-service và booking-service cùng đọc)
     so-ngay-duoc-sua: ${RECORD_EDIT_DAYS:7}

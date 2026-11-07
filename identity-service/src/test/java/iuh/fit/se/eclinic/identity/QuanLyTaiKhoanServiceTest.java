@@ -3,26 +3,20 @@ package iuh.fit.se.eclinic.identity;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.event.ApplicationEvents;
-import org.springframework.test.context.event.RecordApplicationEvents;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import iuh.fit.se.eclinic.common.enums.NgonNgu;
-import iuh.fit.se.eclinic.common.dto.TrangDuLieu;
 import iuh.fit.se.eclinic.common.entity.booking.HoSoBenhNhan;
 import iuh.fit.se.eclinic.common.entity.booking.LichHen;
 import iuh.fit.se.eclinic.common.entity.catalog.BacSi;
@@ -41,44 +35,27 @@ import iuh.fit.se.eclinic.common.enums.TrangThaiTaiKhoan;
 import iuh.fit.se.eclinic.common.enums.VaiTro;
 import iuh.fit.se.eclinic.common.exception.LoiNghiepVu;
 import iuh.fit.se.eclinic.common.exception.MaLoi;
-import iuh.fit.se.eclinic.common.testsupport.MySqlTestcontainersConfiguration;
-import iuh.fit.se.eclinic.common.testsupport.RedisTestcontainersConfiguration;
 import iuh.fit.se.eclinic.common.testsupport.TestFixtures;
 import iuh.fit.se.eclinic.identity.dto.request.CapNhatTrangThaiTaiKhoanRequest;
-import iuh.fit.se.eclinic.identity.dto.request.DangKyRequest;
 import iuh.fit.se.eclinic.identity.dto.request.DangNhapRequest;
-import iuh.fit.se.eclinic.identity.dto.request.DoiEmailRequest;
 import iuh.fit.se.eclinic.identity.dto.response.ChiTietTaiKhoanResponse;
 import iuh.fit.se.eclinic.identity.dto.response.DangNhapResponse;
-import iuh.fit.se.eclinic.identity.dto.response.TaiKhoanQuanTriResponse;
-import iuh.fit.se.eclinic.identity.event.EmailDatLaiMatKhauEvent;
 import iuh.fit.se.eclinic.identity.event.EmailKichHoatLaiTaiKhoanEvent;
 import iuh.fit.se.eclinic.identity.event.EmailVoHieuHoaTaiKhoanEvent;
-import iuh.fit.se.eclinic.identity.event.EmailXacNhanDoiEmailEvent;
-import iuh.fit.se.eclinic.identity.event.EmailXacThucEvent;
 import iuh.fit.se.eclinic.identity.event.TaiKhoanDaXoaEvent;
 import iuh.fit.se.eclinic.identity.repository.TaiKhoanRepository;
 import iuh.fit.se.eclinic.identity.service.DangNhapService;
-import iuh.fit.se.eclinic.identity.service.DoiEmailService;
-import iuh.fit.se.eclinic.identity.service.MatKhauService;
 import iuh.fit.se.eclinic.identity.service.QuanLyTaiKhoanService;
 import iuh.fit.se.eclinic.identity.service.RefreshTokenService;
-import iuh.fit.se.eclinic.identity.service.XacThucService;
 import jakarta.persistence.EntityManager;
 
 /** Quản trị viên quản lý tài khoản với MySQL + Redis thật. */
-@SpringBootTest
-@Import({ MySqlTestcontainersConfiguration.class, RedisTestcontainersConfiguration.class })
-@RecordApplicationEvents
-class QuanLyTaiKhoanServiceTest {
+class QuanLyTaiKhoanServiceTest extends KiemThuTichHop {
 
     private static final String MAT_KHAU = "matkhau-cu";
 
     @Autowired QuanLyTaiKhoanService quanLyTaiKhoanService;
     @Autowired DangNhapService dangNhapService;
-    @Autowired DoiEmailService doiEmailService;
-    @Autowired MatKhauService matKhauService;
-    @Autowired XacThucService xacThucService;
     @Autowired RefreshTokenService refreshTokenService;
     @Autowired TaiKhoanRepository taiKhoanRepository;
     @Autowired PasswordEncoder passwordEncoder;
@@ -98,173 +75,6 @@ class QuanLyTaiKhoanServiceTest {
     }
 
     // ---------- Danh sách, chi tiết ----------
-
-    @Test
-    void timTheoTuKhoaTrenHoTenEmailSoDienThoaiKhongPhanBietHoaThuongVaDau() {
-        String hauTo = hauTo();
-        TaiKhoan theoTen = taoTaiKhoan(VaiTro.BENH_NHAN, TrangThaiTaiKhoan.DA_KICH_HOAT, "Nguyễn Văn " + hauTo,
-                "ql-" + hauTo() + "@example.com");
-        TaiKhoan theoEmail = taoTaiKhoan(VaiTro.BENH_NHAN, TrangThaiTaiKhoan.DA_KICH_HOAT, "Người khác",
-                "ql-" + hauTo + "@example.com");
-        TaiKhoan theoSoDienThoai = taoTaiKhoan(VaiTro.BENH_NHAN, TrangThaiTaiKhoan.DA_KICH_HOAT, "Người thứ ba",
-                "ql-" + hauTo() + "@example.com");
-
-        assertThat(idTimDuoc(hauTo, null, null)).containsExactlyInAnyOrder(theoTen.getId(), theoEmail.getId());
-        assertThat(idTimDuoc("  " + hauTo.toUpperCase() + " ", null, null))
-                .containsExactlyInAnyOrder(theoTen.getId(), theoEmail.getId());
-        // Collation của cột: gõ không dấu vẫn ra tên có dấu
-        assertThat(idTimDuoc("nguyen van " + hauTo, null, null)).containsExactly(theoTen.getId());
-        assertThat(idTimDuoc(theoSoDienThoai.getSoDienThoai(), null, null)).containsExactly(theoSoDienThoai.getId());
-        // Từ khoá rỗng = không lọc
-        assertThat(quanLyTaiKhoanService.timKiem(idAdmin, "   ", null, null, 0, 1).tongSoPhanTu())
-                .isEqualTo(quanLyTaiKhoanService.timKiem(idAdmin, null, null, null, 0, 1).tongSoPhanTu())
-                .isGreaterThanOrEqualTo(4);
-    }
-
-    @Test
-    void locTheoVaiTroVaTrangThaiKetHopTuKhoa() {
-        String hauTo = hauTo();
-        TaiKhoan benhNhan = taoTaiKhoan(VaiTro.BENH_NHAN, TrangThaiTaiKhoan.DA_KICH_HOAT, "Lọc " + hauTo);
-        TaiKhoan benhNhanBiKhoa = taoTaiKhoan(VaiTro.BENH_NHAN, TrangThaiTaiKhoan.VO_HIEU_HOA, "Lọc " + hauTo);
-        TaiKhoan chuaXacThuc = taoTaiKhoan(VaiTro.BENH_NHAN, TrangThaiTaiKhoan.CHO_XAC_NHAN, "Lọc " + hauTo);
-        TaiKhoan bacSi = taoTaiKhoan(VaiTro.BAC_SI, TrangThaiTaiKhoan.DA_KICH_HOAT, "Lọc " + hauTo);
-
-        assertThat(idTimDuoc(hauTo, null, null)).containsExactlyInAnyOrder(benhNhan.getId(), benhNhanBiKhoa.getId(),
-                chuaXacThuc.getId(), bacSi.getId());
-        assertThat(idTimDuoc(hauTo, VaiTro.BENH_NHAN, null)).containsExactlyInAnyOrder(benhNhan.getId(),
-                benhNhanBiKhoa.getId(), chuaXacThuc.getId());
-        assertThat(idTimDuoc(hauTo, VaiTro.BAC_SI, null)).containsExactly(bacSi.getId());
-        assertThat(idTimDuoc(hauTo, null, TrangThaiTaiKhoan.DA_KICH_HOAT)).containsExactlyInAnyOrder(benhNhan.getId(),
-                bacSi.getId());
-        assertThat(idTimDuoc(hauTo, VaiTro.BENH_NHAN, TrangThaiTaiKhoan.VO_HIEU_HOA))
-                .containsExactly(benhNhanBiKhoa.getId());
-        assertThat(idTimDuoc(hauTo, VaiTro.BENH_NHAN, TrangThaiTaiKhoan.CHO_XAC_NHAN))
-                .containsExactly(chuaXacThuc.getId());
-        assertThat(idTimDuoc(hauTo, VaiTro.QUAN_TRI_VIEN, null)).isEmpty();
-        // Không có từ khoá: quản trị viên mặc định nằm trong danh sách quản trị viên
-        assertThat(idTimDuoc(null, VaiTro.QUAN_TRI_VIEN, TrangThaiTaiKhoan.DA_KICH_HOAT)).contains(idAdmin);
-    }
-
-    @Test
-    void kyTuPhanTramGachDuoiVaChamThanTrongTuKhoaLaKyTuThuong() {
-        String hauTo = hauTo();
-        TaiKhoan phanTram = taoTaiKhoan(VaiTro.BENH_NHAN, TrangThaiTaiKhoan.DA_KICH_HOAT, hauTo + " 50%off");
-        TaiKhoan khongPhanTram = taoTaiKhoan(VaiTro.BENH_NHAN, TrangThaiTaiKhoan.DA_KICH_HOAT, hauTo + " 50xoff");
-        TaiKhoan gachDuoi = taoTaiKhoan(VaiTro.BENH_NHAN, TrangThaiTaiKhoan.DA_KICH_HOAT, hauTo + " a_b");
-        TaiKhoan khongGachDuoi = taoTaiKhoan(VaiTro.BENH_NHAN, TrangThaiTaiKhoan.DA_KICH_HOAT, hauTo + " axb");
-        TaiKhoan chamThan = taoTaiKhoan(VaiTro.BENH_NHAN, TrangThaiTaiKhoan.DA_KICH_HOAT, hauTo + " c!d");
-
-        // Nếu % và _ còn là ký tự đại diện thì 2 truy vấn đầu ra cả tài khoản "x"
-        assertThat(idTimDuoc(hauTo + " 50%off", null, null)).containsExactly(phanTram.getId());
-        assertThat(idTimDuoc(hauTo + " a_b", null, null)).containsExactly(gachDuoi.getId());
-        assertThat(idTimDuoc(hauTo + " c!d", null, null)).containsExactly(chamThan.getId());
-        assertThat(idTimDuoc(hauTo + " c!", null, null)).containsExactly(chamThan.getId());
-        // Gõ đúng 1 ký tự "%" hay "_": chỉ ra tài khoản thật sự chứa ký tự đó
-        assertThat(idTimDuoc("%", null, null)).contains(phanTram.getId())
-                .doesNotContain(khongPhanTram.getId(), gachDuoi.getId(), khongGachDuoi.getId(), chamThan.getId());
-        assertThat(idTimDuoc("_", null, null)).contains(gachDuoi.getId())
-                .doesNotContain(phanTram.getId(), khongPhanTram.getId(), khongGachDuoi.getId(), chamThan.getId());
-        assertThat(idTimDuoc("!", null, null)).contains(chamThan.getId())
-                .doesNotContain(phanTram.getId(), khongPhanTram.getId(), gachDuoi.getId(), khongGachDuoi.getId());
-    }
-
-    @Test
-    void moiTaoDungTruocVaPhanTrangDungTongSo() {
-        String hauTo = hauTo();
-        TaiKhoan thuNhat = taoTaiKhoan(VaiTro.BENH_NHAN, TrangThaiTaiKhoan.DA_KICH_HOAT, "Trang " + hauTo);
-        TaiKhoan thuHai = taoTaiKhoan(VaiTro.BENH_NHAN, TrangThaiTaiKhoan.DA_KICH_HOAT, "Trang " + hauTo);
-        TaiKhoan thuBa = taoTaiKhoan(VaiTro.BENH_NHAN, TrangThaiTaiKhoan.DA_KICH_HOAT, "Trang " + hauTo);
-
-        TrangDuLieu<TaiKhoanQuanTriResponse> trang0 = quanLyTaiKhoanService.timKiem(idAdmin, hauTo, null, null, 0, 2);
-        assertThat(trang0.noiDung()).extracting(TaiKhoanQuanTriResponse::id)
-                .containsExactly(thuBa.getId(), thuHai.getId());
-        assertThat(trang0.trang()).isZero();
-        assertThat(trang0.kichThuoc()).isEqualTo(2);
-        assertThat(trang0.tongSoPhanTu()).isEqualTo(3);
-        assertThat(trang0.tongSoTrang()).isEqualTo(2);
-
-        TrangDuLieu<TaiKhoanQuanTriResponse> trang1 = quanLyTaiKhoanService.timKiem(idAdmin, hauTo, null, null, 1, 2);
-        assertThat(trang1.noiDung()).extracting(TaiKhoanQuanTriResponse::id).containsExactly(thuNhat.getId());
-        assertThat(trang1.trang()).isEqualTo(1);
-        assertThat(trang1.tongSoPhanTu()).isEqualTo(3);
-
-        assertThat(quanLyTaiKhoanService.timKiem(idAdmin, hauTo, null, null, 2, 2).noiDung()).isEmpty();
-    }
-
-    @Test
-    void ngaySinhChiCoKhiHoSoBenhNhanDaLienKet() {
-        String hauTo = hauTo();
-        TaiKhoan daLienKet = taoTaiKhoan(VaiTro.BENH_NHAN, TrangThaiTaiKhoan.DA_KICH_HOAT, "NS " + hauTo);
-        taoHoSoBenhNhan(daLienKet, TrangThaiLienKet.DA_LIEN_KET, LocalDate.of(1990, 5, 20));
-        TaiKhoan choXacMinh = taoTaiKhoan(VaiTro.BENH_NHAN, TrangThaiTaiKhoan.DA_KICH_HOAT, "NS " + hauTo);
-        taoHoSoBenhNhan(choXacMinh, TrangThaiLienKet.CHO_XAC_MINH, LocalDate.of(1985, 1, 2));
-        TaiKhoan hoSoThieuNgaySinh = taoTaiKhoan(VaiTro.BENH_NHAN, TrangThaiTaiKhoan.DA_KICH_HOAT, "NS " + hauTo);
-        taoHoSoBenhNhan(hoSoThieuNgaySinh, TrangThaiLienKet.DA_LIEN_KET, null);
-        TaiKhoan khongHoSo = taoTaiKhoan(VaiTro.BENH_NHAN, TrangThaiTaiKhoan.VO_HIEU_HOA, "NS " + hauTo);
-        khongHoSo.setLyDoVoHieuHoa("Vi phạm");
-        taiKhoanRepository.save(khongHoSo);
-
-        List<TaiKhoanQuanTriResponse> danhSach = quanLyTaiKhoanService.timKiem(idAdmin, hauTo, null, null, 0, 20)
-                .noiDung();
-        assertThat(danhSach).hasSize(4);
-        TaiKhoanQuanTriResponse dong = dong(danhSach, daLienKet);
-        assertThat(dong.ngaySinh()).isEqualTo(LocalDate.of(1990, 5, 20));
-        assertThat(dong.email()).isEqualTo(daLienKet.getEmail());
-        assertThat(dong.hoTen()).isEqualTo(daLienKet.getHoTen());
-        assertThat(dong.soDienThoai()).isEqualTo(daLienKet.getSoDienThoai());
-        assertThat(dong.vaiTro()).isEqualTo(VaiTro.BENH_NHAN);
-        assertThat(dong.trangThai()).isEqualTo(TrangThaiTaiKhoan.DA_KICH_HOAT);
-        assertThat(dong.lyDoVoHieuHoa()).isNull();
-        assertThat(dong.ngayTao()).isNotNull();
-        assertThat(dong(danhSach, choXacMinh).ngaySinh()).isNull();
-        assertThat(dong(danhSach, hoSoThieuNgaySinh).ngaySinh()).isNull();
-        assertThat(dong(danhSach, khongHoSo).ngaySinh()).isNull();
-        assertThat(dong(danhSach, khongHoSo).lyDoVoHieuHoa()).isEqualTo("Vi phạm");
-
-        ChiTietTaiKhoanResponse chiTiet = quanLyTaiKhoanService.layChiTiet(idAdmin, daLienKet.getId());
-        assertThat(chiTiet.ngaySinh()).isEqualTo(LocalDate.of(1990, 5, 20));
-        assertThat(chiTiet.trangThaiLienKetHoSo()).isEqualTo(TrangThaiLienKet.DA_LIEN_KET);
-        assertThat(chiTiet.bacSi()).isNull();
-        ChiTietTaiKhoanResponse chiTietChoXacMinh = quanLyTaiKhoanService.layChiTiet(idAdmin, choXacMinh.getId());
-        assertThat(chiTietChoXacMinh.ngaySinh()).isNull();
-        assertThat(chiTietChoXacMinh.trangThaiLienKetHoSo()).isEqualTo(TrangThaiLienKet.CHO_XAC_MINH);
-        ChiTietTaiKhoanResponse chiTietKhongHoSo = quanLyTaiKhoanService.layChiTiet(idAdmin, khongHoSo.getId());
-        assertThat(chiTietKhongHoSo.ngaySinh()).isNull();
-        assertThat(chiTietKhongHoSo.trangThaiLienKetHoSo()).isNull();
-        assertThat(chiTietKhongHoSo.lyDoVoHieuHoa()).isEqualTo("Vi phạm");
-    }
-
-    @Test
-    void chiTietBacSiCoHoSoBacSiVaChuyenKhoa() {
-        TaiKhoan taiKhoan = taoTaiKhoan(VaiTro.BAC_SI, TrangThaiTaiKhoan.DA_KICH_HOAT, "BS " + hauTo());
-        BacSi bacSi = taoBacSi(taiKhoan);
-
-        ChiTietTaiKhoanResponse chiTiet = quanLyTaiKhoanService.layChiTiet(idAdmin, taiKhoan.getId());
-
-        assertThat(chiTiet.id()).isEqualTo(taiKhoan.getId());
-        assertThat(chiTiet.vaiTro()).isEqualTo(VaiTro.BAC_SI);
-        assertThat(chiTiet.coMatKhau()).isTrue();
-        assertThat(chiTiet.lienKetGoogle()).isFalse();
-        assertThat(chiTiet.ngayTao()).isNotNull();
-        assertThat(chiTiet.ngayCapNhat()).isNotNull();
-        assertThat(chiTiet.ngaySinh()).isNull();
-        assertThat(chiTiet.trangThaiLienKetHoSo()).isNull();
-        assertThat(chiTiet.bacSi().id()).isEqualTo(bacSi.getId());
-        assertThat(chiTiet.bacSi().tenChuyenKhoa()).isEqualTo(bacSi.getChuyenKhoa().getTenChuyenKhoa());
-        assertThat(chiTiet.bacSi().hocVi()).isEqualTo("ThS.BS");
-        // Quản trị viên mặc định: không có hồ sơ nào kèm theo
-        ChiTietTaiKhoanResponse admin = quanLyTaiKhoanService.layChiTiet(idAdmin, idAdmin);
-        assertThat(admin.vaiTro()).isEqualTo(VaiTro.QUAN_TRI_VIEN);
-        assertThat(admin.bacSi()).isNull();
-    }
-
-    @Test
-    void taiKhoanKhongTonTaiBaoKhongTimThay() {
-        assertMaLoi(() -> quanLyTaiKhoanService.layChiTiet(idAdmin, Long.MAX_VALUE), MaLoi.KHONG_TIM_THAY);
-        assertMaLoi(() -> quanLyTaiKhoanService.capNhatTrangThai(idAdmin, Long.MAX_VALUE, voHieuHoa("Vi phạm")),
-                MaLoi.KHONG_TIM_THAY);
-        assertMaLoi(() -> quanLyTaiKhoanService.xoa(idAdmin, Long.MAX_VALUE), MaLoi.KHONG_TIM_THAY);
-    }
 
     @Test
     void nguoiThucHienBiVoHieuHoaKhongConHoacKhongPhaiQuanTriVienBiTuChoi() {
@@ -317,104 +127,6 @@ class QuanLyTaiKhoanServiceTest {
     }
 
     @Test
-    void kichHoatLaiXoaLyDoPhatEmailDangNhapLaiDuocNhungKhongKhoiPhucPhienCu() {
-        TaiKhoan taiKhoan = taoTaiKhoan();
-        DangNhapResponse phienCu = dangNhap(taiKhoan);
-        quanLyTaiKhoanService.capNhatTrangThai(idAdmin, taiKhoan.getId(), voHieuHoa("Vi phạm"));
-
-        // Lý do gửi kèm khi kích hoạt lại bị bỏ qua
-        ChiTietTaiKhoanResponse ketQua = quanLyTaiKhoanService.capNhatTrangThai(idAdmin, taiKhoan.getId(),
-                new CapNhatTrangThaiTaiKhoanRequest(TrangThaiTaiKhoan.DA_KICH_HOAT, "không dùng"));
-
-        assertThat(ketQua.trangThai()).isEqualTo(TrangThaiTaiKhoan.DA_KICH_HOAT);
-        assertThat(ketQua.lyDoVoHieuHoa()).isNull();
-        TaiKhoan sau = trongDb(taiKhoan);
-        assertThat(sau.getTrangThai()).isEqualTo(TrangThaiTaiKhoan.DA_KICH_HOAT);
-        assertThat(sau.getLyDoVoHieuHoa()).isNull();
-        assertThat(applicationEvents.stream(EmailKichHoatLaiTaiKhoanEvent.class).toList())
-                .containsExactly(new EmailKichHoatLaiTaiKhoanEvent(taiKhoan.getEmail(), taiKhoan.getHoTen(), NgonNgu.VI));
-        assertThat(dangNhap(taiKhoan).accessToken()).isNotBlank();
-        assertMaLoi(() -> dangNhapService.lamMoi(phienCu.refreshToken()), MaLoi.PHIEN_DANG_NHAP_KHONG_HOP_LE);
-    }
-
-    @Test
-    void lienKetGuiTruocKhiVoHieuHoaKhongDungDuocSauKhiKichHoatLai() {
-        TaiKhoan taiKhoan = taoTaiKhoan();
-        String emailMoi = "ql-moi-" + hauTo() + "@example.com";
-        doiEmailService.yeuCau(taiKhoan.getId(), new DoiEmailRequest(emailMoi, MAT_KHAU));
-        String tokenDoiEmail = applicationEvents.stream(EmailXacNhanDoiEmailEvent.class).toList().get(0).token();
-        matKhauService.quenMatKhau(taiKhoan.getEmail());
-        String tokenDatLai = applicationEvents.stream(EmailDatLaiMatKhauEvent.class).toList().get(0).token();
-
-        quanLyTaiKhoanService.capNhatTrangThai(idAdmin, taiKhoan.getId(), voHieuHoa("Vi phạm"));
-        quanLyTaiKhoanService.capNhatTrangThai(idAdmin, taiKhoan.getId(), kichHoatLai());
-
-        // Tài khoản đã hoạt động lại nên 410 là do liên kết đã bị huỷ
-        assertThat(doiEmailService.layYeuCauDangCho(taiKhoan.getId())).isNull();
-        assertMaLoi(() -> doiEmailService.xacNhan(tokenDoiEmail), MaLoi.LIEN_KET_KHONG_HOP_LE);
-        assertMaLoi(() -> matKhauService.datLaiMatKhau(tokenDatLai, "matkhau-moi"), MaLoi.LIEN_KET_KHONG_HOP_LE);
-        assertThat(trongDb(taiKhoan).getEmail()).isEqualTo(taiKhoan.getEmail());
-        assertThat(dangNhap(taiKhoan).accessToken()).isNotBlank();
-    }
-
-    @Test
-    void voHieuHoaThieuLyDoBao400VaKhongDoiGi() {
-        TaiKhoan taiKhoan = taoTaiKhoan();
-        DangNhapResponse phien = dangNhap(taiKhoan);
-
-        for (String lyDo : new String[] { null, "", "   " }) {
-            assertThatThrownBy(() -> quanLyTaiKhoanService.capNhatTrangThai(idAdmin, taiKhoan.getId(), voHieuHoa(lyDo)))
-                    .isInstanceOf(LoiNghiepVu.class)
-                    .hasMessage("loi.DU_LIEU_KHONG_HOP_LE.lyDoVoHieuHoa")
-                    .extracting(e -> ((LoiNghiepVu) e).getMaLoi())
-                    .isEqualTo(MaLoi.DU_LIEU_KHONG_HOP_LE);
-        }
-
-        assertThat(trongDb(taiKhoan).getTrangThai()).isEqualTo(TrangThaiTaiKhoan.DA_KICH_HOAT);
-        assertThat(dangNhapService.lamMoi(phien.refreshToken()).accessToken()).isNotBlank();
-        assertThat(applicationEvents.stream(EmailVoHieuHoaTaiKhoanEvent.class).toList()).isEmpty();
-    }
-
-    @Test
-    void chuyenSangTrangThaiDangCoBao409() {
-        TaiKhoan dangHoatDong = taoTaiKhoan();
-        TaiKhoan biKhoa = taoTaiKhoan(VaiTro.BENH_NHAN, TrangThaiTaiKhoan.VO_HIEU_HOA, "Bị khoá");
-        biKhoa.setLyDoVoHieuHoa("Lý do cũ");
-        taiKhoanRepository.save(biKhoa);
-
-        assertMaLoi(() -> quanLyTaiKhoanService.capNhatTrangThai(idAdmin, dangHoatDong.getId(), kichHoatLai()),
-                MaLoi.TRANG_THAI_TAI_KHOAN_KHONG_HOP_LE);
-        assertMaLoi(() -> quanLyTaiKhoanService.capNhatTrangThai(idAdmin, biKhoa.getId(), voHieuHoa("Lý do mới")),
-                MaLoi.TRANG_THAI_TAI_KHOAN_KHONG_HOP_LE);
-
-        // Vô hiệu hoá lần 2 không ghi đè lý do và không gửi email
-        assertThat(trongDb(biKhoa).getLyDoVoHieuHoa()).isEqualTo("Lý do cũ");
-        assertThat(applicationEvents.stream(EmailVoHieuHoaTaiKhoanEvent.class).toList()).isEmpty();
-        assertThat(applicationEvents.stream(EmailKichHoatLaiTaiKhoanEvent.class).toList()).isEmpty();
-    }
-
-    @Test
-    void taiKhoanChuaXacThucKhongDoiTrangThaiDuocVaKhongAiChuyenVeChoXacNhanDuoc() {
-        TaiKhoan chuaXacThuc = taoTaiKhoan(VaiTro.BENH_NHAN, TrangThaiTaiKhoan.CHO_XAC_NHAN, "Chưa xác thực");
-        TaiKhoan dangHoatDong = taoTaiKhoan();
-        CapNhatTrangThaiTaiKhoanRequest veChoXacNhan = new CapNhatTrangThaiTaiKhoanRequest(
-                TrangThaiTaiKhoan.CHO_XAC_NHAN, "Lý do");
-
-        assertMaLoi(() -> quanLyTaiKhoanService.capNhatTrangThai(idAdmin, chuaXacThuc.getId(), voHieuHoa("Vi phạm")),
-                MaLoi.TRANG_THAI_TAI_KHOAN_KHONG_HOP_LE);
-        // Kích hoạt hộ = bỏ qua bước xác thực email
-        assertMaLoi(() -> quanLyTaiKhoanService.capNhatTrangThai(idAdmin, chuaXacThuc.getId(), kichHoatLai()),
-                MaLoi.TRANG_THAI_TAI_KHOAN_KHONG_HOP_LE);
-        assertMaLoi(() -> quanLyTaiKhoanService.capNhatTrangThai(idAdmin, dangHoatDong.getId(), veChoXacNhan),
-                MaLoi.DU_LIEU_KHONG_HOP_LE);
-        assertMaLoi(() -> quanLyTaiKhoanService.capNhatTrangThai(idAdmin, chuaXacThuc.getId(), veChoXacNhan),
-                MaLoi.DU_LIEU_KHONG_HOP_LE);
-
-        assertThat(trongDb(chuaXacThuc).getTrangThai()).isEqualTo(TrangThaiTaiKhoan.CHO_XAC_NHAN);
-        assertThat(trongDb(dangHoatDong).getTrangThai()).isEqualTo(TrangThaiTaiKhoan.DA_KICH_HOAT);
-    }
-
-    @Test
     void taiKhoanQuanTriVienKhongVoHieuHoaVaKhongXoaDuoc() {
         assertMaLoi(() -> quanLyTaiKhoanService.capNhatTrangThai(idAdmin, idAdmin, voHieuHoa("Tự khoá")),
                 MaLoi.TAI_KHOAN_QUAN_TRI_DUOC_BAO_VE);
@@ -452,63 +164,7 @@ class QuanLyTaiKhoanServiceTest {
                 .isEqualTo(TrangThaiTaiKhoan.VO_HIEU_HOA);
     }
 
-    @Test
-    void bacSiChiConLichHenDaQuaHoacKhongCoLichHenVanVoHieuHoaDuoc() {
-        TaiKhoan coLichDaQua = taoTaiKhoan(VaiTro.BAC_SI, TrangThaiTaiKhoan.DA_KICH_HOAT, "BS " + hauTo());
-        taoLichHen(taoBacSi(coLichDaQua), LocalDate.now().minusDays(1));
-        TaiKhoan khongLichHen = taoTaiKhoan(VaiTro.BAC_SI, TrangThaiTaiKhoan.DA_KICH_HOAT, "BS " + hauTo());
-        taoBacSi(khongLichHen);
-
-        ChiTietTaiKhoanResponse ketQua = quanLyTaiKhoanService.capNhatTrangThai(idAdmin, coLichDaQua.getId(),
-                voHieuHoa("Nghỉ việc"));
-        assertThat(ketQua.trangThai()).isEqualTo(TrangThaiTaiKhoan.VO_HIEU_HOA);
-        // identity-service không ghi bảng bac_si: hồ sơ bác sĩ vẫn còn nguyên trong chi tiết
-        assertThat(ketQua.bacSi()).isNotNull();
-        assertThat(quanLyTaiKhoanService.capNhatTrangThai(idAdmin, khongLichHen.getId(), voHieuHoa("Nghỉ việc"))
-                .trangThai()).isEqualTo(TrangThaiTaiKhoan.VO_HIEU_HOA);
-    }
-
     // ---------- Xoá ----------
-
-    @Test
-    void xoaTaiKhoanChuaDuocThamChieuXoaLuonPhienVaLienKetRoiEmailDangKyLaiDuoc() {
-        String email = "ql-xoa-" + hauTo() + "@example.com";
-        String soDienThoai = soDienThoaiMoi();
-        Long id = xacThucService.dangKy(new DangKyRequest("Người đăng ký", email, "Matkhau@123", soDienThoai, null)).id();
-        String tokenXacThuc = applicationEvents.stream(EmailXacThucEvent.class).toList().get(0).token();
-        TaiKhoan taiKhoan = taiKhoanRepository.findById(id).orElseThrow();
-        String tokenA = refreshTokenService.tao(taiKhoan, "JUnit A", Duration.ofDays(7)).refreshToken();
-        String tokenB = refreshTokenService.tao(taiKhoan, "JUnit B", Duration.ofDays(7)).refreshToken();
-        assertThat(refreshTokenService.layPhienDangHoatDong(id)).hasSize(2);
-
-        quanLyTaiKhoanService.xoa(idAdmin, id);
-
-        assertThat(taiKhoanRepository.existsById(id)).isFalse();
-        assertThat(refreshTokenService.timTheoToken(tokenA)).isEmpty();
-        assertThat(refreshTokenService.timTheoToken(tokenB)).isEmpty();
-        assertMaLoi(() -> xacThucService.xacThucEmail(tokenXacThuc), MaLoi.LIEN_KET_KHONG_HOP_LE);
-        assertThat(applicationEvents.stream(TaiKhoanDaXoaEvent.class).toList())
-                .containsExactly(new TaiKhoanDaXoaEvent(id, null));
-        assertMaLoi(() -> quanLyTaiKhoanService.layChiTiet(idAdmin, id), MaLoi.KHONG_TIM_THAY);
-        // Email và số điện thoại được giải phóng
-        Long idMoi = xacThucService.dangKy(new DangKyRequest("Người đăng ký lại", email, "Matkhau@123", soDienThoai, null))
-                .id();
-        assertThat(idMoi).isNotEqualTo(id);
-    }
-
-    @Test
-    void xoaTaiKhoanDangHoatDongKhongCoDuLieuCungDuoc() {
-        TaiKhoan taiKhoan = taoTaiKhoan();
-        taiKhoan.setAnhDaiDien("https://lh3.googleusercontent.com/a/anh");
-        taiKhoanRepository.save(taiKhoan);
-        dangNhap(taiKhoan);
-
-        quanLyTaiKhoanService.xoa(idAdmin, taiKhoan.getId());
-
-        assertThat(taiKhoanRepository.existsById(taiKhoan.getId())).isFalse();
-        assertThat(applicationEvents.stream(TaiKhoanDaXoaEvent.class).toList())
-                .containsExactly(new TaiKhoanDaXoaEvent(taiKhoan.getId(), "https://lh3.googleusercontent.com/a/anh"));
-    }
 
     @Test
     void xoaBiTuChoiKhiConDuLieuThamChieuVaThongDiepNeuRoDuLieuNao() {
@@ -553,16 +209,6 @@ class QuanLyTaiKhoanServiceTest {
                 .extracting(e -> ((LoiNghiepVu) e).getMaLoi())
                 .isEqualTo(MaLoi.TAI_KHOAN_DANG_DUOC_SU_DUNG);
         assertThat(taiKhoanRepository.existsById(taiKhoan.getId())).isTrue();
-    }
-
-    private List<Long> idTimDuoc(String tuKhoa, VaiTro vaiTro, TrangThaiTaiKhoan trangThai) {
-        return quanLyTaiKhoanService.timKiem(idAdmin, tuKhoa, vaiTro, trangThai, 0, 100).noiDung().stream()
-                .map(TaiKhoanQuanTriResponse::id)
-                .toList();
-    }
-
-    private static TaiKhoanQuanTriResponse dong(List<TaiKhoanQuanTriResponse> danhSach, TaiKhoan taiKhoan) {
-        return danhSach.stream().filter(d -> d.id().equals(taiKhoan.getId())).findFirst().orElseThrow();
     }
 
     private static CapNhatTrangThaiTaiKhoanRequest voHieuHoa(String lyDo) {
