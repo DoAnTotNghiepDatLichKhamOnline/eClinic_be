@@ -14,10 +14,6 @@ public final class NguoiDungGiaLap {
     private NguoiDungGiaLap() {
     }
 
-    public static RequestPostProcessor quanTriVien() {
-        return giaLap(1L, VaiTro.QUAN_TRI_VIEN);
-    }
-
     public static RequestPostProcessor bacSi(Long idTaiKhoan) {
         return giaLap(idTaiKhoan, VaiTro.BAC_SI);
     }

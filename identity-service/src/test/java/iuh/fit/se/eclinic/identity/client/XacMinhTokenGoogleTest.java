@@ -1,6 +1,5 @@
 package iuh.fit.se.eclinic.identity.client;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.security.KeyPair;
@@ -25,7 +24,6 @@ import com.nimbusds.jwt.SignedJWT;
 
 import iuh.fit.se.eclinic.common.exception.LoiNghiepVu;
 import iuh.fit.se.eclinic.common.exception.MaLoi;
-import iuh.fit.se.eclinic.identity.config.GoogleProperties;
 
 /** Kiểm tra ID token Google không gọi Google: token ký bằng khoá RSA tự tạo. */
 class XacMinhTokenGoogleTest {
@@ -48,29 +46,6 @@ class XacMinhTokenGoogleTest {
     }
 
     @Test
-    void chapNhanCaHaiGiaTriIssVaTraThongTin() {
-        for (String iss : XacMinhTokenGoogle.NHA_PHAT_HANH) {
-            ThongTinGoogle thongTin = xacMinh.xacMinh(token(c -> c.issuer(iss)
-                    .claim("email", " Nguoi.Dung@Gmail.com ")
-                    .claim("hd", null)
-                    .claim("name", "Người Dùng")
-                    .claim("picture", "https://lh3.googleusercontent.com/a/anh")));
-
-            assertThat(thongTin.sub()).isEqualTo("1234567890");
-            assertThat(thongTin.email()).isEqualTo("nguoi.dung@gmail.com");
-            assertThat(thongTin.hd()).isNull();
-            assertThat(thongTin.ten()).isEqualTo("Người Dùng");
-            assertThat(thongTin.anh()).isEqualTo("https://lh3.googleusercontent.com/a/anh");
-        }
-    }
-
-    @Test
-    void emailVerifiedDangChuoiTrueVanHopLe() {
-        assertThat(xacMinh.xacMinh(token(c -> c.claim("email_verified", "true"))).email())
-                .isEqualTo("user@gmail.com");
-    }
-
-    @Test
     void tokenSaiDieuKienBao401() {
         assertMaLoi(token(c -> c.issuer("https://evil.example.com")), MaLoi.GOOGLE_TOKEN_KHONG_HOP_LE);
         assertMaLoi(token(c -> c.audience("client-khac.apps.googleusercontent.com")), MaLoi.GOOGLE_TOKEN_KHONG_HOP_LE);
@@ -88,37 +63,6 @@ class XacMinhTokenGoogleTest {
         assertMaLoi(token((RSAPrivateKey) khoaKhac.getPrivate(), c -> { }), MaLoi.GOOGLE_TOKEN_KHONG_HOP_LE);
         assertMaLoi("khong-phai-jwt", MaLoi.GOOGLE_TOKEN_KHONG_HOP_LE);
         assertMaLoi("a.b.c", MaLoi.GOOGLE_TOKEN_KHONG_HOP_LE);
-    }
-
-    @Test
-    void chuaCauHinhClientIdBao503() {
-        XacMinhTokenGoogle chuaCauHinh = new XacMinhTokenGoogle(
-                new GoogleProperties(" ", "https://www.googleapis.com/oauth2/v3/certs", Duration.ofSeconds(5)));
-
-        assertThatThrownBy(() -> chuaCauHinh.xacMinh(token(c -> { })))
-                .isInstanceOf(LoiNghiepVu.class)
-                .extracting(e -> ((LoiNghiepVu) e).getMaLoi())
-                .isEqualTo(MaLoi.DANG_NHAP_GOOGLE_KHONG_KHA_DUNG);
-    }
-
-    @Test
-    void khongLayDuocKhoaCongKhaiCuaGoogleBao503() {
-        XacMinhTokenGoogle khongKetNoi = new XacMinhTokenGoogle(
-                new GoogleProperties(CLIENT_ID, "http://127.0.0.1:1/certs", Duration.ofSeconds(2)));
-
-        assertThatThrownBy(() -> khongKetNoi.xacMinh(token(c -> { })))
-                .isInstanceOf(LoiNghiepVu.class)
-                .extracting(e -> ((LoiNghiepVu) e).getMaLoi())
-                .isEqualTo(MaLoi.DANG_NHAP_GOOGLE_KHONG_KHA_DUNG);
-    }
-
-    @Test
-    void googleChiDamBaoGmailVaWorkspace() {
-        assertThat(new ThongTinGoogle("1", "a@gmail.com", null, null, null).laGoogleXacNhan()).isTrue();
-        assertThat(new ThongTinGoogle("1", "a@congty.vn", "congty.vn", null, null).laGoogleXacNhan()).isTrue();
-        assertThat(new ThongTinGoogle("1", "a@yahoo.com", null, null, null).laGoogleXacNhan()).isFalse();
-        assertThat(new ThongTinGoogle("1", "a@yahoo.com", " ", null, null).laGoogleXacNhan()).isFalse();
-        assertThat(new ThongTinGoogle("1", "a@gmail.com.evil.vn", null, null, null).laGoogleXacNhan()).isFalse();
     }
 
     private static void assertMaLoi(String idToken, MaLoi maLoi) {

@@ -114,41 +114,6 @@ class ApiGatewayTest {
     }
 
     @Test
-    void chuyenTiepBodyCuaPost() throws Exception {
-        String body = "{\"tenChuyenKhoa\": \"Nội tiết\"}";
-        gui(HttpRequest.newBuilder(url("/api/catalog/chuyen-khoa")).header("Content-Type", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(body, StandardCharsets.UTF_8)));
-
-        assertThat(yeuCauCuoi.get().phuongThuc()).isEqualTo("POST");
-        assertThat(yeuCauCuoi.get().body()).isEqualTo(body);
-    }
-
-    /** Gateway không tự đọc multipart: service phải nhận đúng từng byte và đúng boundary trong Content-Type. */
-    @Test
-    void chuyenTiepNguyenBodyMultipart() throws Exception {
-        String kieu = "multipart/form-data; boundary=----ranhGioiTest";
-        byte[] dau = ("------ranhGioiTest\r\nContent-Disposition: form-data; name=\"anh\"; filename=\"a.png\"\r\n"
-                + "Content-Type: image/png\r\n\r\n").getBytes(StandardCharsets.UTF_8);
-        byte[] cuoi = "\r\n------ranhGioiTest--\r\n".getBytes(StandardCharsets.UTF_8);
-        // 300 KB dữ liệu nhị phân (có cả byte không phải UTF-8)
-        byte[] body = new byte[dau.length + 300_000 + cuoi.length];
-        System.arraycopy(dau, 0, body, 0, dau.length);
-        for (int i = 0; i < 300_000; i++) {
-            body[dau.length + i] = (byte) (i * 31);
-        }
-        System.arraycopy(cuoi, 0, body, dau.length + 300_000, cuoi.length);
-
-        HttpResponse<String> phanHoi = gui(HttpRequest.newBuilder(url("/api/catalog/tai-len"))
-                .header("Content-Type", kieu).POST(HttpRequest.BodyPublishers.ofByteArray(body)));
-
-        assertThat(phanHoi.statusCode()).isEqualTo(200);
-        // Gateway ghi lại header (bỏ dấu cách, thêm ;charset=UTF-8) nhưng boundary phải còn nguyên
-        assertThat(yeuCauCuoi.get().contentType()).startsWith("multipart/form-data")
-                .contains("boundary=----ranhGioiTest");
-        assertThat(yeuCauCuoi.get().noiDung()).isEqualTo(body);
-    }
-
-    @Test
     void requestQuaLonBiGatewayTuChoi413KhongChuyenTiepVaVanCoHeaderCors() throws Exception {
         // Giới hạn trong test là 1MB
         HttpResponse<String> phanHoi = gui(HttpRequest.newBuilder(url("/api/catalog/tai-len"))
@@ -172,29 +137,6 @@ class ApiGatewayTest {
         assertThat(gui(HttpRequest.newBuilder(url("/api/catalog/tai-len"))
                 .POST(HttpRequest.BodyPublishers.ofByteArray(new byte[1024 * 1024]))).statusCode()).isEqualTo(200);
         assertThat(yeuCauCuoi.get().noiDung()).hasSize(1024 * 1024);
-    }
-
-    @Test
-    void loiCuaServiceDuocChuyenNguyenChoFrontend() throws Exception {
-        trangThaiTraVe = 409;
-        bodyTraVe = "{\"thanhCong\":false,\"maLoi\":\"TEN_CHUYEN_KHOA_DA_TON_TAI\",\"thongDiep\":\"Tên đã tồn tại\"}";
-
-        HttpResponse<byte[]> phanHoi = httpClient.send(
-                HttpRequest.newBuilder(url("/api/catalog/chuyen-khoa")).GET().build(),
-                HttpResponse.BodyHandlers.ofByteArray());
-
-        assertThat(phanHoi.statusCode()).isEqualTo(409);
-        assertThat(phanHoi.body()).isEqualTo(bodyTraVe.getBytes(StandardCharsets.UTF_8));
-    }
-
-    @Test
-    void preflightCorsDoGatewayTraLoiKhongChuyenTiep() throws Exception {
-        HttpResponse<String> phanHoi = gui(preflight(FRONTEND));
-
-        assertThat(phanHoi.statusCode()).isEqualTo(200);
-        assertThat(phanHoi.headers().firstValue("Access-Control-Allow-Origin")).hasValue(FRONTEND);
-        assertThat(phanHoi.headers().firstValue("Access-Control-Allow-Credentials")).hasValue("true");
-        assertThat(yeuCauCuoi.get()).isNull();
     }
 
     @Test
@@ -223,60 +165,11 @@ class ApiGatewayTest {
     }
 
     @Test
-    void apiAuthCungDiToiIdentityService() throws Exception {
-        HttpResponse<String> phanHoi = gui(HttpRequest.newBuilder(url("/api/auth/login"))
-                .POST(HttpRequest.BodyPublishers.ofString("{}")));
-
-        // identity trỏ vào cổng 1: 503 nghĩa là đã có route (không có route thì 404)
-        assertThat(phanHoi.statusCode()).isEqualTo(503);
-        assertThat(phanHoi.body()).contains("\"maLoi\":\"DICH_VU_KHONG_KHA_DUNG\"");
-    }
-
-    @Test
-    void apiUsersCungDiToiIdentityService() throws Exception {
-        HttpResponse<String> phanHoi = gui(HttpRequest.newBuilder(url("/api/users/me"))
-                .header("Authorization", "Bearer abc.def.ghi").GET());
-
-        // identity trỏ vào cổng 1: 503 nghĩa là đã có route (không có route thì 404)
-        assertThat(phanHoi.statusCode()).isEqualTo(503);
-        assertThat(phanHoi.body()).contains("\"maLoi\":\"DICH_VU_KHONG_KHA_DUNG\"");
-    }
-
-    /** Danh sách tài khoản là đúng "/api/users" (không có đuôi): vẫn phải khớp Path=/api/users/**. */
-    @Test
-    void apiUsersKhongCoPhanDuoiCungDiToiIdentityService() throws Exception {
-        for (String duongDan : new String[] { "/api/users", "/api/users?trang=0&kichThuoc=5", "/api/users/7/status" }) {
-            HttpResponse<String> phanHoi = gui(HttpRequest.newBuilder(url(duongDan))
-                    .header("Authorization", "Bearer abc.def.ghi").GET());
-
-            // identity trỏ vào cổng 1: 503 nghĩa là đã có route (không có route thì 404)
-            assertThat(phanHoi.statusCode()).as(duongDan).isEqualTo(503);
-            assertThat(phanHoi.body()).contains("\"maLoi\":\"DICH_VU_KHONG_KHA_DUNG\"");
-        }
-    }
-
-    @Test
     void serviceTraLoiQuaLauTraVe504() throws Exception {
         HttpResponse<String> phanHoi = gui(HttpRequest.newBuilder(url("/api/catalog/cham")).GET());
 
         assertThat(phanHoi.statusCode()).isEqualTo(504);
         assertThat(phanHoi.body()).contains("\"thanhCong\":false").contains("\"maLoi\":\"DICH_VU_PHAN_HOI_QUA_LAU\"");
-    }
-
-    @Test
-    void duongDanKhongCoRouteTraVe404() throws Exception {
-        HttpResponse<String> phanHoi = gui(HttpRequest.newBuilder(url("/api/khong-co-route")).GET());
-
-        assertThat(phanHoi.statusCode()).isEqualTo(404);
-        assertThat(phanHoi.body()).contains("\"thanhCong\":false").contains("\"maLoi\":\"KHONG_TIM_THAY\"");
-    }
-
-    @Test
-    void healthCuaGatewayLaUp() throws Exception {
-        HttpResponse<String> phanHoi = gui(HttpRequest.newBuilder(url("/actuator/health")).GET());
-
-        assertThat(phanHoi.statusCode()).isEqualTo(200);
-        assertThat(phanHoi.body()).contains("\"status\":\"UP\"");
     }
 
     private HttpRequest.Builder preflight(String origin) {

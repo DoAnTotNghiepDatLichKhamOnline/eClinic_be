@@ -1,5 +1,7 @@
 package iuh.fit.se.eclinic.common.security;
 
+import java.time.Duration;
+
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -61,9 +63,11 @@ public class BaoMatConfig {
         return http.build();
     }
 
+    /** BCrypt xếp hàng theo số CPU (xem MaHoaMatKhauGioiHan); chờ tối đa 20 giây, ngắn hơn 30 giây của gateway. */
     @Bean
     PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+        return new MaHoaMatKhauGioiHan(new BCryptPasswordEncoder(), Runtime.getRuntime().availableProcessors(),
+                Duration.ofSeconds(20));
     }
 
 }

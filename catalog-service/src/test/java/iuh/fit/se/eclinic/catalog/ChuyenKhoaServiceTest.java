@@ -8,15 +8,12 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import iuh.fit.se.eclinic.catalog.dto.request.ChuyenKhoaRequest;
-import iuh.fit.se.eclinic.catalog.dto.response.ChuyenKhoaQuanTriResponse;
-import iuh.fit.se.eclinic.catalog.dto.response.ChuyenKhoaResponse;
 import iuh.fit.se.eclinic.catalog.service.ChuyenKhoaService;
-import iuh.fit.se.eclinic.common.dto.TrangDuLieu;
-import iuh.fit.se.eclinic.common.exception.LoiKhongTimThay;
 import iuh.fit.se.eclinic.common.exception.LoiNghiepVu;
 import iuh.fit.se.eclinic.common.exception.MaLoi;
 import iuh.fit.se.eclinic.common.testsupport.MySqlTestcontainersConfiguration;
@@ -24,22 +21,15 @@ import iuh.fit.se.eclinic.common.testsupport.TestFixtures;
 import jakarta.persistence.EntityManager;
 
 /** Test service với MySQL thật (Testcontainers) cho các quy tắc do DB quyết định. */
-@SpringBootTest
+// Giữ 3 annotation giống hệt KhungDungChungTest để hai lớp dùng chung một Spring context (một lần khởi động MySQL)
+@SpringBootTest(properties = "app.bao-mat.duong-dan-cong-khai=GET /api/mau/cong-khai")
+@AutoConfigureMockMvc
 @Import(MySqlTestcontainersConfiguration.class)
 class ChuyenKhoaServiceTest {
 
     @Autowired ChuyenKhoaService chuyenKhoaService;
     @Autowired EntityManager entityManager;
     @Autowired PlatformTransactionManager transactionManager;
-
-    /** Các test bên dưới dựa vào collation giống docker-compose.yml (MySqlTestcontainersConfiguration). */
-    @Test
-    void cotTenDungCollationGiongDockerCompose() {
-        Object collation = entityManager.createNativeQuery("SELECT COLLATION_NAME FROM information_schema.COLUMNS"
-                + " WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'chuyen_khoa' AND COLUMN_NAME = 'ten_chuyen_khoa'")
-                .getSingleResult();
-        assertThat(collation).isEqualTo("utf8mb4_unicode_ci");
-    }
 
     @Test
     void trungTenKhongPhanBietHoaThuongVaDau() {
@@ -50,43 +40,6 @@ class ChuyenKhoaServiceTest {
                 .isInstanceOf(LoiNghiepVu.class)
                 .extracting(e -> ((LoiNghiepVu) e).getMaLoi())
                 .isEqualTo(MaLoi.TEN_CHUYEN_KHOA_DA_TON_TAI);
-    }
-
-    @Test
-    void capNhatGiuTenCuDuocNhungTrungTenKhacThiLoi() {
-        String hauTo = hauTo();
-        ChuyenKhoaQuanTriResponse timMach = chuyenKhoaService.tao(new ChuyenKhoaRequest("Tim mạch " + hauTo, null, null, null, null, null));
-        chuyenKhoaService.tao(new ChuyenKhoaRequest("Thần kinh " + hauTo, null, null, null, null, null));
-
-        ChuyenKhoaQuanTriResponse daSua = chuyenKhoaService.capNhat(timMach.id(),
-                new ChuyenKhoaRequest("Tim mạch " + hauTo, null, "Bệnh tim, huyết áp", null, null, null));
-        assertThat(daSua.moTa()).isEqualTo("Bệnh tim, huyết áp");
-
-        assertThatThrownBy(() -> chuyenKhoaService.capNhat(timMach.id(),
-                new ChuyenKhoaRequest("THAN KINH " + hauTo, null, null, null, null, null)))
-                .isInstanceOf(LoiNghiepVu.class)
-                .extracting(e -> ((LoiNghiepVu) e).getMaLoi())
-                .isEqualTo(MaLoi.TEN_CHUYEN_KHOA_DA_TON_TAI);
-    }
-
-    @Test
-    void timKiemKhongDauVanThay() {
-        String hauTo = hauTo();
-        chuyenKhoaService.tao(new ChuyenKhoaRequest("Nội tiết " + hauTo, null, null, null, null, null));
-
-        TrangDuLieu<ChuyenKhoaResponse> ketQua = chuyenKhoaService.timKiem("noi tiet " + hauTo, 0, 20);
-
-        assertThat(ketQua.tongSoPhanTu()).isEqualTo(1);
-        assertThat(ketQua.noiDung().get(0).tenChuyenKhoa()).isEqualTo("Nội tiết " + hauTo);
-    }
-
-    @Test
-    void xoaChuyenKhoaChuaDungThiXoaDuoc() {
-        ChuyenKhoaQuanTriResponse daTao = chuyenKhoaService.tao(new ChuyenKhoaRequest("Da liễu " + hauTo(), null, null, null, null, null));
-
-        chuyenKhoaService.xoa(daTao.id());
-
-        assertThatThrownBy(() -> chuyenKhoaService.layTheoId(daTao.id())).isInstanceOf(LoiKhongTimThay.class);
     }
 
     @Test

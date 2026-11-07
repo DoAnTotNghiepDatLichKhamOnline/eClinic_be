@@ -30,5 +30,6 @@ temp/
 *.docx
 yeu-cau-*.md
 Dockerfile
+docker-bake.hcl
 .dockerignore
 docker-compose.yml

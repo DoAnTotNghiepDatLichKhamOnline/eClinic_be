@@ -1,6 +1,7 @@
 # Production override for the Google Cloud VM. Use together with docker-compose.yml:
-#   docker compose -f docker-compose.yml -f docker-compose.prod.yml --profile app up -d --build
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml --profile app up -d --no-build
 # Only Caddy (80/443) faces the internet. MySQL and phpMyAdmin are bound to 127.0.0.1 (reach them by SSH tunnel).
+# App images come from GHCR (built by CI, tagged with the commit SHA); IMAGE_TAG is kept in the VM .env by the deploy.
 
 services:
   mysql:
@@ -12,14 +13,14 @@ services:
     ports: !override
       - "127.0.0.1:8090:80"
 
-  identity-service:     { ports: !reset [] }
-  catalog-service:      { ports: !reset [] }
-  booking-service:      { ports: !reset [] }
-  medical-service:      { ports: !reset [] }
-  notification-service: { ports: !reset [] }
-  chatbot-service:      { ports: !reset [] }
-  report-service:       { ports: !reset [] }
-  api-gateway:          { ports: !reset [] }
+  identity-service:     { ports: !reset [], image: "ghcr.io/doantotnghiepdatlichkhamonline/eclinic-identity-service:${IMAGE_TAG:?IMAGE_TAG is not set, see README}" }
+  catalog-service:      { ports: !reset [], image: "ghcr.io/doantotnghiepdatlichkhamonline/eclinic-catalog-service:${IMAGE_TAG:?IMAGE_TAG is not set, see README}" }
+  booking-service:      { ports: !reset [], image: "ghcr.io/doantotnghiepdatlichkhamonline/eclinic-booking-service:${IMAGE_TAG:?IMAGE_TAG is not set, see README}" }
+  medical-service:      { ports: !reset [], image: "ghcr.io/doantotnghiepdatlichkhamonline/eclinic-medical-service:${IMAGE_TAG:?IMAGE_TAG is not set, see README}" }
+  notification-service: { ports: !reset [], image: "ghcr.io/doantotnghiepdatlichkhamonline/eclinic-notification-service:${IMAGE_TAG:?IMAGE_TAG is not set, see README}" }
+  chatbot-service:      { ports: !reset [], image: "ghcr.io/doantotnghiepdatlichkhamonline/eclinic-chatbot-service:${IMAGE_TAG:?IMAGE_TAG is not set, see README}" }
+  report-service:       { ports: !reset [], image: "ghcr.io/doantotnghiepdatlichkhamonline/eclinic-report-service:${IMAGE_TAG:?IMAGE_TAG is not set, see README}" }
+  api-gateway:          { ports: !reset [], image: "ghcr.io/doantotnghiepdatlichkhamonline/eclinic-api-gateway:${IMAGE_TAG:?IMAGE_TAG is not set, see README}" }
 
   caddy:
     image: caddy:2.8
@@ -31,6 +32,8 @@ services:
       - "443:443"
     environment:
       API_DOMAIN: ${API_DOMAIN}
+      # Bí mật Vercel gắn vào mỗi request /api (X-Origin-Secret); để trống thì Caddy tin X-Real-IP của mọi request
+      ORIGIN_SECRET: ${ORIGIN_SECRET:-}
     volumes:
       - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data

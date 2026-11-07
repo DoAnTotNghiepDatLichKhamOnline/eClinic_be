@@ -31,8 +31,7 @@ public class TestFixtures {
         this.transactionTemplate = new TransactionTemplate(transactionManager);
     }
 
-    public record CaLamViec(BacSi bacSi, PhongKham phongKham, QuanTriVien quanTriVien, LichLamViec lichLamViec,
-            KhungGioKham khungGio) {
+    public record CaLamViec(BacSi bacSi, PhongKham phongKham, LichLamViec lichLamViec, KhungGioKham khungGio) {
     }
 
     /** Bác sĩ + phòng khám cùng chuyên khoa + 1 ca 08:00–11:00 ngày NGAY_LAM_VIEC (6 BN) + 1 khung giờ 08:00–08:30. */
@@ -76,7 +75,7 @@ public class TestFixtures {
             khungGio.setGioKetThuc(NGAY_LAM_VIEC.atTime(8, 30));
             entityManager.persist(khungGio);
 
-            return new CaLamViec(bacSi, phongKham, quanTriVien, lichLamViec, khungGio);
+            return new CaLamViec(bacSi, phongKham, lichLamViec, khungGio);
         });
     }
 

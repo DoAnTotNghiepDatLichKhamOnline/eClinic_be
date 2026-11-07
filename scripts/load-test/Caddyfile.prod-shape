@@ -1,0 +1,22 @@
+# Giống deploy/Caddyfile (cả cách lấy IP người dùng), chỉ khác chứng chỉ: tự cấp (tls internal) cho tên "caddy" trong
+# mạng Docker và "localhost" từ máy.
+https://caddy, https://localhost {
+	tls internal
+	encode gzip
+
+	@ip_tu_vercel {
+		header X-Real-IP *
+		expression `{env.ORIGIN_SECRET} == "" || {header.X-Origin-Secret} == {env.ORIGIN_SECRET}`
+	}
+	handle @ip_tu_vercel {
+		reverse_proxy api-gateway:8080 {
+			header_up X-Forwarded-For {header.X-Real-IP}
+			header_up -X-Origin-Secret
+		}
+	}
+	handle {
+		reverse_proxy api-gateway:8080 {
+			header_up -X-Origin-Secret
+		}
+	}
+}
