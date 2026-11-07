@@ -36,7 +36,7 @@
         <!-- ZXing (vẽ mã QR phiếu khám) không nằm trong BOM của Boot -->
         <zxing.version>3.5.4</zxing.version>
         <!-- Apache POI (xuất / nhập lịch làm việc dạng .xlsx) không nằm trong BOM của Boot; >= 5.4.0 vì CVE-2025-31672 -->
-        <poi.version>5.5.1</poi.version>
+        <poi.version>6.0.0</poi.version>
         <!-- OpenPDF (in lịch làm việc ra PDF): nhánh 2.0.x là nhánh cuối chạy trên Java 17 (2.1+ / 3.x cần Java 21) -->
         <openpdf.version>2.0.5</openpdf.version>
     </properties>
