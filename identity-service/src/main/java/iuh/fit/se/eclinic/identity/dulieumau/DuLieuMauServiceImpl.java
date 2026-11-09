@@ -1,5 +1,6 @@
 package iuh.fit.se.eclinic.identity.dulieumau;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -340,6 +341,8 @@ public class DuLieuMauServiceImpl implements DuLieuMauService {
             thuoc.setDonViEn(en.donVi());
             thuoc.setMoTa(mau.moTa());
             thuoc.setMoTaEn(en.moTa());
+            thuoc.setCoBaoHiem(mau.coBaoHiem());
+            thuoc.setDonGia(BigDecimal.valueOf(mau.donGia()));
             thuoc.setDaXacMinh(true);
             thuoc.setTrangThai(TrangThaiThuoc.DANG_DUNG);
             entityManager.persist(thuoc);

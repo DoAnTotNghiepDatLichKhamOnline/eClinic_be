@@ -15,6 +15,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import java.math.BigDecimal;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -30,6 +31,9 @@ import org.hibernate.type.SqlTypes;
         columnNames = { "ten_chuan_hoa", "ham_luong_chuan_hoa" }))
 @AttributeOverride(name = "id", column = @Column(name = "id_thuoc"))
 public class Thuoc extends BaseEntity {
+
+    /** Giá tạm (VND) cho thuốc chưa có giá; migration V47 gán cùng giá này cho thuốc cũ ngoài dữ liệu mẫu. */
+    public static final BigDecimal DON_GIA_TAM = BigDecimal.valueOf(5000);
 
     /** Tên hiển thị như người nhập. */
     @Column(name = "ten_thuoc", nullable = false)
@@ -84,6 +88,14 @@ public class Thuoc extends BaseEntity {
     @JdbcTypeCode(SqlTypes.VARCHAR)
     @Column(name = "trang_thai", nullable = false, length = 20)
     private TrangThaiThuoc trangThai = TrangThaiThuoc.DANG_DUNG;
+
+    /** Thuốc có trong danh mục thanh toán bảo hiểm y tế. */
+    @Column(name = "co_bao_hiem", nullable = false)
+    private boolean coBaoHiem;
+
+    /** Giá 1 donVi (VND). Mặc định là giá tạm, như V47 gán cho thuốc chưa có giá. */
+    @Column(name = "don_gia", nullable = false, precision = 12, scale = 0)
+    private BigDecimal donGia = DON_GIA_TAM;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_bac_si_tao")

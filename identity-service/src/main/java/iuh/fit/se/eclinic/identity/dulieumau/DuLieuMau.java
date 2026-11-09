@@ -206,44 +206,47 @@ public final class DuLieuMau {
             new BenhNhanMau(6, "Vũ Đình Sơn", TrangThaiTaiKhoan.VO_HIEU_HOA,
                     "Tài khoản mẫu bị vô hiệu hoá để thử chức năng quản lý tài khoản", null));
 
-    /** 1 thuốc mẫu trong danh mục (đã xác minh, đang dùng); tên + hàm lượng không trùng nhau. */
+    /**
+     * 1 thuốc mẫu trong danh mục (đã xác minh, đang dùng); tên + hàm lượng không trùng nhau. Giá (VND / 1 donVi) và BHYT
+     * trùng với migration V47, nơi gán cho DB đã có thuốc mẫu từ trước.
+     */
     public record ThuocMau(String ten, String hoatChat, String hamLuong, String dangBaoChe, DuongDungThuoc duongDung,
-            String donVi, String moTa) {
+            String donVi, String moTa, boolean coBaoHiem, long donGia) {
     }
 
     /** Thuốc ngoại trú thường dùng, để bác sĩ mẫu kê đơn được. */
     public static final List<ThuocMau> THUOC = List.of(
             new ThuocMau("Paracetamol", "Paracetamol", "500mg", "Viên nén", DuongDungThuoc.UONG, "viên",
-                    "Giảm đau, hạ sốt"),
+                    "Giảm đau, hạ sốt", true, 500),
             new ThuocMau("Hapacol 250", "Paracetamol", "250mg", "Thuốc bột sủi bọt", DuongDungThuoc.UONG, "gói",
-                    "Hạ sốt, giảm đau cho trẻ em"),
+                    "Hạ sốt, giảm đau cho trẻ em", true, 2500),
             new ThuocMau("Amoxicillin", "Amoxicillin", "500mg", "Viên nang", DuongDungThuoc.UONG, "viên",
-                    "Kháng sinh nhóm penicilin"),
+                    "Kháng sinh nhóm penicilin", true, 1200),
             new ThuocMau("Cefuroxim", "Cefuroxim", "500mg", "Viên nén bao phim", DuongDungThuoc.UONG, "viên",
-                    "Kháng sinh nhóm cephalosporin"),
+                    "Kháng sinh nhóm cephalosporin", true, 6000),
             new ThuocMau("Ibuprofen", "Ibuprofen", "400mg", "Viên nén bao phim", DuongDungThuoc.UONG, "viên",
-                    "Kháng viêm, giảm đau, hạ sốt"),
+                    "Kháng viêm, giảm đau, hạ sốt", true, 900),
             new ThuocMau("Loratadin", "Loratadin", "10mg", "Viên nén", DuongDungThuoc.UONG, "viên",
-                    "Chống dị ứng (kháng histamin)"),
+                    "Chống dị ứng (kháng histamin)", true, 600),
             new ThuocMau("Cetirizin", "Cetirizin", "10mg", "Viên nén bao phim", DuongDungThuoc.UONG, "viên",
-                    "Chống dị ứng (kháng histamin)"),
+                    "Chống dị ứng (kháng histamin)", true, 700),
             new ThuocMau("Omeprazol", "Omeprazol", "20mg", "Viên nang tan trong ruột", DuongDungThuoc.UONG, "viên",
-                    "Giảm tiết acid dạ dày"),
+                    "Giảm tiết acid dạ dày", true, 800),
             new ThuocMau("Domperidon", "Domperidon", "10mg", "Viên nén", DuongDungThuoc.UONG, "viên",
-                    "Chống nôn, buồn nôn"),
+                    "Chống nôn, buồn nôn", true, 500),
             new ThuocMau("Salbutamol", "Salbutamol", "100mcg/liều", "Bình xịt định liều", DuongDungThuoc.XIT_HIT,
-                    "bình", "Cắt cơn hen, giãn phế quản"),
+                    "bình", "Cắt cơn hen, giãn phế quản", true, 75000),
             new ThuocMau("Amlodipin", "Amlodipin", "5mg", "Viên nén", DuongDungThuoc.UONG, "viên",
-                    "Hạ huyết áp"),
+                    "Hạ huyết áp", true, 600),
             new ThuocMau("Metformin", "Metformin", "500mg", "Viên nén bao phim", DuongDungThuoc.UONG, "viên",
-                    "Điều trị đái tháo đường type 2"),
+                    "Điều trị đái tháo đường type 2", true, 700),
             new ThuocMau("Vitamin C", "Acid ascorbic", "500mg", "Viên nén", DuongDungThuoc.UONG, "viên",
-                    "Bổ sung vitamin C"),
+                    "Bổ sung vitamin C", false, 400),
             new ThuocMau("Oresol", "Natri clorid + Kali clorid + Natri citrat + Glucose khan", "4,22g",
-                    "Thuốc bột pha dung dịch uống", DuongDungThuoc.UONG, "gói", "Bù nước và điện giải"),
+                    "Thuốc bột pha dung dịch uống", DuongDungThuoc.UONG, "gói", "Bù nước và điện giải", true, 2000),
             new ThuocMau("Povidon iod", "Povidon iod", "10%", "Dung dịch dùng ngoài", DuongDungThuoc.BOI_NGOAI_DA,
-                    "chai", "Sát khuẩn da, vết thương"),
+                    "chai", "Sát khuẩn da, vết thương", true, 25000),
             new ThuocMau("Cloramphenicol", "Cloramphenicol", "0,4%", "Thuốc nhỏ mắt", DuongDungThuoc.NHO_MAT, "lọ",
-                    "Kháng sinh nhỏ mắt"));
+                    "Kháng sinh nhỏ mắt", true, 4000));
 
 }

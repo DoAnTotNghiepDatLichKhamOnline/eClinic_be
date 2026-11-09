@@ -56,7 +56,7 @@ public class QuanTriThuocController {
     }
 
     @Operation(summary = "Sửa thuốc (thuốc đã có trong đơn thuốc mà đổi tên, hoạt chất, hàm lượng, dạng bào chế, đường dùng:"
-            + " 409 THUOC_DA_DUOC_KE; đơn vị, mô tả luôn sửa được)")
+            + " 409 THUOC_DA_DUOC_KE; đơn vị, mô tả, BHYT, đơn giá luôn sửa được)")
     @PutMapping("/{id}")
     public PhanHoiApi<ThuocQuanTriResponse> sua(@PathVariable Long id, @Valid @RequestBody ThuocRequest request) {
         return PhanHoiApi.ok(thuocService.sua(id, request), "thanhCong.capNhatThuoc");

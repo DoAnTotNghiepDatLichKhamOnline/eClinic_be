@@ -402,7 +402,8 @@ public class DuLieuMauLonServiceImpl implements DuLieuMauLonService {
 
     private void taoThuoc() {
         for (NhomThuocLon nhom : DuLieuMauLon.THUOC) {
-            for (String hamLuong : nhom.hamLuong()) {
+            for (int i = 0; i < nhom.hamLuong().size(); i++) {
+                String hamLuong = nhom.hamLuong().get(i);
                 String tenChuanHoa = chuanHoaThuoc(nhom.ten());
                 String hamLuongChuanHoa = chuanHoaThuoc(hamLuong);
                 boolean daCo = entityManager.createQuery("""
@@ -426,6 +427,8 @@ public class DuLieuMauLonServiceImpl implements DuLieuMauLonService {
                 thuoc.setDonViEn("tablet");
                 thuoc.setMoTa(nhom.nhom() + ", dùng theo chỉ định của bác sĩ.");
                 thuoc.setMoTaEn(nhom.nhomEn() + ", used as prescribed by a doctor.");
+                thuoc.setCoBaoHiem(nhom.coBaoHiem());
+                thuoc.setDonGia(BigDecimal.valueOf(nhom.donGia().get(i)));
                 thuoc.setDaXacMinh(true);
                 thuoc.setTrangThai(TrangThaiThuoc.DANG_DUNG);
                 entityManager.persist(thuoc);
