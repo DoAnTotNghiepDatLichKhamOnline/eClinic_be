@@ -2,7 +2,7 @@
 # Một Dockerfile cho cả 8 ứng dụng: stage build chạy Maven 1 lần, stage cuối chỉ có JRE 17 + jar của ARG MODULE.
 # Build tay 1 image: docker build --build-arg MODULE=catalog-service -t eclinic-catalog .
 
-FROM maven:3.9-eclipse-temurin-17 AS build
+FROM maven:3.9-eclipse-temurin-26 AS build
 WORKDIR /workspace
 COPY . .
 # -DskipTests (không phải -Dmaven.test.skip) để vẫn build test-jar của common; test chạy bằng "mvn clean verify".
