@@ -23,7 +23,7 @@ services:
   api-gateway:          { ports: !reset [], image: "ghcr.io/doantotnghiepdatlichkhamonline/eclinic-api-gateway:${IMAGE_TAG:?IMAGE_TAG is not set, see README}" }
 
   caddy:
-    image: caddy:2.8
+    image: caddy:2.10
     container_name: eclinic-caddy
     profiles: [app]
     restart: unless-stopped
