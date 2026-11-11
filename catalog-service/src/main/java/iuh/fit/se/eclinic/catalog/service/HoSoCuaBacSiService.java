@@ -3,6 +3,7 @@ package iuh.fit.se.eclinic.catalog.service;
 import iuh.fit.se.eclinic.catalog.dto.request.CapNhatHoSoCuaToiRequest;
 import iuh.fit.se.eclinic.catalog.dto.response.AnhBacSiQuanTriResponse;
 import iuh.fit.se.eclinic.catalog.dto.response.HoSoBacSiQuanTriResponse;
+import iuh.fit.se.eclinic.common.enums.LoaiAnhBacSi;
 
 /** Bác sĩ đang đăng nhập xem và tự sửa phần được phép của hồ sơ giới thiệu. */
 public interface HoSoCuaBacSiService {
@@ -12,13 +13,15 @@ public interface HoSoCuaBacSiService {
     /** Lỗi như {@link HoSoBacSiService#capNhatHoSoCuaToi}. */
     HoSoBacSiQuanTriResponse capNhatHoSo(Long idTaiKhoan, CapNhatHoSoCuaToiRequest request);
 
-    /** Thêm 1 ảnh làm việc (luôn là ANH_CONG_VIEC). */
-    AnhBacSiQuanTriResponse themAnh(Long idTaiKhoan, String chuThich, String chuThichEn, byte[] noiDung);
+    /** Thêm 1 ảnh giới thiệu loại {@code loai} (ảnh làm việc, chứng chỉ hoặc giải thưởng). */
+    AnhBacSiQuanTriResponse themAnh(Long idTaiKhoan, LoaiAnhBacSi loai, String chuThich, String chuThichEn,
+            byte[] noiDung);
 
-    /** Ảnh chứng chỉ: KHONG_CO_QUYEN (403); ảnh của bác sĩ khác: KHONG_TIM_THAY. */
-    AnhBacSiQuanTriResponse capNhatAnh(Long idTaiKhoan, Long idAnh, String chuThich, String chuThichEn);
+    /** Sửa chú thích, và loại nếu {@code loai} khác null. Ảnh của bác sĩ khác: KHONG_TIM_THAY. */
+    AnhBacSiQuanTriResponse capNhatAnh(Long idTaiKhoan, Long idAnh, LoaiAnhBacSi loai, String chuThich,
+            String chuThichEn);
 
-    /** Như {@link #capNhatAnh}. */
+    /** Xoá 1 ảnh trong hồ sơ của tôi, mọi loại. Ảnh của bác sĩ khác: KHONG_TIM_THAY. */
     void xoaAnh(Long idTaiKhoan, Long idAnh);
 
 }

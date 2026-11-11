@@ -120,10 +120,6 @@ public final class DuLieuMauLon {
         return "%d %s, TP. Hồ Chí Minh".formatted(so, DUONG.get(so % DUONG.size()));
     }
 
-    public static String anhDaiDien(int so) {
-        return ANH_DAI_DIEN.get(so % ANH_DAI_DIEN.size());
-    }
-
     private static final List<String> HO = List.of("Nguyễn", "Trần", "Lê", "Phạm", "Hoàng", "Huỳnh", "Phan", "Vũ", "Võ",
             "Đặng", "Bùi", "Đỗ", "Hồ", "Ngô", "Dương", "Lý");
 
@@ -139,15 +135,6 @@ public final class DuLieuMauLon {
 
     private static final List<String> DUONG = List.of("Lê Lợi, Quận 1", "Võ Văn Tần, Quận 3", "Nguyễn Trãi, Quận 5",
             "Phan Đăng Lưu, Bình Thạnh", "Quang Trung, Gò Vấp", "Cộng Hoà, Tân Bình");
-
-    /** Dùng chung vài ảnh: 100 URL khác nhau chỉ làm trình duyệt tải thêm mà không demo được gì hơn. */
-    private static final List<String> ANH_DAI_DIEN = List.of(
-            "https://placehold.co/400x400/0f766e/ffffff/png?text=BS",
-            "https://placehold.co/400x400/1565c0/ffffff/png?text=BS",
-            "https://placehold.co/400x400/8d6e63/ffffff/png?text=BS",
-            "https://placehold.co/400x400/6a1b9a/ffffff/png?text=BS",
-            "https://placehold.co/400x400/c62828/ffffff/png?text=BS",
-            "https://placehold.co/400x400/2e7d32/ffffff/png?text=BS");
 
     public static final List<String> HOC_VI = List.of("BSCKI", "BSCKII", "ThS.BS", "TS.BS");
 

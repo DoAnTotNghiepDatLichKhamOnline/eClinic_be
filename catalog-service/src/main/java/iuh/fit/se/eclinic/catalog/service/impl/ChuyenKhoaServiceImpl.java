@@ -2,6 +2,7 @@ package iuh.fit.se.eclinic.catalog.service.impl;
 
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -16,6 +17,7 @@ import iuh.fit.se.eclinic.catalog.mapper.ChuyenKhoaMapper;
 import iuh.fit.se.eclinic.catalog.repository.BacSiRepository;
 import iuh.fit.se.eclinic.catalog.repository.ChuyenKhoaRepository;
 import iuh.fit.se.eclinic.catalog.repository.PhongKhamRepository;
+import iuh.fit.se.eclinic.catalog.service.ChuyenKhoaDaXoaEvent;
 import iuh.fit.se.eclinic.catalog.service.ChuyenKhoaService;
 import iuh.fit.se.eclinic.common.dto.TrangDuLieu;
 import iuh.fit.se.eclinic.common.entity.catalog.ChuyenKhoa;
@@ -35,6 +37,7 @@ public class ChuyenKhoaServiceImpl implements ChuyenKhoaService {
     private final PhongKhamRepository phongKhamRepository;
     private final BacSiRepository bacSiRepository;
     private final ChuyenKhoaMapper chuyenKhoaMapper;
+    private final ApplicationEventPublisher eventPublisher;
 
     /** Chỉ cache khi không có từ khoá: số từ khoá là vô hạn, còn danh sách đầy đủ thì trang chủ nào cũng gọi. */
     @Override
@@ -105,6 +108,10 @@ public class ChuyenKhoaServiceImpl implements ChuyenKhoaService {
             throw new LoiNghiepVu(MaLoi.CHUYEN_KHOA_DANG_DUOC_SU_DUNG, "loi.CHUYEN_KHOA_DANG_DUOC_SU_DUNG.soLuong", String.valueOf(soPhongKham), String.valueOf(soBacSi));
         }
         chuyenKhoaRepository.delete(chuyenKhoa);
+        if (chuyenKhoa.getAnhMinhHoa() != null) {
+            // Dọn ảnh riêng trong kho sau khi commit: xoá DB thất bại thì ảnh vẫn còn dùng
+            eventPublisher.publishEvent(new ChuyenKhoaDaXoaEvent(id, chuyenKhoa.getAnhMinhHoa()));
+        }
     }
 
     private ChuyenKhoa timEntity(Long id) {

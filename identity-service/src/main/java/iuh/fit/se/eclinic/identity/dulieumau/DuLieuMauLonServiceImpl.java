@@ -26,6 +26,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import iuh.fit.se.eclinic.common.dulieumau.AnhMau;
 import iuh.fit.se.eclinic.common.entity.booking.HoSoBenhNhan;
 import iuh.fit.se.eclinic.common.entity.booking.LichHen;
 import iuh.fit.se.eclinic.common.entity.booking.LichSuLichHen;
@@ -237,6 +238,7 @@ public class DuLieuMauLonServiceImpl implements DuLieuMauLonService {
                 chuyenKhoa.setMoTaEn(mau.moTaEn());
                 chuyenKhoa.setTrieuChung(mau.trieuChung());
                 chuyenKhoa.setTrieuChungEn(mau.trieuChungEn());
+                chuyenKhoa.setAnhMinhHoa(AnhMau.CHUYEN_KHOA.get(mau.ten()));
                 entityManager.persist(chuyenKhoa);
             }
             danhSach.add(new ChuyenKhoaDaCo(chuyenKhoa.getId(), mau.ten(), mau.tenEn()));
@@ -283,7 +285,7 @@ public class DuLieuMauLonServiceImpl implements DuLieuMauLonService {
         String hoTen = DuLieuMauLon.hoTen(so);
         TaiKhoan taiKhoan = taoTaiKhoan(DuLieuMauLon.emailBacSi(so), hoTen, DuLieuMauLon.soDienThoaiBacSi(so),
                 VaiTro.BAC_SI, TrangThaiTaiKhoan.DA_KICH_HOAT, matKhauHash);
-        taiKhoan.setAnhDaiDien(DuLieuMauLon.anhDaiDien(so));
+        taiKhoan.setAnhDaiDien(AnhDaiDienMau.theoEmail(taiKhoan.getEmail()));
 
         int soNamKinhNghiem = 3 + so % 25;
         int namBatDau = LocalDate.now().getYear() - soNamKinhNghiem;
@@ -314,6 +316,10 @@ public class DuLieuMauLonServiceImpl implements DuLieuMauLonService {
         bacSi.setPhamViHanhNghe("Khám bệnh, chữa bệnh chuyên khoa " + ck.ten());
         bacSi.setPhamViHanhNgheEn("Medical examination and treatment in " + ck.tenEn());
         entityManager.persist(bacSi);
+        // Bác sĩ mới tạo: anh_id_cuoi = 0. Câu UPDATE native đẩy câu INSERT ở trên xuống DB trước khi chạy.
+        AnhGioiThieuMau.ghi(entityManager, bacSi.getId(), AnhGioiThieuMau.baAnh(so, 0,
+                thuTu -> AnhGioiThieuMau.chuThich(thuTu, hoTen, ck.ten(), bacSi.getSoGiayPhep()),
+                thuTu -> AnhGioiThieuMau.chuThichEn(thuTu, hoTen, ck.tenEn(), bacSi.getSoGiayPhep())));
     }
 
     private TaiKhoan taoTaiKhoan(String email, String hoTen, String soDienThoai, VaiTro vaiTro,
@@ -337,6 +343,7 @@ public class DuLieuMauLonServiceImpl implements DuLieuMauLonService {
             String email = DuLieuMauLon.emailBenhNhan(so);
             TaiKhoan taiKhoan = taoTaiKhoan(email, hoTen, soDienThoai, VaiTro.BENH_NHAN,
                     TrangThaiTaiKhoan.DA_KICH_HOAT, matKhauHash);
+            taiKhoan.setAnhDaiDien(AnhDaiDienMau.theoEmail(taiKhoan.getEmail()));
             HoSoBenhNhan hoSo = taoHoSo(so, hoTen, soDienThoai, taiKhoan);
             danhSach.add(new BenhNhanLon(hoSo.getId(), taiKhoan.getId(), hoTen, hoSo.getNgaySinh(), hoSo.getGioiTinh(),
                     soDienThoai, email));
@@ -392,6 +399,7 @@ public class DuLieuMauLonServiceImpl implements DuLieuMauLonService {
             TaiKhoan taiKhoan = taoTaiKhoan(DuLieuMauLon.emailQuanTri(so), DuLieuMauLon.hoTen(so),
                     DuLieuMauLon.soDienThoaiQuanTri(so), VaiTro.QUAN_TRI_VIEN, TrangThaiTaiKhoan.VO_HIEU_HOA, matKhauHash);
             taiKhoan.setLyDoVoHieuHoa("Tài khoản mẫu để thử danh sách quản trị viên");
+            taiKhoan.setAnhDaiDien(AnhDaiDienMau.theoEmail(taiKhoan.getEmail()));
             QuanTriVien quanTriVien = new QuanTriVien();
             quanTriVien.setTaiKhoan(taiKhoan);
             quanTriVien.setCapDoQuyen(CapDoQuyen.NHAN_VIEN);

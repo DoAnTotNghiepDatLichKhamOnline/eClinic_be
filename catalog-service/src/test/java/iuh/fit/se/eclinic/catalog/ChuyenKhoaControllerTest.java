@@ -15,6 +15,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import iuh.fit.se.eclinic.catalog.controller.ChuyenKhoaController;
+import iuh.fit.se.eclinic.catalog.service.AnhChuyenKhoaService;
 import iuh.fit.se.eclinic.catalog.service.ChuyenKhoaService;
 import iuh.fit.se.eclinic.common.security.BaoMatConfig;
 import iuh.fit.se.eclinic.common.testsupport.NguoiDungGiaLap;
@@ -30,6 +31,7 @@ class ChuyenKhoaControllerTest {
 
     @Autowired MockMvc mockMvc;
     @MockitoBean ChuyenKhoaService chuyenKhoaService;
+    @MockitoBean AnhChuyenKhoaService anhChuyenKhoaService;
 
     @Test
     void chuaDangNhapHoacKhongPhaiAdminThiKhongDuocThem() throws Exception {
