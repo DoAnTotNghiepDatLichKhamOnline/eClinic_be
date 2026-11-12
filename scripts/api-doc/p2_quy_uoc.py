@@ -548,7 +548,7 @@ def sua(tl):
                             "`NGUOI_KHAC` (lịch đặt cho người thân, hoặc chủ tài khoản là người giám hộ)"),
         ("`NguoiDatLich`", "`TOI` (chính tài khoản đang xem), `KHACH` (đặt khi không đăng nhập), `TAI_KHOAN_KHAC`"),
         ("`QuanHeGiamHo`", "`CHA`, `ME`, `NGUOI_GIAM_HO_HOP_PHAP`, `KHAC`"),
-        ("`LoaiAnhBacSi`", "`ANH_CONG_VIEC`, `CHUNG_CHI`"),
+        ("`LoaiAnhBacSi`", "`ANH_CONG_VIEC`, `CHUNG_CHI`, `GIAI_THUONG`"),
         ("`LoaiThongBao`", "Gửi cho bệnh nhân: `LICH_HEN_DA_XAC_NHAN`, `LICH_HEN_BI_TU_CHOI`, `LICH_HEN_CAN_DOI` (ca khám "
                            "bị hủy, cần đổi lịch), `LICH_HEN_DOI_PHONG` (giữ nguyên giờ, đổi phòng khám). Chỉ gửi cho "
                            "bác sĩ / quản trị viên: `LICH_HEN_MOI`, `LICH_HEN_DA_DOI`, `LICH_HEN_DA_HUY`, "

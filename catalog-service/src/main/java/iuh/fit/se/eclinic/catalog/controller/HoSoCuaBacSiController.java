@@ -26,13 +26,14 @@ import iuh.fit.se.eclinic.catalog.dto.response.AnhBacSiQuanTriResponse;
 import iuh.fit.se.eclinic.catalog.dto.response.HoSoBacSiQuanTriResponse;
 import iuh.fit.se.eclinic.catalog.service.HoSoCuaBacSiService;
 import iuh.fit.se.eclinic.common.dto.PhanHoiApi;
+import iuh.fit.se.eclinic.common.enums.LoaiAnhBacSi;
 import iuh.fit.se.eclinic.common.security.NguoiDungHienTai;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 
 /** Bác sĩ đang đăng nhập xem và tự sửa phần được phép của hồ sơ giới thiệu, có hiệu lực ngay. */
-@Tag(name = "Hồ sơ của bác sĩ", description = "Bác sĩ xem và tự sửa 1 phần hồ sơ giới thiệu, ảnh làm việc")
+@Tag(name = "Hồ sơ của bác sĩ", description = "Bác sĩ xem và tự sửa 1 phần hồ sơ giới thiệu, ảnh giới thiệu")
 @RestController
 @RequestMapping("/api/catalog/bac-si/toi")
 @PreAuthorize("hasRole('BAC_SI')")
@@ -55,27 +56,28 @@ public class HoSoCuaBacSiController {
                 "thanhCong.capNhatHoSoCuaToi");
     }
 
-    @Operation(summary = "Thêm ảnh làm việc (multipart: phần tệp 'anh' JPEG / PNG / WebP tối đa 4MB, 'chuThich',"
-            + " 'chuThichEn'); luôn là ANH_CONG_VIEC")
+    @Operation(summary = "Thêm ảnh giới thiệu (multipart: phần tệp 'anh' JPEG / PNG / WebP tối đa 4MB, 'loai' ="
+            + " ANH_CONG_VIEC (mặc định) / CHUNG_CHI / GIAI_THUONG, 'chuThich', 'chuThichEn')")
     @PostMapping(path = "/anh", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
     public PhanHoiApi<AnhBacSiQuanTriResponse> themAnh(@RequestPart("anh") MultipartFile anh,
+            @RequestParam(defaultValue = "ANH_CONG_VIEC") LoaiAnhBacSi loai,
             @RequestParam(required = false) @Size(max = 200, message = "{kiemTra.chuThich.toiDa}") String chuThich,
             @RequestParam(required = false) @Size(max = 200, message = "{kiemTra.chuThichEn.toiDa}") String chuThichEn)
             throws IOException {
-        return PhanHoiApi.ok(hoSoCuaBacSiService.themAnh(NguoiDungHienTai.layIdTaiKhoan(), chuThich, chuThichEn,
+        return PhanHoiApi.ok(hoSoCuaBacSiService.themAnh(NguoiDungHienTai.layIdTaiKhoan(), loai, chuThich, chuThichEn,
                 anh.getBytes()), "thanhCong.themAnhBacSi");
     }
 
-    @Operation(summary = "Sửa chú thích ảnh làm việc của tôi (ảnh chứng chỉ: 403)")
+    @Operation(summary = "Sửa chú thích (và loại nếu gửi 'loai') của 1 ảnh giới thiệu của tôi, mọi loại ảnh")
     @PutMapping("/anh/{idAnh}")
     public PhanHoiApi<AnhBacSiQuanTriResponse> capNhatAnh(@PathVariable Long idAnh,
             @Valid @RequestBody ChuThichAnhRequest request) {
         return PhanHoiApi.ok(hoSoCuaBacSiService.capNhatAnh(NguoiDungHienTai.layIdTaiKhoan(), idAnh,
-                request.chuThich(), request.chuThichEn()), "thanhCong.capNhatAnhBacSi");
+                request.loai(), request.chuThich(), request.chuThichEn()), "thanhCong.capNhatAnhBacSi");
     }
 
-    @Operation(summary = "Xoá ảnh làm việc của tôi (ảnh chứng chỉ: 403)")
+    @Operation(summary = "Xoá 1 ảnh giới thiệu của tôi, mọi loại ảnh")
     @DeleteMapping("/anh/{idAnh}")
     public PhanHoiApi<Void> xoaAnh(@PathVariable Long idAnh) {
         hoSoCuaBacSiService.xoaAnh(NguoiDungHienTai.layIdTaiKhoan(), idAnh);

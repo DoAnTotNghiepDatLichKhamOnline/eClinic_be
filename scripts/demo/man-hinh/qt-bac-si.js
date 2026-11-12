@@ -22,7 +22,7 @@
 //                                                                    linhVucKhamChua[], giaiThuong[], congTrinhNghienCuu[]. Bác sĩ tự sửa được giới thiệu
 //                                                                    ngắn, tiểu sử, ngôn ngữ, giải thưởng, nghiên cứu (/doctor/profile)
 //   POST   /api/catalog/quan-tri/bac-si/{id}/anh                     multipart: tệp "anh" (JPEG / PNG / WebP, tối đa 4 MB),
-//                                                                    "loai" = ANH_CONG_VIEC | CHUNG_CHI, "chuThich", "chuThichEn" -> 201
+//                                                                    "loai" = ANH_CONG_VIEC | CHUNG_CHI | GIAI_THUONG, "chuThich", "chuThichEn" -> 201
 //   PUT    /api/catalog/quan-tri/bac-si/{id}/anh/{idAnh}             { loai, chuThich, chuThichEn }
 //   DELETE /api/catalog/quan-tri/bac-si/{id}/anh/{idAnh}
 //   GET    /api/booking/quan-tri/danh-gia?idBacSi=&soSaoToiDa=&trang=&kichThuoc=   đánh giá của bệnh nhân, mới nhất trước, kèm tên
@@ -33,7 +33,8 @@
     const CAC_DANH_SACH = ['quaTrinhDaoTao', 'quaTrinhCongTac', 'linhVucKhamChua', 'giaiThuong', 'congTrinhNghienCuu'];
     const CAC_O_CHU = ['hocVi', 'chucVu', 'namBatDauHanhNghe', 'ngayCapGiayPhep', 'noiCapGiayPhep', 'phamViHanhNghe', 'gioiThieuNgan', 'tieuSu',
         'chucVuEn', 'noiCapGiayPhepEn', 'phamViHanhNgheEn', 'gioiThieuNganEn', 'tieuSuEn'];
-    const LOAI_ANH = nhan({ ANH_CONG_VIEC: cap('Ảnh công việc', 'Work photo'), CHUNG_CHI: cap('Chứng chỉ', 'Certificate') });
+    const LOAI_ANH = nhan({ ANH_CONG_VIEC: cap('Ảnh công việc', 'Work photo'), CHUNG_CHI: cap('Chứng chỉ', 'Certificate'),
+        GIAI_THUONG: cap('Giải thưởng', 'Award') });
     const TRANG_THAI_BAC_SI = nhan({
         DANG_CONG_TAC: cap('Active — đang công tác', 'Active'), NGUNG_CONG_TAC: cap('Inactive — ngừng công tác', 'Inactive'),
     });
@@ -310,7 +311,7 @@
                         <div id="bac-si-anh"></div>
                         <form id="form-anh-bac-si" class="hai-cot">
                             <div><label>${t('Tệp ảnh (JPEG / PNG / WebP, tối đa 4 MB)', 'Image file (JPEG / PNG / WebP, up to 4 MB)')}</label><input name="anh" type="file" accept="image/jpeg,image/png,image/webp" required></div>
-                            <div><label>${t('Loại', 'Type')}</label><select name="loai"><option value="ANH_CONG_VIEC">${LOAI_ANH.ANH_CONG_VIEC}</option><option value="CHUNG_CHI">${LOAI_ANH.CHUNG_CHI}</option></select></div>
+                            <div><label>${t('Loại', 'Type')}</label><select name="loai"><option value="ANH_CONG_VIEC">${LOAI_ANH.ANH_CONG_VIEC}</option><option value="CHUNG_CHI">${LOAI_ANH.CHUNG_CHI}</option><option value="GIAI_THUONG">${LOAI_ANH.GIAI_THUONG}</option></select></div>
                             <div><label>${t('Chú thích', 'Caption')}</label><input name="chuThich" maxlength="200"></div>
                             <div><label>${t('Chú thích (English)', 'Caption (English)')}</label><input name="chuThichEn" maxlength="200"></div>
                             <button>${t('Thêm ảnh', 'Add photo')}</button>

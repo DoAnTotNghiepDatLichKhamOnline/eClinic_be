@@ -3,7 +3,8 @@
 -- 2 route dùng chung, 3 / 4 phần của vai trò), ### mục, #### route hoặc mô hình. Bản .docx:
 --   - bìa: "eClinic Backend", "Tài liệu API", vai trò (phần sau " — " của #), bảng thông tin;
 --   - 1. Giới thiệu và phạm vi: các đoạn đầu tài liệu, đoạn bố cục, lịch sử phiên bản;
---   - 2. Danh sách route: dựng từ tiêu đề route và các bảng "Tất cả route của mục N" (các bảng này không in ra);
+--   - 2. Danh sách route: dựng từ tiêu đề route và các bảng "Tất cả route của mục N" (các bảng này không in ra); cột
+--     Phiên bản lấy từ cột thứ 5 "Phiên bản" của bảng đó: route có thay đổi ghi "v1(<1 câu tóm tắt>)", còn lại để trống;
 --   - 3. Quy ước chung: Markdown 1.1–1.7, rồi tổng quan của từng phần vai trò (x.1 và phần enum đầu x.2);
 --   - 4. Mô hình dữ liệu: mô hình của 1.8 (đoạn **`Ten`**) và của x.2, mỗi mô hình 1 tiêu đề 4.n;
 --   - 5 trở đi: mỗi mục 2.1–2.3, x.3… thành 1 mục cấp 1; mỗi route là tiêu đề "N.k <Mục đích>" và dải phương thức +
@@ -131,9 +132,13 @@ local function doc_cay(blocks)
     elseif b.t == 'Header' then
       loi('không dùng tiêu đề cấp ', b.level, ': ', str(b.content))
     elseif dau_bang(b, 'Phương thức', 'Đường dẫn', 'Quyền', 'Mục đích') then
+      -- Cột thứ 5 "Phiên bản" không bắt buộc: chỉ route có thay đổi mới ghi (vd "v1(Phản hồi thêm …)")
+      local o5 = b.head.rows[1].cells[5]
+      local co_pb = o5 and str(o5.contents) == 'Phiên bản'
       for _, d in ipairs(dong_than(b)) do
         route[str(d.cells[1].contents) .. ' ' .. str(d.cells[2].contents)] =
-          { quyen = noi_dung_o(d.cells[3]), muc_dich = noi_dung_o(d.cells[4]) }
+          { quyen = noi_dung_o(d.cells[3]), muc_dich = noi_dung_o(d.cells[4]),
+            phien_ban = co_pb and d.cells[5] and noi_dung_o(d.cells[5]) or pandoc.Inlines {} }
       end
       if la_nhan(hien[#hien], 'Tất cả route') then table.remove(hien) end
     else
@@ -680,6 +685,7 @@ function Pandoc(doc)
       local tt = route[c.pt .. ' ' .. c.dd] or loi('route ', c.pt, ' ', c.dd, ' không có dòng trong bảng "Tất cả route'
         .. ' của mục ', n.phan.so, '"')
       c.so, c.quyen, c.muc_dich = n.so .. '.' .. k, tt.quyen, pandoc.Inlines(tt.muc_dich):walk(bo_code)
+      c.phien_ban = pandoc.Inlines(tt.phien_ban):walk(bo_code)
       table.insert(ds_route, c)
       theo_phan[n.phan] = (theo_phan[n.phan] or 0) + 1
     end
@@ -788,10 +794,10 @@ function Pandoc(doc)
   for _, c in ipairs(ds_route) do
     table.insert(dong, { o(c.so), o(pandoc.Inlines { huy_hieu(c.pt) }),
       o(pandoc.Inlines { pandoc.Link(pandoc.Inlines { pandoc.Code(c.dd) }, '#' .. c.h.identifier) }),
-      o(c.quyen), o(c.muc_dich) })
+      o(c.quyen), o(c.muc_dich), o(c.phien_ban) })
   end
-  kq:insert(bang({ { 0.07 }, { 0.10, 'AlignCenter' }, { 0.40 }, { 0.19 }, { 0.24 } },
-    { o('Mục'), o('Method'), o('Đường dẫn'), o('Quyền'), o('Chức năng') }, dong))
+  kq:insert(bang({ { 0.06 }, { 0.08, 'AlignCenter' }, { 0.31 }, { 0.13 }, { 0.18 }, { 0.24 } },
+    { o('Mục'), o('Method'), o('Đường dẫn'), o('Quyền'), o('Chức năng'), o('Phiên bản') }, dong))
 
   -- 3. Quy ước chung
   kq:insert(tieu_de(1, '3.', ten(p1.h), p1.h.identifier))

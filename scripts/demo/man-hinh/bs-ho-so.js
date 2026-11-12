@@ -7,16 +7,18 @@
 //   PUT    /api/catalog/bac-si/toi/ho-so        { phienBan, gioiThieuNgan, gioiThieuNganEn, tieuSu, tieuSuEn, ngonNguKham[] (mã ISO 639),
 //                                                 giaiThuong[], giaiThuongEn[], congTrinhNghienCuu[], congTrinhNghienCuuEn[] }: ghi đè các
 //                                                 mục này, mục khác giữ nguyên. phienBan cũ -> 409 DU_LIEU_DA_THAY_DOI (quản trị viên vừa lưu)
-//   POST   /api/catalog/bac-si/toi/anh          multipart: tệp "anh" (JPEG / PNG / WebP, tối đa 4 MB), "chuThich", "chuThichEn" -> 201,
-//                                                 luôn là ảnh công việc
-//   PUT    /api/catalog/bac-si/toi/anh/{idAnh}  { chuThich, chuThichEn }   (ảnh chứng chỉ: 403)
-//   DELETE /api/catalog/bac-si/toi/anh/{idAnh}                              (ảnh chứng chỉ: 403)
-// Học vị, chức vụ, giấy phép, đào tạo, công tác, lĩnh vực khám chữa, năm bắt đầu hành nghề, ảnh chứng chỉ: quản trị viên sửa ở
+//   POST   /api/catalog/bac-si/toi/anh          multipart: tệp "anh" (JPEG / PNG / WebP, tối đa 4 MB), "loai" = ANH_CONG_VIEC
+//                                                 (mặc định) | CHUNG_CHI | GIAI_THUONG, "chuThich", "chuThichEn" -> 201
+//   PUT    /api/catalog/bac-si/toi/anh/{idAnh}  { chuThich, chuThichEn, loai? }   mọi loại ảnh; không gửi loai = giữ loại
+//   DELETE /api/catalog/bac-si/toi/anh/{idAnh}                                     mọi loại ảnh
+// Học vị, chức vụ, giấy phép, đào tạo, công tác, lĩnh vực khám chữa, năm bắt đầu hành nghề: quản trị viên sửa ở
 // /admin/doctors. Đổi số điện thoại, ảnh đại diện, mật khẩu: /account.
 (() => {
     const TOI = '/api/catalog/bac-si/toi';
     const CAC_DANH_SACH = ['giaiThuong', 'congTrinhNghienCuu'];
     const CAC_O_CHU = ['gioiThieuNgan', 'gioiThieuNganEn', 'tieuSu', 'tieuSuEn'];
+    const LOAI_ANH = nhan({ ANH_CONG_VIEC: cap('Ảnh công việc', 'Work photo'), CHUNG_CHI: cap('Chứng chỉ', 'Certificate'),
+        GIAI_THUONG: cap('Giải thưởng', 'Award') });
     let hoSo = null;   // HoSoBacSiQuanTriResponse đang hiện
 
     const dsY = (cacY) => (cacY && cacY.length ? cacY.join('; ') : null);
@@ -75,13 +77,8 @@
         for (const a of ds) {
             const hinh = document.createElement('figure');
             const chuThich = theoNgonNgu(a.chuThich, a.chuThichEn);
-            const congViec = a.loai === 'ANH_CONG_VIEC';
-            hinh.append(anh(a.url, chuThich), the('figcaption', `${congViec ? t('Ảnh công việc', 'Work photo') : t('Chứng chỉ', 'Certificate')}${chuThich ? ': ' + chuThich : ''}`));
-            if (congViec) {
-                hinh.append(nut(t('Sửa chú thích', 'Edit caption'), () => suaAnh(a)), nut(t('Xoá ảnh', 'Delete photo'), () => xoaAnh(a), 'nguy-hiem nho'));
-            } else {
-                hinh.append(ghiChu(t('Quản trị viên quản lý', 'Managed by an administrator')));
-            }
+            hinh.append(anh(a.url, chuThich), the('figcaption', `${LOAI_ANH[a.loai] || a.loai}${chuThich ? ': ' + chuThich : ''}`));
+            hinh.append(nut(t('Sửa', 'Edit'), () => suaAnh(a)), nut(t('Xoá ảnh', 'Delete photo'), () => xoaAnh(a), 'nguy-hiem nho'));
             luoi.append(hinh);
         }
         $('bs-anh').replaceChildren(luoi);
@@ -94,7 +91,11 @@
         const chuThichEn = prompt(t('Chú thích tiếng Anh (để trống = người xem tiếng Anh thấy chú thích tiếng Việt):',
             'English caption (leave empty = English viewers see the Vietnamese caption):'), a.chuThichEn || '');
         if (chuThichEn === null) return;
-        const { status, json } = await goi(`${TOI}/anh/${a.id}`, { chuThich: chuThich.trim() || null, chuThichEn: chuThichEn.trim() || null }, 'PUT');
+        const loai = prompt(t('Loại ảnh: ANH_CONG_VIEC (ảnh công việc), CHUNG_CHI (chứng chỉ), GIAI_THUONG (giải thưởng):',
+            'Photo type: ANH_CONG_VIEC (work photo), CHUNG_CHI (certificate), GIAI_THUONG (award):'), a.loai);
+        if (loai === null) return;
+        const { status, json } = await goi(`${TOI}/anh/${a.id}`, { chuThich: chuThich.trim() || null, chuThichEn: chuThichEn.trim() || null,
+            loai: loai.trim().toUpperCase() || null }, 'PUT');
         if (status === 200) await taiHoSo();
         else bao('bs-anh-trang-thai', thongDiepLoi(json, t('Không sửa được ảnh.', 'Could not update the photo.')), 'loi');
     }
@@ -138,14 +139,15 @@
                 </section>
                 <section>
                     <h2>${t('Ảnh giới thiệu', 'Profile photos')}</h2>
-                    <p class="ghi-chu">${t('Tôi thêm / sửa / xoá được ảnh công việc; ảnh chứng chỉ do quản trị viên quản lý.',
-                        'I can add, edit and delete work photos; certificate photos are managed by an administrator.')}</p>
+                    <p class="ghi-chu">${t('Tôi thêm / sửa / xoá được mọi ảnh của mình: ảnh công việc, chứng chỉ, giải thưởng.',
+                        'I can add, edit and delete all my photos: work photos, certificates and awards.')}</p>
                     <div id="bs-anh"></div>
                     <form id="form-bs-anh" class="hai-cot">
                         <div><label>${t('Tệp ảnh (JPEG / PNG / WebP, tối đa 4 MB)', 'Image file (JPEG / PNG / WebP, up to 4 MB)')}</label><input name="anh" type="file" accept="image/jpeg,image/png,image/webp" required></div>
+                        <div><label>${t('Loại', 'Type')}</label><select name="loai"><option value="ANH_CONG_VIEC">${LOAI_ANH.ANH_CONG_VIEC}</option><option value="CHUNG_CHI">${LOAI_ANH.CHUNG_CHI}</option><option value="GIAI_THUONG">${LOAI_ANH.GIAI_THUONG}</option></select></div>
                         <div><label>${t('Chú thích', 'Caption')}</label><input name="chuThich" maxlength="200"></div>
                         <div><label>${t('Chú thích (English)', 'Caption (English)')}</label><input name="chuThichEn" maxlength="200"></div>
-                        <button>${t('Thêm ảnh công việc', 'Add work photo')}</button>
+                        <button>${t('Thêm ảnh', 'Add photo')}</button>
                     </form>
                     <p id="bs-anh-trang-thai" class="ghi-chu"></p>
                 </section>`);
@@ -176,6 +178,7 @@
             khiGui('form-bs-anh', async (v, form) => {
                 const duLieu = new FormData();
                 duLieu.append('anh', form.elements.anh.files[0]);
+                duLieu.append('loai', v.loai);
                 if (v.chuThich.trim()) duLieu.append('chuThich', v.chuThich.trim());
                 if (v.chuThichEn.trim()) duLieu.append('chuThichEn', v.chuThichEn.trim());
                 const { status, json } = await goi(`${TOI}/anh`, duLieu);
@@ -184,7 +187,7 @@
                     return;
                 }
                 form.reset();
-                bao('bs-anh-trang-thai', t('Đã thêm ảnh công việc.', 'Work photo added.'), 'tot');
+                bao('bs-anh-trang-thai', t('Đã thêm ảnh.', 'Photo added.'), 'tot');
                 await taiHoSo();
             });
             await taiHoSo(false);

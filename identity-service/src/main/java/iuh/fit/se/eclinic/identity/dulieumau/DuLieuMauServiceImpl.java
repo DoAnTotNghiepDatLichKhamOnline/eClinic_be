@@ -1,7 +1,7 @@
 package iuh.fit.se.eclinic.identity.dulieumau;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -16,6 +16,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import iuh.fit.se.eclinic.common.dulieumau.AnhMau;
 import iuh.fit.se.eclinic.common.entity.booking.HoSoBenhNhan;
 import iuh.fit.se.eclinic.common.entity.catalog.AnhBacSi;
 import iuh.fit.se.eclinic.common.entity.catalog.BacSi;
@@ -94,6 +95,7 @@ public class DuLieuMauServiceImpl implements DuLieuMauService {
             TaiKhoan taiKhoan = taoTaiKhoan(mau.email(), mau.hoTen(), mau.soDienThoai(), VaiTro.BENH_NHAN,
                     mau.trangThai(), matKhauHash);
             taiKhoan.setLyDoVoHieuHoa(mau.lyDoVoHieuHoa());
+            taiKhoan.setAnhDaiDien(AnhDaiDienMau.theoEmail(taiKhoan.getEmail()));
             if (mau.hoSo() != null) {
                 HoSoBenhNhan hoSo = new HoSoBenhNhan();
                 hoSo.setTaiKhoan(taiKhoan);
@@ -138,7 +140,7 @@ public class DuLieuMauServiceImpl implements DuLieuMauService {
             bacSi.setQuaTrinhCongTac(String.join("\n", hoSo.congTac()));
             bacSi.setLinhVucKhamChua(String.join("\n", hoSo.linhVuc()));
             if (bacSi.getTaiKhoan().getAnhDaiDien() == null) {
-                bacSi.getTaiKhoan().setAnhDaiDien(anhGiu(400, 400, "0f766e", "ffffff", "BS " + mau.so()));
+                bacSi.getTaiKhoan().setAnhDaiDien(AnhDaiDienMau.theoEmail(bacSi.getTaiKhoan().getEmail()));
             }
 
             if (docAnhGioiThieu(bacSi.getId()).isEmpty()) {
@@ -146,13 +148,9 @@ public class DuLieuMauServiceImpl implements DuLieuMauService {
                         .createNativeQuery("SELECT anh_id_cuoi FROM bac_si WHERE id_bac_si = :id")
                         .setParameter("id", bacSi.getId())
                         .getSingleResult()).longValue();
-                ghiAnhGioiThieu(bacSi.getId(), List.of(
-                        anhMau(idCuoi + 1, 1, LoaiAnhBacSi.ANH_CONG_VIEC,
-                                anhGiu(1200, 800, "e0f2f1", "0f766e", "eClinic"), chuThichMau(mau, 1)),
-                        anhMau(idCuoi + 2, 2, LoaiAnhBacSi.ANH_CONG_VIEC,
-                                anhGiu(1200, 800, "e3f2fd", "1565c0", "eClinic"), chuThichMau(mau, 2)),
-                        anhMau(idCuoi + 3, 3, LoaiAnhBacSi.CHUNG_CHI,
-                                anhGiu(900, 1200, "fff8e1", "8d6e63", mau.soGiayPhep()), chuThichMau(mau, 3))));
+                // Bản tiếng Anh của chú thích do boSungTiengAnh điền sau
+                AnhGioiThieuMau.ghi(entityManager, bacSi.getId(), AnhGioiThieuMau.baAnh(mau.so(), idCuoi,
+                        thuTu -> chuThichMau(mau, thuTu), thuTu -> null));
             }
         }
         if (!chuaCoHoSo.isEmpty()) {
@@ -163,21 +161,13 @@ public class DuLieuMauServiceImpl implements DuLieuMauService {
 
     /** Chú thích tiếng Việt của ảnh mẫu thứ {@code thuTu} (1-3). */
     private static String chuThichMau(BacSiMau mau, int thuTu) {
-        return switch (thuTu) {
-            case 1 -> "Bác sĩ " + mau.hoTen() + " tại phòng khám " + mau.chuyenKhoa();
-            case 2 -> "Tư vấn cho người bệnh";
-            default -> "Chứng chỉ hành nghề số " + mau.soGiayPhep();
-        };
+        return AnhGioiThieuMau.chuThich(thuTu, mau.hoTen(), mau.chuyenKhoa(), mau.soGiayPhep());
     }
 
     /** Bản tiếng Anh của {@link #chuThichMau}; họ tên bác sĩ giữ nguyên. */
     private static String chuThichMauTiengAnh(BacSiMau mau, int thuTu) {
-        return switch (thuTu) {
-            case 1 -> "Dr. " + mau.hoTen() + " at the "
-                    + DuLieuMauTiengAnh.CHUYEN_KHOA.get(mau.chuyenKhoa()).ten() + " clinic";
-            case 2 -> "Consulting a patient";
-            default -> "Practising certificate no. " + mau.soGiayPhep();
-        };
+        return AnhGioiThieuMau.chuThichEn(thuTu, mau.hoTen(),
+                DuLieuMauTiengAnh.CHUYEN_KHOA.get(mau.chuyenKhoa()).ten(), mau.soGiayPhep());
     }
 
     @Override
@@ -241,7 +231,7 @@ public class DuLieuMauServiceImpl implements DuLieuMauService {
                 }
             }
             if (doiAnh) {
-                ghiAnhGioiThieu(bacSi.getId(), danhSachAnh);
+                AnhGioiThieuMau.ghi(entityManager, bacSi.getId(), danhSachAnh);
             }
             soDong++;
         }
@@ -312,6 +302,97 @@ public class DuLieuMauServiceImpl implements DuLieuMauService {
 
     @Override
     @Transactional
+    public int thayAnhMau() {
+        String anhGiu = AnhGioiThieuMau.TIEN_TO_ANH_GIU + "%";
+        String anhGiuTrongJson = "%" + anhGiu;
+        // Chỉ chạy 1 lần trên DB cũ: dữ liệu mẫu cũ luôn có ảnh giữ chỗ, dữ liệu mẫu mới không có. Nhờ vậy ảnh đại diện
+        // người dùng đã chủ động xoá không bị điền lại sau mỗi lần khởi động.
+        long conAnhGiu = ((Number) entityManager.createNativeQuery("""
+                SELECT (SELECT COUNT(*) FROM tai_khoan WHERE anh_dai_dien LIKE :anhGiu)
+                     + (SELECT COUNT(*) FROM bac_si WHERE CAST(anh_gioi_thieu AS CHAR) LIKE :anhGiuTrongJson)
+                """)
+                .setParameter("anhGiu", anhGiu)
+                .setParameter("anhGiuTrongJson", anhGiuTrongJson)
+                .getSingleResult()).longValue();
+        if (conAnhGiu == 0) {
+            return 0;
+        }
+
+        // Ảnh đại diện: chỉ thay ảnh giữ chỗ / điền chỗ trống, ảnh người dùng tự tải lên giữ nguyên
+        List<TaiKhoan> canAnh = entityManager.createQuery("""
+                select t from TaiKhoan t
+                where (t.email like 'bacsi%' or t.email like 'benhnhan%' or t.email like 'quantri%')
+                  and (t.anhDaiDien is null or t.anhDaiDien like :anhGiu)
+                """, TaiKhoan.class)
+                .setParameter("anhGiu", anhGiu)
+                .getResultList();
+        int soAnhDaiDien = 0;
+        for (TaiKhoan taiKhoan : canAnh) {
+            String anh = AnhDaiDienMau.theoEmail(taiKhoan.getEmail());
+            if (anh != null) {
+                taiKhoan.setAnhDaiDien(anh);
+                soAnhDaiDien++;
+            }
+        }
+
+        // Ảnh giới thiệu: bác sĩ mẫu còn ảnh giữ chỗ, hoặc chưa từng có ảnh nào (anh_id_cuoi chỉ tăng, = 0 là chưa có)
+        List<?> dong = entityManager.createNativeQuery("""
+                SELECT b.id_bac_si, b.anh_id_cuoi FROM bac_si b JOIN tai_khoan t ON t.id_tai_khoan = b.id_tai_khoan
+                WHERE t.email LIKE 'bacsi%' AND (CAST(b.anh_gioi_thieu AS CHAR) LIKE :anhGiuTrongJson OR b.anh_id_cuoi = 0)
+                ORDER BY b.id_bac_si
+                """)
+                .setParameter("anhGiuTrongJson", anhGiuTrongJson)
+                .getResultList();
+        Map<Long, Long> idCuoiTheoBacSi = new HashMap<>();
+        for (Object o : dong) {
+            Object[] cot = (Object[]) o;
+            idCuoiTheoBacSi.put(((Number) cot[0]).longValue(), ((Number) cot[1]).longValue());
+        }
+        int soBacSi = 0;
+        if (!idCuoiTheoBacSi.isEmpty()) {
+            List<BacSi> danhSachBacSi = entityManager.createQuery("""
+                    select b from BacSi b join fetch b.taiKhoan join fetch b.chuyenKhoa where b.id in :ids order by b.id
+                    """, BacSi.class)
+                    .setParameter("ids", idCuoiTheoBacSi.keySet())
+                    .getResultList();
+            for (BacSi bacSi : danhSachBacSi) {
+                Integer so = AnhDaiDienMau.soBacSi(bacSi.getTaiKhoan().getEmail());
+                if (so != null && thayAnhGioiThieu(bacSi, so, idCuoiTheoBacSi.get(bacSi.getId()))) {
+                    soBacSi++;
+                }
+            }
+        }
+        log.info("Đã thay ảnh mẫu: {} ảnh đại diện, {} bác sĩ có ảnh giới thiệu", soAnhDaiDien, soBacSi);
+        return soAnhDaiDien + soBacSi;
+    }
+
+    /** Thay URL ảnh giữ chỗ (giữ id, chú thích, thứ tự), hoặc thêm 3 ảnh mẫu nếu bác sĩ chưa từng có ảnh. */
+    private boolean thayAnhGioiThieu(BacSi bacSi, int so, long idCuoi) {
+        List<AnhBacSi> danhSach = docAnhGioiThieu(bacSi.getId());
+        boolean doi = false;
+        for (AnhBacSi anh : danhSach) {
+            if (AnhGioiThieuMau.laAnhGiu(anh)) {
+                anh.setUrl(AnhGioiThieuMau.thayAnhGiu(anh, so));
+                doi = true;
+            }
+        }
+        if (danhSach.isEmpty() && idCuoi == 0) {
+            String hoTen = bacSi.getTaiKhoan().getHoTen();
+            ChuyenKhoa chuyenKhoa = bacSi.getChuyenKhoa();
+            danhSach = AnhGioiThieuMau.baAnh(so, 0,
+                    thuTu -> AnhGioiThieuMau.chuThich(thuTu, hoTen, chuyenKhoa.getTenChuyenKhoa(), bacSi.getSoGiayPhep()),
+                    thuTu -> AnhGioiThieuMau.chuThichEn(thuTu, hoTen, chuyenKhoa.getTenChuyenKhoaEn(),
+                            bacSi.getSoGiayPhep()));
+            doi = true;
+        }
+        if (doi) {
+            AnhGioiThieuMau.ghi(entityManager, bacSi.getId(), danhSach);
+        }
+        return doi;
+    }
+
+    @Override
+    @Transactional
     public int boSungThuoc() {
         int soThuoc = 0;
         for (ThuocMau mau : DuLieuMau.THUOC) {
@@ -340,6 +421,8 @@ public class DuLieuMauServiceImpl implements DuLieuMauService {
             thuoc.setDonViEn(en.donVi());
             thuoc.setMoTa(mau.moTa());
             thuoc.setMoTaEn(en.moTa());
+            thuoc.setCoBaoHiem(mau.coBaoHiem());
+            thuoc.setDonGia(BigDecimal.valueOf(mau.donGia()));
             thuoc.setDaXacMinh(true);
             thuoc.setTrangThai(TrangThaiThuoc.DANG_DUNG);
             entityManager.persist(thuoc);
@@ -361,16 +444,44 @@ public class DuLieuMauServiceImpl implements DuLieuMauService {
         return tiengAnh == null && tiengVietMau.equals(tiengViet) ? tiengAnhMau : tiengAnh;
     }
 
-    /** Ảnh mẫu không nằm trong kho ảnh ({@code maLuuTru} null): tạo dữ liệu mẫu không gọi Cloudinary. */
-    private static AnhBacSi anhMau(long id, int thuTu, LoaiAnhBacSi loai, String url, String chuThich) {
-        AnhBacSi anh = new AnhBacSi();
-        anh.setId(id);
-        anh.setLoai(loai);
-        anh.setUrl(url);
-        anh.setChuThich(chuThich);
-        anh.setThuTu(thuTu);
-        anh.setNgayTao(LocalDateTime.now());
-        return anh;
+    @Override
+    @Transactional
+    public int boSungAnhGiaiThuong() {
+        int soBacSi = 0;
+        for (BacSiMau mau : DuLieuMau.BAC_SI) {
+            if (!HoSoBacSiMau.GIAI_THUONG.containsKey(mau.so())) {
+                continue;
+            }
+            List<?> dong = entityManager.createNativeQuery("""
+                    SELECT b.id_bac_si, b.anh_id_cuoi FROM bac_si b JOIN tai_khoan t ON t.id_tai_khoan = b.id_tai_khoan
+                    WHERE t.email = :email FOR UPDATE
+                    """)
+                    .setParameter("email", mau.email())
+                    .getResultList();
+            if (dong.isEmpty()) {
+                continue;
+            }
+            Object[] cot = (Object[]) dong.get(0);
+            long idBacSi = ((Number) cot[0]).longValue();
+            long idCuoi = ((Number) cot[1]).longValue();
+            // Chỉ bác sĩ còn nguyên 3 ảnh mẫu: đã thêm / xoá ảnh nào (kể cả ảnh giải thưởng) thì không đụng tới
+            if (idCuoi != AnhGioiThieuMau.SO_ANH_MAU) {
+                continue;
+            }
+            List<AnhBacSi> danhSach = docAnhGioiThieu(idBacSi);
+            if (danhSach.stream().anyMatch(anh -> anh.getLoai() == LoaiAnhBacSi.GIAI_THUONG)) {
+                continue;
+            }
+            int thuTuCuoi = danhSach.stream().mapToInt(AnhBacSi::getThuTu).max().orElse(0);
+            List<AnhBacSi> moi = new ArrayList<>(danhSach);
+            moi.addAll(AnhGioiThieuMau.anhGiaiThuong(mau.so(), idCuoi, thuTuCuoi));
+            AnhGioiThieuMau.ghi(entityManager, idBacSi, moi);
+            soBacSi++;
+        }
+        if (soBacSi > 0) {
+            log.info("Đã thêm ảnh giải thưởng mẫu cho {} bác sĩ", soBacSi);
+        }
+        return soBacSi;
     }
 
     /** Ảnh giới thiệu của bác sĩ (mảng JSON trên bac_si, xem {@link AnhBacSi}); khoá dòng tới hết transaction. */
@@ -380,22 +491,6 @@ public class DuLieuMauServiceImpl implements DuLieuMauService {
                 .setParameter("id", idBacSi)
                 .getResultList();
         return AnhBacSi.docDanhSach(json.isEmpty() ? null : (String) json.get(0));
-    }
-
-    /** Ghi lại cả danh sách ảnh (không rỗng) và nâng bộ đếm id ảnh của bác sĩ qua id lớn nhất trong đó. */
-    private void ghiAnhGioiThieu(Long idBacSi, List<AnhBacSi> danhSach) {
-        entityManager.createNativeQuery("UPDATE bac_si SET anh_gioi_thieu = CAST(:json AS JSON),"
-                        + " anh_id_cuoi = GREATEST(anh_id_cuoi, :idLonNhat) WHERE id_bac_si = :id")
-                .setParameter("json", AnhBacSi.vietDanhSach(danhSach))
-                .setParameter("idLonNhat", danhSach.stream().mapToLong(AnhBacSi::getId).max().orElse(0))
-                .setParameter("id", idBacSi)
-                .executeUpdate();
-    }
-
-    /** Ảnh giữ chỗ (nền màu + 1 dòng chữ không dấu) của placehold.co, thay cho ảnh thật khi demo. */
-    private static String anhGiu(int rong, int cao, String mauNen, String mauChu, String chu) {
-        return "https://placehold.co/%dx%d/%s/%s/png?text=%s".formatted(rong, cao, mauNen, mauChu,
-                chu.replace(' ', '+'));
     }
 
     @Override
@@ -471,6 +566,7 @@ public class DuLieuMauServiceImpl implements DuLieuMauService {
                     ChuyenKhoa chuyenKhoa = new ChuyenKhoa();
                     chuyenKhoa.setTenChuyenKhoa(mau.ten());
                     chuyenKhoa.setMoTa(mau.moTa());
+                    chuyenKhoa.setAnhMinhHoa(AnhMau.CHUYEN_KHOA.get(mau.ten()));
                     entityManager.persist(chuyenKhoa);
                     return chuyenKhoa;
                 });

@@ -24,7 +24,7 @@ def mh(ten):
 # ----- Dữ liệu mẫu (từ response thật) -----
 
 BAC_SI = {"id": 1, "hoTen": "Nguyễn Văn An", "hocVi": "TS.BS",
-          "anhDaiDien": "https://placehold.co/400x400/0f766e/ffffff/png?text=BS+1"}
+          "anhDaiDien": "https://res.cloudinary.com/deied72qz/image/upload/v1794322383/eclinic/mau/bac-si/bs01.jpg"}
 PHONG = {"id": 1, "tenPhong": "Phòng 101", "tang": "Tầng 1"}
 
 
