@@ -2,6 +2,7 @@ package iuh.fit.se.eclinic.medical.dto.response;
 
 import iuh.fit.se.eclinic.common.enums.DuongDungThuoc;
 import iuh.fit.se.eclinic.common.enums.TrangThaiThuoc;
+import java.math.BigDecimal;
 
 /** 1 thuốc trong danh mục của quản trị viên. */
 public record ThuocQuanTriResponse(
@@ -18,6 +19,8 @@ public record ThuocQuanTriResponse(
         String moTaEn,
         boolean daXacMinh,
         TrangThaiThuoc trangThai,
+        boolean coBaoHiem,
+        BigDecimal donGia,
         String tenBacSiTao,
         long soLanKe) {
 }

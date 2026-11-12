@@ -25,8 +25,9 @@ import tools.jackson.databind.json.JsonMapper;
 @EnableCaching
 public class CacheConfig implements CachingConfigurer {
 
-    public static final String CHUYEN_KHOA = "catalog:chuyen-khoa";
-    public static final String CHUYEN_KHOA_CHI_TIET = "catalog:chuyen-khoa-chi-tiet";
+    // Hậu tố :vN đổi mỗi khi ChuyenKhoaResponse đổi dạng: bản cache cũ (thiếu trường mới) không bị đọc, tự hết hạn
+    public static final String CHUYEN_KHOA = "catalog:chuyen-khoa:v2";
+    public static final String CHUYEN_KHOA_CHI_TIET = "catalog:chuyen-khoa-chi-tiet:v2";
 
     private static final Duration THOI_HAN = Duration.ofMinutes(10);
 

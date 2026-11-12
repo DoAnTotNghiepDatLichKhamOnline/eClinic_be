@@ -197,12 +197,16 @@ public class ThuocServiceImpl implements ThuocService {
         thuoc.setDonViEn(rongThanhNull(request.donViEn()));
         thuoc.setMoTa(rongThanhNull(request.moTa()));
         thuoc.setMoTaEn(rongThanhNull(request.moTaEn()));
+        thuoc.setCoBaoHiem(request.coBaoHiem());
+        // Đã kiểm tra không có phần thập phân: 1500.0 -> 1500, để phản hồi không trả "1500.0"
+        thuoc.setDonGia(request.donGia().setScale(0));
     }
 
     private static ThuocQuanTriResponse toResponse(Thuoc thuoc, long soLanKe) {
         return new ThuocQuanTriResponse(thuoc.getId(), thuoc.getTenThuoc(), thuoc.getHoatChat(), thuoc.getHamLuong(),
                 thuoc.getDangBaoChe(), thuoc.getDangBaoCheEn(), thuoc.getDuongDung(), thuoc.getDonVi(), thuoc.getDonViEn(),
                 thuoc.getMoTa(), thuoc.getMoTaEn(), thuoc.isDaXacMinh(), thuoc.getTrangThai(),
+                thuoc.isCoBaoHiem(), thuoc.getDonGia(),
                 thuoc.getBacSiTao() == null ? null : thuoc.getBacSiTao().getTaiKhoan().getHoTen(), soLanKe);
     }
 

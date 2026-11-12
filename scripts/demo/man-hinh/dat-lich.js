@@ -308,7 +308,7 @@
                 for (const a of bs.anh) {
                     const hinh = document.createElement('figure');
                     hinh.append(anh(a.url, a.chuThich), the('figcaption',
-                        `${a.loai === 'CHUNG_CHI' ? t('Chứng chỉ', 'Certificate') : t('Ảnh công việc', 'Work photo')}${a.chuThich ? ': ' + a.chuThich : ''}`));
+                        `${{ CHUNG_CHI: t('Chứng chỉ', 'Certificate'), GIAI_THUONG: t('Giải thưởng', 'Award') }[a.loai] || t('Ảnh công việc', 'Work photo')}${a.chuThich ? ': ' + a.chuThich : ''}`));
                     luoi.append(hinh);
                 }
                 phan.push(the('h3', t('Hình ảnh và chứng chỉ', 'Photos and certificates')), luoi);

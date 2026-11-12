@@ -91,7 +91,9 @@ public class AnhBacSiServiceImpl implements AnhBacSiService {
         return transactionTemplate.execute(trangThai -> {
             List<AnhBacSi> danhSach = anhBacSiRepository.khoa(idBacSi);
             AnhBacSi anh = timAnh(danhSach, idAnh);
-            anh.setLoai(request.loai());
+            if (request.loai() != null) {
+                anh.setLoai(request.loai());
+            }
             anh.setChuThich(bacSiMapper.chuanHoa(request.chuThich()));
             anh.setChuThichEn(bacSiMapper.chuanHoa(request.chuThichEn()));
             anhBacSiRepository.ghi(idBacSi, danhSach);
@@ -120,32 +122,10 @@ public class AnhBacSiServiceImpl implements AnhBacSiService {
     }
 
     @Override
-    public AnhBacSiQuanTriResponse capNhatChuThichAnhCongViec(Long idBacSi, Long idAnh, String chuThich,
-            String chuThichEn) {
-        return transactionTemplate.execute(trangThai -> {
-            List<AnhBacSi> danhSach = anhBacSiRepository.khoa(idBacSi);
-            AnhBacSi anh = timAnhCongViec(danhSach, idAnh);
-            anh.setChuThich(bacSiMapper.chuanHoa(chuThich));
-            anh.setChuThichEn(bacSiMapper.chuanHoa(chuThichEn));
-            anhBacSiRepository.ghi(idBacSi, danhSach);
-            return bacSiMapper.toAnhQuanTriResponse(anh);
-        });
-    }
-
-    @Override
     public void xoa(Long idBacSi, Long idAnh) {
-        xoa(idBacSi, idAnh, false);
-    }
-
-    @Override
-    public void xoaAnhCongViec(Long idBacSi, Long idAnh) {
-        xoa(idBacSi, idAnh, true);
-    }
-
-    private void xoa(Long idBacSi, Long idAnh, boolean chiAnhCongViec) {
         String ma = transactionTemplate.execute(trangThai -> {
             List<AnhBacSi> danhSach = anhBacSiRepository.khoa(idBacSi);
-            AnhBacSi anh = chiAnhCongViec ? timAnhCongViec(danhSach, idAnh) : timAnh(danhSach, idAnh);
+            AnhBacSi anh = timAnh(danhSach, idAnh);
             danhSach.remove(anh);
             anhBacSiRepository.ghi(idBacSi, danhSach);
             return anh.getMaLuuTru();
@@ -174,15 +154,6 @@ public class AnhBacSiServiceImpl implements AnhBacSiService {
     private AnhBacSi timAnh(List<AnhBacSi> danhSach, Long idAnh) {
         return danhSach.stream().filter(anh -> anh.getId().equals(idAnh)).findFirst()
                 .orElseThrow(() -> new LoiKhongTimThay("AnhBacSi", idAnh));
-    }
-
-    /** Ảnh chứng chỉ: bác sĩ xem được nhưng chỉ quản trị viên sửa / xoá. */
-    private AnhBacSi timAnhCongViec(List<AnhBacSi> danhSach, Long idAnh) {
-        AnhBacSi anh = timAnh(danhSach, idAnh);
-        if (anh.getLoai() != LoaiAnhBacSi.ANH_CONG_VIEC) {
-            throw new LoiNghiepVu(MaLoi.KHONG_CO_QUYEN, "loi.KHONG_CO_QUYEN.anhChungChi");
-        }
-        return anh;
     }
 
     /** Lỗi kho ảnh không ném ra: dòng trong DB đã xoá / chưa từng có, chỉ còn ảnh thừa trong kho phải xoá tay. */

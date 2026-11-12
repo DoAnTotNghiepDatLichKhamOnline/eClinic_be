@@ -44,7 +44,8 @@ public class BenhAnMapper {
     public ThuocGoiYResponse toGoiY(Thuoc thuoc) {
         NgonNgu ngonNgu = NgonNgu.hienTai();
         return new ThuocGoiYResponse(thuoc.getId(), thuoc.getTenThuoc(), thuoc.getHoatChat(), thuoc.getHamLuong(),
-                thuoc.dangBaoChe(ngonNgu), thuoc.getDuongDung(), thuoc.donVi(ngonNgu));
+                thuoc.dangBaoChe(ngonNgu), thuoc.getDuongDung(), thuoc.donVi(ngonNgu), thuoc.isCoBaoHiem(),
+                thuoc.getDonGia());
     }
 
     public Icd10Response toIcd10(Icd10 icd10) {

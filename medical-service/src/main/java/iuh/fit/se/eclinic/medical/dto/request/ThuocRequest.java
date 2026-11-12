@@ -1,8 +1,12 @@
 package iuh.fit.se.eclinic.medical.dto.request;
 
 import iuh.fit.se.eclinic.common.enums.DuongDungThuoc;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import java.math.BigDecimal;
 
 /** Dữ liệu thêm / sửa 1 thuốc trong danh mục (quản trị viên). */
 public record ThuocRequest(
@@ -35,5 +39,19 @@ public record ThuocRequest(
         String moTa,
 
         @Size(max = 2000, message = "{kiemTra.moTaEn.toiDa}")
-        String moTaEn) {
+        String moTaEn,
+
+        @NotNull(message = "{kiemTra.coBaoHiem.batBuoc}")
+        Boolean coBaoHiem,
+
+        // VND / 1 donVi, số nguyên; 1500.0 vẫn hợp lệ
+        @NotNull(message = "{kiemTra.donGia.batBuoc}")
+        @DecimalMin(value = "0", message = "{kiemTra.donGia.khoang}")
+        @Digits(integer = 12, fraction = 0, message = "{kiemTra.donGia.khoang}")
+        BigDecimal donGia) {
+
+    /** Bỏ số 0 thừa trước khi kiểm tra: 1500.0 là số nguyên như 1500 (@Digits đếm cả số 0 sau dấu phẩy). */
+    public ThuocRequest {
+        donGia = donGia == null ? null : donGia.stripTrailingZeros();
+    }
 }

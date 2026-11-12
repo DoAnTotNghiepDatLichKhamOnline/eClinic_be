@@ -26,7 +26,7 @@ public interface ThuocService {
     /** Thuốc do quản trị viên thêm là thuốc đã xác minh. Ném TEN_THUOC_DA_TON_TAI (trùng tên + hàm lượng). */
     ThuocQuanTriResponse them(ThuocRequest request);
 
-    /** Đơn vị, mô tả, dạng bào chế tiếng Anh sửa được bất cứ lúc nào. */
+    /** Đơn vị, mô tả, dạng bào chế tiếng Anh, BHYT, đơn giá sửa được bất cứ lúc nào. */
     ThuocQuanTriResponse sua(Long id, ThuocRequest request);
 
     /** Ném THUOC_THIEU_THONG_TIN nếu thuốc chưa có hoạt chất hoặc hàm lượng. */

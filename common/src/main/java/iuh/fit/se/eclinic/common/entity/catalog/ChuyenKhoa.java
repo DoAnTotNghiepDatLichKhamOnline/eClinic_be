@@ -31,6 +31,10 @@ public class ChuyenKhoa extends BaseEntity {
     @Column(name = "mo_ta_en", columnDefinition = "TEXT")
     private String moTaEn;
 
+    /** URL ảnh minh hoạ ở thẻ / trang chuyên khoa; null = chưa có ảnh. */
+    @Column(name = "anh_minh_hoa", length = 500)
+    private String anhMinhHoa;
+
     /** Triệu chứng thường gặp của chuyên khoa: chỉ để chatbot chọn chuyên khoa, API công khai không trả. */
     @Column(name = "trieu_chung", columnDefinition = "TEXT")
     private String trieuChung;

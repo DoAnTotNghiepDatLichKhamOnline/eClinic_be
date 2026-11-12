@@ -2,6 +2,7 @@ package iuh.fit.se.eclinic.catalog.service.impl;
 
 import org.springframework.stereotype.Service;
 
+import iuh.fit.se.eclinic.catalog.dto.request.CapNhatAnhBacSiRequest;
 import iuh.fit.se.eclinic.catalog.dto.request.CapNhatHoSoCuaToiRequest;
 import iuh.fit.se.eclinic.catalog.dto.response.AnhBacSiQuanTriResponse;
 import iuh.fit.se.eclinic.catalog.dto.response.HoSoBacSiQuanTriResponse;
@@ -37,18 +38,20 @@ public class HoSoCuaBacSiServiceImpl implements HoSoCuaBacSiService {
     }
 
     @Override
-    public AnhBacSiQuanTriResponse themAnh(Long idTaiKhoan, String chuThich, String chuThichEn, byte[] noiDung) {
-        return anhBacSiService.them(idBacSi(idTaiKhoan), LoaiAnhBacSi.ANH_CONG_VIEC, chuThich, chuThichEn, noiDung);
+    public AnhBacSiQuanTriResponse themAnh(Long idTaiKhoan, LoaiAnhBacSi loai, String chuThich, String chuThichEn,
+            byte[] noiDung) {
+        return anhBacSiService.them(idBacSi(idTaiKhoan), loai, chuThich, chuThichEn, noiDung);
     }
 
     @Override
-    public AnhBacSiQuanTriResponse capNhatAnh(Long idTaiKhoan, Long idAnh, String chuThich, String chuThichEn) {
-        return anhBacSiService.capNhatChuThichAnhCongViec(idBacSi(idTaiKhoan), idAnh, chuThich, chuThichEn);
+    public AnhBacSiQuanTriResponse capNhatAnh(Long idTaiKhoan, Long idAnh, LoaiAnhBacSi loai, String chuThich,
+            String chuThichEn) {
+        return anhBacSiService.capNhat(idBacSi(idTaiKhoan), idAnh, new CapNhatAnhBacSiRequest(loai, chuThich, chuThichEn));
     }
 
     @Override
     public void xoaAnh(Long idTaiKhoan, Long idAnh) {
-        anhBacSiService.xoaAnhCongViec(idBacSi(idTaiKhoan), idAnh);
+        anhBacSiService.xoa(idBacSi(idTaiKhoan), idAnh);
     }
 
     /** JWT còn hạn sau khi tài khoản bị vô hiệu hoá (vd bác sĩ ngừng công tác): kiểm tra lại ở đây. */

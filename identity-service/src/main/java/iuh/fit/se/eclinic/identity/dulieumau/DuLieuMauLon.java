@@ -120,10 +120,6 @@ public final class DuLieuMauLon {
         return "%d %s, TP. Hồ Chí Minh".formatted(so, DUONG.get(so % DUONG.size()));
     }
 
-    public static String anhDaiDien(int so) {
-        return ANH_DAI_DIEN.get(so % ANH_DAI_DIEN.size());
-    }
-
     private static final List<String> HO = List.of("Nguyễn", "Trần", "Lê", "Phạm", "Hoàng", "Huỳnh", "Phan", "Vũ", "Võ",
             "Đặng", "Bùi", "Đỗ", "Hồ", "Ngô", "Dương", "Lý");
 
@@ -139,15 +135,6 @@ public final class DuLieuMauLon {
 
     private static final List<String> DUONG = List.of("Lê Lợi, Quận 1", "Võ Văn Tần, Quận 3", "Nguyễn Trãi, Quận 5",
             "Phan Đăng Lưu, Bình Thạnh", "Quang Trung, Gò Vấp", "Cộng Hoà, Tân Bình");
-
-    /** Dùng chung vài ảnh: 100 URL khác nhau chỉ làm trình duyệt tải thêm mà không demo được gì hơn. */
-    private static final List<String> ANH_DAI_DIEN = List.of(
-            "https://placehold.co/400x400/0f766e/ffffff/png?text=BS",
-            "https://placehold.co/400x400/1565c0/ffffff/png?text=BS",
-            "https://placehold.co/400x400/8d6e63/ffffff/png?text=BS",
-            "https://placehold.co/400x400/6a1b9a/ffffff/png?text=BS",
-            "https://placehold.co/400x400/c62828/ffffff/png?text=BS",
-            "https://placehold.co/400x400/2e7d32/ffffff/png?text=BS");
 
     public static final List<String> HOC_VI = List.of("BSCKI", "BSCKII", "ThS.BS", "TS.BS");
 
@@ -267,45 +254,77 @@ public final class DuLieuMauLon {
                     "đau khi chạy bộ, căng cơ, đau gót chân, chấn thương dây chằng, tư vấn tập luyện",
                     "running pain, muscle strain, heel pain, ligament injury, exercise advice"));
 
-    /** 1 hoạt chất với 3 hàm lượng, thành 3 dòng trong danh mục thuốc. */
-    public record NhomThuocLon(String ten, List<String> hamLuong, String nhom, String nhomEn) {
+    /**
+     * 1 hoạt chất với 3 hàm lượng, thành 3 dòng trong danh mục thuốc. donGia (VND / 1 viên) theo thứ tự hamLuong; giá và
+     * BHYT trùng với migration V47.
+     */
+    public record NhomThuocLon(String ten, List<String> hamLuong, List<Long> donGia, boolean coBaoHiem, String nhom,
+            String nhomEn) {
+
+        public NhomThuocLon {
+            if (donGia.size() != hamLuong.size()) {
+                throw new IllegalArgumentException("Thuốc mẫu " + ten + ": số giá khác số hàm lượng");
+            }
+        }
     }
 
     public static final List<NhomThuocLon> THUOC = List.of(
-            new NhomThuocLon("Azithromycin", List.of("100mg", "250mg", "500mg"), "Kháng sinh", "Antibiotic"),
-            new NhomThuocLon("Clarithromycin", List.of("125mg", "250mg", "500mg"), "Kháng sinh", "Antibiotic"),
-            new NhomThuocLon("Ciprofloxacin", List.of("250mg", "500mg", "750mg"), "Kháng sinh", "Antibiotic"),
-            new NhomThuocLon("Levofloxacin", List.of("250mg", "500mg", "750mg"), "Kháng sinh", "Antibiotic"),
-            new NhomThuocLon("Cefixim", List.of("100mg", "200mg", "400mg"), "Kháng sinh", "Antibiotic"),
-            new NhomThuocLon("Cefpodoxim", List.of("50mg", "100mg", "200mg"), "Kháng sinh", "Antibiotic"),
-            new NhomThuocLon("Doxycyclin", List.of("50mg", "100mg", "200mg"), "Kháng sinh", "Antibiotic"),
-            new NhomThuocLon("Metronidazol", List.of("200mg", "250mg", "500mg"), "Kháng sinh", "Antibiotic"),
-            new NhomThuocLon("Fluconazol", List.of("50mg", "100mg", "150mg"), "Thuốc kháng nấm", "Antifungal"),
-            new NhomThuocLon("Acyclovir", List.of("200mg", "400mg", "800mg"), "Thuốc kháng virus", "Antiviral"),
-            new NhomThuocLon("Naproxen", List.of("250mg", "275mg", "500mg"), "Thuốc giảm đau, kháng viêm",
-                    "Pain relief and anti-inflammatory"),
-            new NhomThuocLon("Diclofenac", List.of("25mg", "50mg", "75mg"), "Thuốc giảm đau, kháng viêm",
-                    "Pain relief and anti-inflammatory"),
-            new NhomThuocLon("Celecoxib", List.of("100mg", "200mg", "400mg"), "Thuốc giảm đau, kháng viêm",
-                    "Pain relief and anti-inflammatory"),
-            new NhomThuocLon("Esomeprazol", List.of("10mg", "20mg", "40mg"), "Thuốc giảm tiết acid dạ dày",
-                    "Stomach acid reducer"),
-            new NhomThuocLon("Pantoprazol", List.of("20mg", "40mg", "80mg"), "Thuốc giảm tiết acid dạ dày",
-                    "Stomach acid reducer"),
-            new NhomThuocLon("Famotidin", List.of("10mg", "20mg", "40mg"), "Thuốc giảm tiết acid dạ dày",
-                    "Stomach acid reducer"),
-            new NhomThuocLon("Losartan", List.of("25mg", "50mg", "100mg"), "Thuốc hạ huyết áp", "Antihypertensive"),
-            new NhomThuocLon("Enalapril", List.of("5mg", "10mg", "20mg"), "Thuốc hạ huyết áp", "Antihypertensive"),
-            new NhomThuocLon("Bisoprolol", List.of("2,5mg", "5mg", "10mg"), "Thuốc hạ huyết áp", "Antihypertensive"),
-            new NhomThuocLon("Atorvastatin", List.of("10mg", "20mg", "40mg"), "Thuốc hạ mỡ máu", "Lipid-lowering drug"),
-            new NhomThuocLon("Rosuvastatin", List.of("5mg", "10mg", "20mg"), "Thuốc hạ mỡ máu", "Lipid-lowering drug"),
-            new NhomThuocLon("Simvastatin", List.of("10mg", "20mg", "40mg"), "Thuốc hạ mỡ máu", "Lipid-lowering drug"),
-            new NhomThuocLon("Gliclazid", List.of("30mg", "60mg", "80mg"), "Thuốc hạ đường huyết", "Antidiabetic"),
-            new NhomThuocLon("Levothyroxin", List.of("25mcg", "50mcg", "100mcg"), "Hormon tuyến giáp", "Thyroid hormone"),
-            new NhomThuocLon("Prednisolon", List.of("5mg", "10mg", "20mg"), "Corticoid", "Corticosteroid"),
-            new NhomThuocLon("Fexofenadin", List.of("60mg", "120mg", "180mg"), "Thuốc chống dị ứng", "Antihistamine"),
-            new NhomThuocLon("Montelukast", List.of("4mg", "5mg", "10mg"), "Thuốc phòng hen", "Asthma controller"),
-            new NhomThuocLon("Vitamin D3", List.of("400IU", "1000IU", "2000IU"), "Vitamin", "Vitamin"));
+            new NhomThuocLon("Azithromycin", List.of("100mg", "250mg", "500mg"), List.of(3000L, 5000L, 9000L), true,
+                    "Kháng sinh", "Antibiotic"),
+            new NhomThuocLon("Clarithromycin", List.of("125mg", "250mg", "500mg"), List.of(3000L, 5000L, 8500L), true,
+                    "Kháng sinh", "Antibiotic"),
+            new NhomThuocLon("Ciprofloxacin", List.of("250mg", "500mg", "750mg"), List.of(1000L, 1500L, 2500L), true,
+                    "Kháng sinh", "Antibiotic"),
+            new NhomThuocLon("Levofloxacin", List.of("250mg", "500mg", "750mg"), List.of(2500L, 4000L, 6500L), true,
+                    "Kháng sinh", "Antibiotic"),
+            new NhomThuocLon("Cefixim", List.of("100mg", "200mg", "400mg"), List.of(2500L, 4000L, 7000L), true,
+                    "Kháng sinh", "Antibiotic"),
+            new NhomThuocLon("Cefpodoxim", List.of("50mg", "100mg", "200mg"), List.of(2500L, 4000L, 7500L), true,
+                    "Kháng sinh", "Antibiotic"),
+            new NhomThuocLon("Doxycyclin", List.of("50mg", "100mg", "200mg"), List.of(500L, 800L, 1500L), true,
+                    "Kháng sinh", "Antibiotic"),
+            new NhomThuocLon("Metronidazol", List.of("200mg", "250mg", "500mg"), List.of(300L, 400L, 700L), true,
+                    "Kháng sinh", "Antibiotic"),
+            new NhomThuocLon("Fluconazol", List.of("50mg", "100mg", "150mg"), List.of(3000L, 5000L, 7000L), true,
+                    "Thuốc kháng nấm", "Antifungal"),
+            new NhomThuocLon("Acyclovir", List.of("200mg", "400mg", "800mg"), List.of(800L, 1400L, 2500L), true,
+                    "Thuốc kháng virus", "Antiviral"),
+            new NhomThuocLon("Naproxen", List.of("250mg", "275mg", "500mg"), List.of(1200L, 1300L, 2200L), true,
+                    "Thuốc giảm đau, kháng viêm", "Pain relief and anti-inflammatory"),
+            new NhomThuocLon("Diclofenac", List.of("25mg", "50mg", "75mg"), List.of(300L, 500L, 800L), true,
+                    "Thuốc giảm đau, kháng viêm", "Pain relief and anti-inflammatory"),
+            new NhomThuocLon("Celecoxib", List.of("100mg", "200mg", "400mg"), List.of(1500L, 2500L, 4500L), true,
+                    "Thuốc giảm đau, kháng viêm", "Pain relief and anti-inflammatory"),
+            new NhomThuocLon("Esomeprazol", List.of("10mg", "20mg", "40mg"), List.of(2500L, 4000L, 6000L), true,
+                    "Thuốc giảm tiết acid dạ dày", "Stomach acid reducer"),
+            new NhomThuocLon("Pantoprazol", List.of("20mg", "40mg", "80mg"), List.of(2000L, 3500L, 6000L), true,
+                    "Thuốc giảm tiết acid dạ dày", "Stomach acid reducer"),
+            new NhomThuocLon("Famotidin", List.of("10mg", "20mg", "40mg"), List.of(400L, 600L, 1000L), true,
+                    "Thuốc giảm tiết acid dạ dày", "Stomach acid reducer"),
+            new NhomThuocLon("Losartan", List.of("25mg", "50mg", "100mg"), List.of(1000L, 1600L, 2800L), true,
+                    "Thuốc hạ huyết áp", "Antihypertensive"),
+            new NhomThuocLon("Enalapril", List.of("5mg", "10mg", "20mg"), List.of(400L, 600L, 1000L), true,
+                    "Thuốc hạ huyết áp", "Antihypertensive"),
+            new NhomThuocLon("Bisoprolol", List.of("2,5mg", "5mg", "10mg"), List.of(1000L, 1500L, 2500L), true,
+                    "Thuốc hạ huyết áp", "Antihypertensive"),
+            new NhomThuocLon("Atorvastatin", List.of("10mg", "20mg", "40mg"), List.of(1000L, 1800L, 3000L), true,
+                    "Thuốc hạ mỡ máu", "Lipid-lowering drug"),
+            new NhomThuocLon("Rosuvastatin", List.of("5mg", "10mg", "20mg"), List.of(1500L, 2500L, 4000L), true,
+                    "Thuốc hạ mỡ máu", "Lipid-lowering drug"),
+            new NhomThuocLon("Simvastatin", List.of("10mg", "20mg", "40mg"), List.of(600L, 1000L, 1800L), true,
+                    "Thuốc hạ mỡ máu", "Lipid-lowering drug"),
+            new NhomThuocLon("Gliclazid", List.of("30mg", "60mg", "80mg"), List.of(1500L, 2800L, 900L), true,
+                    "Thuốc hạ đường huyết", "Antidiabetic"),
+            new NhomThuocLon("Levothyroxin", List.of("25mcg", "50mcg", "100mcg"), List.of(800L, 1000L, 1500L), true,
+                    "Hormon tuyến giáp", "Thyroid hormone"),
+            new NhomThuocLon("Prednisolon", List.of("5mg", "10mg", "20mg"), List.of(200L, 400L, 700L), true,
+                    "Corticoid", "Corticosteroid"),
+            new NhomThuocLon("Fexofenadin", List.of("60mg", "120mg", "180mg"), List.of(1500L, 2500L, 3500L), true,
+                    "Thuốc chống dị ứng", "Antihistamine"),
+            new NhomThuocLon("Montelukast", List.of("4mg", "5mg", "10mg"), List.of(3000L, 3500L, 5000L), true,
+                    "Thuốc phòng hen", "Asthma controller"),
+            new NhomThuocLon("Vitamin D3", List.of("400IU", "1000IU", "2000IU"), List.of(1000L, 1500L, 2500L), false,
+                    "Vitamin", "Vitamin"));
 
     /** Nội dung 1 lần khám: mã ICD lấy từ danh mục, có trong tệp danh-muc/icd10.tsv. */
     public record LanKhamLon(String lyDoKham, String khamLamSang, String chanDoan, String maIcd) {

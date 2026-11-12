@@ -15,13 +15,14 @@ public class ChuyenKhoaMapper {
     /** Bản công khai: tên, mô tả theo ngôn ngữ của request. */
     public ChuyenKhoaResponse toResponse(ChuyenKhoa chuyenKhoa) {
         NgonNgu ngonNgu = NgonNgu.hienTai();
-        return new ChuyenKhoaResponse(chuyenKhoa.getId(), chuyenKhoa.ten(ngonNgu), chuyenKhoa.moTa(ngonNgu));
+        return new ChuyenKhoaResponse(chuyenKhoa.getId(), chuyenKhoa.ten(ngonNgu), chuyenKhoa.moTa(ngonNgu),
+                chuyenKhoa.getAnhMinhHoa());
     }
 
     public ChuyenKhoaQuanTriResponse toQuanTriResponse(ChuyenKhoa chuyenKhoa) {
         return new ChuyenKhoaQuanTriResponse(chuyenKhoa.getId(), chuyenKhoa.getTenChuyenKhoa(),
                 chuyenKhoa.getTenChuyenKhoaEn(), chuyenKhoa.getMoTa(), chuyenKhoa.getMoTaEn(),
-                chuyenKhoa.getTrieuChung(), chuyenKhoa.getTrieuChungEn());
+                chuyenKhoa.getTrieuChung(), chuyenKhoa.getTrieuChungEn(), chuyenKhoa.getAnhMinhHoa());
     }
 
     public ChuyenKhoa toEntity(ChuyenKhoaRequest request) {
