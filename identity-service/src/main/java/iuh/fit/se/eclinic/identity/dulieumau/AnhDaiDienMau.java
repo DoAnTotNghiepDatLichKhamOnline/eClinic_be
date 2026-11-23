@@ -28,8 +28,9 @@ final class AnhDaiDienMau {
         String chuan = ChuanHoa.email(email);
         Integer so = so(BAC_SI, chuan);
         if (so != null) {
-            return so <= DuLieuMau.BAC_SI.size() ? AnhMau.bacSi(so)
-                    : AnhMau.bacSiTheoGioiTinh(DuLieuMauLon.gioiTinh(so), so);
+            // Bác sĩ 1..100 có chân dung riêng (DOANTOTNGH-28); số lớn hơn dùng ảnh chung cùng giới tính
+            String rieng = AnhMau.bacSi(so);
+            return rieng != null ? rieng : AnhMau.bacSiTheoGioiTinh(DuLieuMauLon.gioiTinh(so), so);
         }
         so = so(BENH_NHAN, chuan);
         if (so != null) {

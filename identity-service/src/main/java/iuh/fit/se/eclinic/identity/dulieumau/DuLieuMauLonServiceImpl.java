@@ -5,20 +5,25 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
@@ -27,8 +32,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import iuh.fit.se.eclinic.common.dulieumau.AnhMau;
+import iuh.fit.se.eclinic.common.entity.booking.CauHinhHeThong;
 import iuh.fit.se.eclinic.common.entity.booking.HoSoBenhNhan;
 import iuh.fit.se.eclinic.common.entity.booking.LichHen;
+import iuh.fit.se.eclinic.common.entity.booking.LichSuCauHinh;
 import iuh.fit.se.eclinic.common.entity.booking.LichSuLichHen;
 import iuh.fit.se.eclinic.common.entity.booking.NguoiThanDaLuu;
 import iuh.fit.se.eclinic.common.entity.booking.SuKienThongBao;
@@ -63,7 +70,9 @@ import iuh.fit.se.eclinic.common.enums.SuKienLichHen;
 import iuh.fit.se.eclinic.common.enums.TrangThaiBacSi;
 import iuh.fit.se.eclinic.common.enums.TrangThaiEmail;
 import iuh.fit.se.eclinic.common.enums.TrangThaiHangDoi;
+import iuh.fit.se.eclinic.common.enums.TrangThaiKhungGio;
 import iuh.fit.se.eclinic.common.enums.TrangThaiLichHen;
+import iuh.fit.se.eclinic.common.enums.TrangThaiLichLamViec;
 import iuh.fit.se.eclinic.common.enums.TrangThaiLienKet;
 import iuh.fit.se.eclinic.common.enums.TrangThaiPhienChat;
 import iuh.fit.se.eclinic.common.enums.TrangThaiPhongKham;
@@ -73,6 +82,8 @@ import iuh.fit.se.eclinic.common.enums.TrangThaiYeuCau;
 import iuh.fit.se.eclinic.common.enums.VaiTro;
 import iuh.fit.se.eclinic.common.util.DanhMucIcd10;
 import iuh.fit.se.eclinic.common.util.TokenNgauNhien;
+import iuh.fit.se.eclinic.identity.dulieumau.BenhSuMau.ChuoiBenh;
+import iuh.fit.se.eclinic.identity.dulieumau.BenhSuMau.ThuocKe;
 import iuh.fit.se.eclinic.identity.dulieumau.DuLieuMau.BacSiMau;
 import iuh.fit.se.eclinic.identity.dulieumau.DuLieuMau.Buoi;
 import iuh.fit.se.eclinic.identity.dulieumau.DuLieuMau.ChuyenKhoaMau;
@@ -85,6 +96,7 @@ import iuh.fit.se.eclinic.identity.dulieumau.XepCaMau.PhongNgay;
 import iuh.fit.se.eclinic.identity.repository.TaiKhoanRepository;
 import iuh.fit.se.eclinic.identity.util.ChuanHoa;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -122,7 +134,7 @@ public class DuLieuMauLonServiceImpl implements DuLieuMauLonService {
     private record ChuyenKhoaDaCo(Long id, String ten, String tenEn) {
     }
 
-    private record BacSiLon(Long id, int so, Long idPhong) {
+    private record BacSiLon(Long id, int so, Long idPhong, Long idChuyenKhoa) {
     }
 
     private record BenhNhanLon(Long idHoSo, Long idTaiKhoan, String hoTen, LocalDate ngaySinh,
@@ -211,6 +223,18 @@ public class DuLieuMauLonServiceImpl implements DuLieuMauLonService {
     private long idLonNhat(String bang, String cot) {
         return ((Number) entityManager.createNativeQuery("SELECT COALESCE(MAX(%s), 0) FROM %s".formatted(cot, bang))
                 .getSingleResult()).longValue();
+    }
+
+    /**
+     * Số đầu tiên cho mã tra cứu mẫu ({@code ECL-yyyyMMdd-NNNNNN}) của 1 lần bổ sung: lớn hơn mọi số đã dùng (mã mẫu
+     * cũ có số cố định như 1000 + n, không theo id) và mọi id lịch hẹn, nên không trùng mã ở bất kỳ ngày nào.
+     */
+    private long maTraCuuDau() {
+        long soLonNhat = ((Number) entityManager.createNativeQuery("""
+                SELECT COALESCE(MAX(CAST(SUBSTRING(ma_tra_cuu, 14) AS UNSIGNED)), 0) FROM lich_hen
+                WHERE ma_tra_cuu LIKE 'ECL-________-______%' AND ma_tra_cuu REGEXP '^ECL-[0-9]+-[0-9]+$'
+                """).getSingleResult()).longValue();
+        return Math.max(soLonNhat, idLonNhat("lich_hen", "id_lich_hen")) + 1;
     }
 
     /** Ghi xuống DB rồi bỏ mọi thực thể đang quản lý. Sau lời gọi này chỉ dùng id + getReference. */
@@ -473,7 +497,7 @@ public class DuLieuMauLonServiceImpl implements DuLieuMauLonService {
         if (danhSach.isEmpty()) {
             return 0;
         }
-        LocalDate denNgay = tuNgay.plusDays(properties.soNgay() - 1L);
+        LocalDate denNgay = properties.denNgayXepCa(tuNgay);
         Set<BacSiNgay> ngayDaCoCa = xepCaMau.timNgayDaCoCa(idBacSi(danhSach), tuNgay, denNgay);
         Map<PhongNgay, List<KhoangGio>> caCuaPhong = xepCaMau.timCaDangHoatDongCuaPhong(idPhong(danhSach), tuNgay, denNgay);
         int soCa = 0;
@@ -577,7 +601,7 @@ public class DuLieuMauLonServiceImpl implements DuLieuMauLonService {
             int so = soTheoEmail.get((String) cot[1]);
             Object[] phong = phongTheoTen.get(phongTheoSo.get(so));
             if (phong != null && phong[2].equals(cot[2])) {
-                danhSach.add(new BacSiLon((Long) cot[0], so, (Long) phong[1]));
+                danhSach.add(new BacSiLon((Long) cot[0], so, (Long) phong[1], (Long) cot[2]));
             }
         }
         danhSach.sort(Comparator.comparingInt(BacSiLon::so));
@@ -726,7 +750,12 @@ public class DuLieuMauLonServiceImpl implements DuLieuMauLonService {
         if (idTaiKhoanAdmin == null && kenh == KenhDatLich.HOTLINE) {
             kenh = KenhDatLich.TAI_KHOAN;
         }
-        TaiKhoan taiKhoanBenhNhan = entityManager.getReference(TaiKhoan.class, benhNhan.idTaiKhoan());
+        // Khách không tài khoản chỉ đặt được qua kênh khách
+        if (benhNhan.idTaiKhoan() == null) {
+            kenh = KenhDatLich.KHACH;
+        }
+        TaiKhoan taiKhoanBenhNhan = benhNhan.idTaiKhoan() == null ? null
+                : entityManager.getReference(TaiKhoan.class, benhNhan.idTaiKhoan());
 
         LichHen lichHen = new LichHen();
         lichHen.setHoSoBenhNhan(entityManager.getReference(HoSoBenhNhan.class, benhNhan.idHoSo()));
@@ -990,6 +1019,345 @@ public class DuLieuMauLonServiceImpl implements DuLieuMauLonService {
     }
 
     /** Mốc 0 = mọi mốc nhắc đã xử lý: NhacLichJob bỏ qua lịch mẫu, không gửi email tới địa chỉ @eclinic.local. */
+    // ===================== Lịch sử khám mẫu (DOANTOTNGH-28) =====================
+
+    private static final int SO_LAN_KHAM_MOI_BENH_NHAN = 10;
+    private static final int SO_LAN_CAP_TINH_TOI_DA = 3;
+    /** Lùi xa nhất khi tìm ca cho lần khám cũ nhất (chuỗi mạn tính dài nhất khoảng 10 tháng). */
+    private static final int SO_TUAN_LICH_SU_KHAM = 60;
+    /** Ngày đích không xếp được (bác sĩ nghỉ, ca kín...) thì lùi từng ngày, tối đa chừng này ngày. */
+    private static final int SO_NGAY_LUI_TIM_LUOT = 28;
+    private static final int SO_NGAY_TAI_KHAM_HO_SO_CU = 14;
+    private static final int SO_BENH_NHAN_MOI_LAN_DON = 20;
+    private static final Pattern EMAIL_BENH_NHAN_MAU = Pattern.compile("^benhnhan(\\d+)@eclinic\\.local$");
+
+    private record BenhNhanCanKham(BenhNhanLon benhNhan, int so, int soLanCanThem) {
+    }
+
+    /** 1 lần khám đã có lượt; {@code thuTu} là vị trí trong chuỗi bệnh (0 = lần đầu). */
+    private record LanKhamMoi(ChuoiBenh benh, int thuTu, int soLan, LuotLon luot, LocalDate ngayTaiKham) {
+    }
+
+    /** Dữ liệu dùng chung khi xếp lượt cho mọi bệnh nhân của 1 lần chạy. */
+    private record BoiCanh(LocalDate homNay, Long idAdmin, Set<LocalDate> ngayNghi, Set<BacSiNgay> ngayDaCoCa,
+            Map<PhongNgay, List<KhoangGio>> caCuaPhong, Map<BacSiNgay, Deque<LuotLon>> luotTrong,
+            Map<Integer, BacSiMau> mauTheoSo) {
+    }
+
+    @Override
+    @Transactional
+    public int boSungLichSuKham(LocalDate homNay) {
+        Long idAdmin = timIdAdmin();
+        if (idAdmin == null) {
+            return 0;
+        }
+        int soHoSoCu = ganNgayTaiKhamHoSoCu();
+        List<BenhNhanCanKham> canKham = timBenhNhanCanKham();
+        if (canKham.isEmpty()) {
+            if (soHoSoCu > 0) {
+                log.info("Lịch sử khám mẫu: thêm ngày tái khám cho {} hồ sơ bệnh án cũ", soHoSoCu);
+            }
+            return 0;
+        }
+
+        Map<String, Long> idChuyenKhoaTheoTen = new HashMap<>();
+        entityManager.createQuery("select c.tenChuyenKhoa, c.id from ChuyenKhoa c", Object[].class).getResultList()
+                .forEach(cot -> idChuyenKhoaTheoTen.put((String) cot[0], (Long) cot[1]));
+        Map<String, Long> idThuoc = timThuocKe();
+        List<String> khongKhop = BenhSuMau.kiemTra(idChuyenKhoaTheoTen.keySet(), idThuoc.keySet());
+        if (!khongKhop.isEmpty()) {
+            log.warn("Lịch sử khám mẫu: không khớp danh mục, bỏ qua các mục này: {}", khongKhop);
+        }
+        List<BacSiLon> bacSi = timBacSi(1, DuLieuMauLon.SO_BAC_SI_TOI_DA);
+        if (bacSi.isEmpty() || idThuoc.isEmpty()) {
+            return 0;
+        }
+        Map<Long, List<BacSiLon>> bacSiTheoChuyenKhoa = bacSi.stream()
+                .collect(Collectors.groupingBy(BacSiLon::idChuyenKhoa));
+        Long idTaiKhoanAdmin = entityManager
+                .createQuery("select q.taiKhoan.id from QuanTriVien q where q.id = :id", Long.class)
+                .setParameter("id", idAdmin).getSingleResult();
+
+        LocalDate tuNgay = homNay.minusWeeks(SO_TUAN_LICH_SU_KHAM);
+        BoiCanh boiCanh = new BoiCanh(homNay, idAdmin,
+                new HashSet<>(entityManager.createQuery("select n.ngay from NgayNghiBenhVien n", LocalDate.class)
+                        .getResultList()),
+                xepCaMau.timNgayDaCoCa(idBacSi(bacSi), tuNgay, homNay),
+                xepCaMau.timCaDangHoatDongCuaPhong(idPhong(bacSi), tuNgay, homNay), new HashMap<>(),
+                DuLieuMau.BAC_SI.stream().collect(Collectors.toMap(BacSiMau::so, mau -> mau)));
+
+        long maTraCuuDau = maTraCuuDau();
+        Map<PhongNgay, Integer> soThuTuTrongNgay = new HashMap<>();
+        List<Long> idLichHenMoi = new ArrayList<>();
+        Long idThuocDuPhong = idThuoc.values().stream().min(Long::compare).orElseThrow();
+        int soBenhNhan = 0;
+        for (BenhNhanCanKham bn : canKham) {
+            int soCapTinh = Math.min(SO_LAN_CAP_TINH_TOI_DA, bn.soLanCanThem() / 3);
+            Set<LocalDate> ngayCuaBenhNhan = new HashSet<>();
+            List<LanKhamMoi> lanKham = new ArrayList<>(xepChuoi(BenhSuMau.manTinh(bn.so()),
+                    bn.soLanCanThem() - soCapTinh, homNay.minusDays(7L + bn.so() % 21), bn.so(),
+                    idChuyenKhoaTheoTen, bacSiTheoChuyenKhoa, ngayCuaBenhNhan, boiCanh));
+            if (soCapTinh > 0) {
+                lanKham.addAll(xepChuoi(BenhSuMau.capTinh(bn.so()), soCapTinh,
+                        homNay.minusDays(60L + bn.so() % 140), bn.so(), idChuyenKhoaTheoTen, bacSiTheoChuyenKhoa,
+                        ngayCuaBenhNhan, boiCanh));
+            }
+            lanKham.sort(Comparator.comparing(lan -> lan.luot().gioBatDau()));
+            for (LanKhamMoi lan : lanKham) {
+                LuotLon luot = lan.luot();
+                PhongNgay phongNgay = new PhongNgay(luot.idPhong(), luot.gioBatDau().toLocalDate());
+                int soThuTu = soThuTuTrongNgay.computeIfAbsent(phongNgay, this::demLichHenTrongNgay) + 1;
+                soThuTuTrongNgay.put(phongNgay, soThuTu);
+                ChuoiBenh benh = lan.benh();
+                LichHen lichHen = taoLichHen((int) (maTraCuuDau + idLichHenMoi.size()), luot, bn.benhNhan(),
+                        TrangThaiLichHen.DA_HOAN_THANH, soThuTu,
+                        lan.thuTu() == 0 ? benh.lyDoLanDau() : benh.lyDoTaiKham(), idTaiKhoanAdmin);
+                taoHoSoTheoBenh(lichHen, lan, bn, idLichHenMoi.size(), idThuoc, idThuocDuPhong);
+                idLichHenMoi.add(lichHen.getId());
+            }
+            if (++soBenhNhan % SO_BENH_NHAN_MOI_LAN_DON == 0) {
+                xoaBoNho();
+            }
+        }
+        xoaBoNho();
+        danhDauLichSuKhamMoi(idLichHenMoi);
+        log.info("Lịch sử khám mẫu: thêm {} lần khám cho {} bệnh nhân, thêm ngày tái khám cho {} hồ sơ cũ",
+                idLichHenMoi.size(), canKham.size(), soHoSoCu);
+        return idLichHenMoi.size();
+    }
+
+    /** Hồ sơ bệnh nhân mẫu ({@code benhnhanNN@eclinic.local}) còn dưới 10 hồ sơ bệnh án. */
+    private List<BenhNhanCanKham> timBenhNhanCanKham() {
+        List<BenhNhanCanKham> ketQua = new ArrayList<>();
+        for (Object[] cot : entityManager.createQuery("""
+                select h.id, t.id, h.hoTen, h.ngaySinh, h.gioiTinh, h.soDienThoai, t.email,
+                       (select count(b) from HoSoBenhAn b where b.hoSoBenhNhan = h)
+                from HoSoBenhNhan h join h.taiKhoan t
+                where t.email like 'benhnhan%@eclinic.local'
+                order by h.id
+                """, Object[].class).getResultList()) {
+            Matcher m = EMAIL_BENH_NHAN_MAU.matcher((String) cot[6]);
+            int can = SO_LAN_KHAM_MOI_BENH_NHAN - ((Number) cot[7]).intValue();
+            if (m.matches() && can > 0) {
+                ketQua.add(new BenhNhanCanKham(new BenhNhanLon((Long) cot[0], (Long) cot[1], (String) cot[2],
+                        (LocalDate) cot[3], (GioiTinh) cot[4], (String) cot[5], (String) cot[6]),
+                        Integer.parseInt(m.group(1)), can));
+            }
+        }
+        return ketQua;
+    }
+
+    /** Thuốc đang dùng theo khoá tên + hàm lượng ({@link BenhSuMau#khoaThuoc}); trùng khoá thì lấy id nhỏ nhất. */
+    private Map<String, Long> timThuocKe() {
+        Map<String, Long> ketQua = new HashMap<>();
+        entityManager.createQuery("""
+                select t.id, t.tenThuoc, t.hamLuong from Thuoc t where t.trangThai = :trangThai order by t.id
+                """, Object[].class)
+                .setParameter("trangThai", TrangThaiThuoc.DANG_DUNG)
+                .getResultList()
+                .forEach(cot -> ketQua.putIfAbsent(BenhSuMau.khoaThuoc((String) cot[1], (String) cot[2]), (Long) cot[0]));
+        return ketQua;
+    }
+
+    /**
+     * Xếp {@code soLan} lần khám cùng 1 bác sĩ, lùi từ {@code ngayCuoi}: mỗi lần trước cách lần sau {@code soNgayGiua}
+     * ngày. Ngày tái khám của mỗi lần là ngày của lần sau; lần cuối là ngày khám + {@code soNgayGiua}.
+     */
+    private List<LanKhamMoi> xepChuoi(ChuoiBenh benh, int soLan, LocalDate ngayCuoi, int so,
+            Map<String, Long> idChuyenKhoaTheoTen, Map<Long, List<BacSiLon>> bacSiTheoChuyenKhoa,
+            Set<LocalDate> ngayCuaBenhNhan, BoiCanh boiCanh) {
+        if (soLan <= 0) {
+            return List.of();
+        }
+        List<BacSiLon> ungVien = bacSiTheoChuyenKhoa.get(idChuyenKhoaTheoTen.get(benh.chuyenKhoa()));
+        if (ungVien == null || ungVien.isEmpty()) {
+            ungVien = bacSiTheoChuyenKhoa.get(idChuyenKhoaTheoTen.get("Nội tổng quát"));
+        }
+        if (ungVien == null || ungVien.isEmpty()) {
+            return List.of();
+        }
+        BacSiLon bacSi = ungVien.get(so % ungVien.size());
+        List<LuotLon> luot = new ArrayList<>();
+        LocalDate dich = ngayCuoi;
+        for (int i = 0; i < soLan; i++) {
+            LuotLon lan = timLuot(bacSi, dich, ngayCuaBenhNhan, boiCanh);
+            if (lan == null) {
+                break;
+            }
+            luot.add(lan);
+            dich = lan.gioBatDau().toLocalDate().minusDays(benh.soNgayGiua());
+        }
+        Collections.reverse(luot);
+        List<LanKhamMoi> ketQua = new ArrayList<>();
+        for (int i = 0; i < luot.size(); i++) {
+            LocalDate ngay = luot.get(i).gioBatDau().toLocalDate();
+            LocalDate ngayTaiKham = i + 1 < luot.size() ? luot.get(i + 1).gioBatDau().toLocalDate()
+                    : ngay.plusDays(benh.soNgayGiua());
+            ketQua.add(new LanKhamMoi(benh, i, luot.size(), luot.get(i), ngayTaiKham));
+        }
+        return ketQua;
+    }
+
+    /** Lượt trống của bác sĩ từ ngày {@code dich} lùi dần (trước hôm nay, ngày bệnh nhân chưa có lần khám khác). */
+    private LuotLon timLuot(BacSiLon bacSi, LocalDate dich, Set<LocalDate> ngayCuaBenhNhan, BoiCanh boiCanh) {
+        for (LocalDate ngay = dich; !ngay.isBefore(dich.minusDays(SO_NGAY_LUI_TIM_LUOT)); ngay = ngay.minusDays(1)) {
+            if (!ngay.isBefore(boiCanh.homNay()) || ngayCuaBenhNhan.contains(ngay)) {
+                continue;
+            }
+            LocalDate ngayXet = ngay;
+            Deque<LuotLon> trong = boiCanh.luotTrong().computeIfAbsent(new BacSiNgay(bacSi.id(), ngay),
+                    k -> moLuot(bacSi, ngayXet, boiCanh));
+            if (!trong.isEmpty()) {
+                ngayCuaBenhNhan.add(ngay);
+                return trong.poll();
+            }
+        }
+        return null;
+    }
+
+    /** Các lượt chưa có lịch hẹn của ca đang hoạt động của bác sĩ trong ngày; chưa có ca thì tạo nếu là ngày làm việc. */
+    private Deque<LuotLon> moLuot(BacSiLon bacSi, LocalDate ngay, BoiCanh boiCanh) {
+        if (boiCanh.ngayNghi().contains(ngay)) {
+            return new ArrayDeque<>();
+        }
+        if (!boiCanh.ngayDaCoCa().contains(new BacSiNgay(bacSi.id(), ngay))) {
+            BacSiMau mau = boiCanh.mauTheoSo().get(bacSi.so());
+            DayOfWeek thu = ngay.getDayOfWeek();
+            Buoi buoi = mau != null ? mau.nhomCa().buoi(thu) : DuLieuMauLon.buoi(bacSi.so(), thu);
+            if (buoi == null || !xepCa(bacSi, boiCanh.idAdmin(), ngay, buoi, boiCanh.ngayDaCoCa(), boiCanh.caCuaPhong())) {
+                return new ArrayDeque<>();
+            }
+        }
+        // Truy vấn tự flush ca vừa tạo
+        return new ArrayDeque<>(entityManager.createQuery("""
+                select k.id, l.id, l.bacSi.id, l.phongKham.id, k.gioBatDau
+                from KhungGioKham k join k.lichLamViec l
+                where l.bacSi.id = :idBacSi and l.ngayLamViec = :ngay and l.trangThai = :hoatDong
+                  and k.trangThai <> :daHuy
+                  and not exists (select h.id from LichHen h where h.khungGio = k)
+                order by k.gioBatDau, k.id
+                """, Object[].class)
+                .setParameter("idBacSi", bacSi.id())
+                .setParameter("ngay", ngay)
+                .setParameter("hoatDong", TrangThaiLichLamViec.HOAT_DONG)
+                .setParameter("daHuy", TrangThaiKhungGio.DA_HUY)
+                .getResultStream()
+                .map(cot -> new LuotLon((Long) cot[0], (Long) cot[1], (Long) cot[2], (Long) cot[3],
+                        (LocalDateTime) cot[4]))
+                .toList());
+    }
+
+    private int demLichHenTrongNgay(PhongNgay phongNgay) {
+        return entityManager.createQuery("""
+                select count(h) from LichHen h join h.khungGio k
+                where h.phongKham.id = :idPhong and k.gioBatDau >= :tu and k.gioBatDau < :den
+                """, Long.class)
+                .setParameter("idPhong", phongNgay.phongKhamId())
+                .setParameter("tu", phongNgay.ngay().atStartOfDay())
+                .setParameter("den", phongNgay.ngay().plusDays(1).atStartOfDay())
+                .getSingleResult().intValue();
+    }
+
+    private void taoHoSoTheoBenh(LichHen lichHen, LanKhamMoi lan, BenhNhanCanKham bn, int thuTu,
+            Map<String, Long> idThuoc, Long idThuocDuPhong) {
+        ChuoiBenh benh = lan.benh();
+        int huyetAp = benh.haDau() + (benh.haCuoi() - benh.haDau()) * lan.thuTu() / Math.max(1, lan.soLan() - 1);
+        double nhietDo = lan.thuTu() == 0 ? benh.nhietDoDau() : 36.5 + thuTu % 4 / 10.0;
+
+        HoSoBenhAn hoSoBenhAn = new HoSoBenhAn();
+        hoSoBenhAn.setLichHen(lichHen);
+        hoSoBenhAn.setHoSoBenhNhan(entityManager.getReference(HoSoBenhNhan.class, bn.benhNhan().idHoSo()));
+        hoSoBenhAn.setBacSi(entityManager.getReference(BacSi.class, lan.luot().idBacSi()));
+        hoSoBenhAn.setLyDoKham(lichHen.getLyDoKham());
+        hoSoBenhAn.setMach(70 + thuTu % 15);
+        hoSoBenhAn.setNhietDo(BigDecimal.valueOf(nhietDo).setScale(1, java.math.RoundingMode.HALF_UP));
+        hoSoBenhAn.setHuyetApTamThu(huyetAp);
+        hoSoBenhAn.setHuyetApTamTruong(Math.round(huyetAp * 0.62f));
+        hoSoBenhAn.setNhipTho(16 + thuTu % 4);
+        hoSoBenhAn.setCanNang(BigDecimal.valueOf(50L + bn.so() % 30));
+        hoSoBenhAn.setChieuCao(BigDecimal.valueOf(155L + bn.so() % 25));
+        hoSoBenhAn.setKhamLamSang(lan.thuTu() == 0 ? benh.khamLanDau() : benh.khamTaiKham());
+        hoSoBenhAn.setChanDoan(benh.chanDoan());
+        hoSoBenhAn.setIcdChinh(DanhMucIcd10.tim(benh.maIcd()).orElse(null));
+        hoSoBenhAn.setGhiChu(benh.ghiChu());
+        hoSoBenhAn.setNgayTaiKhamDeXuat(lan.ngayTaiKham());
+        hoSoBenhAn.setMaTokenSoKham(TokenNgauNhien.tao());
+
+        for (ThuocKe ke : benh.thuoc()) {
+            Long id = idThuoc.get(BenhSuMau.khoaThuoc(ke.ten(), ke.hamLuong()));
+            if (id != null) {
+                hoSoBenhAn.addChiTietDonThuoc(chiTietDon(id, ke.lieuDung(), ke.soLanMoiNgay(),
+                        ke.soNgay(benh.soNgayGiua()), ke.soLuong(benh.soNgayGiua()), ke.ghiChuSuDung()));
+            }
+        }
+        if (hoSoBenhAn.getChiTietDonThuoc().isEmpty()) {
+            hoSoBenhAn.addChiTietDonThuoc(chiTietDon(idThuocDuPhong, "1 viên/lần", 2, 5, 10, "Uống sau ăn"));
+        }
+        entityManager.persist(hoSoBenhAn);
+    }
+
+    private ChiTietDonThuoc chiTietDon(Long idThuoc, String lieuDung, int soLanMoiNgay, int soNgayDung, int soLuong,
+            String ghiChu) {
+        ChiTietDonThuoc chiTiet = new ChiTietDonThuoc();
+        chiTiet.setThuoc(entityManager.getReference(Thuoc.class, idThuoc));
+        chiTiet.setLieuDung(lieuDung);
+        chiTiet.setSoLanMoiNgay(soLanMoiNgay);
+        chiTiet.setSoNgayDung(soNgayDung);
+        chiTiet.setSoLuong(soLuong);
+        chiTiet.setGhiChuSuDung(ghiChu);
+        return chiTiet;
+    }
+
+    /**
+     * Hồ sơ bệnh án cũ của bệnh nhân mẫu chưa có ngày tái khám và chưa từng sửa: thêm ngày khám + 14 ngày. Ngày tái khám
+     * được ghi luôn là "đã báo, đã nhắc" để {@code NhacTaiKhamJob} không gửi email tới địa chỉ mẫu {@code @eclinic.local}.
+     */
+    private int ganNgayTaiKhamHoSoCu() {
+        return entityManager.createNativeQuery("""
+                UPDATE ho_so_benh_an h
+                    JOIN lich_hen l ON l.id_lich_hen = h.id_lich_hen
+                    JOIN khung_gio_kham k ON k.id_khung_gio = l.id_khung_gio
+                    JOIN ho_so_benh_nhan p ON p.id_ho_so_benh_nhan = h.id_ho_so_benh_nhan
+                    JOIN tai_khoan t ON t.id_tai_khoan = p.id_tai_khoan
+                SET h.ngay_tai_kham_de_xuat = DATE(k.gio_bat_dau) + INTERVAL :soNgay DAY,
+                    h.tai_kham_ngay_da_bao = DATE(k.gio_bat_dau) + INTERVAL :soNgay DAY,
+                    h.tai_kham_da_nhac_truoc = TRUE
+                WHERE h.ngay_tai_kham_de_xuat IS NULL AND h.phien_ban = 1 AND h.ngay_sua_cuoi IS NULL
+                  AND t.email LIKE 'benhnhan%@eclinic.local'
+                """)
+                .setParameter("soNgay", SO_NGAY_TAI_KHAM_HO_SO_CU)
+                .executeUpdate();
+    }
+
+    /**
+     * Như {@link #luiThoiGian} nhưng chỉ cho các lịch hẹn vừa tạo (theo id, không theo mốc: DB đang chạy có thể có lịch
+     * hẹn thật tạo cùng lúc): khung giờ đã đặt, ngày tạo lùi về trước buổi khám, ngày tái khám coi như đã báo / đã nhắc.
+     */
+    private void danhDauLichSuKhamMoi(List<Long> idLichHen) {
+        for (int tu = 0; tu < idLichHen.size(); tu += 1000) {
+            List<Long> ids = idLichHen.subList(tu, Math.min(tu + 1000, idLichHen.size()));
+            for (String sql : List.of("""
+                    UPDATE khung_gio_kham k JOIN lich_hen l ON l.id_khung_gio = k.id_khung_gio
+                    SET k.trang_thai = 'DA_DAT' WHERE l.id_lich_hen IN (:ids)
+                    """, """
+                    UPDATE lich_hen l JOIN khung_gio_kham k ON k.id_khung_gio = l.id_khung_gio
+                    SET l.ngay_tao = k.gio_bat_dau - INTERVAL 3 DAY, l.ngay_cap_nhat = k.gio_ket_thuc
+                    WHERE l.id_lich_hen IN (:ids)
+                    """, """
+                    UPDATE ho_so_benh_an h JOIN lich_hen l ON l.id_lich_hen = h.id_lich_hen
+                    SET h.ngay_tao = l.ngay_cap_nhat, h.tai_kham_ngay_da_bao = h.ngay_tai_kham_de_xuat,
+                        h.tai_kham_da_nhac_truoc = TRUE
+                    WHERE l.id_lich_hen IN (:ids)
+                    """, """
+                    UPDATE lich_su_thay_doi s JOIN lich_hen l ON l.id_lich_hen = s.id_lich_hen
+                    SET s.ngay_tao = CASE WHEN s.hanh_dong = 'DAT_LICH' THEN l.ngay_tao ELSE l.ngay_cap_nhat END
+                    WHERE s.loai = 'LICH_HEN' AND l.id_lich_hen IN (:ids)
+                    """)) {
+                entityManager.createNativeQuery(sql).setParameter("ids", ids).executeUpdate();
+            }
+        }
+    }
+
     private void tatNhacLich(Moc moc) {
         chay("""
                 UPDATE lich_hen SET nhac_moc_da_xu_ly = 0
@@ -1036,6 +1404,225 @@ public class DuLieuMauLonServiceImpl implements DuLieuMauLonService {
                 SET t.ngay_tao = p.thoi_gian_bat_dau
                 WHERE t.id_tin_nhan > :moc
                 """, moc.tinNhan(), null);
+    }
+
+    // ===== Ca sắp tới đặt sẵn 1 nửa + hạn đặt lịch (DOANTOTNGH-28 p3) =====
+
+    /** Khách đặt sẵn: hồ sơ không tài khoản, số 301..500 (bệnh nhân 7..102, người thân 201..234). */
+    private static final int SO_KHACH_DAU = 301;
+    private static final int SO_KHACH_DAT_SAN = 200;
+    private static final int SO_LICH_HEN_MOI_LAN_DON = 500;
+    /** Trần của {@code so_ngay_dat_truoc_toi_da}, như kiểm tra ở API sửa cấu hình. */
+    private static final int SO_NGAY_DAT_TRUOC_TRAN = 180;
+    private static final String TRUONG_SO_NGAY_DAT_TRUOC = "soNgayDatTruocToiDa";
+    private static final List<TrangThaiLichHen> TRANG_THAI_CHIEM_KHUNG_GIO = Arrays.stream(TrangThaiLichHen.values())
+            .filter(TrangThaiLichHen::chiemKhungGio).toList();
+
+    /** 1 lượt của ca sắp tới; {@code viTri} là thứ tự trong ca (0 = lượt đầu), {@code trong} = đặt được. */
+    private record LuotCa(LuotLon luot, int viTri, boolean trong) {
+    }
+
+    @Override
+    @Transactional
+    public int lapNuaCaSapToi(LocalDate homNay) {
+        long batDau = System.currentTimeMillis();
+        Long idAdmin = timIdAdmin();
+        List<BacSiLon> bacSi = timBacSi(1, DuLieuMauLon.SO_BAC_SI_TOI_DA);
+        if (idAdmin == null || bacSi.isEmpty()) {
+            return 0;
+        }
+        Set<LocalDate> ngayNghi = new HashSet<>(entityManager
+                .createQuery("select n.ngay from NgayNghiBenhVien n where n.ngay >= :homNay", LocalDate.class)
+                .setParameter("homNay", homNay).getResultList());
+        Set<Long> daCoLich = new HashSet<>(entityManager.createQuery("""
+                select h.khungGio.id from LichHen h join h.khungGio k join k.lichLamViec l
+                where l.bacSi.id in :idBacSi and l.ngayLamViec >= :homNay and h.trangThai in :chiem
+                """, Long.class)
+                .setParameter("idBacSi", idBacSi(bacSi))
+                .setParameter("homNay", homNay)
+                .setParameter("chiem", TRANG_THAI_CHIEM_KHUNG_GIO)
+                .getResultList());
+
+        Map<Long, List<LuotCa>> luotTheoCa = new LinkedHashMap<>();
+        Map<Long, Integer> toiDaCuaCa = new HashMap<>();
+        entityManager.createQuery("""
+                select k.id, l.id, l.bacSi.id, l.phongKham.id, k.gioBatDau, k.trangThai, l.soBenhNhanToiDa
+                from KhungGioKham k join k.lichLamViec l
+                where l.bacSi.id in :idBacSi and l.ngayLamViec >= :homNay and l.trangThai = :hoatDong
+                order by l.id, k.gioBatDau, k.id
+                """, Object[].class)
+                .setParameter("idBacSi", idBacSi(bacSi))
+                .setParameter("homNay", homNay)
+                .setParameter("hoatDong", TrangThaiLichLamViec.HOAT_DONG)
+                .getResultList()
+                .forEach(cot -> {
+                    LuotLon luot = new LuotLon((Long) cot[0], (Long) cot[1], (Long) cot[2], (Long) cot[3],
+                            (LocalDateTime) cot[4]);
+                    if (ngayNghi.contains(luot.gioBatDau().toLocalDate())) {
+                        return;
+                    }
+                    List<LuotCa> cuaCa = luotTheoCa.computeIfAbsent(luot.idCa(), k -> new ArrayList<>());
+                    boolean trong = cot[5] == TrangThaiKhungGio.CON_TRONG && !daCoLich.contains(luot.id());
+                    cuaCa.add(new LuotCa(luot, cuaCa.size(), trong));
+                    toiDaCuaCa.put(luot.idCa(), (Integer) cot[6]);
+                });
+
+        // Đủ 1 nửa (tính cả lịch đã có); lượt chẵn trước để lượt đã đặt và lượt trống xen kẽ trong ngày
+        List<LuotLon> chon = new ArrayList<>();
+        int soCa = 0;
+        for (Map.Entry<Long, List<LuotCa>> ca : luotTheoCa.entrySet()) {
+            long soDaDat = ca.getValue().stream().filter(l -> daCoLich.contains(l.luot().id())).count();
+            long canThem = toiDaCuaCa.get(ca.getKey()) / 2 - soDaDat;
+            if (canThem <= 0) {
+                continue;
+            }
+            List<LuotLon> them = ca.getValue().stream().filter(LuotCa::trong)
+                    .sorted(Comparator.comparingInt((LuotCa l) -> l.viTri() % 2).thenComparingInt(LuotCa::viTri))
+                    .limit(canThem).map(LuotCa::luot).toList();
+            if (!them.isEmpty()) {
+                chon.addAll(them);
+                soCa++;
+            }
+        }
+        if (chon.isEmpty()) {
+            return 0;
+        }
+
+        List<BenhNhanLon> khach = timHoacTaoKhach();
+        if (khach.isEmpty()) {
+            return 0;
+        }
+        Long idTaiKhoanAdmin = entityManager
+                .createQuery("select q.taiKhoan.id from QuanTriVien q where q.id = :id", Long.class)
+                .setParameter("id", idAdmin).getSingleResult();
+        // Mỗi ngày xếp theo giờ rồi chia vòng cho khách: 2 lần dùng cùng 1 khách trong ngày cách nhau số khách lượt
+        chon.sort(Comparator.comparing(LuotLon::gioBatDau).thenComparing(LuotLon::id));
+        long maTraCuuDau = maTraCuuDau();
+        Map<PhongNgay, Integer> soThuTuTrongNgay = new HashMap<>();
+        List<Long> idLichHenMoi = new ArrayList<>();
+        LocalDate ngayDangXep = null;
+        int thuTuTrongNgay = 0;
+        for (LuotLon luot : chon) {
+            LocalDate ngay = luot.gioBatDau().toLocalDate();
+            if (!ngay.equals(ngayDangXep)) {
+                ngayDangXep = ngay;
+                thuTuTrongNgay = 0;
+            }
+            BenhNhanLon benhNhan = khach.get(thuTuTrongNgay++ % khach.size());
+            PhongNgay phongNgay = new PhongNgay(luot.idPhong(), ngay);
+            int soThuTu = soThuTuTrongNgay.computeIfAbsent(phongNgay, this::demLichHenTrongNgay) + 1;
+            soThuTuTrongNgay.put(phongNgay, soThuTu);
+            LichHen lichHen = taoLichHen((int) (maTraCuuDau + idLichHenMoi.size()), luot, benhNhan,
+                    TrangThaiLichHen.DA_XAC_NHAN, soThuTu,
+                    DuLieuMauLon.LAN_KHAM.get(idLichHenMoi.size() % DuLieuMauLon.LAN_KHAM.size()).lyDoKham(),
+                    idTaiKhoanAdmin);
+            idLichHenMoi.add(lichHen.getId());
+            if (idLichHenMoi.size() % SO_LICH_HEN_MOI_LAN_DON == 0) {
+                xoaBoNho();
+            }
+        }
+        xoaBoNho();
+        danhDauLichDatSan(idLichHenMoi);
+        log.info("Ca sắp tới đặt sẵn 1 nửa: thêm {} lịch hẹn vào {} ca trong {} ms", idLichHenMoi.size(), soCa,
+                System.currentTimeMillis() - batDau);
+        return idLichHenMoi.size();
+    }
+
+    /**
+     * {@code SO_KHACH_DAT_SAN} hồ sơ khách (không tài khoản) để đặt sẵn lịch, tìm theo CCCD, thiếu thì tạo. Hồ sơ cùng CCCD
+     * đã gắn tài khoản là của người dùng: bỏ qua, không đặt lịch thay họ.
+     */
+    private List<BenhNhanLon> timHoacTaoKhach() {
+        Map<String, Integer> soTheoCccd = new LinkedHashMap<>();
+        for (int so = SO_KHACH_DAU; so < SO_KHACH_DAU + SO_KHACH_DAT_SAN; so++) {
+            soTheoCccd.put(DuLieuMauLon.cccd(so), so);
+        }
+        Map<String, Object[]> daCo = new HashMap<>();
+        entityManager.createQuery("""
+                select h.cccd, h.id, t.id, h.hoTen, h.ngaySinh, h.gioiTinh, h.soDienThoai
+                from HoSoBenhNhan h left join h.taiKhoan t where h.cccd in :cccd
+                """, Object[].class)
+                .setParameter("cccd", soTheoCccd.keySet())
+                .getResultList()
+                .forEach(cot -> daCo.put((String) cot[0], cot));
+        List<BenhNhanLon> khach = new ArrayList<>();
+        soTheoCccd.forEach((cccd, so) -> {
+            Object[] cot = daCo.get(cccd);
+            if (cot == null) {
+                String hoTen = DuLieuMauLon.hoTen(so);
+                String soDienThoai = "0904%06d".formatted(so);
+                HoSoBenhNhan hoSo = taoHoSo(so, hoTen, soDienThoai, null);
+                khach.add(new BenhNhanLon(hoSo.getId(), null, hoTen, hoSo.getNgaySinh(), hoSo.getGioiTinh(),
+                        soDienThoai, null));
+            } else if (cot[2] == null) {
+                khach.add(new BenhNhanLon((Long) cot[1], null, (String) cot[3], (LocalDate) cot[4], (GioiTinh) cot[5],
+                        (String) cot[6], null));
+            }
+        });
+        xoaBoNho();
+        return khach;
+    }
+
+    /**
+     * Như {@link #danhDauLichSuKhamMoi} cho lịch đặt sẵn, theo id: khung giờ đã đặt, tắt nhắc lịch (như
+     * {@link #tatNhacLich}), ngày tạo rải trong 1..20 ngày trước bây giờ (luôn trước giờ khám vì lượt từ hôm nay) để dashboard không thấy hàng
+     * chục nghìn lịch "đặt hôm nay".
+     */
+    private void danhDauLichDatSan(List<Long> idLichHen) {
+        for (int tu = 0; tu < idLichHen.size(); tu += 1000) {
+            List<Long> ids = idLichHen.subList(tu, Math.min(tu + 1000, idLichHen.size()));
+            for (String sql : List.of("""
+                    UPDATE khung_gio_kham k JOIN lich_hen l ON l.id_khung_gio = k.id_khung_gio
+                    SET k.trang_thai = 'DA_DAT' WHERE l.id_lich_hen IN (:ids)
+                    """, """
+                    UPDATE lich_hen l JOIN khung_gio_kham k ON k.id_khung_gio = l.id_khung_gio
+                    SET l.nhac_moc_da_xu_ly = 0,
+                        l.ngay_tao = NOW(6) - INTERVAL (1 + l.id_lich_hen % 20) DAY,
+                        l.ngay_cap_nhat = NOW(6) - INTERVAL (1 + l.id_lich_hen % 20) DAY
+                    WHERE l.id_lich_hen IN (:ids)
+                    """, """
+                    UPDATE lich_su_thay_doi s JOIN lich_hen l ON l.id_lich_hen = s.id_lich_hen
+                    SET s.ngay_tao = l.ngay_tao
+                    WHERE s.loai = 'LICH_HEN' AND l.id_lich_hen IN (:ids)
+                    """)) {
+                entityManager.createNativeQuery(sql).setParameter("ids", ids).executeUpdate();
+            }
+        }
+    }
+
+    @Override
+    @Transactional
+    public int nangHanDatLich(LocalDate homNay) {
+        LocalDate denNgay = properties.denNgay();
+        Long idAdmin = timIdAdmin();
+        if (denNgay == null || idAdmin == null || !denNgay.isAfter(homNay)) {
+            return 0;
+        }
+        int canCo = (int) Math.min(SO_NGAY_DAT_TRUOC_TRAN, ChronoUnit.DAYS.between(homNay, denNgay) + 1);
+        // Khoá dòng như lần lưu của quản trị viên: không ghi đè lần lưu đang chạy song song
+        CauHinhHeThong cauHinh = entityManager.find(CauHinhHeThong.class, CauHinhHeThong.ID,
+                LockModeType.PESSIMISTIC_WRITE);
+        if (cauHinh == null) {
+            log.info("Chưa có dòng cấu hình đặt lịch (booking-service chưa đọc): lần khởi động / chạy job sau sẽ nâng hạn");
+            return 0;
+        }
+        int dangCo = cauHinh.getSoNgayDatTruocToiDa();
+        if (dangCo >= canCo) {
+            return 0;
+        }
+        QuanTriVien quanTri = entityManager.getReference(QuanTriVien.class, idAdmin);
+        LichSuCauHinh lichSu = new LichSuCauHinh();
+        lichSu.setTenTruong(TRUONG_SO_NGAY_DAT_TRUOC);
+        lichSu.setGiaTriCu(String.valueOf(dangCo));
+        lichSu.setGiaTriMoi(String.valueOf(canCo));
+        lichSu.setQuanTri(quanTri);
+        entityManager.persist(lichSu);
+        cauHinh.setSoNgayDatTruocToiDa(canCo);
+        cauHinh.setPhienBan(cauHinh.getPhienBan() + 1);
+        cauHinh.setNgaySua(LocalDateTime.now());
+        cauHinh.setQuanTriSua(quanTri);
+        log.info("Hạn đặt lịch trước: {} -> {} ngày, để đặt được tới {}", dangCo, canCo, denNgay);
+        return canCo;
     }
 
     private void chay(String sql, long moc, LocalDate homNay) {

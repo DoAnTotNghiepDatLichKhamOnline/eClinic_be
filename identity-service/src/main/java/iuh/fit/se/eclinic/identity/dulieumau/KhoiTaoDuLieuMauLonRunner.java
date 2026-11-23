@@ -33,6 +33,19 @@ public class KhoiTaoDuLieuMauLonRunner implements ApplicationRunner {
         } catch (RuntimeException e) {
             log.error("Tạo dữ liệu mẫu lớn thất bại, service vẫn chạy bình thường", e);
         }
+        // Sau khi đã xếp ca: đặt sẵn 1 nửa mỗi ca sắp tới, nâng hạn đặt lịch tới ngày cuối có ca
+        try {
+            duLieuMauLonService.nangHanDatLich(LocalDate.now());
+            log.info("Đã đặt sẵn {} lịch hẹn cho ca sắp tới", duLieuMauLonService.lapNuaCaSapToi(LocalDate.now()));
+        } catch (RuntimeException e) {
+            log.error("Đặt sẵn lịch cho ca sắp tới thất bại, service vẫn chạy bình thường", e);
+        }
+        // Sau dữ liệu mẫu lớn: dữ liệu mẫu lớn chia lịch hẹn đã qua cho benhnhan01..04, bổ sung trước sẽ thành quá 10
+        try {
+            log.info("Đã bổ sung {} lần khám mẫu", duLieuMauLonService.boSungLichSuKham(LocalDate.now()));
+        } catch (RuntimeException e) {
+            log.error("Bổ sung lịch sử khám mẫu thất bại, service vẫn chạy bình thường", e);
+        }
     }
 
 }

@@ -1,0 +1,534 @@
+{
+  "bac-si/bs01": {
+    "url": "https://res.cloudinary.com/deied72qz/image/upload/v1794322383/eclinic/mau/bac-si/bs01.jpg",
+    "bytes": 7073,
+    "width": 256,
+    "height": 256,
+    "nhom": "chan-dung",
+    "gioiTinh": "NAM"
+  },
+  "bac-si/bs02": {
+    "url": "https://res.cloudinary.com/deied72qz/image/upload/v1794322385/eclinic/mau/bac-si/bs02.jpg",
+    "bytes": 6123,
+    "width": 256,
+    "height": 256,
+    "nhom": "chan-dung",
+    "gioiTinh": "NU"
+  },
+  "bac-si/bs03": {
+    "url": "https://res.cloudinary.com/deied72qz/image/upload/v1794322386/eclinic/mau/bac-si/bs03.jpg",
+    "bytes": 6747,
+    "width": 256,
+    "height": 256,
+    "nhom": "chan-dung",
+    "gioiTinh": "NAM"
+  },
+  "bac-si/bs04": {
+    "url": "https://res.cloudinary.com/deied72qz/image/upload/v1794322387/eclinic/mau/bac-si/bs04.jpg",
+    "bytes": 5625,
+    "width": 256,
+    "height": 256,
+    "nhom": "chan-dung",
+    "gioiTinh": "NU"
+  },
+  "bac-si/bs05": {
+    "url": "https://res.cloudinary.com/deied72qz/image/upload/v1794322388/eclinic/mau/bac-si/bs05.jpg",
+    "bytes": 4545,
+    "width": 256,
+    "height": 256,
+    "nhom": "chan-dung",
+    "gioiTinh": "NAM"
+  },
+  "bac-si/bs06": {
+    "url": "https://res.cloudinary.com/deied72qz/image/upload/v1794322389/eclinic/mau/bac-si/bs06.jpg",
+    "bytes": 6135,
+    "width": 256,
+    "height": 256,
+    "nhom": "chan-dung",
+    "gioiTinh": "NU"
+  },
+  "bac-si/bs07": {
+    "url": "https://res.cloudinary.com/deied72qz/image/upload/v1794322390/eclinic/mau/bac-si/bs07.jpg",
+    "bytes": 5974,
+    "width": 256,
+    "height": 256,
+    "nhom": "chan-dung",
+    "gioiTinh": "NAM"
+  },
+  "bac-si/bs08": {
+    "url": "https://res.cloudinary.com/deied72qz/image/upload/v1794322391/eclinic/mau/bac-si/bs08.jpg",
+    "bytes": 6524,
+    "width": 256,
+    "height": 256,
+    "nhom": "chan-dung",
+    "gioiTinh": "NU"
+  },
+  "bac-si/bs09": {
+    "url": "https://res.cloudinary.com/deied72qz/image/upload/v1794322392/eclinic/mau/bac-si/bs09.jpg",
+    "bytes": 5423,
+    "width": 256,
+    "height": 256,
+    "nhom": "chan-dung",
+    "gioiTinh": "NAM"
+  },
+  "bac-si/bs10": {
+    "url": "https://res.cloudinary.com/deied72qz/image/upload/v1794322393/eclinic/mau/bac-si/bs10.jpg",
+    "bytes": 10136,
+    "width": 256,
+    "height": 256,
+    "nhom": "chan-dung",
+    "gioiTinh": "NU"
+  },
+  "bac-si/bs11": {
+    "url": "https://res.cloudinary.com/deied72qz/image/upload/v1794322394/eclinic/mau/bac-si/bs11.jpg",
+    "bytes": 5681,
+    "width": 256,
+    "height": 256,
+    "nhom": "chan-dung",
+    "gioiTinh": "NAM"
+  },
+  "bac-si/bs12": {
+    "url": "https://res.cloudinary.com/deied72qz/image/upload/v1794322395/eclinic/mau/bac-si/bs12.jpg",
+    "bytes": 6284,
+    "width": 256,
+    "height": 256,
+    "nhom": "chan-dung",
+    "gioiTinh": "NU"
+  },
+  "bac-si/nam01": {
+    "url": "https://res.cloudinary.com/deied72qz/image/upload/v1794322396/eclinic/mau/bac-si/nam01.jpg",
+    "bytes": 6132,
+    "width": 256,
+    "height": 256,
+    "nhom": "chan-dung",
+    "gioiTinh": "NAM"
+  },
+  "bac-si/nam02": {
+    "url": "https://res.cloudinary.com/deied72qz/image/upload/v1794322397/eclinic/mau/bac-si/nam02.jpg",
+    "bytes": 5490,
+    "width": 256,
+    "height": 256,
+    "nhom": "chan-dung",
+    "gioiTinh": "NAM"
+  },
+  "nguoi-dung/nam01": {
+    "url": "https://res.cloudinary.com/deied72qz/image/upload/v1794322398/eclinic/mau/nguoi-dung/nam01.jpg",
+    "bytes": 8465,
+    "width": 256,
+    "height": 256,
+    "nhom": "chan-dung",
+    "gioiTinh": "NAM"
+  },
+  "nguoi-dung/nam02": {
+    "url": "https://res.cloudinary.com/deied72qz/image/upload/v1794322221/eclinic/mau/nguoi-dung/nam02.jpg",
+    "bytes": 6089,
+    "width": 256,
+    "height": 256,
+    "nhom": "chan-dung",
+    "gioiTinh": "NAM"
+  },
+  "nguoi-dung/nam03": {
+    "url": "https://res.cloudinary.com/deied72qz/image/upload/v1794322222/eclinic/mau/nguoi-dung/nam03.jpg",
+    "bytes": 5616,
+    "width": 256,
+    "height": 256,
+    "nhom": "chan-dung",
+    "gioiTinh": "NAM"
+  },
+  "nguoi-dung/nam04": {
+    "url": "https://res.cloudinary.com/deied72qz/image/upload/v1794322401/eclinic/mau/nguoi-dung/nam04.jpg",
+    "bytes": 4908,
+    "width": 256,
+    "height": 256,
+    "nhom": "chan-dung",
+    "gioiTinh": "NAM"
+  },
+  "nguoi-dung/nam05": {
+    "url": "https://res.cloudinary.com/deied72qz/image/upload/v1794322224/eclinic/mau/nguoi-dung/nam05.jpg",
+    "bytes": 4523,
+    "width": 256,
+    "height": 256,
+    "nhom": "chan-dung",
+    "gioiTinh": "NAM"
+  },
+  "nguoi-dung/nam06": {
+    "url": "https://res.cloudinary.com/deied72qz/image/upload/v1794322224/eclinic/mau/nguoi-dung/nam06.jpg",
+    "bytes": 7897,
+    "width": 256,
+    "height": 256,
+    "nhom": "chan-dung",
+    "gioiTinh": "NAM"
+  },
+  "nguoi-dung/nu01": {
+    "url": "https://res.cloudinary.com/deied72qz/image/upload/v1794322404/eclinic/mau/nguoi-dung/nu01.jpg",
+    "bytes": 6291,
+    "width": 256,
+    "height": 256,
+    "nhom": "chan-dung",
+    "gioiTinh": "NU"
+  },
+  "nguoi-dung/nu02": {
+    "url": "https://res.cloudinary.com/deied72qz/image/upload/v1794322405/eclinic/mau/nguoi-dung/nu02.jpg",
+    "bytes": 8462,
+    "width": 256,
+    "height": 256,
+    "nhom": "chan-dung",
+    "gioiTinh": "NU"
+  },
+  "nguoi-dung/nu03": {
+    "url": "https://res.cloudinary.com/deied72qz/image/upload/v1794322227/eclinic/mau/nguoi-dung/nu03.jpg",
+    "bytes": 5583,
+    "width": 256,
+    "height": 256,
+    "nhom": "chan-dung",
+    "gioiTinh": "NU"
+  },
+  "nguoi-dung/nu04": {
+    "url": "https://res.cloudinary.com/deied72qz/image/upload/v1794322228/eclinic/mau/nguoi-dung/nu04.jpg",
+    "bytes": 6098,
+    "width": 256,
+    "height": 256,
+    "nhom": "chan-dung",
+    "gioiTinh": "NU"
+  },
+  "nguoi-dung/nu05": {
+    "url": "https://res.cloudinary.com/deied72qz/image/upload/v1794322407/eclinic/mau/nguoi-dung/nu05.jpg",
+    "bytes": 8895,
+    "width": 256,
+    "height": 256,
+    "nhom": "chan-dung",
+    "gioiTinh": "NU"
+  },
+  "nguoi-dung/nu06": {
+    "url": "https://res.cloudinary.com/deied72qz/image/upload/v1794322408/eclinic/mau/nguoi-dung/nu06.jpg",
+    "bytes": 5217,
+    "width": 256,
+    "height": 256,
+    "nhom": "chan-dung",
+    "gioiTinh": "NU"
+  },
+  "cong-viec/cv01": {
+    "url": "https://res.cloudinary.com/deied72qz/image/upload/v1794322231/eclinic/mau/cong-viec/cv01.jpg",
+    "bytes": 28449,
+    "width": 800,
+    "height": 533,
+    "nhom": "cong-viec"
+  },
+  "cong-viec/cv02": {
+    "url": "https://res.cloudinary.com/deied72qz/image/upload/v1794322232/eclinic/mau/cong-viec/cv02.jpg",
+    "bytes": 26660,
+    "width": 800,
+    "height": 533,
+    "nhom": "cong-viec"
+  },
+  "cong-viec/cv03": {
+    "url": "https://res.cloudinary.com/deied72qz/image/upload/v1794322234/eclinic/mau/cong-viec/cv03.jpg",
+    "bytes": 31594,
+    "width": 800,
+    "height": 533,
+    "nhom": "cong-viec"
+  },
+  "cong-viec/cv04": {
+    "url": "https://res.cloudinary.com/deied72qz/image/upload/v1794322235/eclinic/mau/cong-viec/cv04.jpg",
+    "bytes": 32766,
+    "width": 800,
+    "height": 533,
+    "nhom": "cong-viec"
+  },
+  "cong-viec/cv05": {
+    "url": "https://res.cloudinary.com/deied72qz/image/upload/v1794322237/eclinic/mau/cong-viec/cv05.jpg",
+    "bytes": 38419,
+    "width": 800,
+    "height": 533,
+    "nhom": "cong-viec"
+  },
+  "cong-viec/cv06": {
+    "url": "https://res.cloudinary.com/deied72qz/image/upload/v1794322239/eclinic/mau/cong-viec/cv06.jpg",
+    "bytes": 28936,
+    "width": 800,
+    "height": 533,
+    "nhom": "cong-viec"
+  },
+  "chung-chi/cc01": {
+    "url": "https://res.cloudinary.com/deied72qz/image/upload/v1794322240/eclinic/mau/chung-chi/cc01.jpg",
+    "bytes": 11623,
+    "width": 600,
+    "height": 380,
+    "nhom": "chung-chi"
+  },
+  "chung-chi/cc02": {
+    "url": "https://res.cloudinary.com/deied72qz/image/upload/v1794322244/eclinic/mau/chung-chi/cc02.jpg",
+    "bytes": 40032,
+    "width": 600,
+    "height": 386,
+    "nhom": "chung-chi"
+  },
+  "giai-thuong/gt01": {
+    "url": "https://res.cloudinary.com/deied72qz/image/upload/v1794397332/eclinic/mau/giai-thuong/gt01.jpg",
+    "bytes": 88845,
+    "width": 800,
+    "height": 533,
+    "nhom": "giai-thuong"
+  },
+  "giai-thuong/gt02": {
+    "url": "https://res.cloudinary.com/deied72qz/image/upload/v1794397335/eclinic/mau/giai-thuong/gt02.jpg",
+    "bytes": 46844,
+    "width": 533,
+    "height": 800,
+    "nhom": "giai-thuong"
+  },
+  "giai-thuong/gt03": {
+    "url": "https://res.cloudinary.com/deied72qz/image/upload/v1794397336/eclinic/mau/giai-thuong/gt03.jpg",
+    "bytes": 21824,
+    "width": 800,
+    "height": 533,
+    "nhom": "giai-thuong"
+  },
+  "giai-thuong/gt04": {
+    "url": "https://res.cloudinary.com/deied72qz/image/upload/v1794397337/eclinic/mau/giai-thuong/gt04.jpg",
+    "bytes": 66413,
+    "width": 800,
+    "height": 450,
+    "nhom": "giai-thuong"
+  },
+  "chuyen-khoa/noi-tong-quat": {
+    "url": "https://res.cloudinary.com/deied72qz/image/upload/v1794322245/eclinic/mau/chuyen-khoa/noi-tong-quat.jpg",
+    "bytes": 13620,
+    "width": 640,
+    "height": 400,
+    "nhom": "chuyen-khoa",
+    "chuyenKhoa": "Nội tổng quát"
+  },
+  "chuyen-khoa/nhi-khoa": {
+    "url": "https://res.cloudinary.com/deied72qz/image/upload/v1794322248/eclinic/mau/chuyen-khoa/nhi-khoa.jpg",
+    "bytes": 23048,
+    "width": 640,
+    "height": 400,
+    "nhom": "chuyen-khoa",
+    "chuyenKhoa": "Nhi khoa"
+  },
+  "chuyen-khoa/da-lieu": {
+    "url": "https://res.cloudinary.com/deied72qz/image/upload/v1794322250/eclinic/mau/chuyen-khoa/da-lieu.jpg",
+    "bytes": 17311,
+    "width": 640,
+    "height": 400,
+    "nhom": "chuyen-khoa",
+    "chuyenKhoa": "Da liễu"
+  },
+  "chuyen-khoa/tai-mui-hong": {
+    "url": "https://res.cloudinary.com/deied72qz/image/upload/v1794322252/eclinic/mau/chuyen-khoa/tai-mui-hong.jpg",
+    "bytes": 17027,
+    "width": 640,
+    "height": 400,
+    "nhom": "chuyen-khoa",
+    "chuyenKhoa": "Tai Mũi Họng"
+  },
+  "chuyen-khoa/tim-mach": {
+    "url": "https://res.cloudinary.com/deied72qz/image/upload/v1794322255/eclinic/mau/chuyen-khoa/tim-mach.jpg",
+    "bytes": 37574,
+    "width": 640,
+    "height": 400,
+    "nhom": "chuyen-khoa",
+    "chuyenKhoa": "Tim mạch"
+  },
+  "chuyen-khoa/san-phu-khoa": {
+    "url": "https://res.cloudinary.com/deied72qz/image/upload/v1794322256/eclinic/mau/chuyen-khoa/san-phu-khoa.jpg",
+    "bytes": 24901,
+    "width": 640,
+    "height": 400,
+    "nhom": "chuyen-khoa",
+    "chuyenKhoa": "Sản phụ khoa"
+  },
+  "chuyen-khoa/mat": {
+    "url": "https://res.cloudinary.com/deied72qz/image/upload/v1794322259/eclinic/mau/chuyen-khoa/mat.jpg",
+    "bytes": 47516,
+    "width": 640,
+    "height": 400,
+    "nhom": "chuyen-khoa",
+    "chuyenKhoa": "Mắt"
+  },
+  "chuyen-khoa/rang-ham-mat": {
+    "url": "https://res.cloudinary.com/deied72qz/image/upload/v1794322260/eclinic/mau/chuyen-khoa/rang-ham-mat.jpg",
+    "bytes": 23542,
+    "width": 640,
+    "height": 400,
+    "nhom": "chuyen-khoa",
+    "chuyenKhoa": "Răng Hàm Mặt"
+  },
+  "chuyen-khoa/than-kinh": {
+    "url": "https://res.cloudinary.com/deied72qz/image/upload/v1794322262/eclinic/mau/chuyen-khoa/than-kinh.jpg",
+    "bytes": 19515,
+    "width": 640,
+    "height": 400,
+    "nhom": "chuyen-khoa",
+    "chuyenKhoa": "Thần kinh"
+  },
+  "chuyen-khoa/tieu-hoa": {
+    "url": "https://res.cloudinary.com/deied72qz/image/upload/v1794322265/eclinic/mau/chuyen-khoa/tieu-hoa.jpg",
+    "bytes": 39927,
+    "width": 640,
+    "height": 400,
+    "nhom": "chuyen-khoa",
+    "chuyenKhoa": "Tiêu hoá"
+  },
+  "chuyen-khoa/ho-hap": {
+    "url": "https://res.cloudinary.com/deied72qz/image/upload/v1794322268/eclinic/mau/chuyen-khoa/ho-hap.jpg",
+    "bytes": 17949,
+    "width": 640,
+    "height": 400,
+    "nhom": "chuyen-khoa",
+    "chuyenKhoa": "Hô hấp"
+  },
+  "chuyen-khoa/noi-tiet": {
+    "url": "https://res.cloudinary.com/deied72qz/image/upload/v1794322271/eclinic/mau/chuyen-khoa/noi-tiet.jpg",
+    "bytes": 13269,
+    "width": 640,
+    "height": 400,
+    "nhom": "chuyen-khoa",
+    "chuyenKhoa": "Nội tiết"
+  },
+  "chuyen-khoa/co-xuong-khop": {
+    "url": "https://res.cloudinary.com/deied72qz/image/upload/v1794322273/eclinic/mau/chuyen-khoa/co-xuong-khop.jpg",
+    "bytes": 24711,
+    "width": 640,
+    "height": 400,
+    "nhom": "chuyen-khoa",
+    "chuyenKhoa": "Cơ xương khớp"
+  },
+  "chuyen-khoa/than-tiet-nieu": {
+    "url": "https://res.cloudinary.com/deied72qz/image/upload/v1794322276/eclinic/mau/chuyen-khoa/than-tiet-nieu.jpg",
+    "bytes": 41200,
+    "width": 640,
+    "height": 400,
+    "nhom": "chuyen-khoa",
+    "chuyenKhoa": "Thận - Tiết niệu"
+  },
+  "chuyen-khoa/ung-buou": {
+    "url": "https://res.cloudinary.com/deied72qz/image/upload/v1794322280/eclinic/mau/chuyen-khoa/ung-buou.jpg",
+    "bytes": 30743,
+    "width": 640,
+    "height": 400,
+    "nhom": "chuyen-khoa",
+    "chuyenKhoa": "Ung bướu"
+  },
+  "chuyen-khoa/huyet-hoc": {
+    "url": "https://res.cloudinary.com/deied72qz/image/upload/v1794322284/eclinic/mau/chuyen-khoa/huyet-hoc.jpg",
+    "bytes": 32847,
+    "width": 640,
+    "height": 400,
+    "nhom": "chuyen-khoa",
+    "chuyenKhoa": "Huyết học"
+  },
+  "chuyen-khoa/truyen-nhiem": {
+    "url": "https://res.cloudinary.com/deied72qz/image/upload/v1794322285/eclinic/mau/chuyen-khoa/truyen-nhiem.jpg",
+    "bytes": 36106,
+    "width": 640,
+    "height": 400,
+    "nhom": "chuyen-khoa",
+    "chuyenKhoa": "Truyền nhiễm"
+  },
+  "chuyen-khoa/tam-than": {
+    "url": "https://res.cloudinary.com/deied72qz/image/upload/v1794322286/eclinic/mau/chuyen-khoa/tam-than.jpg",
+    "bytes": 19484,
+    "width": 640,
+    "height": 400,
+    "nhom": "chuyen-khoa",
+    "chuyenKhoa": "Tâm thần"
+  },
+  "chuyen-khoa/y-hoc-co-truyen": {
+    "url": "https://res.cloudinary.com/deied72qz/image/upload/v1794322287/eclinic/mau/chuyen-khoa/y-hoc-co-truyen.jpg",
+    "bytes": 21371,
+    "width": 640,
+    "height": 400,
+    "nhom": "chuyen-khoa",
+    "chuyenKhoa": "Y học cổ truyền"
+  },
+  "chuyen-khoa/phuc-hoi-chuc-nang": {
+    "url": "https://res.cloudinary.com/deied72qz/image/upload/v1794322289/eclinic/mau/chuyen-khoa/phuc-hoi-chuc-nang.jpg",
+    "bytes": 29198,
+    "width": 640,
+    "height": 400,
+    "nhom": "chuyen-khoa",
+    "chuyenKhoa": "Phục hồi chức năng"
+  },
+  "chuyen-khoa/dinh-duong": {
+    "url": "https://res.cloudinary.com/deied72qz/image/upload/v1794322292/eclinic/mau/chuyen-khoa/dinh-duong.jpg",
+    "bytes": 22812,
+    "width": 640,
+    "height": 400,
+    "nhom": "chuyen-khoa",
+    "chuyenKhoa": "Dinh dưỡng"
+  },
+  "chuyen-khoa/chan-thuong-chinh-hinh": {
+    "url": "https://res.cloudinary.com/deied72qz/image/upload/v1794322293/eclinic/mau/chuyen-khoa/chan-thuong-chinh-hinh.jpg",
+    "bytes": 18544,
+    "width": 640,
+    "height": 400,
+    "nhom": "chuyen-khoa",
+    "chuyenKhoa": "Chấn thương chỉnh hình"
+  },
+  "chuyen-khoa/ngoai-tong-quat": {
+    "url": "https://res.cloudinary.com/deied72qz/image/upload/v1794322295/eclinic/mau/chuyen-khoa/ngoai-tong-quat.jpg",
+    "bytes": 29332,
+    "width": 640,
+    "height": 400,
+    "nhom": "chuyen-khoa",
+    "chuyenKhoa": "Ngoại tổng quát"
+  },
+  "chuyen-khoa/ngoai-than-kinh": {
+    "url": "https://res.cloudinary.com/deied72qz/image/upload/v1794322297/eclinic/mau/chuyen-khoa/ngoai-than-kinh.jpg",
+    "bytes": 26864,
+    "width": 640,
+    "height": 400,
+    "nhom": "chuyen-khoa",
+    "chuyenKhoa": "Ngoại thần kinh"
+  },
+  "chuyen-khoa/lao-khoa": {
+    "url": "https://res.cloudinary.com/deied72qz/image/upload/v1794322300/eclinic/mau/chuyen-khoa/lao-khoa.jpg",
+    "bytes": 16472,
+    "width": 640,
+    "height": 400,
+    "nhom": "chuyen-khoa",
+    "chuyenKhoa": "Lão khoa"
+  },
+  "chuyen-khoa/di-ung-mien-dich": {
+    "url": "https://res.cloudinary.com/deied72qz/image/upload/v1794322303/eclinic/mau/chuyen-khoa/di-ung-mien-dich.jpg",
+    "bytes": 28326,
+    "width": 640,
+    "height": 400,
+    "nhom": "chuyen-khoa",
+    "chuyenKhoa": "Dị ứng - Miễn dịch"
+  },
+  "chuyen-khoa/nam-khoa": {
+    "url": "https://res.cloudinary.com/deied72qz/image/upload/v1794322304/eclinic/mau/chuyen-khoa/nam-khoa.jpg",
+    "bytes": 17680,
+    "width": 640,
+    "height": 400,
+    "nhom": "chuyen-khoa",
+    "chuyenKhoa": "Nam khoa"
+  },
+  "chuyen-khoa/so-sinh": {
+    "url": "https://res.cloudinary.com/deied72qz/image/upload/v1794322308/eclinic/mau/chuyen-khoa/so-sinh.jpg",
+    "bytes": 36044,
+    "width": 640,
+    "height": 400,
+    "nhom": "chuyen-khoa",
+    "chuyenKhoa": "Sơ sinh"
+  },
+  "chuyen-khoa/phau-thuat-tao-hinh": {
+    "url": "https://res.cloudinary.com/deied72qz/image/upload/v1794322310/eclinic/mau/chuyen-khoa/phau-thuat-tao-hinh.jpg",
+    "bytes": 25425,
+    "width": 640,
+    "height": 400,
+    "nhom": "chuyen-khoa",
+    "chuyenKhoa": "Phẫu thuật tạo hình"
+  },
+  "chuyen-khoa/y-hoc-the-thao": {
+    "url": "https://res.cloudinary.com/deied72qz/image/upload/v1794322311/eclinic/mau/chuyen-khoa/y-hoc-the-thao.jpg",
+    "bytes": 22047,
+    "width": 640,
+    "height": 400,
+    "nhom": "chuyen-khoa",
+    "chuyenKhoa": "Y học thể thao"
+  }
+}
