@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -54,6 +55,9 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @ConditionalOnBooleanProperty("app.du-lieu-mau.bat")
 public class DuLieuMauServiceImpl implements DuLieuMauService {
+
+    /** Thư mục ảnh mẫu cũ (DOANTOTNGH-27) trên Cloudinary; ảnh mới nằm ở {@code eclinic/mau-hd/}. */
+    private static final String TIEN_TO_ANH_MAU_CU = "/eclinic/mau/";
 
     private final EntityManager entityManager;
     private final TaiKhoanRepository taiKhoanRepository;
@@ -484,6 +488,90 @@ public class DuLieuMauServiceImpl implements DuLieuMauService {
         return soBacSi;
     }
 
+    @Override
+    @Transactional
+    public int chanDungRiengChoBacSi() {
+        // Mọi URL ảnh mẫu, cả bản cũ eclinic/mau/: ảnh người dùng tự tải lên không bao giờ nằm trong tập này
+        Set<String> anhMau = new HashSet<>(AnhMau.TAT_CA);
+        anhMau.addAll(AnhMau.URL_CU.keySet());
+        List<?> dong = entityManager.createNativeQuery("""
+                SELECT email, anh_dai_dien FROM tai_khoan WHERE email LIKE 'bacsi%@eclinic.local' AND anh_dai_dien IS NOT NULL
+                """).getResultList();
+        int soDoi = 0;
+        for (Object o : dong) {
+            Object[] cot = (Object[]) o;
+            String email = (String) cot[0];
+            String anh = (String) cot[1];
+            Integer so = AnhDaiDienMau.soBacSi(email);
+            String rieng = so == null ? null : AnhMau.bacSi(so);
+            if (rieng != null && !rieng.equals(anh) && anhMau.contains(anh)) {
+                soDoi += entityManager
+                        .createNativeQuery("UPDATE tai_khoan SET anh_dai_dien = :moi WHERE email = :email AND anh_dai_dien = :cu")
+                        .setParameter("moi", rieng).setParameter("email", email).setParameter("cu", anh).executeUpdate();
+            }
+        }
+        if (soDoi > 0) {
+            log.info("Đã đổi ảnh đại diện của {} bác sĩ mẫu sang chân dung riêng", soDoi);
+        }
+        return soDoi;
+    }
+
+    @Override
+    @Transactional
+    public int nangAnhMauLenBanNet() {
+        String anhCu = "%" + TIEN_TO_ANH_MAU_CU + "%";
+        long conAnhCu = ((Number) entityManager.createNativeQuery("""
+                SELECT (SELECT COUNT(*) FROM tai_khoan WHERE anh_dai_dien LIKE :anhCu)
+                     + (SELECT COUNT(*) FROM chuyen_khoa WHERE anh_minh_hoa LIKE :anhCu)
+                     + (SELECT COUNT(*) FROM bac_si WHERE CAST(anh_gioi_thieu AS CHAR) LIKE :anhCu)
+                """)
+                .setParameter("anhCu", anhCu)
+                .getSingleResult()).longValue();
+        if (conAnhCu == 0) {
+            return 0;
+        }
+
+        // Chỉ đổi URL trùng đúng 1 ảnh mẫu cũ: ảnh người dùng / quản trị viên tự tải lên không bao giờ trùng
+        int soAnhDaiDien = 0;
+        int soChuyenKhoa = 0;
+        for (Map.Entry<String, String> cap : AnhMau.URL_CU.entrySet()) {
+            soAnhDaiDien += entityManager
+                    .createNativeQuery("UPDATE tai_khoan SET anh_dai_dien = :moi WHERE anh_dai_dien = :cu")
+                    .setParameter("moi", cap.getValue()).setParameter("cu", cap.getKey()).executeUpdate();
+            soChuyenKhoa += entityManager
+                    .createNativeQuery("UPDATE chuyen_khoa SET anh_minh_hoa = :moi WHERE anh_minh_hoa = :cu")
+                    .setParameter("moi", cap.getValue()).setParameter("cu", cap.getKey()).executeUpdate();
+        }
+
+        // Ảnh giới thiệu: đọc / ghi qua danh sách để giữ nguyên id, chú thích, thứ tự, maLuuTru
+        List<Long> idBacSi = entityManager.createNativeQuery(
+                        "SELECT id_bac_si FROM bac_si WHERE CAST(anh_gioi_thieu AS CHAR) LIKE :anhCu ORDER BY id_bac_si",
+                        Long.class)
+                .setParameter("anhCu", anhCu)
+                .getResultList();
+        int soBacSi = 0;
+        for (Long id : idBacSi) {
+            List<AnhBacSi> danhSach = docAnhGioiThieu(id);
+            boolean doi = false;
+            for (AnhBacSi anh : danhSach) {
+                String moi = AnhMau.URL_CU.get(anh.getUrl());
+                if (moi != null) {
+                    anh.setUrl(moi);
+                    doi = true;
+                }
+            }
+            if (doi) {
+                AnhGioiThieuMau.ghi(entityManager, id, danhSach);
+                soBacSi++;
+            }
+        }
+        // Dọn bộ nhớ: tài khoản / chuyên khoa đã nạp trước đó không còn khớp sau các câu UPDATE trên
+        entityManager.clear();
+        log.info("Đã đổi ảnh mẫu sang bản nét: {} ảnh đại diện, {} chuyên khoa, {} bác sĩ có ảnh giới thiệu",
+                soAnhDaiDien, soChuyenKhoa, soBacSi);
+        return soAnhDaiDien + soChuyenKhoa + soBacSi;
+    }
+
     /** Ảnh giới thiệu của bác sĩ (mảng JSON trên bac_si, xem {@link AnhBacSi}); khoá dòng tới hết transaction. */
     private List<AnhBacSi> docAnhGioiThieu(Long idBacSi) {
         List<?> json = entityManager.createNativeQuery(
@@ -533,7 +621,7 @@ public class DuLieuMauServiceImpl implements DuLieuMauService {
             return 0;
         }
 
-        LocalDate denNgay = tuNgay.plusDays(properties.soNgay() - 1L);
+        LocalDate denNgay = properties.denNgayXepCa(tuNgay);
         Set<BacSiNgay> ngayDaCoCa = xepCaMau.timNgayDaCoCa(phongCuaBacSi.keySet(), tuNgay, denNgay);
         Set<Long> idPhong = phongCuaBacSi.values().stream().map(PhongKham::getId).collect(Collectors.toSet());
         Map<PhongNgay, List<KhoangGio>> caCuaPhong = xepCaMau.timCaDangHoatDongCuaPhong(idPhong, tuNgay, denNgay);

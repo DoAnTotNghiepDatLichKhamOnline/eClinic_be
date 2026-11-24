@@ -34,10 +34,24 @@ public interface DuLieuMauService {
      */
     int boSungAnhGiaiThuong();
 
+    /**
+     * DB có URL ảnh mẫu cũ (thư mục {@code eclinic/mau/}, ảnh nhỏ, chuyên khoa là ảnh chụp): đổi sang bản nét
+     * ({@code eclinic/mau-hd/}, chuyên khoa là biểu tượng) theo {@code AnhMau.URL_CU}. Chỉ đổi URL trùng đúng ảnh mẫu
+     * cũ, ảnh người dùng / quản trị viên tự tải lên giữ nguyên; hết URL cũ thì không làm gì. Trả số dòng đã đổi.
+     */
+    int nangAnhMauLenBanNet();
+
+    /**
+     * Bác sĩ mẫu ({@code bacsiNN@eclinic.local}, 1..100) đang dùng 1 ảnh mẫu dùng chung (kể cả bản cũ {@code eclinic/mau/})
+     * thì đổi sang chân dung riêng {@code AnhMau.bacSi(NN)} (DOANTOTNGH-28). Ảnh tự tải lên giữ nguyên; chạy lại không đổi
+     * gì. Trả số tài khoản đã đổi.
+     */
+    int chanDungRiengChoBacSi();
+
     /** Thêm các thuốc mẫu còn thiếu trong danh mục (so theo tên + hàm lượng). */
     int boSungThuoc();
 
-    /** Bổ sung ca làm việc + khung giờ còn thiếu của bác sĩ mẫu trong {@code soNgay} ngày từ {@code tuNgay}. */
+    /** Bổ sung ca làm việc + khung giờ còn thiếu của bác sĩ mẫu từ {@code tuNgay} tới {@link DuLieuMauProperties#denNgayXepCa}. */
     int boSungLichLamViec(LocalDate tuNgay);
 
 }

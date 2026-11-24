@@ -4,7 +4,7 @@ import iuh.fit.se.eclinic.catalog.dto.response.ChuyenKhoaQuanTriResponse;
 
 /**
  * Ảnh minh hoạ của chuyên khoa (quản trị viên). Mỗi chuyên khoa có đúng 1 ảnh riêng trong kho, mã cố định theo id: tải
- * lên lần nữa thì ghi đè, xoá thì xoá theo mã đó. Ảnh mẫu dùng chung (eclinic/mau/…) không bao giờ bị xoá.
+ * lên lần nữa thì ghi đè, xoá thì xoá theo mã đó. Ảnh mẫu dùng chung (eclinic/mau/…, eclinic/mau-hd/…) không bao giờ bị xoá.
  */
 public interface AnhChuyenKhoaService {
 

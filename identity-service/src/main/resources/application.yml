@@ -103,3 +103,5 @@ app:
     lon: ${SEED_VOLUME:false}
     mat-khau: ${SEED_PASSWORD:Demo@123}
     so-ngay: 14
+    # Ca mẫu có tới ít nhất ngày này (yyyy-MM-dd); để trống = chỉ so-ngay ngày tới. Ca sắp tới được đặt sẵn 1 nửa.
+    den-ngay: ${SEED_SHIFTS_UNTIL:2027-01-31}

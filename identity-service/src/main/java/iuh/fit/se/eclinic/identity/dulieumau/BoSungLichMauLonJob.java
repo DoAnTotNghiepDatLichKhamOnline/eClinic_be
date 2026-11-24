@@ -26,6 +26,12 @@ public class BoSungLichMauLonJob {
         } catch (RuntimeException e) {
             log.error("Bổ sung ca làm việc mẫu lớn thất bại", e);
         }
+        try {
+            duLieuMauLonService.nangHanDatLich(LocalDate.now());
+            log.info("Đã đặt sẵn {} lịch hẹn cho ca sắp tới", duLieuMauLonService.lapNuaCaSapToi(LocalDate.now()));
+        } catch (RuntimeException e) {
+            log.error("Đặt sẵn lịch cho ca sắp tới thất bại", e);
+        }
     }
 
 }
