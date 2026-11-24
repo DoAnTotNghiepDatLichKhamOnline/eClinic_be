@@ -118,6 +118,8 @@ services:
       # Thêm khoảng 100 dòng mỗi bảng; chỉ có tác dụng khi SEED_DATA=true
       SEED_VOLUME: ${SEED_VOLUME:-true}
       SEED_PASSWORD: ${SEED_PASSWORD:-Demo@123}
+      # Ca mẫu có tới ít nhất ngày này (yyyy-MM-dd), ca sắp tới đặt sẵn 1 nửa; để trống = chỉ 14 ngày tới
+      SEED_SHIFTS_UNTIL: ${SEED_SHIFTS_UNTIL-2027-01-31}
       # Email kích hoạt / đặt lại mật khẩu; console chỉ ghi liên kết ra log
       MAIL_MODE: ${MAIL_MODE:-console}
       # Mật khẩu ban đầu của bác sĩ do quản trị viên tạo (phải đổi ở lần đăng nhập đầu)
